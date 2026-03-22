@@ -1,0 +1,20 @@
+{
+  "short_name": "NutraFit",
+  "name": "NutraFit Control Agua",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#f4f7f6",
+  "display": "standalone",
+  "theme_color": "#78a978"
+}
