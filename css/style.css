@@ -1,0 +1,270 @@
+/* =========================================
+   CONFIGURACIÓN BASE
+   ========================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    background-color: #f4f7f4;
+    color: #333;
+}
+
+/* Contenedor Principal (Index) */
+.contenedor {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+}
+
+/* Imagen de Cabecera en Menú */
+.imagen-principal {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 0 0 15px 15px;
+    border-bottom: 3px solid #a5cba5; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* =========================================
+   MENÚ PRINCIPAL (BOTONES GIGANTES)
+   ========================================= */
+.menu {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px 15px;
+    overflow-y: auto;
+    background-color: #f4f7f4;
+}
+
+.menu button {
+    background-color: #78a978; 
+    color: white;
+    border: none;
+    border-radius: 15px;
+    width: 100%;
+    min-height: 120px; /* Ajustado para que quepan más en pantalla */
+    font-size: 28px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding-left: 10%;
+    gap: 30px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(120, 169, 120, 0.3);
+}
+
+.menu button i {
+    font-size: 35px;
+    width: 40px;
+    text-align: center;
+}
+
+.menu button:active {
+    transform: scale(0.96);
+    background-color: #618d61;
+}
+
+/* =========================================
+   VISTAS INTERNAS (AGUA, PESO, ETC.)
+   ========================================= */
+#contenedor-vistas {
+    width: 100%;
+    height: 100vh;
+    background-color: #f4f7f4;
+    overflow-y: auto;
+}
+
+/* Cabecera de las secciones */
+.cabecera-seccion {
+    background-color: #78a978;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.boton-volver {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 18px;
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.titulo-cabecera h1 {
+    font-size: 1.2rem;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.contenido-seccion {
+    padding: 20px;
+}
+
+/* =========================================
+   CONTROL DE AGUA - ESPECÍFICO
+   ========================================= */
+.tarjeta-progreso {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.icono-agua-grande {
+    font-size: 45px;
+    color: #3498db;
+    margin-bottom: 10px;
+}
+
+.barra-progreso-fondo {
+    width: 100%;
+    height: 12px;
+    background: #eee;
+    border-radius: 10px;
+    margin-top: 15px;
+    overflow: hidden;
+}
+
+.barra-progreso-relleno {
+    width: 0%; 
+    height: 100%;
+    background-color: #7dd3fc;
+    transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.grid-agua {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.boton-vaso {
+    background-color: #f8fbfd; 
+    border: 2px solid #e0e6ed;
+    border-radius: 12px;
+    height: 60px; 
+    color: #a0aec0;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.boton-vaso.activo {
+    background-color: #e0f2fe !important;
+    color: #0c4a6e !important;
+    border-color: #7dd3fc !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(14, 165, 233, 0.15);
+}
+
+.boton-reset {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 15px;
+    width: 100%;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
+}
+
+/* =========================================
+   HISTORIAL (TABLA)
+   ========================================= */
+.seccion-historico {
+    margin-top: 30px;
+}
+
+.seccion-historico h3 {
+    color: #78a978;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.texto-verde { color: #2ecc71; font-weight: bold; }
+.texto-naranja { color: #e67e22; font-weight: bold; }
+
+/* Estilos de tabla para que se vea profesional */
+table th {
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+}
+
+table td {
+    color: #444;
+}
+/* =========================================
+   TABLA HISTORIAL NUTRAFIT (ESTILO PREMIUM)
+   ========================================= */
+.tabla-nutrafit {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden; /* Para que las esquinas redondeadas funcionen */
+    border: 1px solid #78a978; /* Borde exterior verde */
+}
+
+/* Cabecera: Fondo Verde, Texto Blanco */
+.tabla-nutrafit thead {
+    background-color: #78a978;
+    color: white;
+}
+
+.tabla-nutrafit th {
+    padding: 12px;
+    text-align: left;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid #a5cba5; /* Líneas verdes en la cabecera */
+}
+
+/* Celdas con líneas de cuadrícula verdes suaves */
+.tabla-nutrafit td {
+    padding: 12px;
+    font-size: 0.9rem;
+    color: #444;
+    border: 1px solid #d0e1d0; /* Línea de cuadrícula verde suave */
+}
+
+/* Efecto cebra opcional (filas alternas un pelín más claras) */
+.tabla-nutrafit tr:nth-child(even) {
+    background-color: #f9fbf9;
+}

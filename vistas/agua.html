@@ -1,0 +1,57 @@
+<div class="contenedor-vista">
+    
+    <header class="cabecera-seccion">
+        <button onclick="volverInicio()" class="boton-volver">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="titulo-cabecera">
+            <i class="fas fa-glass-whiskey"></i> 
+            <h1>MI CONTROL DE AGUA</h1>
+        </div>
+    </header>
+
+    <main class="contenido-seccion">
+        <div class="tarjeta-progreso">
+            <i class="fas fa-tint icono-agua-grande"></i>
+            <h2 id="contador-texto">0 / 8 Vasos</h2>
+            <div class="barra-progreso-fondo">
+                <div id="barra-llenado" class="barra-progreso-relleno"></div>
+            </div>
+        </div>
+
+        <div class="grid-agua">
+            <button class="boton-vaso" onclick="gestionarVaso(0)"><i class="fas fa-glass-whiskey"></i></button>
+            <button class="boton-vaso" onclick="gestionarVaso(1)"><i class="fas fa-glass-whiskey"></i></button>
+            <button class="boton-vaso" onclick="gestionarVaso(2)"><i class="fas fa-glass-whiskey"></i></button>
+            <button class="boton-vaso" onclick="gestionarVaso(3)"><i class="fas fa-glass-whiskey"></i></button>
+            <button class="boton-vaso" onclick="gestionarVaso(4)"><i class="fas fa-glass-whiskey"></i></button>
+            <button class="boton-vaso" onclick="gestionarVaso(5)"><i class="fas fa-glass-whiskey"></i></button>
+            <button class="boton-vaso" onclick="gestionarVaso(6)"><i class="fas fa-glass-whiskey"></i></button>
+            <button class="boton-vaso" onclick="gestionarVaso(7)"><i class="fas fa-glass-whiskey"></i></button>
+        </div>
+        
+        <button class="boton-reset" onclick="reiniciarAgua()">
+            <i class="fas fa-sync-alt"></i> Reiniciar Día y Guardar
+        </button>
+
+        <div class="seccion-historico" style="margin-top: 30px;">
+            <h3><i class="fas fa-history"></i> Mi Historial</h3>
+            <div style="background: white; border-radius: 10px; overflow: hidden;">
+                <table style="width:100%; border-collapse: collapse; font-family: sans-serif;">
+                    <thead>
+                        <tr style="background: #f4f4f4; color: #666; font-size: 0.8rem;">
+                            <th style="padding: 10px;">FECHA</th>
+                            <th style="padding: 10px;">VASOS</th>
+                            <th style="padding: 10px;">ESTADO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="datos-tabla" style="text-align: center; font-size: 0.9rem;">
+                        <tr>
+                            <td colspan="3" style="padding: 20px; color: #999;">Cargando historial...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>

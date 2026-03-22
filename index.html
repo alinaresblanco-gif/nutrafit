@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUTRAFIT - Mi Asistente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="pantalla-inicio" class="contenedor">
+        <img src="IMAGENES/IMAGEN_2.png" class="imagen-principal" alt="Nutrafit Logo">
+        
+        <div class="menu">
+            <button onclick="abrirVista('creditos-diarios')">
+                <i class="fas fa-credit-card"></i> Mis Créditos Diarios
+            </button>
+            
+            <button onclick="abrirVista('creditos-alimentos')">
+                <i class="fas fa-apple-alt"></i> Mis Créditos de Alimentos
+            </button>
+            
+            <button onclick="abrirVista('evolucion-peso')">
+                <i class="fas fa-chart-line"></i> Mi Evolución de Peso
+            </button>
+            
+            <button onclick="abrirVista('agua')">
+                <i class="fas fa-glass-whiskey"></i> Mi Control de Agua
+            </button>
+            
+            <button onclick="abrirVista('diario-comida')">
+                <i class="fas fa-book-open"></i> Mi Diario de Comida
+            </button>
+            
+            <button onclick="abrirVista('carrito-compra')">
+                <i class="fas fa-shopping-cart"></i> Mi Carrito de la Compra
+            </button>
+            
+            <button onclick="abrirVista('recetas-favoritas')">
+                <i class="fas fa-heart"></i> Mis Recetas Favoritas
+            </button>
+            
+            <button onclick="abrirVista('ejercicio-diario')">
+                <i class="fas fa-dumbbell"></i> Mi Ejercicio Diario
+            </button>
+        </div>
+    </div>
+
+    <div id="contenedor-vistas" style="display: none;">
+        </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
