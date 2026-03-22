@@ -52,7 +52,7 @@ html, body {
     border: none;
     border-radius: 10px;
     width: 100%;
-    min-height: 50px; /* Ajustado para que quepan más en pantalla */
+    min-height: 51px; /* Ajustado para que quepan más en pantalla */
     font-size: 16px;
     font-weight: 700;
     text-transform: uppercase;
