@@ -60,7 +60,7 @@ html, body {
     justify-content: flex-start;
     align-items: center;
     padding-left: 10%;
-    gap: 10px;
+    gap: 5px;
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 4px 12px rgba(120, 169, 120, 0.3);
