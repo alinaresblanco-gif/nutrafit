@@ -50,17 +50,17 @@ html, body {
     background-color: #78a978; 
     color: white;
     border: none;
-    border-radius: 15px;
+    border-radius: 10px;
     width: 100%;
-    min-height: 120px; /* Ajustado para que quepan más en pantalla */
-    font-size: 28px;
+    min-height: 50px; /* Ajustado para que quepan más en pantalla */
+    font-size: 16px;
     font-weight: 700;
     text-transform: uppercase;
     display: flex;
     justify-content: flex-start;
     align-items: center;
     padding-left: 10%;
-    gap: 30px;
+    gap: 20px;
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 4px 12px rgba(120, 169, 120, 0.3);

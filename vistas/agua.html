@@ -36,16 +36,28 @@
 
         <div class="seccion-historico" style="margin-top: 30px;">
             <h3><i class="fas fa-history"></i> Mi Historial</h3>
-            <div style="background: white; border-radius: 10px; overflow: hidden;">
-                <table style="width:100%; border-collapse: collapse; font-family: sans-serif;">
+            <div style="background: white; border-radius: 10px; overflow: hidden; border: 1px solid #78a978;">
+                <table class="tabla-nutrafit" style="width:100%; border-collapse: collapse; font-family: sans-serif;">
                     <thead>
-                        <tr style="background: #f4f4f4; color: #666; font-size: 0.8rem;">
-                            <th style="padding: 10px;">FECHA</th>
-                            <th style="padding: 10px;">VASOS</th>
-                            <th style="padding: 10px;">ESTADO</th>
+                        <tr style="background: #78a978; color: white; font-size: 0.8rem;">
+                            <th style="padding: 12px; border: 1px solid #a5cba5;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fas fa-calendar-alt"></i> FECHA
+                                </div>
+                            </th>
+                            <th style="padding: 12px; border: 1px solid #a5cba5;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fas fa-tint"></i> VASOS
+                                </div>
+                            </th>
+                            <th style="padding: 12px; border: 1px solid #a5cba5;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <i class="fas fa-check-circle"></i> ESTADO
+                                </div>
+                            </th>
                         </tr>
                     </thead>
-                    <tbody id="datos-tabla" style="text-align: center; font-size: 0.9rem;">
+                    <tbody id="datos-tabla" style="text-align: center; font-size: 0.9rem; color: #444;">
                         <tr>
                             <td colspan="3" style="padding: 20px; color: #999;">Cargando historial...</td>
                         </tr>
