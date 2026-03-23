@@ -159,3 +159,41 @@ async function cargarHistorico() {
         contenedor.innerHTML = "<tr><td colspan='3' style='padding:20px; color:red;'>Error de conexión al cargar datos</td></tr>";
     }
 }
+// Función para los botones de + y -
+function ajustarValor(id, incremento) {
+    const input = document.getElementById(id);
+    let valorActual = parseFloat(input.value) || 0;
+    input.value = (valorActual + incremento).toFixed(id === 'peso-credito' ? 2 : 0);
+    calcularCreditos(); // Recalcular automáticamente
+}
+
+// La fórmula de AppSheet adaptada
+function calcularCreditos() {
+    const genero = document.getElementById('genero-credito').value;
+    const peso = parseFloat(document.getElementById('peso-credito').value) || 0;
+    const altura = parseFloat(document.getElementById('altura-credito').value) || 0;
+    const edad = parseInt(document.getElementById('edad-credito').value) || 0;
+
+    if (peso > 0 && altura > 0 && edad > 0) {
+        let tmb;
+        if (genero === "Hombre") {
+            tmb = (10 * peso) + (6.25 * altura) - (5 * edad) + 5;
+        } else {
+            tmb = (10 * peso) + (6.25 * altura) - (5 * edad) - 161;
+        }
+
+        // Aplicamos el factor 0.9 / 35 y redondeamos al alza (Math.ceil)
+        let resultado = Math.ceil((tmb * 0.9) / 35);
+        document.getElementById('resultado-creditos').value = resultado;
+    } else {
+        document.getElementById('resultado-creditos').value = 0;
+    }
+}
+
+// Inicializar fecha de hoy al cargar la vista
+function inicializarFecha() {
+    const inputFecha = document.getElementById('fecha-credito');
+    if(inputFecha) {
+        inputFecha.value = new Date().toISOString().split('T')[0];
+    }
+}

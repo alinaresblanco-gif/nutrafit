@@ -19,3 +19,86 @@
     </main>
 
 </div>
+<div class="contenedor-vista">
+    <header class="cabecera-seccion" style="display: flex; align-items: center; justify-content: center; position: relative; padding: 15px;">
+        <button onclick="volverInicio()" class="boton-volver" style="position: absolute; left: 15px;">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="titulo-cabecera" style="display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-credit-card" style="font-size: 1.5rem;"></i> 
+            <h1 style="margin: 0; font-size: 1.2rem; white-space: nowrap;">CALCULAR CRÉDITOS</h1>
+        </div>
+    </header>
+
+    <main class="contenido-seccion" style="padding: 20px;">
+        <div class="formulario-creditos" style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            
+            <div class="campo-grupo" style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: bold; color: #78a978; margin-bottom: 5px;">FECHA *</label>
+                <input type="date" id="fecha-credito" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+
+            <div class="campo-grupo" style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: bold; color: #78a978; margin-bottom: 5px;">GÉNERO *</label>
+                <select id="genero-credito" onchange="calcularCreditos()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <option value="Mujer" selected>MUJER</option>
+                    <option value="Hombre">HOMBRE</option>
+                </select>
+            </div>
+
+            <div class="campo-grupo" style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: bold; color: #78a978; margin-bottom: 5px;">EDAD *</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button onclick="ajustarValor('edad-credito', -1)" style="background: #78a978; color: white; border: none; border-radius: 5px; width: 40px; height: 40px; font-size: 1.5rem;">-</button>
+                    <input type="number" id="edad-credito" value="30" oninput="calcularCreditos()" style="flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <button onclick="ajustarValor('edad-credito', 1)" style="background: #78a978; color: white; border: none; border-radius: 5px; width: 40px; height: 40px; font-size: 1.5rem;">+</button>
+                </div>
+            </div>
+
+            <div class="campo-grupo" style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: bold; color: #78a978; margin-bottom: 5px;">PESO (kg) *</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button onclick="ajustarValor('peso-credito', -0.5)" style="background: #78a978; color: white; border: none; border-radius: 5px; width: 40px; height: 40px; font-size: 1.5rem;">-</button>
+                    <input type="number" id="peso-credito" value="70.00" step="0.01" oninput="calcularCreditos()" style="flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <button onclick="ajustarValor('peso-credito', 0.5)" style="background: #78a978; color: white; border: none; border-radius: 5px; width: 40px; height: 40px; font-size: 1.5rem;">+</button>
+                </div>
+            </div>
+
+            <div class="campo-grupo" style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: bold; color: #78a978; margin-bottom: 5px;">ALTURA (cm) *</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button onclick="ajustarValor('altura-credito', -1)" style="background: #78a978; color: white; border: none; border-radius: 5px; width: 40px; height: 40px; font-size: 1.5rem;">-</button>
+                    <input type="number" id="altura-credito" value="165" oninput="calcularCreditos()" style="flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <button onclick="ajustarValor('altura-credito', 1)" style="background: #78a978; color: white; border: none; border-radius: 5px; width: 40px; height: 40px; font-size: 1.5rem;">+</button>
+                </div>
+            </div>
+
+            <div class="campo-grupo" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; color: #78a978; margin-bottom: 5px;">CRÉDITOS CALCULADOS</label>
+                <input type="text" id="resultado-creditos" value="0" readonly style="width: 100%; padding: 15px; border: 2px solid #78a978; border-radius: 8px; background: #f9f9f9; text-align: center; font-size: 1.5rem; font-weight: bold; color: #333;">
+            </div>
+
+            <button onclick="guardarCreditos()" style="width: 100%; background: #78a978; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;">
+                <i class="fas fa-save"></i> GUARDAR EN HISTORIAL
+            </button>
+        </div>
+
+        <div class="seccion-historico" style="margin-top: 30px;">
+            <h3 style="color: #78a978;"><i class="fas fa-history"></i> Historial Créditos</h3>
+            <div style="background: white; border-radius: 10px; overflow: hidden; border: 1px solid #78a978;">
+                <table style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #78a978; color: white; font-size: 0.8rem;">
+                            <th style="padding: 10px; border: 1px solid #a5cba5; color: black;">FECHA</th>
+                            <th style="padding: 10px; border: 1px solid #a5cba5; color: black;">CRÉDITOS</th>
+                            <th style="padding: 10px; border: 1px solid #a5cba5; color: black;">GÉNERO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-creditos-body" style="text-align: center; font-size: 0.9rem; color: #000; font-weight: 500;">
+                        <tr><td colspan="3" style="padding: 15px;">Sin registros</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
