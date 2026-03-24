@@ -22,7 +22,6 @@ async function abrirVista(nombreVista) {
         pantallaInicio.style.display = 'none';
         contenedorVistas.style.display = 'block';
 
-        // Lógica específica según la vista
         if (nombreVista === 'agua') {
             inicializarAgua();
             cargarHistorico();
@@ -198,23 +197,18 @@ function inicializarPeso() {
     cargarHistorialPeso();
 }
 
-// FUNCIÓN PARA QUE FUNCIONEN LOS BOTONES + Y - EN LA VISTA DE PESO
 function ajustarPeso(valor) {
     const input = document.getElementById('input-peso');
     if (!input) return;
     let actual = parseFloat(input.value) || 70; 
     let nuevoPeso = (actual + valor).toFixed(1);
     input.value = nuevoPeso;
-    
-    // Actualizamos el IMC en tiempo real al tocar botones
     calcularIMC(nuevoPeso);
 }
 
-// NUEVA FUNCIÓN: CALCULAR IMC
 function calcularIMC(peso) {
-    // Intentamos obtener la altura de la calculadora de créditos (si existe)
     const inputAltura = document.getElementById('altura-credito');
-    let altura = inputAltura ? parseFloat(inputAltura.value) / 100 : 1.70; // 1.70m por defecto
+    let altura = inputAltura ? parseFloat(inputAltura.value) / 100 : 1.70; 
 
     if (altura > 0) {
         const imc = (peso / (altura * altura)).toFixed(1);
@@ -222,7 +216,6 @@ function calcularIMC(peso) {
     }
 }
 
-// NUEVA FUNCIÓN: ACTUALIZAR INTERFAZ IMC
 function actualizarInterfazIMC(imc) {
     const contenedor = document.getElementById('contenedor-imc');
     const valorElem = document.getElementById('valor-imc');
@@ -265,22 +258,6 @@ async function guardarPeso() {
 
     try {
         await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        
-        const msgDiv = document.getElementById('mensaje-motivador');
-        if (msgDiv) {
-            msgDiv.style.display = "block";
-            if (diferencia < 0) {
-                msgDiv.innerHTML = "¡¡Genial, lo estás consiguiendo, todo esfuerzo tiene su recompensa!!";
-                msgDiv.style.color = "#155724";
-            } else if (diferencia > 0) {
-                msgDiv.innerHTML = "¡Vamos, tú puedes. El próximo día mejor, ya verás. Ánimo!";
-                msgDiv.style.color = "#856404";
-            } else {
-                msgDiv.innerHTML = "¡Te mantienes estable! Sigue así.";
-                msgDiv.style.color = "#004085";
-            }
-        }
-
         alert("Peso guardado correctamente");
         setTimeout(cargarHistorialPeso, 2000);
     } catch (e) { alert("Error al guardar"); }
@@ -311,7 +288,6 @@ async function cargarHistorialPeso() {
             </tr>`;
         }).join('');
 
-        // Al cargar el historial, calculamos el IMC con el peso más reciente
         calcularIMC(datos[0][1]);
         renderizarGrafico([...datos].reverse());
     } catch (e) { console.error("Error cargando peso", e); }
@@ -344,4 +320,78 @@ function renderizarGrafico(datos) {
             scales: { y: { beginAtZero: false } }
         }
     });
+}
+
+/* --- FUNCIÓN MEJORADA: GENERAR PDF CON TABLA DE HISTORIAL --- */
+async function generarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const fechaActual = new Date().toLocaleDateString('es-ES');
+
+    // 1. Cabecera
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor(120, 169, 120); 
+    doc.text("INFORME DE PROGRESO NUTRAFIT", 20, 20);
+
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generado el: ${fechaActual}`, 20, 28);
+    doc.line(20, 32, 190, 32); 
+
+    // 2. Resumen IMC
+    const valorIMC = document.getElementById('valor-imc')?.innerText || "--";
+    const estadoIMC = document.getElementById('estado-imc')?.innerText || "--";
+    doc.setFontSize(14);
+    doc.setTextColor(0);
+    doc.text("Estado Actual", 20, 45);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(`IMC: ${valorIMC} - Clasificación: ${estadoIMC}`, 25, 52);
+
+    // 3. Gráfica
+    const canvas = document.getElementById('graficoPeso');
+    if (canvas) {
+        const imgData = canvas.toDataURL("image/png");
+        doc.setFont("helvetica", "bold");
+        doc.text("Gráfica de Evolución", 20, 65);
+        doc.addImage(imgData, 'PNG', 15, 70, 180, 80);
+    }
+
+    // 4. Tabla de los últimos 5 registros
+    doc.setFont("helvetica", "bold");
+    doc.text("Últimos 5 registros detallados", 20, 165);
+    
+    // Encabezados de tabla manual
+    doc.setFontSize(10);
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, 170, 170, 8, 'F');
+    doc.text("FECHA", 25, 175);
+    doc.text("PESO (KG)", 85, 175);
+    doc.text("DIFERENCIA", 145, 175);
+
+    const filas = document.querySelectorAll('#tabla-peso-body tr');
+    let yPos = 183;
+    
+    // Solo tomamos los primeros 5 o el total que haya si es menor a 5
+    const limite = Math.min(filas.length, 5);
+
+    doc.setFont("helvetica", "normal");
+    for(let i = 0; i < limite; i++) {
+        const celdas = filas[i].querySelectorAll('td');
+        if(celdas.length >= 3) {
+            doc.text(celdas[0].innerText, 25, yPos);
+            doc.text(celdas[1].innerText, 85, yPos);
+            doc.text(celdas[2].innerText, 145, yPos);
+            doc.line(20, yPos + 2, 190, yPos + 2); // Línea sutil entre filas
+            yPos += 8;
+        }
+    }
+
+    // Pie de página
+    doc.setFontSize(9);
+    doc.setTextColor(150);
+    doc.text("Nutrafit App - Tu salud en buenas manos", 105, 285, null, null, "center");
+
+    doc.save(`Nutrafit_Historial_${fechaActual}.pdf`);
 }
