@@ -1,7 +1,7 @@
 /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyyaClKfB7FOJPvT5gfL4GZ7OExC4Q0Lr4ag_CHNCIZYgVm_UZi6207vyBqTRN2NzHc/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbynylHg3C7ATOgUoPVQeHliIeCXGE2DyNI2IYaGentji85ZvcHAX9-HuJnWcCZP1VO1/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -39,6 +39,9 @@ async function abrirVista(nombreVista) {
         console.error("Error al abrir la vista:", error);
         alert("No se pudo cargar la sección.");
     }
+    if (nombreVista === 'evolucion-peso') {
+    setTimeout(inicializarPeso, 100);
+}
 }
 
 function volverInicio() {
@@ -262,4 +265,101 @@ async function cargarHistorialCreditos() {
     } catch (e) {
         console.log("Error cargando historial de créditos", e);
     }
+}
+/* --- 5. LÓGICA DE EVOLUCIÓN DE PESO --- */
+let graficoPesoInstancia = null;
+
+function inicializarPeso() {
+    const inputFecha = document.getElementById('fecha-peso');
+    if(inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
+    cargarHistorialPeso();
+}
+
+async function guardarPeso() {
+    const pesoActual = parseFloat(document.getElementById('input-peso').value);
+    const fecha = document.getElementById('fecha-peso').value;
+    
+    // Obtenemos el último peso para calcular la diferencia
+    const tabla = document.getElementById('tabla-peso-body');
+    const ultimoPeso = tabla.rows.length > 0 && !isNaN(parseFloat(tabla.rows[0].cells[1].innerText)) 
+                       ? parseFloat(tabla.rows[0].cells[1].innerText) : pesoActual;
+
+    const diferencia = (pesoActual - ultimoPeso).toFixed(2);
+    
+    const datos = {
+        tipo: "peso",
+        fecha: fecha,
+        peso: pesoActual,
+        diferencia: diferencia
+    };
+
+    try {
+        await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
+        
+        // Mensaje Motivador local instantáneo
+        const msgDiv = document.getElementById('mensaje-motivador');
+        if (diferencia < 0) {
+            msgDiv.innerHTML = "¡¡Genial, lo estás consiguiendo, todo esfuerzo tiene su recompensa!!";
+            msgDiv.style.backgroundColor = "#d4edda"; msgDiv.style.color = "#155724";
+        } else if (diferencia > 0) {
+            msgDiv.innerHTML = "¡Vamos, tu puedes. El próximo día mejor, ya verás. Ánimo!";
+            msgDiv.style.backgroundColor = "#fff3cd"; msgDiv.style.color = "#856404";
+        }
+
+        alert("Peso guardado correctamente");
+        setTimeout(cargarHistorialPeso, 2000);
+    } catch (e) { alert("Error al guardar"); }
+}
+
+async function cargarHistorialPeso() {
+    try {
+        const res = await fetch(URL_GOOGLE_SCRIPT + "?tabla=peso&t=" + new Date().getTime());
+        const datos = await res.json();
+        const cuerpo = document.getElementById('tabla-peso-body');
+        if(!cuerpo) return;
+
+        // Invertimos para el gráfico (orden cronológico) y normal para la tabla (descendente)
+        const datosGrafico = [...datos].reverse();
+        
+        cuerpo.innerHTML = datos.map(fila => {
+            const dif = parseFloat(fila[2]);
+            const colorDif = dif < 0 ? "color: green;" : (dif > 0 ? "color: red;" : "");
+            const icono = dif < 0 ? "↓" : (dif > 0 ? "↑" : "");
+            
+            return `<tr>
+                <td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td>
+                <td>${fila[1]} kg</td>
+                <td style="${colorDif} font-weight:bold;">${icono} ${Math.abs(dif).toFixed(2)}</td>
+            </tr>`;
+        }).join('');
+
+        renderizarGrafico(datosGrafico);
+    } catch (e) { console.log("Error cargando peso", e); }
+}
+
+function renderizarGrafico(datos) {
+    const ctx = document.getElementById('graficoPeso');
+    if (!ctx) return;
+
+    if (graficoPesoInstancia) graficoPesoInstancia.destroy();
+
+    graficoPesoInstancia = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: datos.map(f => new Date(f[0]).toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit'})),
+            datasets: [{
+                label: 'Peso (kg)',
+                data: datos.map(f => f[1]),
+                borderColor: '#78a978',
+                backgroundColor: 'rgba(120, 169, 120, 0.2)',
+                borderWidth: 3,
+                tension: 0.3,
+                fill: true,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#78a978',
+                pointRadius: 5
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
 }

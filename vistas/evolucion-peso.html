@@ -1,13 +1,54 @@
 <div class="contenedor-vista">
-    <header class="cabecera-seccion" style="display: flex; align-items: center; justify-content: center; position: relative; padding: 15px;">
-        <button onclick="volverInicio()" class="boton-volver" style="position: absolute; left: 15px;"><i class="fas fa-chevron-left"></i></button>
-        <div class="titulo-cabecera" style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-chart-line" style="font-size: 1.5rem;"></i> 
-            <h1 style="margin: 0; font-size: 1.2rem; white-space: nowrap;">MI EVOLUCIÓN DE PESO</h1>
+    <header class="cabecera-seccion">
+        <button onclick="volverInicio()" class="boton-volver"><i class="fas fa-chevron-left"></i></button>
+        <div class="titulo-cabecera">
+            <i class="fas fa-weight"></i>
+            <h1>EVOLUCIÓN DE MI PESO</h1>
         </div>
     </header>
-    <main class="contenido-seccion" style="text-align: center; padding-top: 50px; color: #666;">
-        <i class="fas fa-weight" style="font-size: 3rem; color: #78a978; margin-bottom: 15px;"></i>
-        <p>Gráficas y registros de peso en construcción...</p>
+
+    <main class="contenido-seccion">
+        <div class="tarjeta-progreso" style="padding: 10px;">
+            <canvas id="graficoPeso" style="width: 100%; max-height: 250px;"></canvas>
+        </div>
+
+        <div id="mensaje-motivador" style="text-align: center; margin-bottom: 20px; font-weight: bold; padding: 10px; border-radius: 10px;">
+            ¡Hola! Registra tu peso de hoy.
+        </div>
+
+        <div class="tarjeta-progreso">
+            <div style="margin-bottom: 15px; text-align: left;">
+                <label style="color: #78a978; font-weight: bold; display: block; margin-bottom: 5px;">FECHA *</label>
+                <input type="date" id="fecha-peso" style="width: 100%; padding: 10px; border: 1px solid #d0e1d0; border-radius: 8px;">
+            </div>
+
+            <div style="margin-bottom: 15px; text-align: left;">
+                <label style="color: #78a978; font-weight: bold; display: block; margin-bottom: 5px;">PESO (kg) *</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button type="button" onclick="ajustarValor('input-peso', -0.1)" class="boton-vaso" style="flex: 1; height: 45px;">-</button>
+                    <input type="number" id="input-peso" value="70.0" step="0.1" style="flex: 2; text-align: center; padding: 10px; border: 1px solid #d0e1d0; border-radius: 8px; font-size: 1.2rem; font-weight: bold;">
+                    <button type="button" onclick="ajustarValor('input-peso', 0.1)" class="boton-vaso" style="flex: 1; height: 45px;">+</button>
+                </div>
+            </div>
+
+            <button onclick="guardarPeso()" class="menu button" style="justify-content: center; padding-left: 0; background-color: #78a978; width: 100%;">
+                <i class="fas fa-save"></i> GUARDAR PESO
+            </button>
+        </div>
+
+        <div class="seccion-historico">
+            <h3><i class="fas fa-history"></i> HISTORIAL DE PESO</h3>
+            <table class="tabla-nutrafit">
+                <thead>
+                    <tr>
+                        <th>FECHA</th>
+                        <th>PESO</th>
+                        <th>DIF.</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-peso-body">
+                    </tbody>
+            </table>
+        </div>
     </main>
 </div>
