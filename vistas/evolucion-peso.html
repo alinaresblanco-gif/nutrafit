@@ -13,6 +13,14 @@
             <canvas id="graficoPeso"></canvas>
         </div>
 
+        <div id="contenedor-imc" style="background: white; margin: 15px 0; padding: 15px; border-radius: 15px; border: 2px solid #78a978; text-align: center; display: none;">
+            <p style="margin: 0; color: #666; font-size: 0.9rem; font-weight: bold;">TU IMC ACTUAL</p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 5px;">
+                <span id="valor-imc" style="font-size: 2rem; font-weight: bold; color: #78a978;">--</span>
+                <span id="estado-imc" style="padding: 5px 12px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.8rem; background: #ccc;">Cargando...</span>
+            </div>
+        </div>
+
         <div id="mensaje-motivador" style="text-align: center; margin: 15px 0; font-weight: bold; padding: 12px; border-radius: 10px; border: 1px dashed #78a978; color: #78a978;">
             Registra tu peso para ver tu progreso
         </div>
@@ -58,7 +66,7 @@
                     </tr>
                 </thead>
                 <tbody id="tabla-peso-body">
-                    </tbody>
+                </tbody>
             </table>
         </div>
     </main>

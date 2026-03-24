@@ -36,7 +36,6 @@ async function abrirVista(nombreVista) {
             }, 100);
         }
 
-        // LÓGICA DE PESO (CORREGIDA DENTRO DE ABRIR VISTA)
         if (nombreVista === 'evolucion-peso') {
             setTimeout(inicializarPeso, 100);
         }
@@ -191,7 +190,7 @@ async function cargarHistorialCreditos() {
     } catch (e) { console.log("Error créditos", e); }
 }
 
-/* --- 4. LÓGICA DE EVOLUCIÓN DE PESO (SANEADA) --- */
+/* --- 4. LÓGICA DE EVOLUCIÓN DE PESO E IMC --- */
 
 function inicializarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
@@ -203,8 +202,47 @@ function inicializarPeso() {
 function ajustarPeso(valor) {
     const input = document.getElementById('input-peso');
     if (!input) return;
-    let actual = parseFloat(input.value) || 70; // 70 por defecto si está vacío
-    input.value = (actual + valor).toFixed(1);
+    let actual = parseFloat(input.value) || 70; 
+    let nuevoPeso = (actual + valor).toFixed(1);
+    input.value = nuevoPeso;
+    
+    // Actualizamos el IMC en tiempo real al tocar botones
+    calcularIMC(nuevoPeso);
+}
+
+// NUEVA FUNCIÓN: CALCULAR IMC
+function calcularIMC(peso) {
+    // Intentamos obtener la altura de la calculadora de créditos (si existe)
+    const inputAltura = document.getElementById('altura-credito');
+    let altura = inputAltura ? parseFloat(inputAltura.value) / 100 : 1.70; // 1.70m por defecto
+
+    if (altura > 0) {
+        const imc = (peso / (altura * altura)).toFixed(1);
+        actualizarInterfazIMC(imc);
+    }
+}
+
+// NUEVA FUNCIÓN: ACTUALIZAR INTERFAZ IMC
+function actualizarInterfazIMC(imc) {
+    const contenedor = document.getElementById('contenedor-imc');
+    const valorElem = document.getElementById('valor-imc');
+    const estadoElem = document.getElementById('estado-imc');
+    
+    if (!contenedor || !valorElem || !estadoElem) return;
+
+    contenedor.style.display = "block";
+    valorElem.innerText = imc;
+
+    let color = "#ccc";
+    let texto = "";
+
+    if (imc < 18.5) { texto = "Bajo Peso"; color = "#3498db"; }
+    else if (imc < 25) { texto = "Normal"; color = "#2ecc71"; }
+    else if (imc < 30) { texto = "Sobrepeso"; color = "#f1c40f"; }
+    else { texto = "Obesidad"; color = "#e74c3c"; }
+
+    estadoElem.innerText = texto.toUpperCase();
+    estadoElem.style.background = color;
 }
 
 async function guardarPeso() {
@@ -218,7 +256,6 @@ async function guardarPeso() {
     const tabla = document.getElementById('tabla-peso-body');
     let ultimoPeso = pesoActual;
     
-    // Si hay datos en la tabla, pillamos el primero (el más reciente)
     if (tabla && tabla.rows.length > 0 && !tabla.rows[0].innerText.includes("registros")) {
         ultimoPeso = parseFloat(tabla.rows[0].cells[1].innerText);
     }
@@ -274,6 +311,8 @@ async function cargarHistorialPeso() {
             </tr>`;
         }).join('');
 
+        // Al cargar el historial, calculamos el IMC con el peso más reciente
+        calcularIMC(datos[0][1]);
         renderizarGrafico([...datos].reverse());
     } catch (e) { console.error("Error cargando peso", e); }
 }
