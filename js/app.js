@@ -1,7 +1,7 @@
 /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyKeToe21yshYN6KNyFeZLSuKaaVlpDfbOCcu_msX4QP_fUvby7lbY_pPSYHEirABgv/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzVxxi3TfA9Iuv-sr3vjqhe3ERUOKj9mK9rGWuLEqRSw_KBb8A6u6TS84ixNiNcXW78/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -21,9 +21,18 @@ async function abrirVista(nombreVista) {
         pantallaInicio.style.display = 'none';
         contenedorVistas.style.display = 'block';
 
+        // Lógica específica según la vista
         if (nombreVista === 'agua') {
             inicializarAgua();
             cargarHistorico();
+        }
+
+        if (nombreVista === 'creditos-diarios') {
+            setTimeout(() => {
+                inicializarFecha(); // Pone fecha de hoy
+                calcularCreditos(); // Cálculo inicial
+                cargarHistorialCreditos(); // Carga tabla de Excel
+            }, 100);
         }
 
     } catch (error) {
@@ -77,7 +86,7 @@ function actualizarInterfazAgua() {
     });
 }
 
-/* --- 3. CONEXIÓN CON GOOGLE SHEETS (HISTORIAL) --- */
+/* --- 3. CONEXIÓN CON GOOGLE SHEETS (AGUA) --- */
 async function reiniciarAgua() {
     if (vasosActuales === 0) {
         alert("¡Marca al menos un vaso!");
@@ -86,14 +95,12 @@ async function reiniciarAgua() {
 
     if (confirm("¿Guardar y reiniciar?")) {
         try {
-            // Enviamos como texto plano para evitar bloqueos de CORS en el envío
             await fetch(URL_GOOGLE_SCRIPT, {
                 method: "POST",
                 mode: "no-cors", 
-                body: JSON.stringify({ vasos: vasosActuales })
+                body: JSON.stringify({ tipo: "agua", vasos: vasosActuales })
             });
 
-            // Si llegamos aquí, asumimos éxito (no-cors no permite leer la respuesta, pero el dato llega)
             alert("¡Datos enviados con éxito!");
             
             vasosActuales = 0;
@@ -113,7 +120,6 @@ async function cargarHistorico() {
     if (!contenedor) return;
 
     try {
-        // Añadimos el timestamp para evitar que el navegador guarde datos viejos
         const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?t=" + new Date().getTime());
         const filas = await respuesta.json();
 
@@ -126,63 +132,50 @@ async function cargarHistorico() {
 
         filas.forEach(fila => {
             let tr = document.createElement('tr');
-            
-            // 1. Formateo de fecha (de ISO a DD/MM/AAAA)
             let fechaFormateada = fila[0];
-            try {
-                let fechaObj = new Date(fila[0]);
-                fechaFormateada = fechaObj.toLocaleDateString('es-ES', {
-                    day: '2-digit', 
-                    month: '2-digit', 
-                    year: 'numeric'
-                });
-            } catch (e) {
-                console.error("Error al formatear fecha:", e);
-            }
-
-            // 2. Color del estado (Verde si está completado, Naranja si está pendiente)
             const colorEstado = fila[2] === "COMPLETADO" ? "#2ecc71" : "#e67e22";
             
-            // 3. Insertamos las celdas limpias para que el CSS de .tabla-nutrafit las decore
             tr.innerHTML = `
                 <td>${fechaFormateada}</td>
                 <td>${fila[1]}</td>
-                <td style="color:${colorEstado}; font-weight:bold;">
-                    ${fila[2]}
-                </td>
+                <td style="color:${colorEstado}; font-weight:bold;">${fila[2]}</td>
             `;
             contenedor.appendChild(tr);
         });
 
     } catch (error) {
         console.error("Fallo al cargar historial:", error);
-        contenedor.innerHTML = "<tr><td colspan='3' style='padding:20px; color:red;'>Error de conexión al cargar datos</td></tr>";
     }
 }
-// Función para los botones de + y -
+
+/* --- 4. LÓGICA DE CALCULADORA DE CRÉDITOS --- */
+
 function ajustarValor(id, incremento) {
     const input = document.getElementById(id);
+    if (!input) return;
     let valorActual = parseFloat(input.value) || 0;
     input.value = (valorActual + incremento).toFixed(id === 'peso-credito' ? 2 : 0);
-    calcularCreditos(); // Recalcular automáticamente
+    calcularCreditos();
 }
 
-// La fórmula de AppSheet adaptada
 function calcularCreditos() {
-    const genero = document.getElementById('genero-credito').value;
-    const peso = parseFloat(document.getElementById('peso-credito').value) || 0;
-    const altura = parseFloat(document.getElementById('altura-credito').value) || 0;
-    const edad = parseInt(document.getElementById('edad-credito').value) || 0;
+    const genElem = document.getElementById('genero-credito');
+    const pesoElem = document.getElementById('peso-credito');
+    const altElem = document.getElementById('altura-credito');
+    const edadElem = document.getElementById('edad-credito');
+
+    if (!genElem || !pesoElem || !altElem || !edadElem) return;
+
+    const genero = genElem.value;
+    const peso = parseFloat(pesoElem.value) || 0;
+    const altura = parseFloat(altElem.value) || 0;
+    const edad = parseInt(edadElem.value) || 0;
 
     if (peso > 0 && altura > 0 && edad > 0) {
-        let tmb;
-        if (genero === "Hombre") {
-            tmb = (10 * peso) + (6.25 * altura) - (5 * edad) + 5;
-        } else {
-            tmb = (10 * peso) + (6.25 * altura) - (5 * edad) - 161;
-        }
+        let tmb = (genero === "Hombre") 
+            ? (10 * peso) + (6.25 * altura) - (5 * edad) + 5
+            : (10 * peso) + (6.25 * altura) - (5 * edad) - 161;
 
-        // Aplicamos el factor 0.9 / 35 y redondeamos al alza (Math.ceil)
         let resultado = Math.ceil((tmb * 0.9) / 35);
         document.getElementById('resultado-creditos').value = resultado;
     } else {
@@ -190,10 +183,67 @@ function calcularCreditos() {
     }
 }
 
-// Inicializar fecha de hoy al cargar la vista
 function inicializarFecha() {
     const inputFecha = document.getElementById('fecha-credito');
     if(inputFecha) {
         inputFecha.value = new Date().toISOString().split('T')[0];
+    }
+}
+
+async function guardarCreditos() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+    const datos = {
+        tipo: "creditos",
+        fecha: document.getElementById('fecha-credito').value,
+        genero: document.getElementById('genero-credito').value,
+        edad: document.getElementById('edad-credito').value,
+        peso: document.getElementById('peso-credito').value,
+        altura: document.getElementById('altura-credito').value,
+        resultado: document.getElementById('resultado-creditos').value
+    };
+
+    try {
+        await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(datos)
+        });
+        
+        alert("¡Petición enviada! Los créditos aparecerán en el historial en unos segundos.");
+        setTimeout(cargarHistorialCreditos, 2000);
+        
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error al conectar con la base de datos");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> GUARDAR EN HISTORIAL';
+    }
+}
+
+async function cargarHistorialCreditos() {
+    const cuerpoTabla = document.getElementById('tabla-creditos-body');
+    if (!cuerpoTabla) return;
+
+    try {
+        const response = await fetch(URL_GOOGLE_SCRIPT + "?tabla=creditos&t=" + new Date().getTime());
+        const datos = await response.json();
+        
+        if (datos && datos.length > 0) {
+            cuerpoTabla.innerHTML = datos.map(fila => `
+                <tr>
+                    <td style="padding:10px; border:1px solid #eee;">${fila[0]}</td>
+                    <td style="padding:10px; border:1px solid #eee;">${fila[5]}</td>
+                    <td style="padding:10px; border:1px solid #eee;">${fila[1]}</td>
+                </tr>
+            `).join('');
+        } else {
+            cuerpoTabla.innerHTML = "<tr><td colspan='3' style='padding:15px;'>Sin registros</td></tr>";
+        }
+    } catch (e) {
+        console.log("Error cargando historial de créditos", e);
     }
 }
