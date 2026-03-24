@@ -1,7 +1,7 @@
 /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzVxxi3TfA9Iuv-sr3vjqhe3ERUOKj9mK9rGWuLEqRSw_KBb8A6u6TS84ixNiNcXW78/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxz_-BECkFwPxTkVRie8ICyJ5obZAHfYzllC0ACIKarucxNSZRCthPI8IfQhpSJ3lx7/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
