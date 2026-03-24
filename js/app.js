@@ -132,7 +132,14 @@ async function cargarHistorico() {
 
         filas.forEach(fila => {
             let tr = document.createElement('tr');
-            let fechaFormateada = fila[0];
+            
+            // FORMATEO DE FECHA (DD/MM/AAAA)
+            let fechaFormateada = "---";
+            if (fila[0]) {
+                const f = new Date(fila[0]);
+                fechaFormateada = !isNaN(f) ? f.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'}) : fila[0];
+            }
+
             const colorEstado = fila[2] === "COMPLETADO" ? "#2ecc71" : "#e67e22";
             
             tr.innerHTML = `
@@ -233,13 +240,22 @@ async function cargarHistorialCreditos() {
         const datos = await response.json();
         
         if (datos && datos.length > 0) {
-            cuerpoTabla.innerHTML = datos.map(fila => `
-                <tr>
-                    <td style="padding:10px; border:1px solid #eee;">${fila[0]}</td>
-                    <td style="padding:10px; border:1px solid #eee;">${fila[5]}</td>
-                    <td style="padding:10px; border:1px solid #eee;">${fila[1]}</td>
-                </tr>
-            `).join('');
+            cuerpoTabla.innerHTML = datos.map(fila => {
+                // FORMATEO DE FECHA (DD/MM/AAAA)
+                let fechaFormateada = "---";
+                if (fila[0]) {
+                    const f = new Date(fila[0]);
+                    fechaFormateada = !isNaN(f) ? f.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'}) : fila[0];
+                }
+
+                return `
+                    <tr>
+                        <td style="padding:10px; border:1px solid #eee;">${fechaFormateada}</td>
+                        <td style="padding:10px; border:1px solid #eee;">${fila[5]}</td>
+                        <td style="padding:10px; border:1px solid #eee;">${fila[1]}</td>
+                    </tr>
+                `;
+            }).join('');
         } else {
             cuerpoTabla.innerHTML = "<tr><td colspan='3' style='padding:15px;'>Sin registros</td></tr>";
         }
