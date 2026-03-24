@@ -1,11 +1,12 @@
 /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbynylHg3C7ATOgUoPVQeHliIeCXGE2DyNI2IYaGentji85ZvcHAX9-HuJnWcCZP1VO1/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzFF2CRYNxpXB7dItBz8423VCDnzNf09OvRN4JcgCNK0iwbTl3RFAqRtYmvyHipccBy/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
 const objetivoDiario = 8;
+let graficoPesoInstancia = null;
 
 /* --- 1. NAVEGACIÓN TIPO APP (SIN RECARGAR PÁGINA) --- */
 async function abrirVista(nombreVista) {
@@ -29,19 +30,21 @@ async function abrirVista(nombreVista) {
 
         if (nombreVista === 'creditos-diarios') {
             setTimeout(() => {
-                inicializarFecha(); // Pone fecha de hoy
-                calcularCreditos(); // Cálculo inicial
-                cargarHistorialCreditos(); // Carga tabla de Excel
+                inicializarFecha(); 
+                calcularCreditos(); 
+                cargarHistorialCreditos(); 
             }, 100);
+        }
+
+        // LÓGICA DE PESO (CORREGIDA DENTRO DE ABRIR VISTA)
+        if (nombreVista === 'evolucion-peso') {
+            setTimeout(inicializarPeso, 100);
         }
 
     } catch (error) {
         console.error("Error al abrir la vista:", error);
         alert("No se pudo cargar la sección.");
     }
-    if (nombreVista === 'evolucion-peso') {
-    setTimeout(inicializarPeso, 100);
-}
 }
 
 function volverInicio() {
@@ -89,7 +92,6 @@ function actualizarInterfazAgua() {
     });
 }
 
-/* --- 3. CONEXIÓN CON GOOGLE SHEETS (AGUA) --- */
 async function reiniciarAgua() {
     if (vasosActuales === 0) {
         alert("¡Marca al menos un vaso!");
@@ -105,11 +107,9 @@ async function reiniciarAgua() {
             });
 
             alert("¡Datos enviados con éxito!");
-            
             vasosActuales = 0;
             localStorage.setItem('agua_nutrafit', 0);
             actualizarInterfazAgua();
-            
             setTimeout(cargarHistorico, 2000); 
 
         } catch (error) {
@@ -125,46 +125,31 @@ async function cargarHistorico() {
     try {
         const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?t=" + new Date().getTime());
         const filas = await respuesta.json();
-
         contenedor.innerHTML = ""; 
 
         if (!filas || filas.length === 0) {
-            contenedor.innerHTML = "<tr><td colspan='3' style='padding:20px;'>Aún no hay registros en el historial</td></tr>";
+            contenedor.innerHTML = "<tr><td colspan='3' style='padding:20px;'>Aún no hay registros</td></tr>";
             return;
         }
 
         filas.forEach(fila => {
             let tr = document.createElement('tr');
-            
-            // FORMATEO DE FECHA (DD/MM/AAAA)
-            let fechaFormateada = "---";
-            if (fila[0]) {
-                const f = new Date(fila[0]);
-                fechaFormateada = !isNaN(f) ? f.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'}) : fila[0];
-            }
-
+            let f = new Date(fila[0]);
+            let fechaF = !isNaN(f) ? f.toLocaleDateString('es-ES') : "---";
             const colorEstado = fila[2] === "COMPLETADO" ? "#2ecc71" : "#e67e22";
             
-            tr.innerHTML = `
-                <td>${fechaFormateada}</td>
-                <td>${fila[1]}</td>
-                <td style="color:${colorEstado}; font-weight:bold;">${fila[2]}</td>
-            `;
+            tr.innerHTML = `<td>${fechaF}</td><td>${fila[1]}</td><td style="color:${colorEstado}; font-weight:bold;">${fila[2]}</td>`;
             contenedor.appendChild(tr);
         });
-
-    } catch (error) {
-        console.error("Fallo al cargar historial:", error);
-    }
+    } catch (error) { console.error("Error historial agua", error); }
 }
 
-/* --- 4. LÓGICA DE CALCULADORA DE CRÉDITOS --- */
-
+/* --- 3. LÓGICA DE CRÉDITOS --- */
 function ajustarValor(id, incremento) {
     const input = document.getElementById(id);
     if (!input) return;
     let valorActual = parseFloat(input.value) || 0;
-    input.value = (valorActual + incremento).toFixed(id === 'peso-credito' ? 2 : 0);
+    input.value = (valorActual + incremento).toFixed(id === 'peso-credito' ? 1 : 0);
     calcularCreditos();
 }
 
@@ -173,8 +158,9 @@ function calcularCreditos() {
     const pesoElem = document.getElementById('peso-credito');
     const altElem = document.getElementById('altura-credito');
     const edadElem = document.getElementById('edad-credito');
+    const resElem = document.getElementById('resultado-creditos');
 
-    if (!genElem || !pesoElem || !altElem || !edadElem) return;
+    if (!genElem || !pesoElem || !altElem || !edadElem || !resElem) return;
 
     const genero = genElem.value;
     const peso = parseFloat(pesoElem.value) || 0;
@@ -186,88 +172,26 @@ function calcularCreditos() {
             ? (10 * peso) + (6.25 * altura) - (5 * edad) + 5
             : (10 * peso) + (6.25 * altura) - (5 * edad) - 161;
 
-        let resultado = Math.ceil((tmb * 0.9) / 35);
-        document.getElementById('resultado-creditos').value = resultado;
-    } else {
-        document.getElementById('resultado-creditos').value = 0;
+        resElem.value = Math.ceil((tmb * 0.9) / 35);
     }
 }
 
 function inicializarFecha() {
-    const inputFecha = document.getElementById('fecha-credito');
-    if(inputFecha) {
-        inputFecha.value = new Date().toISOString().split('T')[0];
-    }
-}
-
-async function guardarCreditos() {
-    const btn = event.target;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-
-    const datos = {
-        tipo: "creditos",
-        fecha: document.getElementById('fecha-credito').value,
-        genero: document.getElementById('genero-credito').value,
-        edad: document.getElementById('edad-credito').value,
-        peso: document.getElementById('peso-credito').value,
-        altura: document.getElementById('altura-credito').value,
-        resultado: document.getElementById('resultado-creditos').value
-    };
-
-    try {
-        await fetch(URL_GOOGLE_SCRIPT, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(datos)
-        });
-        
-        alert("¡Petición enviada! Los créditos aparecerán en el historial en unos segundos.");
-        setTimeout(cargarHistorialCreditos, 2000);
-        
-    } catch (error) {
-        console.error("Error:", error);
-        alert("Error al conectar con la base de datos");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> GUARDAR EN HISTORIAL';
-    }
+    const f = document.getElementById('fecha-credito');
+    if(f) f.value = new Date().toISOString().split('T')[0];
 }
 
 async function cargarHistorialCreditos() {
     const cuerpoTabla = document.getElementById('tabla-creditos-body');
     if (!cuerpoTabla) return;
-
     try {
         const response = await fetch(URL_GOOGLE_SCRIPT + "?tabla=creditos&t=" + new Date().getTime());
         const datos = await response.json();
-        
-        if (datos && datos.length > 0) {
-            cuerpoTabla.innerHTML = datos.map(fila => {
-                // FORMATEO DE FECHA (DD/MM/AAAA)
-                let fechaFormateada = "---";
-                if (fila[0]) {
-                    const f = new Date(fila[0]);
-                    fechaFormateada = !isNaN(f) ? f.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'}) : fila[0];
-                }
-
-                return `
-                    <tr>
-                        <td style="padding:10px; border:1px solid #eee;">${fechaFormateada}</td>
-                        <td style="padding:10px; border:1px solid #eee;">${fila[5]}</td>
-                        <td style="padding:10px; border:1px solid #eee;">${fila[1]}</td>
-                    </tr>
-                `;
-            }).join('');
-        } else {
-            cuerpoTabla.innerHTML = "<tr><td colspan='3' style='padding:15px;'>Sin registros</td></tr>";
-        }
-    } catch (e) {
-        console.log("Error cargando historial de créditos", e);
-    }
+        cuerpoTabla.innerHTML = datos.map(fila => `<tr><td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td><td>${fila[5]}</td><td>${fila[1]}</td></tr>`).join('');
+    } catch (e) { console.log("Error créditos", e); }
 }
-/* --- 5. LÓGICA DE EVOLUCIÓN DE PESO --- */
-let graficoPesoInstancia = null;
+
+/* --- 4. LÓGICA DE EVOLUCIÓN DE PESO (SANEADA) --- */
 
 function inicializarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
@@ -275,35 +199,49 @@ function inicializarPeso() {
     cargarHistorialPeso();
 }
 
-async function guardarPeso() {
-    const pesoActual = parseFloat(document.getElementById('input-peso').value);
-    const fecha = document.getElementById('fecha-peso').value;
-    
-    // Obtenemos el último peso para calcular la diferencia
-    const tabla = document.getElementById('tabla-peso-body');
-    const ultimoPeso = tabla.rows.length > 0 && !isNaN(parseFloat(tabla.rows[0].cells[1].innerText)) 
-                       ? parseFloat(tabla.rows[0].cells[1].innerText) : pesoActual;
+// FUNCIÓN PARA QUE FUNCIONEN LOS BOTONES + Y - EN LA VISTA DE PESO
+function ajustarPeso(valor) {
+    const input = document.getElementById('input-peso');
+    if (!input) return;
+    let actual = parseFloat(input.value) || 70; // 70 por defecto si está vacío
+    input.value = (actual + valor).toFixed(1);
+}
 
-    const diferencia = (pesoActual - ultimoPeso).toFixed(2);
+async function guardarPeso() {
+    const inputPeso = document.getElementById('input-peso');
+    const inputFecha = document.getElementById('fecha-peso');
+    if(!inputPeso || !inputPeso.value) return alert("Introduce el peso");
+
+    const pesoActual = parseFloat(inputPeso.value);
+    const fecha = inputFecha.value;
     
-    const datos = {
-        tipo: "peso",
-        fecha: fecha,
-        peso: pesoActual,
-        diferencia: diferencia
-    };
+    const tabla = document.getElementById('tabla-peso-body');
+    let ultimoPeso = pesoActual;
+    
+    // Si hay datos en la tabla, pillamos el primero (el más reciente)
+    if (tabla && tabla.rows.length > 0 && !tabla.rows[0].innerText.includes("registros")) {
+        ultimoPeso = parseFloat(tabla.rows[0].cells[1].innerText);
+    }
+
+    const diferencia = (pesoActual - ultimoPeso).toFixed(1);
+    const datos = { tipo: "peso", fecha: fecha, peso: pesoActual, diferencia: diferencia };
 
     try {
         await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
         
-        // Mensaje Motivador local instantáneo
         const msgDiv = document.getElementById('mensaje-motivador');
-        if (diferencia < 0) {
-            msgDiv.innerHTML = "¡¡Genial, lo estás consiguiendo, todo esfuerzo tiene su recompensa!!";
-            msgDiv.style.backgroundColor = "#d4edda"; msgDiv.style.color = "#155724";
-        } else if (diferencia > 0) {
-            msgDiv.innerHTML = "¡Vamos, tu puedes. El próximo día mejor, ya verás. Ánimo!";
-            msgDiv.style.backgroundColor = "#fff3cd"; msgDiv.style.color = "#856404";
+        if (msgDiv) {
+            msgDiv.style.display = "block";
+            if (diferencia < 0) {
+                msgDiv.innerHTML = "¡¡Genial, lo estás consiguiendo, todo esfuerzo tiene su recompensa!!";
+                msgDiv.style.color = "#155724";
+            } else if (diferencia > 0) {
+                msgDiv.innerHTML = "¡Vamos, tú puedes. El próximo día mejor, ya verás. Ánimo!";
+                msgDiv.style.color = "#856404";
+            } else {
+                msgDiv.innerHTML = "¡Te mantienes estable! Sigue así.";
+                msgDiv.style.color = "#004085";
+            }
         }
 
         alert("Peso guardado correctamente");
@@ -312,35 +250,37 @@ async function guardarPeso() {
 }
 
 async function cargarHistorialPeso() {
+    const cuerpo = document.getElementById('tabla-peso-body');
+    if(!cuerpo) return;
+
     try {
         const res = await fetch(URL_GOOGLE_SCRIPT + "?tabla=peso&t=" + new Date().getTime());
         const datos = await res.json();
-        const cuerpo = document.getElementById('tabla-peso-body');
-        if(!cuerpo) return;
 
-        // Invertimos para el gráfico (orden cronológico) y normal para la tabla (descendente)
-        const datosGrafico = [...datos].reverse();
-        
+        if (!datos || datos.length === 0) {
+            cuerpo.innerHTML = "<tr><td colspan='3'>Aún no hay registros</td></tr>";
+            return;
+        }
+
         cuerpo.innerHTML = datos.map(fila => {
-            const dif = parseFloat(fila[2]);
-            const colorDif = dif < 0 ? "color: green;" : (dif > 0 ? "color: red;" : "");
+            const dif = parseFloat(fila[2]) || 0;
+            const colorDif = dif < 0 ? "color: #2ecc71;" : (dif > 0 ? "color: #e74c3c;" : "");
             const icono = dif < 0 ? "↓" : (dif > 0 ? "↑" : "");
             
             return `<tr>
                 <td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td>
-                <td>${fila[1]} kg</td>
-                <td style="${colorDif} font-weight:bold;">${icono} ${Math.abs(dif).toFixed(2)}</td>
+                <td style="font-weight:bold;">${fila[1]} kg</td>
+                <td style="${colorDif} font-weight:bold;">${icono} ${Math.abs(dif).toFixed(1)}</td>
             </tr>`;
         }).join('');
 
-        renderizarGrafico(datosGrafico);
-    } catch (e) { console.log("Error cargando peso", e); }
+        renderizarGrafico([...datos].reverse());
+    } catch (e) { console.error("Error cargando peso", e); }
 }
 
 function renderizarGrafico(datos) {
     const ctx = document.getElementById('graficoPeso');
     if (!ctx) return;
-
     if (graficoPesoInstancia) graficoPesoInstancia.destroy();
 
     graficoPesoInstancia = new Chart(ctx, {
@@ -348,18 +288,21 @@ function renderizarGrafico(datos) {
         data: {
             labels: datos.map(f => new Date(f[0]).toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit'})),
             datasets: [{
-                label: 'Peso (kg)',
+                label: 'Evolución de Peso',
                 data: datos.map(f => f[1]),
                 borderColor: '#78a978',
                 backgroundColor: 'rgba(120, 169, 120, 0.2)',
                 borderWidth: 3,
-                tension: 0.3,
+                tension: 0.4,
                 fill: true,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#78a978',
-                pointRadius: 5
+                pointRadius: 4
             }]
         },
-        options: { responsive: true, plugins: { legend: { display: false } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: false } }
+        }
     });
 }

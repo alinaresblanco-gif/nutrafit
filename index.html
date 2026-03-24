@@ -7,13 +7,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#78a978">
-<link rel="icon" type="image/png" href="logo.png">
+    <meta name="theme-color" content="#78a978">
+    <link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
 
     <div id="pantalla-inicio" class="contenedor">
-        <img src="IMAGENES/IMAGEN_2.png" class="imagen-principal" alt="Nutrafit Logo">
+        <header class="cabecera-inicio">
+            <img src="IMAGENES/IMAGEN_2.png" class="imagen-principal" alt="Nutrafit Logo">
+        </header>
         
         <div class="menu">
             <button onclick="abrirVista('creditos-diarios')">
@@ -50,10 +52,11 @@
         </div>
     </div>
 
-    <div id="contenedor-vistas" style="display: none;">
+    <div id="contenedor-vistas" style="display: none; height: 100vh; width: 100%;">
         </div>
 
-    <script src="js/app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="js/app.js"></script>
 </body>
 </html>
