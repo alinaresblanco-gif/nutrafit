@@ -23,18 +23,26 @@
                 <input type="date" id="fecha-peso" style="width: 100%; padding: 12px; border: 1px solid #d0e1d0; border-radius: 8px; font-size: 1rem;">
             </div>
 
-            <div style="margin-bottom: 25px; text-align: left;">
-                <label style="color: #78a978; font-weight: bold; display: block; margin-bottom: 8px;">PESO ACTUAL (kg)</label>
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <button type="button" onclick="ajustarPeso(-0.1)" class="boton-vaso activo" style="flex: 1; height: 55px; font-size: 24px; background-color: #78a978 !important; color: white !important;">-</button>
-                    
-                    <input type="number" id="input-peso" value="75.0" step="0.1" style="flex: 1.5; text-align: center; padding: 12px; border: 2px solid #78a978; border-radius: 8px; font-size: 1.4rem; font-weight: bold; color: #333;">
-                    
-                    <button type="button" onclick="ajustarPeso(0.1)" class="boton-vaso activo" style="flex: 1; height: 55px; font-size: 24px; background-color: #78a978 !important; color: white !important;">+</button>
+            <div style="margin-bottom: 25px; text-align: center;">
+                <label style="color: #78a978; font-weight: bold; display: block; margin-bottom: 12px; text-align: left;">PESO ACTUAL (kg)</label>
+                
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                    <button type="button" onclick="ajustarPeso(-0.1)" 
+                        style="width: 55px; height: 55px; border-radius: 12px; border: none; background-color: #78a978; color: white; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-minus"></i>
+                    </button>
+
+                    <input type="number" id="input-peso" value="75.0" step="0.1" 
+                        style="width: 100px; height: 55px; text-align: center; font-size: 1.5rem; font-weight: bold; border: 2px solid #78a978; border-radius: 12px; color: #333; outline: none;">
+
+                    <button type="button" onclick="ajustarPeso(0.1)" 
+                        style="width: 55px; height: 55px; border-radius: 12px; border: none; background-color: #78a978; color: white; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-plus"></i>
+                    </button>
                 </div>
             </div>
 
-            <button id="btn-guardar-peso" onclick="guardarPeso()" class="boton-reset" style="background-color: #78a978; box-shadow: 0 4px 12px rgba(120, 169, 120, 0.3);">
+            <button id="btn-guardar-peso" onclick="guardarPeso()" class="boton-reset" style="background-color: #78a978; box-shadow: 0 4px 12px rgba(120, 169, 120, 0.3); width: 100%;">
                 <i class="fas fa-save"></i> GUARDAR EN HISTORIAL
             </button>
         </div>
