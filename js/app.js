@@ -179,6 +179,36 @@ function inicializarFecha() {
     if(f) f.value = new Date().toISOString().split('T')[0];
 }
 
+// NUEVA FUNCIÓN: GUARDAR CRÉDITOS DIARIOS
+async function guardarCreditos() {
+    const fecha = document.getElementById('fecha-credito').value;
+    const genero = document.getElementById('genero-credito').value;
+    const peso = document.getElementById('peso-credito').value;
+    const altura = document.getElementById('altura-credito').value;
+    const edad = document.getElementById('edad-credito').value;
+    const total = document.getElementById('resultado-creditos').value;
+
+    if (!total || total == 0) return alert("Primero calcula tus créditos");
+
+    const datos = {
+        tipo: "creditos",
+        fecha: fecha,
+        genero: genero,
+        peso: peso,
+        altura: altura,
+        edad: edad,
+        total: total
+    };
+
+    try {
+        await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
+        alert("Créditos guardados con éxito");
+        setTimeout(cargarHistorialCreditos, 2000);
+    } catch (e) {
+        alert("Error al guardar");
+    }
+}
+
 async function cargarHistorialCreditos() {
     const cuerpoTabla = document.getElementById('tabla-creditos-body');
     if (!cuerpoTabla) return;
@@ -328,7 +358,6 @@ async function generarPDF() {
     const doc = new jsPDF();
     const fechaActual = new Date().toLocaleDateString('es-ES');
 
-    // 1. Cabecera
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
     doc.setTextColor(120, 169, 120); 
@@ -339,7 +368,6 @@ async function generarPDF() {
     doc.text(`Generado el: ${fechaActual}`, 20, 28);
     doc.line(20, 32, 190, 32); 
 
-    // 2. Resumen IMC
     const valorIMC = document.getElementById('valor-imc')?.innerText || "--";
     const estadoIMC = document.getElementById('estado-imc')?.innerText || "--";
     doc.setFontSize(14);
@@ -349,7 +377,6 @@ async function generarPDF() {
     doc.setFontSize(12);
     doc.text(`IMC: ${valorIMC} - Clasificación: ${estadoIMC}`, 25, 52);
 
-    // 3. Gráfica
     const canvas = document.getElementById('graficoPeso');
     if (canvas) {
         const imgData = canvas.toDataURL("image/png");
@@ -358,11 +385,9 @@ async function generarPDF() {
         doc.addImage(imgData, 'PNG', 15, 70, 180, 80);
     }
 
-    // 4. Tabla de los últimos 5 registros
     doc.setFont("helvetica", "bold");
     doc.text("Últimos 5 registros detallados", 20, 165);
     
-    // Encabezados de tabla manual
     doc.setFontSize(10);
     doc.setFillColor(240, 240, 240);
     doc.rect(20, 170, 170, 8, 'F');
@@ -372,8 +397,6 @@ async function generarPDF() {
 
     const filas = document.querySelectorAll('#tabla-peso-body tr');
     let yPos = 183;
-    
-    // Solo tomamos los primeros 5 o el total que haya si es menor a 5
     const limite = Math.min(filas.length, 5);
 
     doc.setFont("helvetica", "normal");
@@ -383,12 +406,11 @@ async function generarPDF() {
             doc.text(celdas[0].innerText, 25, yPos);
             doc.text(celdas[1].innerText, 85, yPos);
             doc.text(celdas[2].innerText, 145, yPos);
-            doc.line(20, yPos + 2, 190, yPos + 2); // Línea sutil entre filas
+            doc.line(20, yPos + 2, 190, yPos + 2); 
             yPos += 8;
         }
     }
 
-    // Pie de página
     doc.setFontSize(9);
     doc.setTextColor(150);
     doc.text("Nutrafit App - Tu salud en buenas manos", 105, 285, null, null, "center");
