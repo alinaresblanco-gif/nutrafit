@@ -109,7 +109,7 @@ async function cargarHistorico() {
     } catch (error) { console.error("Error historial agua", error); }
 }
 
-/* --- 3. LÓGICA DE CRÉDITOS (CORREGIDA) --- */
+/* --- 3. LÓGICA DE CRÉDITOS --- */
 function ajustarValor(id, incremento) {
     const input = document.getElementById(id);
     if (!input) return;
@@ -146,22 +146,16 @@ function inicializarFecha() {
 }
 
 async function guardarCreditos() {
-    const fecha = document.getElementById('fecha-credito').value;
-    const genero = document.getElementById('genero-credito').value;
-    const peso = document.getElementById('peso-credito').value;
-    const altura = document.getElementById('altura-credito').value;
-    const edad = document.getElementById('edad-credito').value;
     const total = document.getElementById('resultado-creditos').value;
-
     if (!total || total == 0) return alert("Primero calcula tus créditos");
 
     const datos = {
         tipo: "creditos",
-        fecha: fecha,
-        genero: genero,
-        edad: edad,
-        peso: peso,
-        altura: altura,
+        fecha: document.getElementById('fecha-credito').value,
+        genero: document.getElementById('genero-credito').value,
+        edad: document.getElementById('edad-credito').value,
+        peso: document.getElementById('peso-credito').value,
+        altura: document.getElementById('altura-credito').value,
         total: total
     };
 
@@ -188,7 +182,7 @@ async function cargarHistorialCreditos() {
     } catch (e) { console.log("Error créditos", e); }
 }
 
-/* --- 4. LÓGICA DE EVOLUCIÓN DE PESO --- */
+/* --- 4. LÓGICA DE EVOLUCIÓN DE PESO (CORREGIDA CON IMC Y MENSAJES) --- */
 function inicializarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
     if(inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
@@ -206,7 +200,9 @@ function ajustarPeso(valor) {
 
 function calcularIMC(peso) {
     const inputAltura = document.getElementById('altura-credito');
-    let altura = inputAltura ? parseFloat(inputAltura.value) / 100 : 1.70; 
+    // Si no hay altura en créditos, usamos 170cm por defecto para evitar errores
+    let altura = (inputAltura && parseFloat(inputAltura.value) > 0) ? parseFloat(inputAltura.value) / 100 : 1.70; 
+    
     if (altura > 0) {
         const imc = (peso / (altura * altura)).toFixed(1);
         actualizarInterfazIMC(imc);
@@ -214,12 +210,16 @@ function calcularIMC(peso) {
 }
 
 function actualizarInterfazIMC(imc) {
+    const contenedor = document.getElementById('contenedor-imc');
     const valorElem = document.getElementById('valor-imc');
     const estadoElem = document.getElementById('estado-imc');
+    
     if (!valorElem || !estadoElem) return;
+    if (contenedor) contenedor.style.display = "block";
 
     valorElem.innerText = imc;
     let color = "#ccc", texto = "";
+
     if (imc < 18.5) { texto = "Bajo Peso"; color = "#3498db"; }
     else if (imc < 25) { texto = "Normal"; color = "#2ecc71"; }
     else if (imc < 30) { texto = "Sobrepeso"; color = "#f1c40f"; }
@@ -230,17 +230,36 @@ function actualizarInterfazIMC(imc) {
 }
 
 async function guardarPeso() {
-    const peso = document.getElementById('input-peso').value;
-    const fecha = document.getElementById('fecha-peso').value;
-    if(!peso) return alert("Introduce el peso");
+    const inputPeso = document.getElementById('input-peso');
+    const inputFecha = document.getElementById('fecha-peso');
+    if(!inputPeso || !inputPeso.value) return alert("Introduce el peso");
 
+    const pesoActual = parseFloat(inputPeso.value);
+    const fecha = inputFecha.value;
+    
     const tabla = document.getElementById('tabla-peso-body');
-    let ultimoPeso = (tabla && tabla.rows.length > 0) ? parseFloat(tabla.rows[0].cells[1].innerText) : peso;
+    let ultimoPeso = pesoActual;
+    
+    // Comparar con el último registro de la tabla para el mensaje
+    if (tabla && tabla.rows.length > 0 && !tabla.rows[0].innerText.includes("registros")) {
+        ultimoPeso = parseFloat(tabla.rows[0].cells[1].innerText);
+    }
 
-    const datos = { tipo: "peso", fecha: fecha, peso: peso, diferencia: (peso - ultimoPeso).toFixed(1) };
+    const diferencia = (pesoActual - ultimoPeso).toFixed(1);
+
+    // Mensajes de ánimo/recompensa
+    if (diferencia < 0) {
+        alert(`¡ESPECTACULAR! Has bajado ${Math.abs(diferencia)} kg. ¡Te mereces un premio sano! 🥳`);
+    } else if (diferencia > 0) {
+        alert(`¡No te rindas! Has subido ${diferencia} kg, pero mañana es un nuevo día para mejorar. 💪`);
+    } else {
+        alert("Te mantienes estable. ¡Sigue así!");
+    }
+
+    const datos = { tipo: "peso", fecha: fecha, peso: pesoActual, diferencia: diferencia };
+
     try {
         await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        alert("Peso guardado");
         setTimeout(cargarHistorialPeso, 2000);
     } catch (e) { alert("Error al guardar"); }
 }
@@ -248,18 +267,35 @@ async function guardarPeso() {
 async function cargarHistorialPeso() {
     const cuerpo = document.getElementById('tabla-peso-body');
     if(!cuerpo) return;
+
     try {
         const res = await fetch(URL_GOOGLE_SCRIPT + "?tabla=peso&t=" + new Date().getTime());
         const datos = await res.json();
+
+        if (!datos || datos.length === 0) {
+            cuerpo.innerHTML = "<tr><td colspan='3'>Aún no hay registros</td></tr>";
+            return;
+        }
+
+        // 1. Dibujar la tabla
         cuerpo.innerHTML = datos.map(fila => {
             const dif = parseFloat(fila[2]) || 0;
+            const colorDif = dif < 0 ? "color: #2ecc71;" : (dif > 0 ? "color: #e74c3c;" : "");
             const icono = dif < 0 ? "↓" : (dif > 0 ? "↑" : "");
-            return `<tr><td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td><td>${fila[1]} kg</td><td style="font-weight:bold; color:${dif < 0 ? '#2ecc71' : '#e74c3c'}">${icono} ${Math.abs(dif).toFixed(1)}</td></tr>`;
+            
+            return `<tr>
+                <td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td>
+                <td style="font-weight:bold;">${fila[1]} kg</td>
+                <td style="${colorDif} font-weight:bold;">${icono} ${Math.abs(dif).toFixed(1)}</td>
+            </tr>`;
         }).join('');
-        if(datos.length > 0) {
-            calcularIMC(datos[0][1]);
-            renderizarGrafico([...datos].reverse());
-        }
+
+        // 2. Actualizar IMC con el registro más reciente (el primero de la lista)
+        calcularIMC(parseFloat(datos[0][1]));
+
+        // 3. Renderizar Gráfico
+        renderizarGrafico([...datos].reverse());
+
     } catch (e) { console.error("Error peso", e); }
 }
 
