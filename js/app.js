@@ -2,7 +2,7 @@
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
 // IMPORTANTE: PEGA AQUÍ TU URL DE GOOGLE SCRIPT ACTUALIZADA
-const URL_GOOGLE_SCRIPT = "TU_URL_DE_GOOGLE_SCRIPT_AQUI";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwNEuYst_1B26vDliXCAEZGYFP9XzSMkqjVInVIPO-oyPmnVU0gNn7nhEcUkxqaDDIv/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
