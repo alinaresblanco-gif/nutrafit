@@ -310,62 +310,78 @@ function renderizarGrafico(datos) {
     });
 }
 
-/* --- 5. GENERACIÓN DE INFORME PDF --- */
+/* --- 5. GENERACIÓN DE INFORME PDF CON GRÁFICO --- */
 async function generarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+    const fechaReporte = new Date().toLocaleDateString('es-ES');
     
+    // 1. Cabecera Estilo Nutrafit
+    doc.setFillColor(120, 169, 120);
+    doc.rect(0, 0, 210, 40, 'F');
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
-    doc.setTextColor(120, 169, 120); 
-    doc.text("INFORME DE EVOLUCIÓN NUTRAFIT", 20, 30);
+    doc.setTextColor(255, 255, 255);
+    doc.text("INFORME DE EVOLUCIÓN NUTRAFIT", 20, 25);
     
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    doc.setFont("helvetica", "normal");
-    doc.text("Reporte generado el: " + new Date().toLocaleDateString(), 20, 40);
-    doc.line(20, 45, 190, 45); 
+    doc.setFontSize(10);
+    doc.text(`Fecha del informe: ${fechaReporte}`, 20, 33);
 
-    const tablaPeso = document.getElementById('tabla-peso-body');
-    if (!tablaPeso || tablaPeso.rows.length === 0 || tablaPeso.innerText.includes("registros")) {
-        doc.text("No hay datos de peso registrados aún.", 20, 60);
-    } else {
-        doc.setFont("helvetica", "bold");
-        doc.text("Historial de Peso Reciente:", 20, 60);
-        
-        let y = 70;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        
-        doc.text("Fecha", 25, y);
-        doc.text("Peso (kg)", 70, y);
-        doc.text("Diferencia", 110, y);
-        y += 7;
-        doc.line(20, y-5, 140, y-5);
-
-        const filas = Array.from(tablaPeso.rows).slice(0, 10);
-        filas.forEach(fila => {
-            doc.text(fila.cells[0].innerText, 25, y);
-            doc.text(fila.cells[1].innerText, 70, y);
-            doc.text(fila.cells[2].innerText, 110, y);
-            y += 8;
-        });
-
-        const imcActual = document.getElementById('valor-imc')?.innerText;
-        const estadoActual = document.getElementById('estado-imc')?.innerText;
-        
-        if (imcActual) {
-            y += 10;
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(12);
-            doc.text(`IMC ACTUAL: ${imcActual} (${estadoActual})`, 20, y);
-        }
+    // 2. Gráfico (Captura del Canvas)
+    const canvas = document.getElementById('graficoPeso');
+    if (canvas) {
+        const imgData = canvas.toDataURL("image/png");
+        doc.setTextColor(100);
+        doc.setFontSize(14);
+        doc.text("Progreso Visual del Peso:", 20, 50);
+        // Añadimos el gráfico (x, y, ancho, alto)
+        doc.addImage(imgData, 'PNG', 15, 55, 180, 80);
     }
 
+    // 3. Tabla de Datos
+    let yTabla = 150;
+    doc.setFontSize(14);
+    doc.setTextColor(120, 169, 120);
+    doc.text("Historial Detallado:", 20, yTabla);
+    
     doc.setFontSize(10);
+    doc.setTextColor(50);
+    doc.setFont("helvetica", "bold");
+    yTabla += 10;
+    doc.text("Fecha", 25, yTabla);
+    doc.text("Peso (kg)", 80, yTabla);
+    doc.text("Diferencia", 130, yTabla);
+    
+    doc.line(20, yTabla + 2, 190, yTabla + 2);
+    yTabla += 8;
+    
+    doc.setFont("helvetica", "normal");
+    const tablaPeso = document.getElementById('tabla-peso-body');
+    if (tablaPeso && !tablaPeso.innerText.includes("registros")) {
+        const filas = Array.from(tablaPeso.rows).slice(0, 8); // Top 8 registros
+        filas.forEach(fila => {
+            doc.text(fila.cells[0].innerText, 25, yTabla);
+            doc.text(fila.cells[1].innerText, 80, yTabla);
+            doc.text(fila.cells[2].innerText, 130, yTabla);
+            yTabla += 7;
+        });
+    }
+
+    // 4. IMC y Estado Final
+    const imcValue = document.getElementById('valor-imc')?.innerText || "--";
+    const imcEstado = document.getElementById('estado-imc')?.innerText || "--";
+    
+    yTabla += 10;
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, yTabla, 170, 15, 'F');
+    doc.setFont("helvetica", "bold");
+    doc.text(`IMC Actual: ${imcValue} - Estado: ${imcEstado}`, 25, yTabla + 10);
+
+    // Pie de página
+    doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
     doc.setTextColor(150);
-    doc.text("¡Cada paso cuenta! Sigue adelante con tu plan Nutrafit.", 20, 280);
+    doc.text("Nutrafit App - Tu asistente personal de salud", 105, 285, null, null, "center");
 
-    doc.save(`Nutrafit_Reporte_${new Date().toLocaleDateString()}.pdf`);
+    doc.save(`Nutrafit_Evolucion_${fechaReporte}.pdf`);
 }
