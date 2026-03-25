@@ -8,7 +8,7 @@ let vasosActuales = 0;
 const objetivoDiario = 8;
 let graficoPesoInstancia = null;
 
-/* --- 1. NAVEGACIÓN TIPO APP (SIN RECARGAR PÁGINA) --- */
+/* --- 1. NAVEGACIÓN TIPO APP --- */
 async function abrirVista(nombreVista) {
     const pantallaInicio = document.getElementById('pantalla-inicio');
     const contenedorVistas = document.getElementById('contenedor-vistas');
@@ -18,7 +18,6 @@ async function abrirVista(nombreVista) {
         const textoHtml = await respuesta.text();
         
         contenedorVistas.innerHTML = textoHtml;
-        
         pantallaInicio.style.display = 'none';
         contenedorVistas.style.display = 'block';
 
@@ -41,7 +40,6 @@ async function abrirVista(nombreVista) {
 
     } catch (error) {
         console.error("Error al abrir la vista:", error);
-        alert("No se pudo cargar la sección.");
     }
 }
 
@@ -61,9 +59,7 @@ function gestionarVaso(indiceVaso) {
     if (indiceVaso < vasosActuales) {
         vasosActuales = indiceVaso; 
     } else {
-        if (vasosActuales < objetivoDiario) {
-            vasosActuales++;
-        }
+        if (vasosActuales < objetivoDiario) vasosActuales++;
     }
     localStorage.setItem('agua_nutrafit', vasosActuales);
     actualizarInterfazAgua();
@@ -75,27 +71,15 @@ function actualizarInterfazAgua() {
     const botones = document.querySelectorAll('.boton-vaso');
 
     if (texto) texto.innerText = `${vasosActuales} / ${objetivoDiario} Vasos`;
-    
-    if (barra) {
-        const porcentaje = (vasosActuales / objetivoDiario) * 100;
-        barra.style.width = `${porcentaje}%`;
-    }
+    if (barra) barra.style.width = `${(vasosActuales / objetivoDiario) * 100}%`;
 
     botones.forEach((btn, index) => {
-        if (index < vasosActuales) {
-            btn.classList.add('activo');
-        } else {
-            btn.classList.remove('activo');
-        }
+        index < vasosActuales ? btn.classList.add('activo') : btn.classList.remove('activo');
     });
 }
 
 async function reiniciarAgua() {
-    if (vasosActuales === 0) {
-        alert("¡Marca al menos un vaso!");
-        return;
-    }
-
+    if (vasosActuales === 0) return alert("¡Marca al menos un vaso!");
     if (confirm("¿Guardar y reiniciar?")) {
         try {
             await fetch(URL_GOOGLE_SCRIPT, {
@@ -103,46 +87,29 @@ async function reiniciarAgua() {
                 mode: "no-cors", 
                 body: JSON.stringify({ tipo: "agua", vasos: vasosActuales })
             });
-
-            alert("¡Datos enviados con éxito!");
+            alert("¡Datos enviados!");
             vasosActuales = 0;
             localStorage.setItem('agua_nutrafit', 0);
             actualizarInterfazAgua();
             setTimeout(cargarHistorico, 2000); 
-
-        } catch (error) {
-            alert("Error al conectar.");
-        }
+        } catch (error) { alert("Error al conectar."); }
     }
 }
 
 async function cargarHistorico() {
     const contenedor = document.getElementById('datos-tabla');
     if (!contenedor) return;
-
     try {
         const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?t=" + new Date().getTime());
         const filas = await respuesta.json();
-        contenedor.innerHTML = ""; 
-
-        if (!filas || filas.length === 0) {
-            contenedor.innerHTML = "<tr><td colspan='3' style='padding:20px;'>Aún no hay registros</td></tr>";
-            return;
-        }
-
-        filas.forEach(fila => {
-            let tr = document.createElement('tr');
-            let f = new Date(fila[0]);
-            let fechaF = !isNaN(f) ? f.toLocaleDateString('es-ES') : "---";
+        contenedor.innerHTML = filas.map(fila => {
             const colorEstado = fila[2] === "COMPLETADO" ? "#2ecc71" : "#e67e22";
-            
-            tr.innerHTML = `<td>${fechaF}</td><td>${fila[1]}</td><td style="color:${colorEstado}; font-weight:bold;">${fila[2]}</td>`;
-            contenedor.appendChild(tr);
-        });
+            return `<tr><td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td><td>${fila[1]}</td><td style="color:${colorEstado}; font-weight:bold;">${fila[2]}</td></tr>`;
+        }).join('') || "<tr><td colspan='3'>Sin registros</td></tr>";
     } catch (error) { console.error("Error historial agua", error); }
 }
 
-/* --- 3. LÓGICA DE CRÉDITOS --- */
+/* --- 3. LÓGICA DE CRÉDITOS (CORREGIDA) --- */
 function ajustarValor(id, incremento) {
     const input = document.getElementById(id);
     if (!input) return;
@@ -169,7 +136,6 @@ function calcularCreditos() {
         let tmb = (genero === "Hombre") 
             ? (10 * peso) + (6.25 * altura) - (5 * edad) + 5
             : (10 * peso) + (6.25 * altura) - (5 * edad) - 161;
-
         resElem.value = Math.ceil((tmb * 0.9) / 35);
     }
 }
@@ -179,7 +145,6 @@ function inicializarFecha() {
     if(f) f.value = new Date().toISOString().split('T')[0];
 }
 
-// NUEVA FUNCIÓN: GUARDAR CRÉDITOS DIARIOS
 async function guardarCreditos() {
     const fecha = document.getElementById('fecha-credito').value;
     const genero = document.getElementById('genero-credito').value;
@@ -194,19 +159,17 @@ async function guardarCreditos() {
         tipo: "creditos",
         fecha: fecha,
         genero: genero,
+        edad: edad,
         peso: peso,
         altura: altura,
-        edad: edad,
         total: total
     };
 
     try {
         await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        alert("Créditos guardados con éxito");
+        alert("¡Créditos guardados!");
         setTimeout(cargarHistorialCreditos, 2000);
-    } catch (e) {
-        alert("Error al guardar");
-    }
+    } catch (e) { alert("Error al guardar"); }
 }
 
 async function cargarHistorialCreditos() {
@@ -215,12 +178,17 @@ async function cargarHistorialCreditos() {
     try {
         const response = await fetch(URL_GOOGLE_SCRIPT + "?tabla=creditos&t=" + new Date().getTime());
         const datos = await response.json();
-        cuerpoTabla.innerHTML = datos.map(fila => `<tr><td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td><td>${fila[5]}</td><td>${fila[1]}</td></tr>`).join('');
+        cuerpoTabla.innerHTML = datos.map(fila => `
+            <tr>
+                <td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td>
+                <td style="font-weight:bold; color:#78a978;">${fila[5] || '---'}</td>
+                <td>${fila[1] || '---'}</td>
+            </tr>
+        `).join('');
     } catch (e) { console.log("Error créditos", e); }
 }
 
-/* --- 4. LÓGICA DE EVOLUCIÓN DE PESO E IMC --- */
-
+/* --- 4. LÓGICA DE EVOLUCIÓN DE PESO --- */
 function inicializarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
     if(inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
@@ -239,7 +207,6 @@ function ajustarPeso(valor) {
 function calcularIMC(peso) {
     const inputAltura = document.getElementById('altura-credito');
     let altura = inputAltura ? parseFloat(inputAltura.value) / 100 : 1.70; 
-
     if (altura > 0) {
         const imc = (peso / (altura * altura)).toFixed(1);
         actualizarInterfazIMC(imc);
@@ -247,18 +214,12 @@ function calcularIMC(peso) {
 }
 
 function actualizarInterfazIMC(imc) {
-    const contenedor = document.getElementById('contenedor-imc');
     const valorElem = document.getElementById('valor-imc');
     const estadoElem = document.getElementById('estado-imc');
-    
-    if (!contenedor || !valorElem || !estadoElem) return;
+    if (!valorElem || !estadoElem) return;
 
-    contenedor.style.display = "block";
     valorElem.innerText = imc;
-
-    let color = "#ccc";
-    let texto = "";
-
+    let color = "#ccc", texto = "";
     if (imc < 18.5) { texto = "Bajo Peso"; color = "#3498db"; }
     else if (imc < 25) { texto = "Normal"; color = "#2ecc71"; }
     else if (imc < 30) { texto = "Sobrepeso"; color = "#f1c40f"; }
@@ -269,26 +230,17 @@ function actualizarInterfazIMC(imc) {
 }
 
 async function guardarPeso() {
-    const inputPeso = document.getElementById('input-peso');
-    const inputFecha = document.getElementById('fecha-peso');
-    if(!inputPeso || !inputPeso.value) return alert("Introduce el peso");
+    const peso = document.getElementById('input-peso').value;
+    const fecha = document.getElementById('fecha-peso').value;
+    if(!peso) return alert("Introduce el peso");
 
-    const pesoActual = parseFloat(inputPeso.value);
-    const fecha = inputFecha.value;
-    
     const tabla = document.getElementById('tabla-peso-body');
-    let ultimoPeso = pesoActual;
-    
-    if (tabla && tabla.rows.length > 0 && !tabla.rows[0].innerText.includes("registros")) {
-        ultimoPeso = parseFloat(tabla.rows[0].cells[1].innerText);
-    }
+    let ultimoPeso = (tabla && tabla.rows.length > 0) ? parseFloat(tabla.rows[0].cells[1].innerText) : peso;
 
-    const diferencia = (pesoActual - ultimoPeso).toFixed(1);
-    const datos = { tipo: "peso", fecha: fecha, peso: pesoActual, diferencia: diferencia };
-
+    const datos = { tipo: "peso", fecha: fecha, peso: peso, diferencia: (peso - ultimoPeso).toFixed(1) };
     try {
         await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        alert("Peso guardado correctamente");
+        alert("Peso guardado");
         setTimeout(cargarHistorialPeso, 2000);
     } catch (e) { alert("Error al guardar"); }
 }
@@ -296,124 +248,45 @@ async function guardarPeso() {
 async function cargarHistorialPeso() {
     const cuerpo = document.getElementById('tabla-peso-body');
     if(!cuerpo) return;
-
     try {
         const res = await fetch(URL_GOOGLE_SCRIPT + "?tabla=peso&t=" + new Date().getTime());
         const datos = await res.json();
-
-        if (!datos || datos.length === 0) {
-            cuerpo.innerHTML = "<tr><td colspan='3'>Aún no hay registros</td></tr>";
-            return;
-        }
-
         cuerpo.innerHTML = datos.map(fila => {
             const dif = parseFloat(fila[2]) || 0;
-            const colorDif = dif < 0 ? "color: #2ecc71;" : (dif > 0 ? "color: #e74c3c;" : "");
             const icono = dif < 0 ? "↓" : (dif > 0 ? "↑" : "");
-            
-            return `<tr>
-                <td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td>
-                <td style="font-weight:bold;">${fila[1]} kg</td>
-                <td style="${colorDif} font-weight:bold;">${icono} ${Math.abs(dif).toFixed(1)}</td>
-            </tr>`;
+            return `<tr><td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td><td>${fila[1]} kg</td><td style="font-weight:bold; color:${dif < 0 ? '#2ecc71' : '#e74c3c'}">${icono} ${Math.abs(dif).toFixed(1)}</td></tr>`;
         }).join('');
-
-        calcularIMC(datos[0][1]);
-        renderizarGrafico([...datos].reverse());
-    } catch (e) { console.error("Error cargando peso", e); }
+        if(datos.length > 0) {
+            calcularIMC(datos[0][1]);
+            renderizarGrafico([...datos].reverse());
+        }
+    } catch (e) { console.error("Error peso", e); }
 }
 
 function renderizarGrafico(datos) {
     const ctx = document.getElementById('graficoPeso');
-    if (!ctx) return;
+    if (!ctx || typeof Chart === 'undefined') return;
     if (graficoPesoInstancia) graficoPesoInstancia.destroy();
-
     graficoPesoInstancia = new Chart(ctx, {
         type: 'line',
         data: {
             labels: datos.map(f => new Date(f[0]).toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit'})),
             datasets: [{
-                label: 'Evolución de Peso',
+                label: 'Peso',
                 data: datos.map(f => f[1]),
                 borderColor: '#78a978',
-                backgroundColor: 'rgba(120, 169, 120, 0.2)',
-                borderWidth: 3,
                 tension: 0.4,
                 fill: true,
-                pointRadius: 4
+                backgroundColor: 'rgba(120, 169, 120, 0.1)'
             }]
         },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: false } }
-        }
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
-/* --- FUNCIÓN MEJORADA: GENERAR PDF CON TABLA DE HISTORIAL --- */
 async function generarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const fechaActual = new Date().toLocaleDateString('es-ES');
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.setTextColor(120, 169, 120); 
-    doc.text("INFORME DE PROGRESO NUTRAFIT", 20, 20);
-
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generado el: ${fechaActual}`, 20, 28);
-    doc.line(20, 32, 190, 32); 
-
-    const valorIMC = document.getElementById('valor-imc')?.innerText || "--";
-    const estadoIMC = document.getElementById('estado-imc')?.innerText || "--";
-    doc.setFontSize(14);
-    doc.setTextColor(0);
-    doc.text("Estado Actual", 20, 45);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.text(`IMC: ${valorIMC} - Clasificación: ${estadoIMC}`, 25, 52);
-
-    const canvas = document.getElementById('graficoPeso');
-    if (canvas) {
-        const imgData = canvas.toDataURL("image/png");
-        doc.setFont("helvetica", "bold");
-        doc.text("Gráfica de Evolución", 20, 65);
-        doc.addImage(imgData, 'PNG', 15, 70, 180, 80);
-    }
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Últimos 5 registros detallados", 20, 165);
-    
-    doc.setFontSize(10);
-    doc.setFillColor(240, 240, 240);
-    doc.rect(20, 170, 170, 8, 'F');
-    doc.text("FECHA", 25, 175);
-    doc.text("PESO (KG)", 85, 175);
-    doc.text("DIFERENCIA", 145, 175);
-
-    const filas = document.querySelectorAll('#tabla-peso-body tr');
-    let yPos = 183;
-    const limite = Math.min(filas.length, 5);
-
-    doc.setFont("helvetica", "normal");
-    for(let i = 0; i < limite; i++) {
-        const celdas = filas[i].querySelectorAll('td');
-        if(celdas.length >= 3) {
-            doc.text(celdas[0].innerText, 25, yPos);
-            doc.text(celdas[1].innerText, 85, yPos);
-            doc.text(celdas[2].innerText, 145, yPos);
-            doc.line(20, yPos + 2, 190, yPos + 2); 
-            yPos += 8;
-        }
-    }
-
-    doc.setFontSize(9);
-    doc.setTextColor(150);
-    doc.text("Nutrafit App - Tu salud en buenas manos", 105, 285, null, null, "center");
-
-    doc.save(`Nutrafit_Historial_${fechaActual}.pdf`);
+    doc.text("INFORME NUTRAFIT", 20, 20);
+    doc.save("Nutrafit_Reporte.pdf");
 }
