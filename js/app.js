@@ -38,8 +38,8 @@ async function abrirVista(nombreVista) {
             setTimeout(inicializarPeso, 100);
         }
         if (nombreVista === 'nuestra_despensa') {
-    setTimeout(cargarDespensa, 100); // Esto dispara la carga de datos al abrir la vista
-}
+            setTimeout(cargarDespensa, 100); 
+        }
 
     } catch (error) {
         console.error("Error al abrir la vista:", error);
@@ -319,7 +319,6 @@ async function generarPDF() {
     const doc = new jsPDF();
     const fechaReporte = new Date().toLocaleDateString('es-ES');
     
-    // 1. Cabecera Estilo Nutrafit
     doc.setFillColor(120, 169, 120);
     doc.rect(0, 0, 210, 40, 'F');
     doc.setFont("helvetica", "bold");
@@ -330,18 +329,15 @@ async function generarPDF() {
     doc.setFontSize(10);
     doc.text(`Fecha del informe: ${fechaReporte}`, 20, 33);
 
-    // 2. Gráfico (Captura del Canvas)
     const canvas = document.getElementById('graficoPeso');
     if (canvas) {
         const imgData = canvas.toDataURL("image/png");
         doc.setTextColor(100);
         doc.setFontSize(14);
         doc.text("Progreso Visual del Peso:", 20, 50);
-        // Añadimos el gráfico (x, y, ancho, alto)
         doc.addImage(imgData, 'PNG', 15, 55, 180, 80);
     }
 
-    // 3. Tabla de Datos
     let yTabla = 150;
     doc.setFontSize(14);
     doc.setTextColor(120, 169, 120);
@@ -361,7 +357,7 @@ async function generarPDF() {
     doc.setFont("helvetica", "normal");
     const tablaPeso = document.getElementById('tabla-peso-body');
     if (tablaPeso && !tablaPeso.innerText.includes("registros")) {
-        const filas = Array.from(tablaPeso.rows).slice(0, 8); // Top 8 registros
+        const filas = Array.from(tablaPeso.rows).slice(0, 8); 
         filas.forEach(fila => {
             doc.text(fila.cells[0].innerText, 25, yTabla);
             doc.text(fila.cells[1].innerText, 80, yTabla);
@@ -370,7 +366,6 @@ async function generarPDF() {
         });
     }
 
-    // 4. IMC y Estado Final
     const imcValue = document.getElementById('valor-imc')?.innerText || "--";
     const imcEstado = document.getElementById('estado-imc')?.innerText || "--";
     
@@ -380,7 +375,6 @@ async function generarPDF() {
     doc.setFont("helvetica", "bold");
     doc.text(`IMC Actual: ${imcValue} - Estado: ${imcEstado}`, 25, yTabla + 10);
 
-    // Pie de página
     doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
     doc.setTextColor(150);
@@ -388,39 +382,47 @@ async function generarPDF() {
 
     doc.save(`Nutrafit_Evolucion_${fechaReporte}.pdf`);
 }
-/* --- 6. LÓGICA DE ALIMENTOS Y DESPENSA --- */
 
-// Función para los botones +/- (Paso de 0.1 para precisión)
+/* --- 6. LÓGICA DE ALIMENTOS Y DESPENSA (REDONDEADA) --- */
+
 function ajustarMacroAlimento(id, inc) {
     const el = document.getElementById(id);
     if (!el) return;
     let val = parseFloat(el.value) || 0;
+    // Mantenemos precisión de 2 decimales para los macros al usar botones
     el.value = Math.max(0, val + inc).toFixed(2);
-    recalcularAlimento(); // Calcula automáticamente al cambiar valores
+    recalcularAlimento();
 }
 
-// TU FÓRMULA: (Grasa * 0.15) + (Carb * 0.12) + (Prot * 0.05) - (Fibra * 0.01)
 function recalcularAlimento() {
     const prot = parseFloat(document.getElementById('alim-prot').value) || 0;
     const carb = parseFloat(document.getElementById('alim-carb').value) || 0;
     const gras = parseFloat(document.getElementById('alim-gras').value) || 0;
     const fibra = parseFloat(document.getElementById('alim-fibra').value) || 0;
     
-    const calc = (gras * 0.15) + (carb * 0.12) + (prot * 0.05) - (fibra * 0.01);
+    // Tu fórmula original
+    const resultadoBruto = (gras * 0.15) + (carb * 0.12) + (prot * 0.05) - (fibra * 0.01);
     
-    // Mostramos el resultado en el campo de solo lectura
+    // APLICAMOS REDONDEO (0.5 sube al siguiente entero)
+    const resultadoRedondeado = Math.round(resultadoBruto);
+    
     const campoCalc = document.getElementById('alim-calc');
-    if (campoCalc) campoCalc.value = Math.max(0, calc).toFixed(2);
+    if (campoCalc) {
+        // Mostramos como entero
+        campoCalc.value = Math.max(0, resultadoRedondeado); 
+    }
 }
 
 async function guardarEnDespensa() {
     const nombre = document.getElementById('alim-nombre').value;
     if(!nombre) return alert("Por favor, escribe el nombre del alimento");
 
-    const manual = parseFloat(document.getElementById('alim-manual').value) || 0;
-    const calculado = parseFloat(document.getElementById('alim-calc').value) || 0;
+    // Redondeamos los manuales también para asegurar que no entren decimales
+    const manualVal = document.getElementById('alim-manual').value;
+    const manual = manualVal ? Math.round(parseFloat(manualVal)) : 0;
+    const calculado = parseInt(document.getElementById('alim-calc').value) || 0;
 
-    // CRÉDITO NETO: Si hay manual, usamos ese. Si no, el calculado.
+    // CRÉDITO NETO: Si hay manual, usamos ese redondeado. Si no, el calculado.
     const neto = manual > 0 ? manual : calculado;
 
     const datos = {
@@ -433,13 +435,12 @@ async function guardarEnDespensa() {
         fibra: document.getElementById('alim-fibra').value,
         manual: manual,
         calculado: calculado,
-        neto: neto.toFixed(2)
+        neto: neto // Enviamos el entero
     };
 
     try {
-        // "no-cors" es necesario para Google Apps Script
         await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        alert("✅ " + nombre + " guardado en la despensa");
+        alert("✅ " + nombre + " guardado con " + neto + " créditos.");
         limpiarFormAlimento();
     } catch (e) { 
         alert("Error al conectar con la base de datos"); 
@@ -447,12 +448,13 @@ async function guardarEnDespensa() {
 }
 
 function limpiarFormAlimento() {
-    // Resetea todos los campos para el siguiente alimento
     const campos = ['alim-nombre', 'alim-prot', 'alim-carb', 'alim-gras', 'alim-fibra', 'alim-manual', 'alim-calc'];
     campos.forEach(id => {
         const el = document.getElementById(id);
         if(el) {
-            if(el.type === 'number' || id === 'alim-calc') el.value = "0.00";
+            // Limpiamos con formato de entero para los resultados y 0.00 para los macros
+            if(id === 'alim-calc' || id === 'alim-manual') el.value = "0";
+            else if(el.type === 'number') el.value = "0.00";
             else el.value = "";
         }
     });
@@ -473,7 +475,6 @@ async function cargarDespensa() {
             return;
         }
 
-        // Agrupar por el campo 'Grupo' (índice 1 de la fila)
         const grupos = {};
         datos.forEach(fila => {
             const nombreGrupo = fila[1];
@@ -481,7 +482,6 @@ async function cargarDespensa() {
             grupos[nombreGrupo].push(fila);
         });
 
-        // Ordenar grupos alfabéticamente
         const nombresGruposOrdenados = Object.keys(grupos).sort();
 
         let htmlFinal = "";
@@ -494,7 +494,7 @@ async function cargarDespensa() {
                             <tr class="fila-alimento">
                                 <td><b>${a[0]}</b></td>
                                 <td style="text-align:right">
-                                    <span class="credito-badge">${a[8]} créd.</span>
+                                    <span class="credito-badge">${Math.round(a[8])} créd.</span>
                                 </td>
                             </tr>
                         `).join('')}
