@@ -3,9 +3,11 @@
         <button onclick="volverInicio()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
         </button>
+        
         <span class="titulo-vista">
             <i class="fas fa-shopping-cart"></i> LISTA DE COMPRA
         </span>
+
         <button onclick="limpiarListaCompra()" class="boton-nav-circular">
             <i class="fas fa-trash-alt"></i>
         </button>
@@ -32,35 +34,62 @@
 </div>
 
 <style>
-    /* CABECERA Y BOTONES DE NAVEGACIÓN */
+    /* 1. ESTILOS DE LA CABECERA (ESTILO CORPORATIVO UNIFICADO) */
+    .cabecera-barra {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        background: #78a978; /* Tu verde corporativo */
+        color: white;
+    }
+
+    /* Corrección solicitada: Fondo verde, icono blanco */
     .boton-nav-circular {
-        width: 35px;
-        height: 35px;
-        background-color: white;
+        background: rgba(255, 255, 255, 0.2); /* Fondo blanco traslúcido sobre el verde */
         border: none;
+        color: white; /* Icono blanco puro */
+        width: 38px;
+        height: 38px;
         border-radius: 50%;
-        color: #78a978; /* Tu verde */
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 16px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         cursor: pointer;
+        transition: all 0.3s ease;
     }
 
-    /* TARJETA DE INPUTS */
+    .boton-nav-circular:active {
+        background: white; /* Al pulsar, se vuelve blanco total */
+        color: #78a978; /* Y el icono verde */
+        transform: scale(0.9);
+    }
+
+    .titulo-vista {
+        font-weight: bold;
+        font-size: 16px;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* 2. TARJETA DE INPUTS Y BOTÓN AÑADIR (NUEVO DISEÑO CENTRADO) */
     .contenedor-input-compra {
         padding: 0 15px;
+        background: #78a978; /* Mantenemos el fondo verde de la cabecera */
     }
 
     .tarjeta-input-compra {
         background: white;
-        padding: 12px;
+        padding: 15px;
         border-radius: 15px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         display: flex;
         flex-direction: column;
         gap: 12px;
+        transform: translateY(10px); /* Ligera elevación */
     }
 
     .fila-inputs-moderna {
@@ -75,6 +104,7 @@
         padding: 10px;
         font-size: 16px;
         outline: none;
+        color: #333;
     }
 
     .input-app-corto {
@@ -85,14 +115,15 @@
         font-size: 16px;
         text-align: center;
         outline: none;
+        color: #333;
     }
 
-    /* BOTÓN AÑADIR CENTRADO Y CHULO */
+    /* Botón Añadir principal (Estilo chulo centrado) */
     .btn-añadir-principal {
-        background-color: #78a978;
+        background-color: #78a978; /* Verde corporativo */
         color: white;
         border: none;
-        padding: 12px;
+        padding: 14px;
         border-radius: 10px;
         font-size: 14px;
         font-weight: bold;
@@ -101,18 +132,22 @@
         align-items: center;
         justify-content: center;
         gap: 10px;
-        transition: transform 0.2s;
+        transition: all 0.2s;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(120, 169, 120, 0.3);
     }
 
     .btn-añadir-principal:active {
-        transform: scale(0.95);
+        transform: scale(0.97);
+        background-color: #6a966a; /* Un verde un pelín más oscuro al pulsar */
     }
 
-    /* ESTILO DE LA LISTA (Mantenido según Imagen 3) */
+    /* 3. ESTILO DE LA LISTA DE COMPRA (MANTENIDO SEGÚN IMAGEN 3) */
     .contenedor-lista-compra-estilo {
         background: white;
         border-radius: 15px;
         overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
     .item-compra {
@@ -120,6 +155,14 @@
         align-items: center;
         padding: 15px;
         border-bottom: 1px solid #f8f8f8;
+    }
+
+    .icono-item {
+        color: #ccc;
+        font-size: 18px;
+        opacity: 0.3;
+        width: 25px;
+        text-align: center;
     }
 
     .info-item {
@@ -143,23 +186,33 @@
         background: none;
         border: none;
         font-size: 18px;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .btn-borrar-u:hover {
+        color: #ffb3b3; /* Rojo suave al pasar el ratón */
     }
 
     .check-c {
         width: 22px;
         height: 22px;
         accent-color: #78a978;
+        cursor: pointer;
     }
 
+    /* Estado comprado: Gris y tachado */
     .item-compra.comprado {
         background: #fafafa;
         opacity: 0.6;
     }
-    .item-compra.comprado .nombre-p { text-decoration: line-through; }
+    .item-compra.comprado .nombre-p { text-decoration: line-through; color: #888; }
 
     .progreso-texto-compra {
-        padding: 10px;
+        padding: 15px 10px 10px 10px;
         font-size: 14px;
         color: #666;
+        font-weight: bold;
+        text-align: center;
     }
 </style>
