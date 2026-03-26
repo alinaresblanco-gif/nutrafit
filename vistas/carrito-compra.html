@@ -1,4 +1,4 @@
-<div class="vista-cabecera-fija" style="height: 140px;"> 
+<div class="vista-cabecera-fija" style="height: 190px;"> 
     <div class="cabecera-barra">
         <button onclick="volverInicio()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
@@ -12,17 +12,19 @@
     </div>
 
     <div class="contenedor-input-compra">
-        <div class="fila-inputs-moderna">
-            <input type="text" id="item-nombre" placeholder="Nombre del alimento..." class="input-app-grande">
-            <input type="number" id="item-cantidad" placeholder="Cant." class="input-app-corto">
-            <button onclick="agregarItemCompra()" class="btn-mas-verde">
-                <i class="fas fa-plus"></i>
+        <div class="tarjeta-input-compra">
+            <div class="fila-inputs-moderna">
+                <input type="text" id="item-nombre" placeholder="Nombre del alimento..." class="input-app-grande">
+                <input type="text" id="item-cantidad" placeholder="Cant." class="input-app-corto">
+            </div>
+            <button onclick="agregarItemCompra()" class="btn-añadir-principal">
+                <i class="fas fa-plus"></i> AÑADIR A LA LISTA
             </button>
         </div>
     </div>
 </div>
 
-<div class="contenido-scroll" style="margin-top: 150px; padding: 10px;">
+<div class="contenido-scroll" style="margin-top: 200px; padding: 10px;">
     <div id="progreso-compra" class="progreso-texto-compra">0 artículos en la lista</div>
     
     <div id="lista-compra-items" class="contenedor-lista-compra-estilo">
@@ -30,59 +32,87 @@
 </div>
 
 <style>
-    /* REPARACIÓN DE LA CABECERA (Estilo Imagen 1) */
+    /* CABECERA Y BOTONES DE NAVEGACIÓN */
+    .boton-nav-circular {
+        width: 35px;
+        height: 35px;
+        background-color: white;
+        border: none;
+        border-radius: 50%;
+        color: #78a978; /* Tu verde */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        cursor: pointer;
+    }
+
+    /* TARJETA DE INPUTS */
     .contenedor-input-compra {
-        padding: 0 15px 15px 15px;
+        padding: 0 15px;
+    }
+
+    .tarjeta-input-compra {
+        background: white;
+        padding: 12px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
 
     .fila-inputs-moderna {
         display: flex;
-        gap: 10px;
-        background: white;
-        padding: 8px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        align-items: center;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
     }
 
     .input-app-grande {
-        flex: 2; /* Ocupa más espacio */
+        flex: 1;
         border: none;
-        padding: 12px;
+        padding: 10px;
         font-size: 16px;
         outline: none;
     }
 
     .input-app-corto {
-        width: 60px;
+        width: 70px;
         border: none;
         border-left: 1px solid #eee;
-        padding: 12px 5px;
+        padding: 10px;
         font-size: 16px;
         text-align: center;
         outline: none;
     }
 
-    .btn-mas-verde {
-        background-color: #78a978; /* Tu verde corporativo */
+    /* BOTÓN AÑADIR CENTRADO Y CHULO */
+    .btn-añadir-principal {
+        background-color: #78a978;
         color: white;
         border: none;
-        width: 45px;
-        height: 45px;
+        padding: 12px;
         border-radius: 10px;
-        font-size: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 1px;
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
+        gap: 10px;
+        transition: transform 0.2s;
     }
 
-    /* ESTILO DE LA LISTA (Estilo Imagen 3) */
+    .btn-añadir-principal:active {
+        transform: scale(0.95);
+    }
+
+    /* ESTILO DE LA LISTA (Mantenido según Imagen 3) */
     .contenedor-lista-compra-estilo {
         background: white;
         border-radius: 15px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
     .item-compra {
