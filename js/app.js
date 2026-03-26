@@ -383,13 +383,12 @@ async function generarPDF() {
     doc.save(`Nutrafit_Evolucion_${fechaReporte}.pdf`);
 }
 
-/* --- 6. LÓGICA DE ALIMENTOS Y DESPENSA (REDONDEADA) --- */
+/* --- 6. LÓGICA DE ALIMENTOS Y DESPENSA (CORREGIDA CON REDONDEO REAL) --- */
 
 function ajustarMacroAlimento(id, inc) {
     const el = document.getElementById(id);
     if (!el) return;
     let val = parseFloat(el.value) || 0;
-    // Mantenemos precisión de 2 decimales para los macros al usar botones
     el.value = Math.max(0, val + inc).toFixed(2);
     recalcularAlimento();
 }
@@ -403,13 +402,13 @@ function recalcularAlimento() {
     // Tu fórmula original
     const resultadoBruto = (gras * 0.15) + (carb * 0.12) + (prot * 0.05) - (fibra * 0.01);
     
-    // APLICAMOS REDONDEO (0.5 sube al siguiente entero)
+    // FORZAMOS EL REDONDEO: 0.5 sube al siguiente entero
     const resultadoRedondeado = Math.round(resultadoBruto);
     
     const campoCalc = document.getElementById('alim-calc');
     if (campoCalc) {
-        // Mostramos como entero
-        campoCalc.value = Math.max(0, resultadoRedondeado); 
+        // Mostramos el número como entero puro
+        campoCalc.value = Math.max(0, resultadoRedondeado).toFixed(0); 
     }
 }
 
@@ -417,12 +416,10 @@ async function guardarEnDespensa() {
     const nombre = document.getElementById('alim-nombre').value;
     if(!nombre) return alert("Por favor, escribe el nombre del alimento");
 
-    // Redondeamos los manuales también para asegurar que no entren decimales
     const manualVal = document.getElementById('alim-manual').value;
     const manual = manualVal ? Math.round(parseFloat(manualVal)) : 0;
     const calculado = parseInt(document.getElementById('alim-calc').value) || 0;
 
-    // CRÉDITO NETO: Si hay manual, usamos ese redondeado. Si no, el calculado.
     const neto = manual > 0 ? manual : calculado;
 
     const datos = {
@@ -435,12 +432,12 @@ async function guardarEnDespensa() {
         fibra: document.getElementById('alim-fibra').value,
         manual: manual,
         calculado: calculado,
-        neto: neto // Enviamos el entero
+        neto: Math.round(neto) 
     };
 
     try {
         await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        alert("✅ " + nombre + " guardado con " + neto + " créditos.");
+        alert("✅ " + nombre + " guardado con " + Math.round(neto) + " créditos.");
         limpiarFormAlimento();
     } catch (e) { 
         alert("Error al conectar con la base de datos"); 
@@ -452,7 +449,6 @@ function limpiarFormAlimento() {
     campos.forEach(id => {
         const el = document.getElementById(id);
         if(el) {
-            // Limpiamos con formato de entero para los resultados y 0.00 para los macros
             if(id === 'alim-calc' || id === 'alim-manual') el.value = "0";
             else if(el.type === 'number') el.value = "0.00";
             else el.value = "";
@@ -460,7 +456,7 @@ function limpiarFormAlimento() {
     });
 }
 
-/* --- 7. CARGA Y BUSCADOR DE DESPENSA --- */
+/* --- 7. CARGA Y BUSCADOR DE DESPENSA (CORREGIDA) --- */
 
 async function cargarDespensa() {
     const contenedor = document.getElementById('lista-alimentos-agrupados');
@@ -478,8 +474,10 @@ async function cargarDespensa() {
         const grupos = {};
         datos.forEach(fila => {
             const nombreGrupo = fila[1];
-            if(!grupos[nombreGrupo]) grupos[nombreGrupo] = [];
-            grupos[nombreGrupo].push(fila);
+            if(nombreGrupo && nombreGrupo !== "undefined") {
+                if(!grupos[nombreGrupo]) grupos[nombreGrupo] = [];
+                grupos[nombreGrupo].push(fila);
+            }
         });
 
         const nombresGruposOrdenados = Object.keys(grupos).sort();
@@ -494,7 +492,7 @@ async function cargarDespensa() {
                             <tr class="fila-alimento">
                                 <td><b>${a[0]}</b></td>
                                 <td style="text-align:right">
-                                    <span class="credito-badge">${Math.round(a[8])} créd.</span>
+                                    <span class="credito-badge">${Math.round(parseFloat(a[8]))} créd.</span>
                                 </td>
                             </tr>
                         `).join('')}
