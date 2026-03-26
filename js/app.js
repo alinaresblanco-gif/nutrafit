@@ -515,3 +515,113 @@ function filtrarDespensa() {
         fila.style.display = nombreAlimento.includes(textoBusqueda) ? "" : "none";
     });
 }
+/* --- 8. LÓGICA DE LISTA DE COMPRA --- */
+
+// Array global para la lista, cargando desde el almacenamiento del móvil/navegador
+let listaCompra = JSON.parse(localStorage.getItem('nutrafit_lista_compra')) || [];
+
+function agregarItemCompra() {
+    const inputNombre = document.getElementById('item-nombre');
+    const inputCantidad = document.getElementById('item-cantidad');
+    
+    const nombre = inputNombre.value.trim();
+    const cantidad = inputCantidad.value.trim() || "1";
+
+    if (!nombre) {
+        alert("Por favor, escribe un alimento");
+        return;
+    }
+
+    const nuevoItem = {
+        id: Date.now(),
+        nombre: nombre,
+        cantidad: cantidad,
+        comprado: false
+    };
+
+    listaCompra.push(nuevoItem);
+    
+    // Limpiar inputs y devolver el foco al nombre para seguir escribiendo rápido
+    inputNombre.value = "";
+    inputCantidad.value = "";
+    inputNombre.focus();
+    
+    actualizarInterfazCompra();
+}
+
+function toggleComprado(id) {
+    const item = listaCompra.find(i => i.id === id);
+    if (item) {
+        item.comprado = !item.comprado;
+        actualizarInterfazCompra();
+    }
+}
+
+function eliminarItemCompra(id) {
+    listaCompra = listaCompra.filter(i => i.id !== id);
+    actualizarInterfazCompra();
+}
+
+function limpiarListaCompra() {
+    if (listaCompra.length === 0) return;
+    
+    // Un toque de cortesía antes de borrar todo
+    if (confirm("¿Deseas vaciar toda la lista de la compra?")) {
+        listaCompra = [];
+        actualizarInterfazCompra();
+    }
+}
+
+function actualizarInterfazCompra() {
+    const contenedor = document.getElementById('lista-compra-items');
+    const progreso = document.getElementById('progreso-compra');
+    
+    // Si no estamos en la vista de carrito, no intentamos dibujar nada
+    if (!contenedor) return;
+
+    // 1. Guardar estado actual en LocalStorage
+    localStorage.setItem('nutrafit_lista_compra', JSON.stringify(listaCompra));
+
+    // 2. ORDENACIÓN: Alfabética + Comprados al final
+    listaCompra.sort((a, b) => {
+        // Primero comparamos el estado de "comprado"
+        if (a.comprado !== b.comprado) {
+            return a.comprado ? 1 : -1;
+        }
+        // Si ambos tienen el mismo estado, ordenamos por nombre (A-Z)
+        return a.nombre.localeCompare(b.nombre);
+    });
+
+    // 3. Renderizar el HTML
+    if (listaCompra.length === 0) {
+        contenedor.innerHTML = `
+            <div style="text-align:center; color:#bbb; margin-top:40px;">
+                <i class="fas fa-shopping-basket" style="font-size: 3em; margin-bottom: 10px; opacity: 0.3;"></i>
+                <p>Tu lista está vacía.<br>¡Añade algo que necesites!</p>
+            </div>`;
+        progreso.innerText = "0 artículos en la lista";
+        return;
+    }
+
+    contenedor.innerHTML = listaCompra.map(item => `
+        <div class="item-compra ${item.comprado ? 'comprado' : ''}">
+            <div class="item-info">
+                <span class="cantidad-badge">${item.cantidad}</span>
+                <span class="nombre-producto">${item.nombre}</span>
+            </div>
+            <div class="item-acciones">
+                <input type="checkbox" class="check-compra" 
+                    ${item.comprado ? 'checked' : ''} 
+                    onchange="toggleComprado(${item.id})">
+                <button class="btn-borrar-item" onclick="eliminarItemCompra(${item.id})">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    // 4. Actualizar el contador de progreso
+    const total = listaCompra.length;
+    const completados = listaCompra.filter(i => i.comprado).length;
+    progreso.innerHTML = `<i class="fas fa-info-circle"></i> Tienes <strong>${completados} de ${total}</strong> artículos listos`;
+}
