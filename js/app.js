@@ -506,14 +506,15 @@ function filtrarDespensa() {
         fila.style.display = nombreAlimento.includes(textoBusqueda) ? "" : "none";
     });
 }
-
-/* --- 8. LÓGICA DE LISTA DE COMPRA --- */
+/* --- 8. LÓGICA DE LISTA DE COMPRA (DISEÑO IMAGEN 3) --- */
 let listaCompra = JSON.parse(localStorage.getItem('nutrafit_lista_compra')) || [];
 
 function agregarItemCompra() {
     const inputNombre = document.getElementById('item-nombre');
     const inputCantidad = document.getElementById('item-cantidad');
     
+    if (!inputNombre || !inputCantidad) return;
+
     const nombre = inputNombre.value.trim();
     const cantidad = inputCantidad.value.trim() || "1";
 
@@ -530,6 +531,8 @@ function agregarItemCompra() {
     };
 
     listaCompra.push(nuevoItem);
+    
+    // Limpiar inputs y devolver foco
     inputNombre.value = "";
     inputCantidad.value = "";
     inputNombre.focus();
@@ -546,6 +549,7 @@ function toggleComprado(id) {
 }
 
 function eliminarItemCompra(id) {
+    // No preguntamos para eliminar uno solo para que sea ágil, como en la imagen
     listaCompra = listaCompra.filter(i => i.id !== id);
     actualizarInterfazCompra();
 }
@@ -564,8 +568,10 @@ function actualizarInterfazCompra() {
     
     if (!contenedor) return;
 
+    // Sincronizar con almacenamiento local (Persistencia)
     localStorage.setItem('nutrafit_lista_compra', JSON.stringify(listaCompra));
 
+    // Ordenar: Pendientes arriba (A-Z) y Comprados abajo
     listaCompra.sort((a, b) => {
         if (a.comprado !== b.comprado) return a.comprado ? 1 : -1;
         return a.nombre.localeCompare(b.nombre);
@@ -573,32 +579,41 @@ function actualizarInterfazCompra() {
 
     if (listaCompra.length === 0) {
         contenedor.innerHTML = `
-            <div style="text-align:center; color:#bbb; margin-top:40px;">
-                <i class="fas fa-shopping-basket" style="font-size: 3em; margin-bottom: 10px; opacity: 0.3;"></i>
-                <p>Tu lista está vacía.<br>¡Añade algo que necesites!</p>
+            <div style="text-align:center; color:#bbb; padding:40px;">
+                <i class="fas fa-shopping-basket" style="font-size: 3em; opacity: 0.2;"></i>
+                <p style="margin-top:10px;">La lista está vacía</p>
             </div>`;
-        progreso.innerText = "0 artículos en la lista";
+        if (progreso) progreso.innerText = "0 artículos";
         return;
     }
 
+    // Renderizado estilo Imagen 3
     contenedor.innerHTML = listaCompra.map(item => `
         <div class="item-compra ${item.comprado ? 'comprado' : ''}">
-            <div class="item-info">
-                <span class="cantidad-badge">${item.cantidad}</span>
-                <span class="nombre-producto">${item.nombre}</span>
+            <div class="icono-item">
+                <i class="fas fa-apple-alt" style="opacity:0.2"></i>
             </div>
-            <div class="item-acciones">
-                <input type="checkbox" class="check-compra" 
-                    ${item.comprado ? 'checked' : ''} 
-                    onchange="toggleComprado(${item.id})">
-                <button class="btn-borrar-item" onclick="eliminarItemCompra(${item.id})">
+            
+            <div class="info-item">
+                <span class="nombre-p">${item.nombre}</span>
+                <span class="cantidad-p">${item.cantidad}</span>
+            </div>
+
+            <div class="acciones-item">
+                <button class="btn-borrar-u" onclick="eliminarItemCompra(${item.id})" title="Eliminar">
                     <i class="fas fa-trash-alt"></i>
                 </button>
+                <input type="checkbox" class="check-c" 
+                    ${item.comprado ? 'checked' : ''} 
+                    onchange="toggleComprado(${item.id})">
             </div>
         </div>
     `).join('');
 
-    const total = listaCompra.length;
-    const completados = listaCompra.filter(i => i.comprado).length;
-    progreso.innerHTML = `<i class="fas fa-info-circle"></i> Tienes <strong>${completados} de ${total}</strong> artículos listos`;
+    // Actualizar contador
+    if (progreso) {
+        const total = listaCompra.length;
+        const listos = listaCompra.filter(i => i.comprado).length;
+        progreso.innerHTML = `<i class="fas fa-check-circle"></i> ${listos} de ${total} comprados`;
+    }
 }
