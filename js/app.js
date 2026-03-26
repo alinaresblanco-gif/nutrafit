@@ -37,6 +37,9 @@ async function abrirVista(nombreVista) {
         if (nombreVista === 'evolucion-peso') {
             setTimeout(inicializarPeso, 100);
         }
+        if (nombreVista === 'nuestra_despensa') {
+    setTimeout(cargarDespensa, 100); // Esto dispara la carga de datos al abrir la vista
+}
 
     } catch (error) {
         console.error("Error al abrir la vista:", error);
@@ -384,4 +387,133 @@ async function generarPDF() {
     doc.text("Nutrafit App - Tu asistente personal de salud", 105, 285, null, null, "center");
 
     doc.save(`Nutrafit_Evolucion_${fechaReporte}.pdf`);
+}
+/* --- 6. LÓGICA DE ALIMENTOS Y DESPENSA --- */
+
+// Función para los botones +/- (Paso de 0.1 para precisión)
+function ajustarMacroAlimento(id, inc) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let val = parseFloat(el.value) || 0;
+    el.value = Math.max(0, val + inc).toFixed(2);
+    recalcularAlimento(); // Calcula automáticamente al cambiar valores
+}
+
+// TU FÓRMULA: (Grasa * 0.15) + (Carb * 0.12) + (Prot * 0.05) - (Fibra * 0.01)
+function recalcularAlimento() {
+    const prot = parseFloat(document.getElementById('alim-prot').value) || 0;
+    const carb = parseFloat(document.getElementById('alim-carb').value) || 0;
+    const gras = parseFloat(document.getElementById('alim-gras').value) || 0;
+    const fibra = parseFloat(document.getElementById('alim-fibra').value) || 0;
+    
+    const calc = (gras * 0.15) + (carb * 0.12) + (prot * 0.05) - (fibra * 0.01);
+    
+    // Mostramos el resultado en el campo de solo lectura
+    const campoCalc = document.getElementById('alim-calc');
+    if (campoCalc) campoCalc.value = Math.max(0, calc).toFixed(2);
+}
+
+async function guardarEnDespensa() {
+    const nombre = document.getElementById('alim-nombre').value;
+    if(!nombre) return alert("Por favor, escribe el nombre del alimento");
+
+    const manual = parseFloat(document.getElementById('alim-manual').value) || 0;
+    const calculado = parseFloat(document.getElementById('alim-calc').value) || 0;
+
+    // CRÉDITO NETO: Si hay manual, usamos ese. Si no, el calculado.
+    const neto = manual > 0 ? manual : calculado;
+
+    const datos = {
+        tipo: "guardar_alimento",
+        nombre: nombre,
+        grupo: document.getElementById('alim-grupo').value,
+        proteinas: document.getElementById('alim-prot').value,
+        carbohidratos: document.getElementById('alim-carb').value,
+        grasas: document.getElementById('alim-gras').value,
+        fibra: document.getElementById('alim-fibra').value,
+        manual: manual,
+        calculado: calculado,
+        neto: neto.toFixed(2)
+    };
+
+    try {
+        // "no-cors" es necesario para Google Apps Script
+        await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
+        alert("✅ " + nombre + " guardado en la despensa");
+        limpiarFormAlimento();
+    } catch (e) { 
+        alert("Error al conectar con la base de datos"); 
+    }
+}
+
+function limpiarFormAlimento() {
+    // Resetea todos los campos para el siguiente alimento
+    const campos = ['alim-nombre', 'alim-prot', 'alim-carb', 'alim-gras', 'alim-fibra', 'alim-manual', 'alim-calc'];
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            if(el.type === 'number' || id === 'alim-calc') el.value = "0.00";
+            else el.value = "";
+        }
+    });
+}
+
+/* --- 7. CARGA Y BUSCADOR DE DESPENSA --- */
+
+async function cargarDespensa() {
+    const contenedor = document.getElementById('lista-alimentos-agrupados');
+    if(!contenedor) return;
+
+    try {
+        const res = await fetch(URL_GOOGLE_SCRIPT + "?tabla=alimentos&t=" + new Date().getTime());
+        const datos = await res.json();
+        
+        if (!datos || datos.length === 0) {
+            contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>La despensa está vacía.</p>";
+            return;
+        }
+
+        // Agrupar por el campo 'Grupo' (índice 1 de la fila)
+        const grupos = {};
+        datos.forEach(fila => {
+            const nombreGrupo = fila[1];
+            if(!grupos[nombreGrupo]) grupos[nombreGrupo] = [];
+            grupos[nombreGrupo].push(fila);
+        });
+
+        // Ordenar grupos alfabéticamente
+        const nombresGruposOrdenados = Object.keys(grupos).sort();
+
+        let htmlFinal = "";
+        nombresGruposOrdenados.forEach(nombreG => {
+            htmlFinal += `
+                <div class="grupo-despensa-seccion">
+                    <div class="cabecera-grupo-despensa">${nombreG}</div>
+                    <table class="tabla-despensa">
+                        ${grupos[nombreG].map(a => `
+                            <tr class="fila-alimento">
+                                <td><b>${a[0]}</b></td>
+                                <td style="text-align:right">
+                                    <span class="credito-badge">${a[8]} créd.</span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                </div>`;
+        });
+        contenedor.innerHTML = htmlFinal;
+
+    } catch (e) { 
+        contenedor.innerHTML = "<p style='color:red; text-align:center;'>Error al cargar los alimentos.</p>";
+    }
+}
+
+function filtrarDespensa() {
+    const textoBusqueda = document.getElementById('buscador-despensa').value.toLowerCase();
+    const filas = document.querySelectorAll('.fila-alimento');
+    
+    filas.forEach(fila => {
+        const nombreAlimento = fila.innerText.toLowerCase();
+        fila.style.display = nombreAlimento.includes(textoBusqueda) ? "" : "none";
+    });
 }
