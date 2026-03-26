@@ -8,7 +8,7 @@ let vasosActuales = 0;
 const objetivoDiario = 8;
 let graficoPesoInstancia = null;
 
-/* --- 1. NAVEGACIÓN TIPO APP --- */
+/* --- 1. NAVEGACIÓN TIPO APP (ACTUALIZADA) --- */
 async function abrirVista(nombreVista) {
     const pantallaInicio = document.getElementById('pantalla-inicio');
     const contenedorVistas = document.getElementById('contenedor-vistas');
@@ -21,6 +21,7 @@ async function abrirVista(nombreVista) {
         pantallaInicio.style.display = 'none';
         contenedorVistas.style.display = 'block';
 
+        // DISPARADORES SEGÚN LA VISTA CARGADA
         if (nombreVista === 'agua') {
             inicializarAgua();
             cargarHistorico();
@@ -37,8 +38,14 @@ async function abrirVista(nombreVista) {
         if (nombreVista === 'evolucion-peso') {
             setTimeout(inicializarPeso, 100);
         }
+
         if (nombreVista === 'nuestra_despensa') {
             setTimeout(cargarDespensa, 100); 
+        }
+
+        // Caso específico para tu nueva vista de Carrito
+        if (nombreVista === 'carrito-compra') {
+            setTimeout(actualizarInterfazCompra, 100);
         }
 
     } catch (error) {
@@ -313,7 +320,7 @@ function renderizarGrafico(datos) {
     });
 }
 
-/* --- 5. GENERACIÓN DE INFORME PDF CON GRÁFICO --- */
+/* --- 5. GENERACIÓN DE INFORME PDF --- */
 async function generarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -383,8 +390,7 @@ async function generarPDF() {
     doc.save(`Nutrafit_Evolucion_${fechaReporte}.pdf`);
 }
 
-/* --- 6. LÓGICA DE ALIMENTOS Y DESPENSA (CORREGIDA CON REDONDEO REAL) --- */
-
+/* --- 6. LÓGICA DE ALIMENTOS Y DESPENSA --- */
 function ajustarMacroAlimento(id, inc) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -399,17 +405,11 @@ function recalcularAlimento() {
     const gras = parseFloat(document.getElementById('alim-gras').value) || 0;
     const fibra = parseFloat(document.getElementById('alim-fibra').value) || 0;
     
-    // Tu fórmula original
     const resultadoBruto = (gras * 0.15) + (carb * 0.12) + (prot * 0.05) - (fibra * 0.01);
-    
-    // FORZAMOS EL REDONDEO: 0.5 sube al siguiente entero
     const resultadoRedondeado = Math.round(resultadoBruto);
     
     const campoCalc = document.getElementById('alim-calc');
-    if (campoCalc) {
-        // Mostramos el número como entero puro
-        campoCalc.value = Math.max(0, resultadoRedondeado).toFixed(0); 
-    }
+    if (campoCalc) campoCalc.value = Math.max(0, resultadoRedondeado).toFixed(0); 
 }
 
 async function guardarEnDespensa() {
@@ -419,7 +419,6 @@ async function guardarEnDespensa() {
     const manualVal = document.getElementById('alim-manual').value;
     const manual = manualVal ? Math.round(parseFloat(manualVal)) : 0;
     const calculado = parseInt(document.getElementById('alim-calc').value) || 0;
-
     const neto = manual > 0 ? manual : calculado;
 
     const datos = {
@@ -437,11 +436,9 @@ async function guardarEnDespensa() {
 
     try {
         await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        alert("✅ " + nombre + " guardado con " + Math.round(neto) + " créditos.");
+        alert("✅ " + nombre + " guardado.");
         limpiarFormAlimento();
-    } catch (e) { 
-        alert("Error al conectar con la base de datos"); 
-    }
+    } catch (e) { alert("Error al guardar"); }
 }
 
 function limpiarFormAlimento() {
@@ -456,8 +453,7 @@ function limpiarFormAlimento() {
     });
 }
 
-/* --- 7. CARGA Y BUSCADOR DE DESPENSA (CORREGIDA) --- */
-
+/* --- 7. CARGA Y BUSCADOR DE DESPENSA --- */
 async function cargarDespensa() {
     const contenedor = document.getElementById('lista-alimentos-agrupados');
     if(!contenedor) return;
@@ -474,14 +470,13 @@ async function cargarDespensa() {
         const grupos = {};
         datos.forEach(fila => {
             const nombreGrupo = fila[1];
-            if(nombreGrupo && nombreGrupo !== "undefined") {
+            if(nombreGrupo) {
                 if(!grupos[nombreGrupo]) grupos[nombreGrupo] = [];
                 grupos[nombreGrupo].push(fila);
             }
         });
 
         const nombresGruposOrdenados = Object.keys(grupos).sort();
-
         let htmlFinal = "";
         nombresGruposOrdenados.forEach(nombreG => {
             htmlFinal += `
@@ -500,24 +495,19 @@ async function cargarDespensa() {
                 </div>`;
         });
         contenedor.innerHTML = htmlFinal;
-
-    } catch (e) { 
-        contenedor.innerHTML = "<p style='color:red; text-align:center;'>Error al cargar los alimentos.</p>";
-    }
+    } catch (e) { console.error("Error despensa", e); }
 }
 
 function filtrarDespensa() {
     const textoBusqueda = document.getElementById('buscador-despensa').value.toLowerCase();
     const filas = document.querySelectorAll('.fila-alimento');
-    
     filas.forEach(fila => {
         const nombreAlimento = fila.innerText.toLowerCase();
         fila.style.display = nombreAlimento.includes(textoBusqueda) ? "" : "none";
     });
 }
-/* --- 8. LÓGICA DE LISTA DE COMPRA --- */
 
-// Array global para la lista, cargando desde el almacenamiento del móvil/navegador
+/* --- 8. LÓGICA DE LISTA DE COMPRA --- */
 let listaCompra = JSON.parse(localStorage.getItem('nutrafit_lista_compra')) || [];
 
 function agregarItemCompra() {
@@ -540,8 +530,6 @@ function agregarItemCompra() {
     };
 
     listaCompra.push(nuevoItem);
-    
-    // Limpiar inputs y devolver el foco al nombre para seguir escribiendo rápido
     inputNombre.value = "";
     inputCantidad.value = "";
     inputNombre.focus();
@@ -564,8 +552,6 @@ function eliminarItemCompra(id) {
 
 function limpiarListaCompra() {
     if (listaCompra.length === 0) return;
-    
-    // Un toque de cortesía antes de borrar todo
     if (confirm("¿Deseas vaciar toda la lista de la compra?")) {
         listaCompra = [];
         actualizarInterfazCompra();
@@ -576,23 +562,15 @@ function actualizarInterfazCompra() {
     const contenedor = document.getElementById('lista-compra-items');
     const progreso = document.getElementById('progreso-compra');
     
-    // Si no estamos en la vista de carrito, no intentamos dibujar nada
     if (!contenedor) return;
 
-    // 1. Guardar estado actual en LocalStorage
     localStorage.setItem('nutrafit_lista_compra', JSON.stringify(listaCompra));
 
-    // 2. ORDENACIÓN: Alfabética + Comprados al final
     listaCompra.sort((a, b) => {
-        // Primero comparamos el estado de "comprado"
-        if (a.comprado !== b.comprado) {
-            return a.comprado ? 1 : -1;
-        }
-        // Si ambos tienen el mismo estado, ordenamos por nombre (A-Z)
+        if (a.comprado !== b.comprado) return a.comprado ? 1 : -1;
         return a.nombre.localeCompare(b.nombre);
     });
 
-    // 3. Renderizar el HTML
     if (listaCompra.length === 0) {
         contenedor.innerHTML = `
             <div style="text-align:center; color:#bbb; margin-top:40px;">
@@ -620,7 +598,6 @@ function actualizarInterfazCompra() {
         </div>
     `).join('');
 
-    // 4. Actualizar el contador de progreso
     const total = listaCompra.length;
     const completados = listaCompra.filter(i => i.comprado).length;
     progreso.innerHTML = `<i class="fas fa-info-circle"></i> Tienes <strong>${completados} de ${total}</strong> artículos listos`;
