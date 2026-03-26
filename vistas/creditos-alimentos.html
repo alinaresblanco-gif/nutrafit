@@ -11,7 +11,7 @@
 
 <div class="contenido-scroll" style="margin-top: 80px; padding: 15px;">
     
-    <button class="boton-historial-v2" onclick="abrirVista('nuestra_despensa')" style="width:100%; margin-bottom:20px;">
+    <button class="boton-accion-v2" onclick="abrirVista('nuestra_despensa')" style="width:100%; margin-bottom:20px; background-color: #78a978;">
         <i class="fas fa-warehouse"></i> NUESTRA DESPENSA
     </button>
 
@@ -50,31 +50,34 @@
                 <label class="etiqueta-verde">PROTEINAS</label>
                 <div class="control-stepper-corporativo">
                     <button onclick="ajustarMacroAlimento('alim-prot', -1)">-</button>
-                    <input type="number" id="alim-prot" value="0.00" readonly class="text-center">
+                    <input type="number" id="alim-prot" value="0.00" step="0.1" class="text-center" oninput="recalcularAlimento()">
                     <button onclick="ajustarMacroAlimento('alim-prot', 1)">+</button>
                 </div>
             </div>
+            
             <div class="campo-macro">
                 <label class="etiqueta-verde">CARBOHIDR.</label>
                 <div class="control-stepper-corporativo">
                     <button onclick="ajustarMacroAlimento('alim-carb', -1)">-</button>
-                    <input type="number" id="alim-carb" value="0.00" readonly class="text-center">
+                    <input type="number" id="alim-carb" value="0.00" step="0.1" class="text-center" oninput="recalcularAlimento()">
                     <button onclick="ajustarMacroAlimento('alim-carb', 1)">+</button>
                 </div>
             </div>
+
             <div class="campo-macro">
                 <label class="etiqueta-verde">GRASAS</label>
                 <div class="control-stepper-corporativo">
                     <button onclick="ajustarMacroAlimento('alim-gras', -1)">-</button>
-                    <input type="number" id="alim-gras" value="0.00" readonly class="text-center">
+                    <input type="number" id="alim-gras" value="0.00" step="0.1" class="text-center" oninput="recalcularAlimento()">
                     <button onclick="ajustarMacroAlimento('alim-gras', 1)">+</button>
                 </div>
             </div>
+
             <div class="campo-macro">
                 <label class="etiqueta-verde">FIBRA</label>
                 <div class="control-stepper-corporativo">
                     <button onclick="ajustarMacroAlimento('alim-fibra', -1)">-</button>
-                    <input type="number" id="alim-fibra" value="0.00" readonly class="text-center">
+                    <input type="number" id="alim-fibra" value="0.00" step="0.1" class="text-center" oninput="recalcularAlimento()">
                     <button onclick="ajustarMacroAlimento('alim-fibra', 1)">+</button>
                 </div>
             </div>
