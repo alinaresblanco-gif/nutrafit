@@ -1,4 +1,4 @@
-<div class="vista-cabecera-fija" style="height: 120px;"> 
+<div class="vista-cabecera-fija" style="height: 140px;"> 
     <div class="cabecera-barra">
         <button onclick="volverInicio()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
@@ -12,91 +12,124 @@
     </div>
 
     <div class="contenedor-input-compra">
-        <div class="fila-inputs">
-            <input type="text" id="item-nombre" placeholder="Nombre del alimento..." class="input-app">
-            <input type="text" id="item-cantidad" placeholder="Cant." class="input-app" style="width: 70px;">
-            <button onclick="agregarItemCompra()" class="btn-añadir-item">
+        <div class="fila-inputs-moderna">
+            <input type="text" id="item-nombre" placeholder="Nombre del alimento..." class="input-app-grande">
+            <input type="number" id="item-cantidad" placeholder="Cant." class="input-app-corto">
+            <button onclick="agregarItemCompra()" class="btn-mas-verde">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
     </div>
 </div>
 
-<div class="contenido-scroll" style="margin-top: 130px; padding: 10px;">
-    <div id="progreso-compra" class="progreso-texto">0 artículos en la lista</div>
+<div class="contenido-scroll" style="margin-top: 150px; padding: 10px;">
+    <div id="progreso-compra" class="progreso-texto-compra">0 artículos en la lista</div>
     
-    <div id="lista-compra-items" class="contenedor-lista-compra">
+    <div id="lista-compra-items" class="contenedor-lista-compra-estilo">
         </div>
 </div>
 
 <style>
-    /* Estilos para que se parezca a la Imagen 3 */
-    .contenedor-lista-compra {
+    /* REPARACIÓN DE LA CABECERA (Estilo Imagen 1) */
+    .contenedor-input-compra {
+        padding: 0 15px 15px 15px;
+    }
+
+    .fila-inputs-moderna {
         display: flex;
-        flex-direction: column;
+        gap: 10px;
+        background: white;
+        padding: 8px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        align-items: center;
+    }
+
+    .input-app-grande {
+        flex: 2; /* Ocupa más espacio */
+        border: none;
+        padding: 12px;
+        font-size: 16px;
+        outline: none;
+    }
+
+    .input-app-corto {
+        width: 60px;
+        border: none;
+        border-left: 1px solid #eee;
+        padding: 12px 5px;
+        font-size: 16px;
+        text-align: center;
+        outline: none;
+    }
+
+    .btn-mas-verde {
+        background-color: #78a978; /* Tu verde corporativo */
+        color: white;
+        border: none;
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    /* ESTILO DE LA LISTA (Estilo Imagen 3) */
+    .contenedor-lista-compra-estilo {
         background: white;
         border-radius: 15px;
         overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
     .item-compra {
         display: flex;
         align-items: center;
         padding: 15px;
-        border-bottom: 1px solid #f0f0f0;
-        transition: all 0.3s;
-    }
-
-    .icono-item {
-        color: #ccc;
-        font-size: 20px;
-        margin-right: 15px;
-        width: 30px;
-        text-align: center;
+        border-bottom: 1px solid #f8f8f8;
     }
 
     .info-item {
         flex-grow: 1;
         display: flex;
         flex-direction: column;
+        margin-left: 10px;
     }
 
-    .nombre-p {
-        font-size: 16px;
-        color: #333;
-        font-weight: 500;
-    }
-
-    .cantidad-p {
-        font-size: 12px;
-        color: #888;
-    }
+    .nombre-p { font-weight: 500; color: #333; font-size: 16px; }
+    .cantidad-p { color: #888; font-size: 13px; }
 
     .acciones-item {
         display: flex;
-        gap: 20px;
+        gap: 15px;
         align-items: center;
     }
 
     .btn-borrar-u {
-        color: #bbb;
+        color: #d1d1d1;
         background: none;
         border: none;
         font-size: 18px;
     }
 
     .check-c {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
         accent-color: #78a978;
     }
 
-    /* Estilo para cuando está comprado (como pediste: gris y tachado) */
     .item-compra.comprado {
-        background: #fdfdfd;
-        opacity: 0.5;
+        background: #fafafa;
+        opacity: 0.6;
     }
-    .item-compra.comprado .nombre-p {
-        text-decoration: line-through;
+    .item-compra.comprado .nombre-p { text-decoration: line-through; }
+
+    .progreso-texto-compra {
+        padding: 10px;
+        font-size: 14px;
+        color: #666;
     }
 </style>
