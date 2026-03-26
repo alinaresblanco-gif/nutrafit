@@ -1,5 +1,6 @@
-<div class="vista-cabecera-fija" style="height: 120px;"> <div class="cabecera-barra">
-        <button onclick="abrirVista('creditos-alimentos')" class="boton-volver">
+<div class="vista-cabecera-fija" style="height: 120px;"> 
+    <div class="cabecera-barra">
+        <button onclick="abrirVista('creditos-alimentos')" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
         </button>
         
@@ -7,8 +8,8 @@
             <i class="fas fa-warehouse"></i> NUESTRA DESPENSA
         </span>
 
-        <button onclick="volverInicio()" class="boton-home-derecha">
-            <i class="fas fa-home"></i>
+        <button onclick="volverInicio()" class="boton-nav-circular">
+            <i class="fas fa-th-large"></i>
         </button>
     </div>
 
@@ -21,17 +22,52 @@
 </div>
 
 <div class="contenido-scroll" style="margin-top: 130px; padding: 10px;">
-    
     <div id="lista-alimentos-agrupados">
         <div class="cargando-container">
             <div class="spinner-verde"></div>
             <p>Consultando almacén de alimentos...</p>
         </div>
     </div>
-
 </div>
 
 <style>
+    /* Estilos de la Cabecera */
+    .cabecera-barra {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        background: #78a978;
+        color: white;
+    }
+
+    .boton-nav-circular {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .boton-nav-circular:active {
+        background: white;
+        color: #78a978;
+        transform: scale(0.9);
+    }
+
+    .titulo-vista {
+        font-weight: bold;
+        font-size: 16px;
+        letter-spacing: 1px;
+    }
+
     .contenedor-buscador-corporativo {
         padding: 0 15px 10px 15px;
         background: #78a978;
@@ -59,7 +95,7 @@
         color: #333;
     }
 
-    /* Estilo de Grupos */
+    /* Estilo de Grupos y Alimentos */
     .cabecera-grupo-despensa {
         background: #f1f8f1;
         color: #4a6d4a;
@@ -79,10 +115,11 @@
         border-radius: 10px;
         overflow: hidden;
         margin-bottom: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
     .fila-alimento {
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid #f5f5f5;
     }
 
     .fila-alimento td {
@@ -93,9 +130,32 @@
     .credito-badge {
         background: #78a978;
         color: white;
-        padding: 3px 10px;
-        border-radius: 12px;
+        padding: 4px 12px;
+        border-radius: 15px;
         font-weight: bold;
-        font-size: 0.9em;
+        font-size: 0.85em;
+        display: inline-block;
+    }
+
+    /* Animación de carga */
+    .cargando-container {
+        text-align: center;
+        padding: 50px 20px;
+        color: #78a978;
+    }
+
+    .spinner-verde {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #78a978;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>
