@@ -1,13 +1,146 @@
-<div class="contenedor-vista">
-    <header class="cabecera-seccion" style="display: flex; align-items: center; justify-content: center; position: relative; padding: 15px;">
-        <button onclick="volverInicio()" class="boton-volver" style="position: absolute; left: 15px;"><i class="fas fa-chevron-left"></i></button>
-        <div class="titulo-cabecera" style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-shopping-cart" style="font-size: 1.5rem;"></i> 
-            <h1 style="margin: 0; font-size: 1.2rem; white-space: nowrap;">MI CARRITO DE COMPRA</h1>
+<div class="vista-cabecera-fija" style="height: 120px;"> 
+    <div class="cabecera-barra">
+        <button onclick="volverInicio()" class="boton-nav-circular">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <span class="titulo-vista">
+            <i class="fas fa-shopping-cart"></i> LISTA DE COMPRA
+        </span>
+
+        <button onclick="limpiarListaCompra()" class="boton-nav-circular" title="Limpiar lista">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    </div>
+
+    <div class="contenedor-input-compra">
+        <div class="fila-inputs">
+            <input type="text" id="item-nombre" placeholder="¿Qué necesitas?" class="input-app">
+            <input type="text" id="item-cantidad" placeholder="Cant." class="input-app" style="width: 80px;">
+            <button onclick="agregarItemCompra()" class="btn-añadir-item">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
-    </header>
-    <main class="contenido-seccion" style="text-align: center; padding-top: 50px; color: #666;">
-        <i class="fas fa-tasks" style="font-size: 3rem; color: #78a978; margin-bottom: 15px;"></i>
-        <p>Lista de la compra inteligente en construcción...</p>
-    </main>
+    </div>
 </div>
+
+<div class="contenido-scroll" style="margin-top: 135px; padding: 15px;">
+    <div id="progreso-compra" class="progreso-texto">Cargando lista...</div>
+    
+    <div id="lista-compra-items" class="contenedor-lista-compra">
+        </div>
+</div>
+
+<style>
+    .contenedor-input-compra {
+        padding: 0 15px 15px 15px;
+        background: #78a978;
+    }
+
+    .fila-inputs {
+        display: flex;
+        gap: 8px;
+        background: white;
+        padding: 8px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .input-app {
+        border: 1px solid #eee;
+        padding: 10px;
+        border-radius: 10px;
+        outline: none;
+        font-size: 14px;
+    }
+
+    .btn-añadir-item {
+        background: #78a978;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        width: 45px;
+        cursor: pointer;
+    }
+
+    .contenedor-lista-compra {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .item-compra {
+        background: white;
+        padding: 12px 15px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+
+    .item-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-grow: 1;
+    }
+
+    .cantidad-badge {
+        background: #f1f8f1;
+        color: #78a978;
+        font-weight: bold;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.85em;
+        min-width: 30px;
+        text-align: center;
+    }
+
+    .nombre-producto {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .item-acciones {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    /* Checkbox personalizado */
+    .check-compra {
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        accent-color: #78a978;
+    }
+
+    .btn-borrar-item {
+        color: #ffb3b3;
+        background: none;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+    }
+
+    /* ESTADO COMPRADO */
+    .item-compra.comprado {
+        background: #f9f9f9;
+        opacity: 0.6;
+    }
+
+    .item-compra.comprado .nombre-producto {
+        text-decoration: line-through;
+        color: #888;
+    }
+
+    .progreso-texto {
+        text-align: center;
+        font-size: 0.9em;
+        color: #666;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+</style>
