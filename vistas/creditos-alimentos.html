@@ -9,99 +9,90 @@
     </div>
 </div>
 
-<div class="contenido-scroll" style="margin-top: 70px; padding: 15px;">
-
-    <button class="boton-historial-v2" onclick="abrirVista('nuestra_despensa')" style="margin-bottom: 20px;">
+<div class="contenido-scroll" style="margin-top: 80px; padding: 15px;">
+    
+    <button class="boton-historial-v2" onclick="abrirVista('nuestra_despensa')" style="width:100%; margin-bottom:20px;">
         <i class="fas fa-warehouse"></i> NUESTRA DESPENSA
     </button>
 
     <div class="formulario-card">
+        
+        <label class="etiqueta-verde">NOMBRE DEL ALIMENTO</label>
+        <input type="text" id="alim-nombre" class="input-texto-centrado" placeholder="Escribir nombre...">
 
-        <div class="campo-grupo-centrado">
-            <label class="etiqueta-verde">NOMBRE</label>
-            <input type="text" id="alim-nombre" placeholder="Ej: Pechuga de Pollo" class="input-texto-centrado">
-        </div>
+        <label class="etiqueta-verde">GRUPO</label>
+        <select id="alim-grupo" class="input-texto-centrado">
+            <option value="🍉 FRUTA">🍉 FRUTA</option>
+            <option value="🥦 HORTALIZAS,VERDURAS Y PATATAS">🥦 HORTALIZAS, VERDURAS Y PATATAS</option>
+            <option value="🌾 CEREALES">🌾 CEREALES</option>
+            <option value="🥖 PAN">🥖 PAN</option>
+            <option value="🥘 PASTAS, ARROZ Y LEGUMBRES">🥘 PASTAS, ARROZ Y LEGUMBRES</option>
+            <option value="🥩 CARNES Y AVES">🥩 CARNES Y AVES</option>
+            <option value="🐟 PESCADOS">🐟 PESCADOS</option>
+            <option value="🥚 HUEVOS">🥚 HUEVOS</option>
+            <option value="🧀 EMBUTIDOS">🧀 EMBUTIDOS</option>
+            <option value="🏺 MATERIAS GRASAS">🏺 MATERIAS GRASAS</option>
+            <option value="🥜 FRUTOS SECOS">🥜 FRUTOS SECOS</option>
+            <option value="🍶 LACTEOS">🍶 LACTEOS</option>
+            <option value="🥧 POSTRES">🥧 POSTRES</option>
+            <option value="🍯 UNTABLES">🍯 UNTABLES</option>
+            <option value="🧃 SALSAS">🧃 SALSAS</option>
+            <option value="🍟 APERITIVOS SALADOS">🍟 APERITIVOS SALADOS</option>
+            <option value="🥐 BOLLERIA">🥐 BOLLERIA</option>
+            <option value="🍰 PASTELERIA">🍰 PASTELERIA</option>
+            <option value="🍨 HELADOS">🍨 HELADOS</option>
+            <option value="🍵 BEBIDAS">🍵 BEBIDAS</option>
+            <option value="🧂 CONDIMENTOS">🧂 CONDIMENTOS</option>
+        </select>
 
-        <div class="campo-grupo-centrado">
-            <label class="etiqueta-verde">GRUPO</label>
-            <select id="alim-grupo" class="input-texto-centrado select-corporativo">
-                <option value="🍉 FRUTA">🍉 FRUTA</option>
-                <option value="🥦 HORTALIZAS,VERDURAS Y PATATAS">🥦 HORTALIZAS, VERDURAS Y PATATAS</option>
-                <option value="🌾 CEREALES">🌾 CEREALES</option>
-                <option value="🥖 PAN">🥖 PAN</option>
-                <option value="🥘 PASTAS, ARROZ Y LEGUMBRES">🥘 PASTAS, ARROZ Y LEGUMBRES</option>
-                <option value="🥩 CARNES Y AVES">🥩 CARNES Y AVES</option>
-                <option value="🐟 PESCADOS">🐟 PESCADOS</option>
-                <option value="🥚 HUEVOS">🥚 HUEVOS</option>
-                <option value="🧀 EMBUTIDOS">🧀 EMBUTIDOS</option>
-                <option value="🏺 MATERIAS GRASAS">🏺 MATERIAS GRASAS</option>
-                <option value="🥜 FRUTOS SECOS">🥜 FRUTOS SECOS</option>
-                <option value="🍶 LACTEOS">🍶 LACTEOS</option>
-                <option value="🥧 POSTRES">🥧 POSTRES</option>
-                <option value="🍯 UNTABLES">🍯 UNTABLES</option>
-                <option value="🧃 SALSAS">🧃 SALSAS</option>
-                <option value="🍟 APERITIVOS SALADOS">🍟 APERITIVOS SALADOS</option>
-                <option value="🥐 BOLLERIA">🥐 BOLLERIA</option>
-                <option value="🍰 PASTELERIA">🍰 PASTELERIA</option>
-                <option value="🍨 HELADOS">🍨 HELADOS</option>
-                <option value="🍵 BEBIDAS">🍵 BEBIDAS</option>
-                <option value="🧂 CONDIMENTOS">🧂 CONDIMENTOS</option>
-            </select>
-        </div>
-
-        <div class="grid-macros">
-            <div class="campo-macro-tactil">
-                <label class="etiqueta-verde-centrada">PROTEINAS</label>
+        <div class="grid-macros" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div class="campo-macro">
+                <label class="etiqueta-verde">PROTEINAS</label>
                 <div class="control-stepper-corporativo">
-                    <button onclick="ajustarMacroAlimento('alim-prot', -0.1)" class="btn-stepper">-</button>
-                    <input type="number" id="alim-prot" value="0.00" step="0.01" class="input-macro-centro" oninput="recalcularAlimento()">
-                    <button onclick="ajustarMacroAlimento('alim-prot', 0.1)" class="btn-stepper">+</button>
+                    <button onclick="ajustarMacroAlimento('alim-prot', -1)">-</button>
+                    <input type="number" id="alim-prot" value="0.00" readonly class="text-center">
+                    <button onclick="ajustarMacroAlimento('alim-prot', 1)">+</button>
                 </div>
             </div>
-            <div class="campo-macro-tactil">
-                <label class="etiqueta-verde-centrada">CARBOHIDRATOS</label>
+            <div class="campo-macro">
+                <label class="etiqueta-verde">CARBOHIDR.</label>
                 <div class="control-stepper-corporativo">
-                    <button onclick="ajustarMacroAlimento('alim-carb', -0.1)" class="btn-stepper">-</button>
-                    <input type="number" id="alim-carb" value="0.00" step="0.01" class="input-macro-centro" oninput="recalcularAlimento()">
-                    <button onclick="ajustarMacroAlimento('alim-carb', 0.1)" class="btn-stepper">+</button>
+                    <button onclick="ajustarMacroAlimento('alim-carb', -1)">-</button>
+                    <input type="number" id="alim-carb" value="0.00" readonly class="text-center">
+                    <button onclick="ajustarMacroAlimento('alim-carb', 1)">+</button>
                 </div>
             </div>
-            <div class="campo-macro-tactil">
-                <label class="etiqueta-verde-centrada">GRASAS</label>
+            <div class="campo-macro">
+                <label class="etiqueta-verde">GRASAS</label>
                 <div class="control-stepper-corporativo">
-                    <button onclick="ajustarMacroAlimento('alim-gras', -0.1)" class="btn-stepper">-</button>
-                    <input type="number" id="alim-gras" value="0.00" step="0.01" class="input-macro-centro" oninput="recalcularAlimento()">
-                    <button onclick="ajustarMacroAlimento('alim-gras', 0.1)" class="btn-stepper">+</button>
+                    <button onclick="ajustarMacroAlimento('alim-gras', -1)">-</button>
+                    <input type="number" id="alim-gras" value="0.00" readonly class="text-center">
+                    <button onclick="ajustarMacroAlimento('alim-gras', 1)">+</button>
                 </div>
             </div>
-            <div class="campo-macro-tactil">
-                <label class="etiqueta-verde-centrada">FIBRA</label>
+            <div class="campo-macro">
+                <label class="etiqueta-verde">FIBRA</label>
                 <div class="control-stepper-corporativo">
-                    <button onclick="ajustarMacroAlimento('alim-fibra', -0.1)" class="btn-stepper">-</button>
-                    <input type="number" id="alim-fibra" value="0.00" step="0.01" class="input-macro-centro" oninput="recalcularAlimento()">
-                    <button onclick="ajustarMacroAlimento('alim-fibra', 0.1)" class="btn-stepper">+</button>
+                    <button onclick="ajustarMacroAlimento('alim-fibra', -1)">-</button>
+                    <input type="number" id="alim-fibra" value="0.00" readonly class="text-center">
+                    <button onclick="ajustarMacroAlimento('alim-fibra', 1)">+</button>
                 </div>
             </div>
         </div>
 
-        <div class="campo-grupo-centrado" style="margin-top: 20px;">
-            <label class="etiqueta-verde">CRÉDITOS MANUALES</label>
-            <input type="number" id="alim-manual" class="input-texto-centrado" placeholder="0" oninput="gestionarInputsCreditos('manual')">
-        </div>
+        <label class="etiqueta-verde" style="margin-top:20px">CRÉDITOS MANUALES</label>
+        <input type="number" id="alim-manual" class="input-texto-centrado" placeholder="0.0" oninput="recalcularAlimento()">
 
-        <div class="campo-grupo-centrado">
-            <label class="etiqueta-verde">CRÉDITOS CALCULADOS</label>
-            <input type="text" id="alim-calc" class="input-texto-centrado readonly-input" readonly value="0">
-        </div>
+        <label class="etiqueta-verde" style="margin-top:10px">CRÉDITOS CALCULADOS</label>
+        <input type="text" id="alim-calc" class="input-texto-centrado readonly-input" style="background:#eee; font-weight:bold;" readonly value="0.00">
 
-        <div class="botones-fila-vertical">
-            <button class="boton-accion-v2" onclick="guardarEnDespensa()">
-                <i class="fas fa-save"></i> GUARDAR EN DESPENSA
-            </button>
-            <button class="boton-accion-v2 boton-secundario-corporativo" onclick="limpiarFormAlimento()">
-                <i class="fas fa-plus-circle"></i> NUEVO ALIMENTO
-            </button>
-        </div>
+        <button class="boton-accion-v2" onclick="guardarEnDespensa()" style="width:100%; margin-top:25px; background:#78a978">
+            <i class="fas fa-save"></i> GUARDAR EN DESPENSA
+        </button>
+        
+        <button class="boton-accion-v2" onclick="limpiarFormAlimento()" style="width:100%; margin-top:10px; background:#e67e22">
+            <i class="fas fa-plus-circle"></i> NUEVO ALIMENTO
+        </button>
 
     </div>
 </div>
