@@ -1,0 +1,25 @@
+<div class="vista-cabecera-fija">
+    <div class="cabecera-barra">
+        <button onclick="abrirVista('creditos-alimentos')" class="boton-volver">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="titulo-vista">
+            <i class="fas fa-warehouse"></i> NUESTRA DESPENSA
+        </span>
+        <button onclick="volverInicio()" class="boton-home-derecha">
+            <i class="fas fa-home"></i>
+        </button>
+    </div>
+    <div class="contenedor-buscador">
+        <div class="caja-busqueda">
+            <i class="fas fa-search"></i>
+            <input type="text" id="buscador-despensa" placeholder="Buscar alimento..." onkeyup="filtrarDespensa()">
+        </div>
+    </div>
+</div>
+
+<div class="contenido-scroll" style="margin-top: 125px; padding: 10px;">
+    <div id="lista-alimentos-agrupados">
+        <div class="cargando">Cargando despensa...</div>
+    </div>
+</div>

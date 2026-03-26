@@ -1,13 +1,104 @@
-<div class="contenedor-vista">
-    <header class="cabecera-seccion" style="display: flex; align-items: center; justify-content: center; position: relative; padding: 15px;">
-        <button onclick="volverInicio()" class="boton-volver" style="position: absolute; left: 15px;"><i class="fas fa-chevron-left"></i></button>
-        <div class="titulo-cabecera" style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-apple-alt" style="font-size: 1.5rem;"></i> 
-            <h1 style="margin: 0; font-size: 1.2rem; white-space: nowrap;">CRÉDITOS DE ALIMENTOS</h1>
+<div class="vista-cabecera-fija">
+    <div class="cabecera-barra">
+        <button onclick="volverInicio()" class="boton-volver">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="titulo-vista">
+            <i class="fas fa-apple-alt"></i> CREDITOS DE MIS ALIMENTOS
+        </span>
+    </div>
+</div>
+
+<div class="contenido-scroll" style="margin-top: 70px; padding: 15px;">
+    <button class="boton-historial-v2" onclick="abrirVista('nuestra_despensa')" style="margin-bottom: 20px;">
+        <i class="fas fa-warehouse"></i> NUESTRA DESPENSA
+    </button>
+
+    <div class="formulario-card">
+        <div class="campo-grupo">
+            <label class="etiqueta-verde">NOMBRE</label>
+            <input type="text" id="alim-nombre" placeholder="Ej: Pechuga de Pollo" class="input-texto">
         </div>
-    </header>
-    <main class="contenido-seccion" style="text-align: center; padding-top: 50px; color: #666;">
-        <i class="fas fa-list-ul" style="font-size: 3rem; color: #78a978; margin-bottom: 15px;"></i>
-        <p>Listado de créditos por alimento en construcción...</p>
-    </main>
+
+        <div class="campo-grupo">
+            <label class="etiqueta-verde">GRUPO</label>
+            <select id="alim-grupo" class="input-texto">
+                <option value="🍉 FRUTA">🍉 FRUTA</option>
+                <option value="🥦 HORTALIZAS,VERDURAS Y PATATAS">🥦 HORTALIZAS, VERDURAS Y PATATAS</option>
+                <option value="🌾 CEREALES">🌾 CEREALES</option>
+                <option value="🥖 PAN">🥖 PAN</option>
+                <option value="🥘 PASTAS, ARROZ Y LEGUMBRES">🥘 PASTAS, ARROZ Y LEGUMBRES</option>
+                <option value="🥩 CARNES Y AVES">🥩 CARNES Y AVES</option>
+                <option value="🐟 PESCADOS">🐟 PESCADOS</option>
+                <option value="🥚 HUEVOS">🥚 HUEVOS</option>
+                <option value="🧀 EMBUTIDOS">🧀 EMBUTIDOS</option>
+                <option value="🏺 MATERIAS GRASAS">🏺 MATERIAS GRASAS</option>
+                <option value="🥜 FRUTOS SECOS">🥜 FRUTOS SECOS</option>
+                <option value="🍶 LACTEOS">🍶 LACTEOS</option>
+                <option value="🥧 POSTRES">🥧 POSTRES</option>
+                <option value="🍯 UNTABLES">🍯 UNTABLES</option>
+                <option value="🧃 SALSAS">🧃 SALSAS</option>
+                <option value="🍟 APERITIVOS SALADOS">🍟 APERITIVOS SALADOS</option>
+                <option value="🥐 BOLLERIA">🥐 BOLLERIA</option>
+                <option value="🍰 PASTELERIA">🍰 PASTELERIA</option>
+                <option value="🍨 HELADOS">🍨 HELADOS</option>
+                <option value="🍵 BEBIDAS">🍵 BEBIDAS</option>
+                <option value="🧂 CONDIMENTOS">🧂 CONDIMENTOS</option>
+            </select>
+        </div>
+
+        <div class="grid-macros">
+            <div class="campo-macro">
+                <label class="etiqueta-verde">PROTEINAS</label>
+                <div class="control-stepper">
+                    <button onclick="ajustarAlimento('alim-prot', -1)">-</button>
+                    <input type="number" id="alim-prot" value="0.00" step="0.01" oninput="recalcularAlimento()">
+                    <button onclick="ajustarAlimento('alim-prot', 1)">+</button>
+                </div>
+            </div>
+            <div class="campo-macro">
+                <label class="etiqueta-verde">CARBOHIDRATOS</label>
+                <div class="control-stepper">
+                    <button onclick="ajustarAlimento('alim-carb', -1)">-</button>
+                    <input type="number" id="alim-carb" value="0.00" step="0.01" oninput="recalcularAlimento()">
+                    <button onclick="ajustarAlimento('alim-carb', 1)">+</button>
+                </div>
+            </div>
+            <div class="campo-macro">
+                <label class="etiqueta-verde">GRASAS</label>
+                <div class="control-stepper">
+                    <button onclick="ajustarAlimento('alim-gras', -1)">-</button>
+                    <input type="number" id="alim-gras" value="0.00" step="0.01" oninput="recalcularAlimento()">
+                    <button onclick="ajustarAlimento('alim-gras', 1)">+</button>
+                </div>
+            </div>
+            <div class="campo-macro">
+                <label class="etiqueta-verde">FIBRA</label>
+                <div class="control-stepper">
+                    <button onclick="ajustarAlimento('alim-fibra', -1)">-</button>
+                    <input type="number" id="alim-fibra" value="0.00" step="0.01" oninput="recalcularAlimento()">
+                    <button onclick="ajustarAlimento('alim-fibra', 1)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="campo-grupo">
+            <label class="etiqueta-verde">CRÉDITOS MANUALES</label>
+            <input type="number" id="alim-manual" class="input-texto" oninput="recalcularAlimento()">
+        </div>
+
+        <div class="campo-grupo">
+            <label class="etiqueta-verde">CRÉDITOS CALCULADOS</label>
+            <input type="text" id="alim-calc" class="input-texto readonly-input" readonly value="0">
+        </div>
+
+        <div class="botones-fila">
+            <button class="boton-accion-v2" onclick="guardarEnDespensa()">
+                <i class="fas fa-save"></i> GUARDAR EN DESPENSA
+            </button>
+            <button class="boton-accion-v2" onclick="limpiarFormAlimento()">
+                <i class="fas fa-plus-circle"></i> NUEVO ALIMENTO
+            </button>
+        </div>
+    </div>
 </div>
