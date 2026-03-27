@@ -1,4 +1,4 @@
-<div class="vista-cabecera-fija" style="height: 380px;"> 
+<div class="vista-cabecera-fija" style="height: 410px;"> 
     <div class="cabecera-barra">
         <button onclick="volverInicio()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
@@ -41,25 +41,29 @@
         <div class="contenedor-formulario-datos">
             <div class="fila-datos">
                 <div class="grupo-input">
-                    <label class="etiqueta-verde">Tiempo de Actividad (min)</label>
+                    <label class="etiqueta-verde">TIEMPO (MIN)</label>
                     <input type="number" id="ej-tiempo" placeholder="0" class="input-app-form">
                 </div>
                 <div class="grupo-input">
-                    <label class="etiqueta-verde">Pasos (Cálculo Aut.)</label>
+                    <label class="etiqueta-verde">PASOS (CALC)</label>
                     <input type="text" id="ej-pasos" placeholder="0" class="input-app-form readonly" readonly>
                 </div>
             </div>
             <div class="fila-datos">
                 <div class="grupo-input">
-                    <label class="etiqueta-verde">Distancia (km)</label>
+                    <label class="etiqueta-verde">DISTANCIA (KM)</label>
                     <input type="number" id="ej-distancia" placeholder="0.00" step="0.01" class="input-app-form">
                 </div>
                 <div class="grupo-input">
-                    <label class="etiqueta-verde">Desnivel Positivo (m)</label>
+                    <label class="etiqueta-verde">DESNIVEL (M)</label>
                     <input type="number" id="ej-desnivel" placeholder="0" class="input-app-form">
                 </div>
             </div>
         </div>
+
+        <a href="strava://feed" class="btn-strava-enlace" title="Abrir Strava">
+            <i class="fab fa-strava"></i> ABRIR STRAVA
+        </a>
 
         <button onclick="validarYGuardarEjercicio()" class="btn-guardar-principal">
             <i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO
@@ -67,7 +71,7 @@
     </div>
 </div>
 
-<div class="solapa-progreso-hoy" style="margin-top: 390px;">
+<div class="solapa-progreso-hoy" style="margin-top: 420px; padding: 0 15px;">
     <div class="tarjeta-info-creditos">
         <i class="fas fa-fire"></i>
         <div>
@@ -77,122 +81,37 @@
     </div>
 </div>
 
-<div class="contenido-scroll-registros" style="margin-top: 450px; padding: 10px;">
+<div class="contenido-scroll-registros" style="margin-top: 490px; padding: 10px;">
     <h3 class="subtitulo-seccion">TUS ACTIVIDADES RECIENTES</h3>
     <div id="lista-actividades-historial" class="contenedor-historial-strava">
-        <div class="vacio-mensaje">Aún no hay actividades registradas. <br>¡Empieza ahora!</div>
+        <div class="vacio-mensaje">No hay actividades.</div>
     </div>
 </div>
 
 <style>
-    /* --- 1. ESTILOS GLOBALES Y CABECERA (UNIFICADO) --- */
-    .cabecera-barra {
-        background: #78a978;
-        padding: 10px 15px;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+    /* Mantenemos tu cabecera corporativa de la Imagen 2 */
+    .cabecera-barra { background: #78a978; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
+    .boton-nav-circular { background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
 
-    /* Iconos blancos translúcidos corporativos */
-    .boton-nav-circular {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        color: white;
-        width: 38px; height: 38px;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 16px; cursor: pointer;
-    }
+    /* Selectores grandes e iguales */
+    .fila-selectores-actividad { display: flex; justify-content: space-between; padding: 15px 0; }
+    .btn-actividad-selector { background: rgba(255, 255, 255, 0.2); color: white; border: none; width: 65px; height: 65px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+    .btn-actividad-selector.activo { background: white; color: #78a978; box-shadow: 0 0 15px white; }
 
-    .titulo-vista { font-weight: bold; font-size: 16px; letter-spacing: 1px; }
+    /* Ajuste de Formulario (Imagen 5 Fix) */
+    .contenedor-formulario-datos { background: white; padding: 12px; border-radius: 15px; margin-bottom: 10px; }
+    .fila-datos { display: flex; gap: 8px; margin-bottom: 8px; }
+    .grupo-input { flex: 1; min-width: 0; } /* El min-width: 0 evita que se salga del contenedor */
+    
+    .etiqueta-verde { color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .input-app-form { width: 100%; border: 1px solid #eee; padding: 8px; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+    .input-app-form.readonly { background: #f5f5f5; color: #999; }
 
-    /* --- 2. SELECTORES DE ACTIVIDAD (GRANDES Y EQUIDISTANTES) --- */
-    .fila-selectores-actividad {
-        display: flex;
-        justify-content: space-between; /* Equidistantes a lo ancho */
-        padding: 15px 0;
-        margin-bottom: 10px;
-    }
+    /* Botón Strava */
+    .btn-strava-enlace { background: #FC6100; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px; border-radius: 10px; font-weight: bold; font-size: 13px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(252, 97, 0, 0.3); }
 
-    .btn-actividad-selector {
-        background: rgba(255, 255, 255, 0.2); /* Mismo fondo translúcido que cabecera */
-        color: white; /* Icono blanco */
-        border: none;
-        width: 70px; height: 70px; /* Más grandes que antes */
-        border-radius: 50%;
-        font-size: 28px;
-        cursor: pointer;
-        transition: all 0.3s;
-        display: flex; align-items: center; justify-content: center;
-    }
-
-    .btn-actividad-selector.activo {
-        background: white;
-        color: #78a978;
-        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.5);
-    }
-
-    /* --- 3. BOTONES DE IMAGEN --- */
-    .fila-botones-imagen {
-        display: flex; gap: 10px; margin-bottom: 15px;
-    }
-
-    .btn-accion-secundario {
-        flex: 1; background: white; border: 1px solid #78a978;
-        color: #78a978; padding: 10px; border-radius: 8px;
-        font-size: 13px; cursor: pointer;
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-
-    #previsualizacion-contenedor {
-        position: relative; width: 100%; max-height: 150px;
-        border-radius: 10px; overflow: hidden; border: 2px dashed rgba(255,255,255,0.5);
-    }
-    #img-previa { width: 100%; height: auto; display: block; }
-    .btn-quitar-img {
-        position: absolute; top: 5px; right: 5px;
-        background: rgba(255,255,255,0.8); color: #ff6b6b;
-        border: none; border-radius: 50%; font-size: 20px;
-    }
-
-    /* --- 4. FORMULARIO DE DATOS --- */
-    .contenedor-formulario-datos {
-        background: white; padding: 15px; border-radius: 15px;
-        margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    .fila-datos { display: flex; gap: 15px; margin-bottom: 10px; }
-    .grupo-input { flex: 1; display: flex; flex-direction: column; }
-
-    .etiqueta-verde {
-        color: #78a978; font-size: 12px; font-weight: bold; margin-bottom: 4px;
-    }
-
-    .input-app-form {
-        border: 1px solid #eee; padding: 10px; border-radius: 8px;
-        font-size: 14px; outline: none; color: #333;
-    }
-    .input-app-form.readonly { background-color: #f9f9f9; color: #888; }
-
-    /* --- 5. BOTÓN GUARDAR PRINCIPAL (ESTILO IMAGEN 3) --- */
-    .btn-guardar-principal {
-        background-color: #78a978; color: white; border: 2px solid white;
-        width: 100%; padding: 15px; border-radius: 12px;
-        font-size: 15px; font-weight: bold; letter-spacing: 1px;
-        display: flex; align-items: center; justify-content: center; gap: 12px;
-        cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    /* --- 6. SOLAPA HOY LLEVAS --- */
-    .tarjeta-info-creditos {
-        background: linear-gradient(135deg, #78a978, #5a8a5a);
-        color: white; padding: 15px; border-radius: 15px;
-        display: flex; align-items: center; gap: 15px;
-    }
-
-    /* --- 7. HISTORIAL ESTILO STRAVA --- */
-    .contenedor-historial-strava { display: flex; flex-direction: column; gap: 15px; }
-    .subtitulo-seccion { color: #666; font-size: 14px; margin-bottom: 10px; padding-left: 5px; }
+    /* Botón Guardar principal */
+    .btn-guardar-principal { background: #78a978; color: white; border: 2px solid white; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    
+    .tarjeta-info-creditos { background: linear-gradient(135deg, #78a978, #5a8a5a); color: white; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
 </style>
