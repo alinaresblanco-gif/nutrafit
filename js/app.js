@@ -617,3 +617,21 @@ function actualizarInterfazCompra() {
         progreso.innerHTML = `<i class="fas fa-check-circle"></i> ${listos} de ${total} comprados`;
     }
 }
+/* === INTERRUPTOR DE BOTONES DE ACTIVIDAD === */
+function seleccionarActividad(tipo) {
+    // 1. Quitamos el blanco de todos los botones
+    const botones = document.querySelectorAll('.btn-actividad-selector');
+    botones.forEach(btn => btn.classList.remove('activo'));
+
+    // 2. Buscamos el que corresponde y le ponemos el blanco (clase activo)
+    if (tipo === 'Caminar') {
+        document.getElementById('btn-walk').classList.add('activo');
+    } else if (tipo === 'Ciclismo') {
+        document.getElementById('btn-bike').classList.add('activo');
+    } else if (tipo === 'Gimnasio') {
+        document.getElementById('btn-gym').classList.add('activo');
+    }
+
+    // Guardamos la elección para usarla esta tarde en los cálculos
+    console.log("Actividad seleccionada para el registro: " + tipo);
+}
