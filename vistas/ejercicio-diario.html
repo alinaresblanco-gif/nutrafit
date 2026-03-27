@@ -1,59 +1,74 @@
-<div class="vista-cabecera-fija" style="height: 190px;"> 
+<div class="vista-cabecera-fija" style="height: 380px;"> 
     <div class="cabecera-barra">
         <button onclick="volverInicio()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
         </button>
         <span class="titulo-vista">MI ACTIVIDAD FÍSICA</span>
-        <button onclick="abrirVista('consultar-ejercicios')" class="boton-nav-circular">
+        <button onclick="abrirVista('historial-ejercicios')" class="boton-nav-circular">
             <i class="fas fa-history"></i>
         </button>
     </div>
 
-    <div class="contenedor-input-compra" style="background: #78a978; padding-bottom: 20px;">
-        <div class="tarjeta-input-compra">
-            <div class="fila-inputs-moderna" style="justify-content: space-around; border:none;">
-                <button class="btn-actividad-selector activo" id="btn-walk" onclick="seleccionarActividad('Caminar')">
-                    <i class="fas fa-walking"></i>
-                </button>
-                <button class="btn-actividad-selector" id="btn-bike" onclick="seleccionarActividad('Ciclismo')">
-                    <i class="fas fa-bicycle"></i>
-                </button>
-                <button class="btn-actividad-selector" id="btn-gym" onclick="seleccionarActividad('Gimnasio')">
-                    <i class="fas fa-dumbbell"></i>
-                </button>
-            </div>
-            
-            <div class="fila-inputs-moderna">
-                <input type="number" id="ej-minutos" placeholder="Minutos de actividad..." class="input-app-grande">
-            </div>
-
-            <div class="contenedor-subir-imagen">
-                <input type="file" id="input-captura" accept="image/*" style="display: none;" onchange="previsualizarImagen(this)">
-                
-                <div class="botones-imagen-fila">
-                    <button onclick="document.getElementById('input-captura').click()" class="btn-accion-secundario">
-                        <i class="fas fa-image"></i> Subir Captura
-                    </button>
-                    <button onclick="hacerFotoEjercicio()" class="btn-accion-secundario camera-btn">
-                        <i class="fas fa-camera"></i> Hacer Foto
-                    </button>
-                </div>
-
-                <div id="previsualizacion-contenedor" style="display: none;">
-                    <img id="img-previa" src="" alt="Previa">
-                    <button onclick="quitarImagen()" class="btn-quitar-img"><i class="fas fa-times-circle"></i></button>
-                </div>
-            </div>
-
-            <button onclick="guardarEjercicioDiario()" class="btn-añadir-principal" id="btn-guardar-ej">
-                <i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO
+    <div class="contenedor-principal-ejercicio" style="background: #78a978; padding: 10px 15px 20px 15px;">
+        
+        <div class="fila-selectores-actividad">
+            <button class="btn-actividad-selector activo" id="btn-walk" onclick="seleccionarActividad('Caminar')">
+                <i class="fas fa-walking"></i>
+            </button>
+            <button class="btn-actividad-selector" id="btn-bike" onclick="seleccionarActividad('Ciclismo')">
+                <i class="fas fa-bicycle"></i>
+            </button>
+            <button class="btn-actividad-selector" id="btn-gym" onclick="seleccionarActividad('Gimnasio')">
+                <i class="fas fa-dumbbell"></i>
             </button>
         </div>
+
+        <div class="fila-botones-imagen">
+            <input type="file" id="input-captura" accept="image/*" style="display: none;" onchange="previsualizarImagen(this)">
+            <button onclick="document.getElementById('input-captura').click()" class="btn-accion-secundario">
+                <i class="fas fa-image"></i> Subir Captura
+            </button>
+            <button onclick="hacerFotoEjercicio()" class="btn-accion-secundario camera-btn">
+                <i class="fas fa-camera"></i> Hacer Foto
+            </button>
+        </div>
+        
+        <div id="previsualizacion-contenedor" style="display: none; margin-bottom: 10px;">
+            <img id="img-previa" src="" alt="Previa">
+            <button onclick="quitarImagen()" class="btn-quitar-img"><i class="fas fa-times-circle"></i></button>
+        </div>
+
+        <div class="contenedor-formulario-datos">
+            <div class="fila-datos">
+                <div class="grupo-input">
+                    <label class="etiqueta-verde">Tiempo de Actividad (min)</label>
+                    <input type="number" id="ej-tiempo" placeholder="0" class="input-app-form">
+                </div>
+                <div class="grupo-input">
+                    <label class="etiqueta-verde">Pasos (Cálculo Aut.)</label>
+                    <input type="text" id="ej-pasos" placeholder="0" class="input-app-form readonly" readonly>
+                </div>
+            </div>
+            <div class="fila-datos">
+                <div class="grupo-input">
+                    <label class="etiqueta-verde">Distancia (km)</label>
+                    <input type="number" id="ej-distancia" placeholder="0.00" step="0.01" class="input-app-form">
+                </div>
+                <div class="grupo-input">
+                    <label class="etiqueta-verde">Desnivel Positivo (m)</label>
+                    <input type="number" id="ej-desnivel" placeholder="0" class="input-app-form">
+                </div>
+            </div>
+        </div>
+
+        <button onclick="validarYGuardarEjercicio()" class="btn-guardar-principal">
+            <i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO
+        </button>
     </div>
 </div>
 
-<div class="contenido-scroll" style="margin-top: 210px; padding: 10px;">
-     <div class="tarjeta-info-creditos" style="margin-top: 0;">
+<div class="solapa-progreso-hoy" style="margin-top: 390px;">
+    <div class="tarjeta-info-creditos">
         <i class="fas fa-fire"></i>
         <div>
             <strong>Hoy llevas:</strong>
@@ -62,92 +77,122 @@
     </div>
 </div>
 
+<div class="contenido-scroll-registros" style="margin-top: 450px; padding: 10px;">
+    <h3 class="subtitulo-seccion">TUS ACTIVIDADES RECIENTES</h3>
+    <div id="lista-actividades-historial" class="contenedor-historial-strava">
+        <div class="vacio-mensaje">Aún no hay actividades registradas. <br>¡Empieza ahora!</div>
+    </div>
+</div>
+
 <style>
-    /* REUTILIZAMOS Y ADAPTAMOS TUS ESTILOS CORPORATIVOS */
-    
-    /* Selectores rápidos de actividad */
-    .btn-actividad-selector {
-        background: #f0f7f0;
-        color: #78a978;
-        border: 2px solid #78a978;
-        width: 55px; height: 55px;
-        border-radius: 50%;
-        font-size: 22px;
-        cursor: pointer;
-        transition: all 0.2s;
-        opacity: 0.5;
-    }
-
-    .btn-actividad-selector.activo {
-        opacity: 1;
+    /* --- 1. ESTILOS GLOBALES Y CABECERA (UNIFICADO) --- */
+    .cabecera-barra {
         background: #78a978;
+        padding: 10px 15px;
         color: white;
-        box-shadow: 0 4px 10px rgba(120, 169, 120, 0.4);
-    }
-
-    /* Sección de imagen */
-    .contenedor-subir-imagen {
-        border-top: 1px solid #eee;
-        padding-top: 12px;
-    }
-
-    .botones-imagen-fila {
         display: flex;
-        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Iconos blancos translúcidos corporativos */
+    .boton-nav-circular {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; cursor: pointer;
+    }
+
+    .titulo-vista { font-weight: bold; font-size: 16px; letter-spacing: 1px; }
+
+    /* --- 2. SELECTORES DE ACTIVIDAD (GRANDES Y EQUIDISTANTES) --- */
+    .fila-selectores-actividad {
+        display: flex;
+        justify-content: space-between; /* Equidistantes a lo ancho */
+        padding: 15px 0;
         margin-bottom: 10px;
     }
 
-    .btn-accion-secundario {
-        flex: 1;
-        background: white;
-        border: 1px solid #78a978;
-        color: #78a978;
-        padding: 10px;
-        border-radius: 8px;
-        font-size: 13px;
+    .btn-actividad-selector {
+        background: rgba(255, 255, 255, 0.2); /* Mismo fondo translúcido que cabecera */
+        color: white; /* Icono blanco */
+        border: none;
+        width: 70px; height: 70px; /* Más grandes que antes */
+        border-radius: 50%;
+        font-size: 28px;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
+        transition: all 0.3s;
+        display: flex; align-items: center; justify-content: center;
+    }
+
+    .btn-actividad-selector.activo {
+        background: white;
+        color: #78a978;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.5);
+    }
+
+    /* --- 3. BOTONES DE IMAGEN --- */
+    .fila-botones-imagen {
+        display: flex; gap: 10px; margin-bottom: 15px;
+    }
+
+    .btn-accion-secundario {
+        flex: 1; background: white; border: 1px solid #78a978;
+        color: #78a978; padding: 10px; border-radius: 8px;
+        font-size: 13px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
     }
 
     #previsualizacion-contenedor {
-        position: relative;
-        width: 100%;
-        max-height: 150px;
-        border-radius: 10px;
-        overflow: hidden;
-        border: 2px dashed #ddd;
-        margin-top: 10px;
+        position: relative; width: 100%; max-height: 150px;
+        border-radius: 10px; overflow: hidden; border: 2px dashed rgba(255,255,255,0.5);
     }
-
-    #img-previa {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-
+    #img-previa { width: 100%; height: auto; display: block; }
     .btn-quitar-img {
-        position: absolute;
-        top: 5px; right: 5px;
-        background: rgba(255,255,255,0.8);
-        color: #ff6b6b;
-        border: none;
-        border-radius: 50%;
-        font-size: 20px;
-        cursor: pointer;
+        position: absolute; top: 5px; right: 5px;
+        background: rgba(255,255,255,0.8); color: #ff6b6b;
+        border: none; border-radius: 50%; font-size: 20px;
     }
 
-    /* Mantenemos el estilo de tu tarjeta bonus */
+    /* --- 4. FORMULARIO DE DATOS --- */
+    .contenedor-formulario-datos {
+        background: white; padding: 15px; border-radius: 15px;
+        margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .fila-datos { display: flex; gap: 15px; margin-bottom: 10px; }
+    .grupo-input { flex: 1; display: flex; flex-direction: column; }
+
+    .etiqueta-verde {
+        color: #78a978; font-size: 12px; font-weight: bold; margin-bottom: 4px;
+    }
+
+    .input-app-form {
+        border: 1px solid #eee; padding: 10px; border-radius: 8px;
+        font-size: 14px; outline: none; color: #333;
+    }
+    .input-app-form.readonly { background-color: #f9f9f9; color: #888; }
+
+    /* --- 5. BOTÓN GUARDAR PRINCIPAL (ESTILO IMAGEN 3) --- */
+    .btn-guardar-principal {
+        background-color: #78a978; color: white; border: 2px solid white;
+        width: 100%; padding: 15px; border-radius: 12px;
+        font-size: 15px; font-weight: bold; letter-spacing: 1px;
+        display: flex; align-items: center; justify-content: center; gap: 12px;
+        cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* --- 6. SOLAPA HOY LLEVAS --- */
     .tarjeta-info-creditos {
         background: linear-gradient(135deg, #78a978, #5a8a5a);
-        color: white;
-        padding: 15px;
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        color: white; padding: 15px; border-radius: 15px;
+        display: flex; align-items: center; gap: 15px;
     }
+
+    /* --- 7. HISTORIAL ESTILO STRAVA --- */
+    .contenedor-historial-strava { display: flex; flex-direction: column; gap: 15px; }
+    .subtitulo-seccion { color: #666; font-size: 14px; margin-bottom: 10px; padding-left: 5px; }
 </style>
