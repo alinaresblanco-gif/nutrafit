@@ -795,3 +795,97 @@ function limpiarFormulario() {
     document.getElementById('ej-pasos').value = "";
     quitarImagen();
 }
+/* =========================================
+   AÑADIDOS FINALES - CORRECCIONES ANTONIO
+   ========================================= */
+
+// 1. CORRECCIÓN ERROR DE CONEXIÓN Y CARGA DE REGISTROS
+// Esta función sobreescribe la anterior para asegurar que use la tabla correcta
+async function cargarHistorialEjercicios() {
+    const contenedor = document.getElementById('lista-actividades-historial');
+    if (!contenedor) return;
+
+    // Ponemos un mensaje de carga para saber que está trabajando
+    contenedor.innerHTML = '<p style="text-align:center; color:#fff; padding:20px;">Actualizando historial de actividades...</p>';
+
+    try {
+        // Añadimos ?tabla=ejercicio para que Google sepa qué darnos
+        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=ejercicio&t=" + new Date().getTime());
+        const registros = await respuesta.json();
+
+        if (!registros || registros.length === 0) {
+            contenedor.innerHTML = '<p style="text-align:center; color:#ccc;">Aún no hay entrenamientos registrados.</p>';
+            return;
+        }
+
+        // Limpiamos y dibujamos las tarjetas estilo Strava (el más reciente primero)
+        contenedor.innerHTML = "";
+        registros.reverse().forEach(reg => {
+            // reg[0]=Fecha, [1]=Título, [2]=Tiempo, [3]=URL Foto, [4]=Km, [5]=Pasos, [6]=Desnivel, [7]=VelMed
+            const tarjeta = document.createElement('div');
+            tarjeta.className = "tarjeta-strava";
+            tarjeta.style = "background: #242424; border-radius: 12px; margin-bottom: 20px; overflow: hidden; border: 1px solid #333; color: white;";
+            
+            tarjeta.innerHTML = `
+                <div style="padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: bold; color: #ff4500; font-size: 1.1em;">${reg[1]}</div>
+                        <div style="font-size: 0.85em; color: #aaa;">${new Date(reg[0]).toLocaleDateString('es-ES')}</div>
+                    </div>
+                </div>
+                ${reg[3] ? `<img src="${reg[3]}" style="width: 100%; display: block; max-height: 300px; object-fit: cover;">` : ''}
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 15px; text-align: center; background: #1a1a1a;">
+                    <div><span style="display:block; font-size: 0.8em; color: #888;">Distancia</span><strong style="font-size: 1.2em;">${reg[4]} km</strong></div>
+                    <div><span style="display:block; font-size: 0.8em; color: #888;">Tiempo</span><strong style="font-size: 1.2em;">${reg[2]} min</strong></div>
+                    <div><span style="display:block; font-size: 0.8em; color: #888;">Velocidad</span><strong style="font-size: 1.2em;">${reg[7]} km/h</strong></div>
+                </div>
+                <div style="padding: 10px 15px; background: #111; display: flex; gap: 15px; font-size: 0.9em; color: #bbb;">
+                    <span><i class="fas fa-shoe-prints"></i> ${reg[5]} pasos</span>
+                    <span><i class="fas fa-mountain"></i> ${reg[6]}m desnivel</span>
+                </div>
+            `;
+            contenedor.appendChild(tarjeta);
+        });
+    } catch (error) {
+        console.error("Error al cargar historial:", error);
+        contenedor.innerHTML = '<p style="text-align:center; color:#ff4d4d;">Error al conectar con el historial. Verifica la conexión.</p>';
+    }
+}
+
+// 2. CORRECCIÓN BOTÓN CÁMARA
+// Forzamos el clic en el input de archivo que debe estar en el HTML
+function intentarHacerFoto() {
+    const selectorFoto = document.getElementById('input-captura');
+    if (selectorFoto) {
+        selectorFoto.click();
+    } else {
+        alert("No se encuentra el selector de cámara en el HTML.");
+    }
+}
+
+// 3. CORRECCIÓN BOTÓN STRAVA
+function abrirStravaExterno() {
+    // Intento abrir la App primero (Deep link), si no, abre la web
+    window.location.href = "strava://feed";
+    setTimeout(function() {
+        window.open("https://www.strava.com/mobile", "_blank");
+    }, 500);
+}
+
+// 4. ASEGURAR QUE EL REGISTRO APARECE AL GUARDAR
+// Modificamos ligeramente la respuesta del guardado para que refresque la lista
+const originalEnviarDatosFinales = enviarDatosFinales;
+enviarDatosFinales = async function(datos) {
+    try {
+        await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
+        alert("¡Entrenamiento guardado con éxito, Antonio!");
+        
+        // Limpiamos el formulario
+        limpiarFormularioEjercicio();
+        
+        // Esperamos 2 segundos para dar tiempo a Google a escribir y recargamos la lista
+        setTimeout(cargarHistorialEjercicios, 2000);
+    } catch (e) {
+        alert("Error al guardar el registro.");
+    }
+};
