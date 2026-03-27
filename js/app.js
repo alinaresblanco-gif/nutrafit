@@ -1,7 +1,7 @@
 /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwaWM_21tXNSYPgog05zIyCsyL9kqaXjaACu0nIOhMg_LXA1iPHRDzzvLGJwbbR9Xip/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycby7qIh6mwTZPvECqAPNZ3cJF1vfK92fNgTCm-2dKl1g5IBDrEPMSt1DvB5I_JeGjKY7/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -635,3 +635,166 @@ function seleccionarActividad(tipo) {
     // Guardamos la elección para usarla esta tarde en los cálculos
     console.log("Actividad seleccionada para el registro: " + tipo);
 }
+/* ============================================================
+   LÓGICA FINAL DE EJERCICIO - ESTILO ANTONIO
+   ============================================================ */
+
+let actividadActual = 'Caminar';
+let archivoImagenActual = null;
+
+// 1. CAMBIO DE ACTIVIDAD Y TÍTULOS DINÁMICOS
+function seleccionarActividad(tipo) {
+    actividadActual = tipo;
+    
+    // UI: Cambiar botones activos
+    const botones = document.querySelectorAll('.btn-actividad-selector');
+    botones.forEach(btn => btn.classList.remove('activo'));
+    if (tipo === 'Caminar') document.getElementById('btn-walk').classList.add('activo');
+    if (tipo === 'Ciclismo') document.getElementById('btn-bike').classList.add('activo');
+    if (tipo === 'Gimnasio') document.getElementById('btn-gym').classList.add('activo');
+
+    console.log("Actividad lista: " + actividadActual);
+}
+
+// 2. CÁLCULOS EN TIEMPO REAL (Pasos y Velocidad)
+document.addEventListener('input', function (e) {
+    const km = parseFloat(document.getElementById('ej-distancia').value);
+    const min = parseFloat(document.getElementById('ej-tiempo').value);
+
+    // Cálculo de Pasos (Metros / 0.65)
+    if (e.target.id === 'ej-distancia' && !isNaN(km)) {
+        const pasos = Math.round((km * 1000) / 0.65);
+        document.getElementById('ej-pasos').value = pasos.toLocaleString();
+    }
+});
+
+// 3. GUARDAR TODO (Drive + Sheets + Historial)
+async function validarYGuardarEjercicio() {
+    const tiempo = document.getElementById('ej-tiempo').value;
+    const distancia = document.getElementById('ej-distancia').value;
+    const desnivel = document.getElementById('ej-desnivel').value || 0;
+    const btnSave = document.querySelector('.btn-guardar-principal');
+
+    if (!tiempo || !distancia) return alert("Antonio, rellena tiempo y distancia.");
+
+    btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GUARDANDO...';
+    btnSave.disabled = true;
+
+    // Obtener Fecha y Hora actual
+    const ahora = new Date();
+    const fechaStr = ahora.toLocaleDateString('es-ES');
+    const horaStr = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+    // Título dinámico según actividad
+    let tituloActividad = "";
+    if (actividadActual === 'Caminar') tituloActividad = "CAMINATA DE HOY";
+    else if (actividadActual === 'Ciclismo') tituloActividad = "RUTA EN BICICLETA";
+    else tituloActividad = "ACTIVIDAD EN GIMNASIO";
+
+    const datos = {
+        tipo: "guardar_ejercicio",
+        actividad: `${tituloActividad} (${fechaStr} - ${horaStr})`,
+        tiempo: tiempo,
+        distancia: distancia,
+        pasos: document.getElementById('ej-pasos').value,
+        desnivel: desnivel
+    };
+
+    // Procesar Foto si existe
+    if (archivoImagenActual) {
+        const reader = new FileReader();
+        reader.readAsDataURL(archivoImagenActual);
+        reader.onload = async function () {
+            datos.imagenBase64 = reader.result.split(',')[1];
+            enviarDatosFinales(datos);
+        };
+    } else {
+        enviarDatosFinales(datos);
+    }
+}
+
+async function enviarDatosFinales(datos) {
+    try {
+        const response = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(datos)
+        });
+        
+        alert("¡Registro guardado con éxito!");
+        cargarHistorialEjercicios(); // Recargar la lista debajo
+        limpiarFormulario();
+    } catch (error) {
+        alert("Error al conectar con el servidor.");
+    } finally {
+        const btnSave = document.querySelector('.btn-guardar-principal');
+        btnSave.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';
+        btnSave.disabled = false;
+    }
+}
+
+// 4. CREAR EL HISTORIAL DINÁMICO (Estilo Strava - Imagen 4)
+async function cargarHistorialEjercicios() {
+    const contenedor = document.getElementById('lista-actividades-historial');
+    contenedor.innerHTML = '<p style="text-align:center; color:white;">Cargando historial...</p>';
+
+    try {
+        const res = await fetch(`${URL_GOOGLE_SCRIPT}?tabla=ejercicio`);
+        const registros = await res.json();
+        
+        contenedor.innerHTML = ""; // Limpiar
+        
+        // El más reciente arriba (reverse)
+        registros.reverse().forEach(reg => {
+            // reg[0]=Fecha, [1]=Título, [2]=Min, [3]=URL Foto, [4]=Km, [5]=Pasos, [6]=Desnivel, [7]=VelMed
+            const card = document.createElement('div');
+            card.className = "tarjeta-strava";
+            card.innerHTML = `
+                <div class="strava-header">
+                    <img src="tu-logo-pequeño.png" class="avatar-mini">
+                    <div>
+                        <div class="strava-titulo">${reg[1]}</div>
+                        <div class="strava-fecha">${new Date(reg[0]).toLocaleDateString()}</div>
+                    </div>
+                    <button class="btn-compartir" onclick="compartirActividad('${reg[1]}', '${reg[4]}km')">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                </div>
+                ${reg[3] ? `<img src="${reg[3]}" class="strava-imagen">` : ''}
+                <div class="strava-stats">
+                    <div class="stat"><span>Distancia</span><strong>${reg[4]} km</strong></div>
+                    <div class="stat"><span>Tiempo</span><strong>${reg[2]} min</strong></div>
+                    <div class="stat"><span>Vel. Media</span><strong>${reg[7]} km/h</strong></div>
+                </div>
+                <div class="strava-footer">
+                    <span><i class="fas fa-shoe-prints"></i> ${reg[5]} pasos</span>
+                    <span><i class="fas fa-mountain"></i> ${reg[6]}m desnivel</span>
+                </div>
+            `;
+            contenedor.appendChild(card);
+        });
+    } catch (e) {
+        contenedor.innerHTML = '<p style="color:white;">Registra tu primera actividad para verla aquí.</p>';
+    }
+}
+
+// 5. BOTÓN COMPARTIR
+function compartirActividad(titulo, distancia) {
+    const texto = `¡Mira mi entrenamiento en Nutrafit! 🏋️‍♂️\n${titulo}\nDistancia: ${distancia}\n¡Seguimos sumando!`;
+    if (navigator.share) {
+        navigator.share({ title: 'Mi Actividad Nutrafit', text: texto });
+    } else {
+        alert("Copiado al portapapeles: \n" + texto);
+    }
+}
+
+function limpiarFormulario() {
+    document.getElementById('ej-tiempo').value = "";
+    document.getElementById('ej-distancia').value = "";
+    document.getElementById('ej-desnivel').value = "";
+    document.getElementById('ej-pasos').value = "";
+    quitarImagen();
+}
+
+// Ejecutar carga inicial al abrir la vista
+document.addEventListener('DOMContentLoaded', cargarHistorialEjercicios);
