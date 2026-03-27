@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx-j6YAm7-yBH5kWCygTh3y-cmiAREmIa97ewfLGpIHT6TyJ2eAMmqJ-rQxHAY3xCoh/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzIazLHQqckNCgcpq1298BrhvdNzNv6kDznPr472mAaE5g-We7G-Tq8tNGstjGsTouU/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -796,101 +796,122 @@ function limpiarFormulario() {
     quitarImagen();
 }
 /* =========================================
-   BLOQUE DE REPARACIÓN PASO A PASO
+   BLOQUE DE REPARACIÓN FINAL (Distinción Botones y Fotos)
    ========================================= */
 
-// A. REPARAR STRAVA (Prioridad App del móvil)
-function abrirStravaExterno() {
-    const instalada = "strava://feed";
-    const web = "https://www.strava.com/dashboard";
-    
-    // Intento abrir la app
-    window.location.href = instalada;
-    
-    // Si en 1.5 segundos sigue aquí, abre la web
-    setTimeout(() => {
-        if (!document.hidden) {
-            window.open(web, "_blank");
-        }
-    }, 1500);
-}
-
-// B. REPARAR CÁMARA (Apertura directa)
+// 1. CORRECCIÓN: Distinguir botones de foto
 function intentarHacerFoto() {
     const input = document.getElementById('input-captura');
     if (input) {
-        // 'capture' le dice al móvil que abra la cámara, no la galería
+        // Forzamos al móvil a preferir la cámara trasera directamente
         input.setAttribute('accept', 'image/*');
         input.setAttribute('capture', 'environment'); 
         input.click();
+    } else {
+        alert("Selector de cámara no encontrado.");
     }
 }
 
-// C. ENVIAR DATOS (Simplificado para evitar errores de conexión)
-async function enviarDatosFinales(datos) {
+// NUEVA FUNCIÓN: Para el botón "Subir Captura/Imagen"
+function intentarSubirCaptura() {
+    const input = document.getElementById('input-captura');
+    if (input) {
+        // Quitamos 'capture' para que el móvil pregunte: Cámara o Galería
+        input.setAttribute('accept', 'image/*');
+        input.removeAttribute('capture'); 
+        input.click();
+    } else {
+        alert("Selector de imagen no encontrado.");
+    }
+}
+
+// 2. CORRECCIÓN: Mensaje de guardado y carga de historial
+enviarDatosFinales = async function(datos) {
     const btn = document.querySelector('.btn-guardar-principal');
     if(btn) {
-        btn.innerHTML = "Subiendo... espera";
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo... espera';
         btn.disabled = true;
     }
 
     try {
-        // Enviamos con 'no-cors' para que el móvil no bloquee la subida de fotos
+        // Enviamos con 'no-cors' para evitar bloqueos del móvil al subir fotos
+        // El móvil pensará que falla, pero Google lo recibirá.
         await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify(datos)
         });
 
-        // Si llega aquí, es que se ha enviado (aunque no podamos leer la respuesta)
-        alert("¡Recibido en Nutrafit!");
+        // Como usamos no-cors, el móvil siempre piensa que falla. 
+        // Sobreescribimos el comportamiento para asumir éxito si no hay error de red.
+        alert("¡Registro enviado a Nutrafit, Antonio! (Verificando en Excel)");
+        
         limpiarFormularioEjercicio();
         
-        // Esperamos 3 segundos y recargamos el historial
-        setTimeout(cargarHistorialEjercicios, 3000);
+        // Esperamos 4 segundos y recargamos el historial
+        setTimeout(cargarHistorialEjercicios, 4000);
 
     } catch (e) {
-        alert("Fallo al enviar. Revisa tu internet.");
+        // Esto solo saldrá si realmente no hay internet o la URL está rota.
+        alert("Fallo real de conexión. Revisa tu internet o la URL del Script.");
     } finally {
         if(btn) {
             btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';
             btn.disabled = false;
         }
     }
-}
+};
 
-// D. CARGAR REGISTROS (Para que aparezcan debajo del botón)
+// 3. CORRECCIÓN: Cargar historial (Tarjetas estilo Strava)
+// Esta función debe sobreescribir la carga inicial
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     if (!contenedor) return;
 
+    // Mensaje de carga inicial
+    contenedor.innerHTML = '<p style="text-align:center; color:#fff; padding:20px;">Actualizando historial de actividades...</p>';
+
     try {
-        const respuesta = await fetch(`${URL_GOOGLE_SCRIPT}?tabla=ejercicio&t=${Date.now()}`);
+        // Petición a Google con timestamp para evitar caché (?t=...)
+        const urlPeticion = `${URL_GOOGLE_SCRIPT}?tabla=ejercicio&t=${Date.now()}`;
+        const respuesta = await fetch(urlPeticion);
         const registros = await respuesta.json();
 
         if (!registros || registros.length === 0) {
-            contenedor.innerHTML = '<p style="text-align:center; color:gray;">No hay registros.</p>';
+            contenedor.innerHTML = '<p style="text-align:center; color:#ccc; padding:20px;">Aún no hay entrenamientos registrados.</p>';
             return;
         }
 
+        // Limpiamos y dibujamos las tarjetas estilo Strava (el más reciente primero)
         contenedor.innerHTML = "";
-        // El último ejercicio saldrá arriba
         registros.reverse().forEach(reg => {
-            const card = document.createElement('div');
-            card.style = "background:#222; border-radius:10px; margin-bottom:15px; border:1px solid #444; color:white; overflow:hidden;";
+            // Estructura: reg[0]=Fecha, [1]=Título, [2]=Min, [3]=URL Foto, [4]=Km, [5]=Pasos, [6]=Desnivel, [7]=VelMed
+            const tarjeta = document.createElement('div');
+            tarjeta.className = "tarjeta-strava";
+            tarjeta.style = "background: #242424; border-radius: 12px; margin-bottom: 20px; overflow: hidden; border: 1px solid #333; color: white;";
             
-            card.innerHTML = `
-                <div style="padding:10px; background:#333; font-weight:bold; color:#fc4c02;">${reg[1]}</div>
-                ${reg[3] ? `<img src="${reg[3]}" style="width:100%; display:block;">` : ''}
-                <div style="padding:10px; display:flex; justify-content:space-between; font-size:0.9em;">
-                    <span><b>Km:</b> ${reg[4]}</span>
-                    <span><b>Min:</b> ${reg[2]}</span>
-                    <span><b>Vel:</b> ${reg[7]}</span>
+            tarjeta.innerHTML = `
+                <div style="padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: bold; color: #fc4c02; font-size: 1.1em;">${reg[1]}</div>
+                        <div style="font-size: 0.85em; color: #aaa;">${new Date(reg[0]).toLocaleDateString('es-ES')}</div>
+                    </div>
+                </div>
+                ${reg[3] && reg[3].startsWith('http') ? `<img src="${reg[3]}" style="width: 100%; display: block; max-height: 300px; object-fit: cover;">` : ''}
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 15px; text-align: center; background: #1a1a1a;">
+                    <div><span style="display:block; font-size: 0.8em; color: #888;">Distancia</span><strong style="font-size: 1.2em;">${reg[4]} km</strong></div>
+                    <div><span style="display:block; font-size: 0.8em; color: #888;">Tiempo</span><strong style="font-size: 1.2em;">${reg[2]} min</strong></div>
+                    <div><span style="display:block; font-size: 0.8em; color: #888;">Velocidad</span><strong style="font-size: 1.2em;">${reg[7]} km/h</strong></div>
+                </div>
+                <div style="padding: 10px 15px; background: #111; display: flex; gap: 15px; font-size: 0.9em; color: #bbb;">
+                    <span><i class="fas fa-shoe-prints"></i> ${reg[5]} pasos</span>
+                    <span><i class="fas fa-mountain"></i> ${reg[6]}m desnivel</span>
                 </div>
             `;
-            contenedor.appendChild(card);
+            contenedor.appendChild(tarjeta);
         });
-    } catch (e) {
-        contenedor.innerHTML = '<p style="text-align:center; color:red;">Error al leer registros del Excel.</p>';
+    } catch (error) {
+        console.error("Error al cargar historial:", error);
+        contenedor.innerHTML = '<p style="text-align:center; color:#ff4d4d; padding:20px;">Error al conectar con el historial. Verifica la conexión y la URL.</p>';
     }
 }
