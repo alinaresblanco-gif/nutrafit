@@ -26,7 +26,7 @@
         <div class="fila-botones-imagen-moderna">
             <input type="file" id="input-captura" accept="image/*" style="display: none;" onchange="previsualizarImagen(this)">
             
-            <button onclick="document.getElementById('input-captura').click()" class="btn-subir-imagen-blanco">
+            <button onclick="intentarSubirCaptura()" class="btn-subir-imagen-blanco">
                 <i class="fas fa-image"></i> Subir Captura
             </button>
             
@@ -35,9 +35,11 @@
             </button>
         </div>
         
-        <div id="previsualizacion-contenedor" style="display: none; margin-bottom: 10px;">
-            <img id="img-previa" src="" alt="Previa">
-            <button onclick="quitarImagen()" class="btn-quitar-img"><i class="fas fa-times-circle"></i></button>
+        <div id="previsualizacion-contenedor" style="display: none; margin-bottom: 10px; position: relative; width: 100%; border-radius: 10px; overflow: hidden; border: 2px dashed rgba(255,255,255,0.5);">
+            <img id="img-previa" src="" alt="Previa" style="width: 100%; height: auto; display: block;">
+            <button onclick="quitarImagen()" class="btn-quitar-img" style="position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.8); color: #ff6b6b; border: none; border-radius: 50%; font-size: 20px; cursor: pointer;">
+                <i class="fas fa-times-circle"></i>
+            </button>
         </div>
 
         <div class="contenedor-formulario-datos">
@@ -91,7 +93,7 @@
 </div>
 
 <style>
-    /* Estilos corporativos mantenidos */
+    /* Estilos corporativos */
     .cabecera-barra { background: #78a978; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
     .boton-nav-circular { background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
 
@@ -99,18 +101,13 @@
     .btn-actividad-selector { background: rgba(255, 255, 255, 0.2); color: white; border: none; width: 65px; height: 65px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
     .btn-actividad-selector.activo { background: white; color: #78a978; box-shadow: 0 0 15px white; }
 
-    /* 📸 SOLUCIÓN: Nuevos Estilos para Botones Modernos de Imagen */
-    .fila-botones-imagen-moderna {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 12px;
-    }
+    .fila-botones-imagen-moderna { display: flex; gap: 10px; margin-bottom: 12px; }
 
     .btn-subir-imagen-blanco {
         flex: 1;
         background: white;
         border: 1px solid white;
-        color: #78a978; /* Texto verde corporativo */
+        color: #78a978;
         padding: 12px;
         border-radius: 10px;
         font-size: 13px;
@@ -124,17 +121,9 @@
         transition: all 0.2s;
     }
 
-    .btn-subir-imagen-blanco:active {
-        transform: scale(0.97);
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
+    .btn-subir-imagen-blanco:active { transform: scale(0.97); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-    /* Previsualización (Mantenida) */
-    #previsualizacion-contenedor { position: relative; width: 100%; max-height: 150px; border-radius: 10px; overflow: hidden; border: 2px dashed rgba(255,255,255,0.5); }
-    #img-previa { width: 100%; height: auto; display: block; }
-    .btn-quitar-img { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.8); color: #ff6b6b; border: none; border-radius: 50%; font-size: 20px; }
-
-    /* Formulario Ajustado (Mantenido) */
+    /* Formulario Ajustado */
     .contenedor-formulario-datos { background: white; padding: 12px; border-radius: 15px; margin-bottom: 10px; }
     .fila-datos { display: flex; gap: 8px; margin-bottom: 8px; }
     .grupo-input { flex: 1; min-width: 0; }
@@ -142,11 +131,7 @@
     .input-app-form { width: 100%; border: 1px solid #eee; padding: 8px; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
     .input-app-form.readonly { background: #f5f5f5; color: #999; }
 
-    /* Botón Strava (Color corregido para que no se pierda al pulsar) */
     .btn-strava-enlace { background: #FC6100; color: white; border: none; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 13px; margin-bottom: 10px; cursor: pointer; }
-
-    /* Botón Guardar principal */
     .btn-guardar-principal { background: #78a978; color: white; border: 2px solid white; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
-    
     .tarjeta-info-creditos { background: linear-gradient(135deg, #78a978, #5a8a5a); color: white; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
 </style>

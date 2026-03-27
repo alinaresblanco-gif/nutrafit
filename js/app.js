@@ -795,49 +795,87 @@ function limpiarFormulario() {
     document.getElementById('ej-pasos').value = "";
     quitarImagen();
 }
-/* =========================================
-   ENVÍO PROFESIONAL - CORRECCIÓN DE BLOQUEO
-   ========================================= */
+/* =========================================================
+   BLOQUE FINAL DEFINITIVO - REPARACIÓN FOTO Y VISTA PREVIA
+   ========================================================= */
 
+// VARIABLE GLOBAL PARA GUARDAR LA FOTO
+let imagenParaEnviar = null;
+
+// 1. FUNCIÓN PARA CAPTURAR Y MOSTRAR LA FOTO (VISTA PREVIA)
+function previsualizarImagen(input) {
+    if (input.files && input.files[0]) {
+        const lector = new FileReader();
+        lector.onload = function(e) {
+            // Guardamos la base64 pura (sin el encabezado data:image...)
+            imagenParaEnviar = e.target.result.split(',')[1];
+            
+            // BUSCAMOS O CREAMOS EL CONTENEDOR DE VISTA PREVIA
+            let vistaPrevia = document.getElementById('img-previa');
+            if (vistaPrevia) {
+                vistaPrevia.src = e.target.result;
+                vistaPrevia.parentElement.style.display = 'block';
+                console.log("Vista previa cargada correctamente");
+            }
+        };
+        lector.readAsDataURL(input.files[0]);
+    }
+}
+
+// 2. DISTINGUIR BOTONES (Hacer Foto vs Subir Archivo)
+function intentarHacerFoto() {
+    const input = document.getElementById('input-captura');
+    if (input) {
+        input.setAttribute('capture', 'environment');
+        // IMPORTANTE: Aseguramos que el input escuche el cambio
+        input.onchange = function() { previsualizarImagen(this); };
+        input.click();
+    }
+}
+
+function intentarSubirCaptura() {
+    const input = document.getElementById('input-captura');
+    if (input) {
+        input.removeAttribute('capture');
+        input.onchange = function() { previsualizarImagen(this); };
+        input.click();
+    }
+}
+
+// 3. ENVÍO DE DATOS (AHORA CON LA IMAGEN RECONECTADA)
 async function enviarDatosFinales(datos) {
     const btn = document.querySelector('.btn-guardar-principal');
     if(btn) {
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENVIANDO...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENVIANDO DATOS Y FOTO...';
         btn.disabled = true;
     }
 
-    // --- TRUCO: ENCOGER LA FOTO ANTES DE ENVIAR ---
-    // Si la foto es muy grande, Google corta la conexión.
-    if (datos.imagenBase64 && datos.imagenBase64.length > 500000) { 
-        console.log("Foto pesada, intentando comprimir...");
-        // (Aquí podríamos añadir un compresor, pero de momento vamos a asegurar el envío)
-    }
+    // AÑADIMOS LA IMAGEN QUE TENEMOS EN LA VARIABLE GLOBAL
+    datos.imagenBase64 = imagenParaEnviar;
 
     try {
-        // CAMBIO CRÍTICO: Quitamos 'no-cors' y usamos un envío estándar
-        // Esto requiere que el Script de Google esté bien publicado
-        const respuesta = await fetch(URL_GOOGLE_SCRIPT, {
+        // Usamos modo 'no-cors' para máxima compatibilidad móvil
+        await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
-            mode: 'cors', // Ahora usamos CORS porque ya tenemos permisos
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+            mode: 'no-cors',
             body: JSON.stringify(datos)
         });
 
-        const resultado = await respuesta.text();
-
-        if (resultado.includes("Éxito") || resultado.includes("Recibido")) {
-            alert("¡TODO GUARDADO! Datos y Foto en Nutrafit.");
-            limpiarFormularioEjercicio();
-            setTimeout(cargarHistorialEjercicios, 3000);
-        } else {
-            // Si Google responde pero con error
-            alert("Respuesta de Google: " + resultado);
+        // Como es 'no-cors' no podemos leer la respuesta, pero si llega aquí, se envió.
+        alert("¡Recibido en Nutrafit! Revisa tu Excel y la carpeta de fotos.");
+        
+        // LIMPIEZA
+        limpiarFormularioEjercicio();
+        imagenParaEnviar = null;
+        if(document.getElementById('previsualizacion-contenedor')) {
+            document.getElementById('previsualizacion-contenedor').style.display = 'none';
         }
 
+        // Recargamos el historial abajo
+        setTimeout(cargarHistorialEjercicios, 3500);
+
     } catch (e) {
-        // Si sale este error, es que la URL está mal o el Script no está publicado para "Cualquier persona"
-        console.error("Error de red:", e);
-        alert("Error de conexión. Por favor, revisa que la URL del Script sea la última.");
+        alert("Fallo de conexión crítico.");
     } finally {
         if(btn) {
             btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';
