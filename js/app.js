@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzBSVreF_uqTWsKf4bwZOdIgOcKa2PCQLiU1ttLwGnzDas7of5Jboi6GehBVIz0051e/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbx-j6YAm7-yBH5kWCygTh3y-cmiAREmIa97ewfLGpIHT6TyJ2eAMmqJ-rQxHAY3xCoh/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -796,99 +796,101 @@ function limpiarFormulario() {
     quitarImagen();
 }
 /* =========================================
-   SISTEMA DE ASISTENCIA TÉCNICA - CORRECCIÓN CRÍTICA
+   BLOQUE DE REPARACIÓN PASO A PASO
    ========================================= */
 
-// 1. CORRECCIÓN CARGA DE HISTORIAL (Elimina el error de conexión)
-async function cargarHistorialEjercicios() {
-    const contenedor = document.getElementById('lista-actividades-historial');
-    if (!contenedor) return;
-
-    contenedor.innerHTML = '<p style="text-align:center; color:#fff;">Cargando historial...</p>';
-
-    try {
-        // Forzamos la tabla correcta y evitamos caché
-        const urlPeticion = `${URL_GOOGLE_SCRIPT}?tabla=ejercicio&cache=${Date.now()}`;
-        const respuesta = await fetch(urlPeticion);
-        const registros = await respuesta.json();
-
-        if (!registros || registros.length === 0) {
-            contenedor.innerHTML = '<p style="text-align:center; color:#ccc;">No hay registros aún.</p>';
-            return;
-        }
-
-        contenedor.innerHTML = "";
-        registros.reverse().forEach(reg => {
-            // Estructura: 0:Fecha, 1:Actividad, 2:Tiempo, 3:FotoURL, 4:Km, 5:Pasos, 6:Desnivel, 7:Vel
-            const card = document.createElement('div');
-            card.className = "tarjeta-strava";
-            card.style = "background:#1f1f1f; border-radius:12px; margin-top:15px; border:1px solid #333; overflow:hidden;";
-            
-            card.innerHTML = `
-                <div style="padding:12px; background:#282828; border-bottom:1px solid #333;">
-                    <strong style="color:#fc4c02; font-size:1.1em;">${reg[1]}</strong><br>
-                    <small style="color:#aaa;">${new Date(reg[0]).toLocaleDateString()}</small>
-                </div>
-                ${reg[3] ? `<img src="${reg[3]}" style="width:100%; max-height:250px; object-fit:cover; display:block;">` : ''}
-                <div style="display:grid; grid-template-columns:repeat(3,1fr); padding:12px; text-align:center; background:#181818;">
-                    <div><small style="color:#888;">Distancia</small><br><strong>${reg[4]}km</strong></div>
-                    <div><small style="color:#888;">Tiempo</small><br><strong>${reg[2]}m</strong></div>
-                    <div><small style="color:#888;">Velocidad</small><br><strong>${reg[7]}k/h</strong></div>
-                </div>
-                <div style="padding:8px 12px; font-size:0.85em; color:#aaa; border-top:1px solid #222;">
-                    <span>👣 ${reg[5]} pasos</span> | <span>⛰️ ${reg[6]}m desnivel</span>
-                </div>`;
-            contenedor.appendChild(card);
-        });
-    } catch (e) {
-        contenedor.innerHTML = '<p style="color:#ff6666; text-align:center;">Error al recuperar datos. Pulsa de nuevo en el cuaderno.</p>';
-    }
-}
-
-// 2. CORRECCIÓN STRAVA (Apertura de App Directa)
+// A. REPARAR STRAVA (Prioridad App del móvil)
 function abrirStravaExterno() {
-    // Intento abrir directamente la sección de actividad de la App
-    window.location.href = "strava://feed";
-    // Si en 1 segundo no ha salido de la app, es que no abrió la app, entonces lanzamos web
+    const instalada = "strava://feed";
+    const web = "https://www.strava.com/dashboard";
+    
+    // Intento abrir la app
+    window.location.href = instalada;
+    
+    // Si en 1.5 segundos sigue aquí, abre la web
     setTimeout(() => {
         if (!document.hidden) {
-            window.open("https://www.strava.com/dashboard", "_blank");
+            window.open(web, "_blank");
         }
-    }, 1000);
+    }, 1500);
 }
 
-// 3. CORRECCIÓN CÁMARA (Para que no sea igual que subir archivo)
+// B. REPARAR CÁMARA (Apertura directa)
 function intentarHacerFoto() {
     const input = document.getElementById('input-captura');
     if (input) {
-        // Forzamos al móvil a preferir la cámara trasera
+        // 'capture' le dice al móvil que abra la cámara, no la galería
+        input.setAttribute('accept', 'image/*');
         input.setAttribute('capture', 'environment'); 
         input.click();
     }
 }
 
-// 4. CORRECCIÓN ENVÍO DE DATOS (Asegura que la foto llegue a Google)
+// C. ENVIAR DATOS (Simplificado para evitar errores de conexión)
 async function enviarDatosFinales(datos) {
     const btn = document.querySelector('.btn-guardar-principal');
+    if(btn) {
+        btn.innerHTML = "Subiendo... espera";
+        btn.disabled = true;
+    }
+
     try {
-        if(btn) btn.innerHTML = "SUBIENDO FOTO...";
-        
-        // El modo 'no-cors' impide leer la respuesta, pero permite enviar. 
-        // Si no suben las fotos, es que el Script de Google necesita ser publicado como "Nueva Versión"
+        // Enviamos con 'no-cors' para que el móvil no bloquee la subida de fotos
         await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify(datos)
         });
 
-        alert("¡Registro enviado a Nutrafit, Antonio!");
+        // Si llega aquí, es que se ha enviado (aunque no podamos leer la respuesta)
+        alert("¡Recibido en Nutrafit!");
         limpiarFormularioEjercicio();
-        // Recarga el historial tras 3 segundos para dar tiempo a Google
+        
+        // Esperamos 3 segundos y recargamos el historial
         setTimeout(cargarHistorialEjercicios, 3000);
 
     } catch (e) {
-        alert("Error de conexión al enviar.");
+        alert("Fallo al enviar. Revisa tu internet.");
     } finally {
-        if(btn) btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';
+        if(btn) {
+            btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';
+            btn.disabled = false;
+        }
+    }
+}
+
+// D. CARGAR REGISTROS (Para que aparezcan debajo del botón)
+async function cargarHistorialEjercicios() {
+    const contenedor = document.getElementById('lista-actividades-historial');
+    if (!contenedor) return;
+
+    try {
+        const respuesta = await fetch(`${URL_GOOGLE_SCRIPT}?tabla=ejercicio&t=${Date.now()}`);
+        const registros = await respuesta.json();
+
+        if (!registros || registros.length === 0) {
+            contenedor.innerHTML = '<p style="text-align:center; color:gray;">No hay registros.</p>';
+            return;
+        }
+
+        contenedor.innerHTML = "";
+        // El último ejercicio saldrá arriba
+        registros.reverse().forEach(reg => {
+            const card = document.createElement('div');
+            card.style = "background:#222; border-radius:10px; margin-bottom:15px; border:1px solid #444; color:white; overflow:hidden;";
+            
+            card.innerHTML = `
+                <div style="padding:10px; background:#333; font-weight:bold; color:#fc4c02;">${reg[1]}</div>
+                ${reg[3] ? `<img src="${reg[3]}" style="width:100%; display:block;">` : ''}
+                <div style="padding:10px; display:flex; justify-content:space-between; font-size:0.9em;">
+                    <span><b>Km:</b> ${reg[4]}</span>
+                    <span><b>Min:</b> ${reg[2]}</span>
+                    <span><b>Vel:</b> ${reg[7]}</span>
+                </div>
+            `;
+            contenedor.appendChild(card);
+        });
+    } catch (e) {
+        contenedor.innerHTML = '<p style="text-align:center; color:red;">Error al leer registros del Excel.</p>';
     }
 }
