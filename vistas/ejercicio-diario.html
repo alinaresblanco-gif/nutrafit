@@ -4,8 +4,8 @@
             <i class="fas fa-chevron-left"></i>
         </button>
         <span class="titulo-vista">MI ACTIVIDAD FÍSICA</span>
-        <button onclick="abrirVista('historial-ejercicios')" class="boton-nav-circular">
-            <i class="fas fa-history"></i>
+        <button onclick="cargarHistorialEjercicios()" class="boton-nav-circular">
+            <i class="fas fa-sync-alt"></i>
         </button>
     </div>
 
@@ -32,9 +32,9 @@
             </button>
         </div>
         
-        <div id="previsualizacion-contenedor">
-            <img id="img-previa" src="" alt="Previa">
-            <button onclick="quitarImagen()" class="btn-quitar-img">
+        <div id="previsualizacion-contenedor" style="display:none; margin-bottom:10px; position:relative;">
+            <img id="img-previa" src="" style="width:100%; border-radius:10px; max-height:200px; object-fit:cover;">
+            <button onclick="quitarImagen()" class="btn-quitar-img" style="position:absolute; top:5px; right:5px; background:white; border-radius:50%; width:25px; height:25px; border:none; color:red;">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -43,21 +43,21 @@
             <div class="fila-datos">
                 <div class="grupo-input">
                     <label class="etiqueta-verde">TIEMPO (MIN)</label>
-                    <input type="number" id="ej-tiempo" placeholder="0" class="input-app-form">
+                    <input type="number" id="ej-tiempo" class="input-app-form">
                 </div>
                 <div class="grupo-input">
                     <label class="etiqueta-verde">PASOS (CALC)</label>
-                    <input type="text" id="ej-pasos" placeholder="0" class="input-app-form readonly" readonly>
+                    <input type="text" id="ej-pasos" class="input-app-form readonly" readonly>
                 </div>
             </div>
             <div class="fila-datos">
                 <div class="grupo-input">
                     <label class="etiqueta-verde">DISTANCIA (KM)</label>
-                    <input type="number" id="ej-distancia" placeholder="0.00" step="0.01" class="input-app-form">
+                    <input type="number" id="ej-distancia" step="0.01" class="input-app-form">
                 </div>
                 <div class="grupo-input">
                     <label class="etiqueta-verde">DESNIVEL (M)</label>
-                    <input type="number" id="ej-desnivel" placeholder="0" class="input-app-form">
+                    <input type="number" id="ej-desnivel" class="input-app-form">
                 </div>
             </div>
         </div>
@@ -71,7 +71,7 @@
         </button>
 
         <button onclick="reiniciarFormularioEjercicio()" class="btn-guardar-principal btn-reiniciar">
-            <i class="fas fa-redo-alt"></i> REINICIAR / LIMPIAR VISTA
+            <i class="fas fa-redo-alt"></i> LIMPIAR VISTA
         </button>
     </div>
 </div>
@@ -88,61 +88,43 @@
 
 <div class="contenido-scroll-registros">
     <h3 class="subtitulo-seccion">TUS ACTIVIDADES RECIENTES</h3>
-    <div id="lista-actividades-historial" class="contenedor-historial-strava">
+    <div id="lista-actividades-historial">
         </div>
 </div>
 
 <style>
-    /* 1. ESTRUCTURA Y CABECERA */
     .vista-cabecera-fija { height: auto; position: relative; }
     .cabecera-barra { background: #78a978; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
-    .boton-nav-circular { background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-    
+    .boton-nav-circular { background: rgba(255,255,255,0.2); border:none; color:white; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
     .contenedor-principal-ejercicio { background: #78a978; padding: 10px 15px 20px 15px; }
-
-    /* 2. SELECTORES Y BOTONES IMAGEN */
     .fila-selectores-actividad { display: flex; justify-content: space-between; padding: 15px 0; }
-    .btn-actividad-selector { background: rgba(255, 255, 255, 0.2); color: white; border: none; width: 65px; height: 65px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-    .btn-actividad-selector.activo { background: white; color: #78a978; box-shadow: 0 0 15px white; }
-    
+    .btn-actividad-selector { background: rgba(255,255,255,0.2); color:white; border:none; width:65px; height:65px; border-radius:50%; font-size:24px; }
+    .btn-actividad-selector.activo { background:white; color:#78a978; box-shadow: 0 0 15px white; }
     .fila-botones-imagen-moderna { display: flex; gap: 10px; margin-bottom: 12px; }
-    .btn-subir-imagen-blanco { flex: 1; background: white; border: none; color: #78a978; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-    /* 3. PREVISUALIZACIÓN */
-    #previsualizacion-contenedor { display: none; margin-bottom: 10px; position: relative; }
-    #img-previa { width: 100%; border-radius: 10px; max-height: 200px; object-fit: cover; border: 2px solid white; }
-    .btn-quitar-img { position: absolute; top: 5px; right: 5px; background: white; border-radius: 50%; border: none; color: red; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; }
-
-    /* 4. FORMULARIO */
+    .btn-subir-imagen-blanco { flex:1; background:white; border:none; color:#78a978; padding:12px; border-radius:10px; font-weight:bold; font-size:12px; }
     .contenedor-formulario-datos { background: white; padding: 12px; border-radius: 15px; margin-bottom: 10px; }
     .fila-datos { display: flex; gap: 8px; margin-bottom: 8px; }
-    .grupo-input { flex: 1; min-width: 0; }
-    .etiqueta-verde { color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 3px; }
-    .input-app-form { width: 100%; border: 1px solid #eee; padding: 8px; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+    .etiqueta-verde { color: #78a978; font-size: 10px; font-weight: bold; display: block; }
+    .input-app-form { width: 100%; border: 1px solid #eee; padding: 8px; border-radius: 8px; }
     .input-app-form.readonly { background: #f5f5f5; color: #999; }
+    .btn-strava-enlace { background: #FC6100; color: white; width: 100%; padding: 12px; border-radius: 10px; border:none; font-weight:bold; margin-bottom:10px; }
+    .btn-guardar-principal { background: #78a978; color: white; border: 2px solid white; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; }
+    .btn-reiniciar { background: #666 !important; margin-top: 10px; border:none !important; }
 
-    /* 5. BOTONES ACCIÓN */
-    .btn-strava-enlace { background: #FC6100; color: white; border: none; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 10px; text-decoration: none; }
-    .btn-guardar-principal { background: #78a978; color: white; border: 2px solid white; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
-    .btn-reiniciar { background: #666 !important; margin-top: 10px; border-color: #999 !important; }
-
-    /* 6. PROGRESO Y SECCIÓN HISTORIAL */
-    .solapa-progreso-hoy { margin-top: 20px; padding: 0 15px; }
+    /* HISTORIAL */
+    .solapa-progreso-hoy { margin-top: 10px; padding: 0 15px; }
     .tarjeta-info-creditos { background: linear-gradient(135deg, #78a978, #5a8a5a); color: white; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
-    .contenido-scroll-registros { margin-top: 20px; padding: 10px; }
-    .subtitulo-seccion { color: #333; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; font-size: 14px; }
+    .contenido-scroll-registros { padding: 15px; }
+    .subtitulo-seccion { color: #333; font-size: 14px; margin-bottom: 15px; }
 
-    /* 7. TARJETAS DEL HISTORIAL (ESTILO IMAGEN 8) */
-    .tarjeta-actividad-final { background: #1a1a1a; border-radius: 12px; margin-bottom: 25px; overflow: hidden; border: 1px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-    .cabecera-card { padding: 12px; background: #242424; border-bottom: 1px solid #333; }
-    .cabecera-card strong { color: #78a978; display: block; text-transform: uppercase; font-size: 1.1em; }
-    .cabecera-card small { color: #888; font-size: 0.85em; }
-
-    .img-post-actividad { width: 100%; max-height: 300px; object-fit: cover; display: block; background: #222; }
-
-    .bloque-blanco-datos { background: white; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .dato-celda label { color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px; }
+    /* TARJETA ESTILO IMAGEN 12/13 */
+    .tarjeta-actividad-final { background: #1a1a1a; border-radius: 12px; margin-bottom: 20px; overflow: hidden; border: 1px solid #333; }
+    .cabecera-card { padding: 12px; background: #242424; }
+    .cabecera-card strong { color: #78a978; display: block; }
+    .cabecera-card small { color: #888; }
+    .img-post-actividad { width: 100%; max-height: 250px; object-fit: cover; display: block; }
+    .bloque-blanco-datos { background: white; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .dato-celda label { color: #78a978; font-size: 10px; font-weight: bold; display: block; }
     .dato-celda span { color: #333; font-weight: bold; font-size: 1.1em; }
-
-    .franja-velocidad { background: #78a978; color: white; padding: 8px 15px; text-align: right; font-size: 12px; font-weight: bold; }
+    .franja-velocidad { background: #78a978; color: white; padding: 8px; text-align: right; font-size: 12px; font-weight: bold; }
 </style>

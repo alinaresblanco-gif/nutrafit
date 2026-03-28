@@ -624,27 +624,27 @@ function actualizarInterfazCompra() {
 let actividadActual = 'Caminar';
 let imagenParaEnviar = null; 
 
-// 1. CARGA AUTOMÁTICA AL ABRIR
-// Esta función detecta cuando entras en la vista y carga el historial
-document.addEventListener('DOMContentLoaded', () => {
-    // Si ya estás en la vista de ejercicio al cargar, o cuando cambies a ella:
-    cargarHistorialEjercicios();
-});
+// 1. CARGA AL ABRIR LA VISTA
+// Modifica tu función abrirVista en el archivo principal para que llame a cargarHistorialEjercicios()
+// O simplemente deja este intervalo que revisa si el contenedor existe:
+setInterval(() => {
+    const contenedor = document.getElementById('lista-actividades-historial');
+    if (contenedor && contenedor.innerHTML === "") {
+        cargarHistorialEjercicios();
+    }
+}, 2000);
 
 // 2. SELECTOR DE ACTIVIDAD
 function seleccionarActividad(tipo) {
     actividadActual = tipo;
     const botones = document.querySelectorAll('.btn-actividad-selector');
     botones.forEach(btn => btn.classList.remove('activo'));
-
     if (tipo === 'Caminar') document.getElementById('btn-walk').classList.add('activo');
     if (tipo === 'Ciclismo') document.getElementById('btn-bike').classList.add('activo');
     if (tipo === 'Gimnasio') document.getElementById('btn-gym').classList.add('activo');
 }
 
-// 3. CÁLCULO DE PASOS Y GESTIÓN DE DECIMALES
-// IMPORTANTE: En el móvil, usa siempre el PUNTO para decimales si el teclado te lo permite.
-// He añadido una limpieza para que si pones coma, la convierta en punto internamente.
+// 3. GESTIÓN DE ENTRADA (COMA POR PUNTO)
 document.addEventListener('input', function (e) {
     if (e.target.id === 'ej-distancia') {
         let valor = e.target.value.replace(',', '.'); 
@@ -715,11 +715,11 @@ async function validarYGuardarEjercicio() {
             mode: 'no-cors',
             body: JSON.stringify(datos)
         });
-        alert("¡Recibido con éxito!");
+        alert("¡Guardado correctamente!");
         reiniciarFormularioEjercicio(); 
-        setTimeout(cargarHistorialEjercicios, 2000);
+        setTimeout(cargarHistorialEjercicios, 1500);
     } catch (e) {
-        alert("Error de red.");
+        alert("Error al guardar.");
     } finally {
         btnSave.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';
         btnSave.disabled = false;
@@ -734,7 +734,7 @@ function reiniciarFormularioEjercicio() {
     quitarImagen();
 }
 
-// 6. HISTORIAL (EL CORAZÓN DEL DISEÑO)
+// 6. HISTORIAL (CON LIMPIEZA DE "NÚMEROS FEOS")
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     if (!contenedor) return;
@@ -748,20 +748,29 @@ async function cargarHistorialEjercicios() {
             const card = document.createElement('div');
             card.className = "tarjeta-actividad-final";
             
-            let tituloVisual = "MI CAMINATA DE HOY";
+            // Títulos
+            let tituloVisual = "MI CAMINATA";
             if (reg[1] && reg[1].includes("Ciclismo")) tituloVisual = "MI RUTA EN BICI";
             if (reg[1] && reg[1].includes("Gimnasio")) tituloVisual = "MI SESIÓN DE GYM";
 
+            // Fecha
             const f = new Date(reg[0]);
             const fechaStr = isNaN(f) ? "Reciente" : `${f.getDate()}/${f.getMonth()+1}/${f.getFullYear()}`;
 
-            // LIMPIEZA DE VELOCIDAD MEDIA (Evita formatos raros)
-            let velMedia = parseFloat(reg[7]);
-            velMedia = isNaN(velMedia) ? "0.00" : velMedia.toFixed(2);
+            // --- LIMPIEZA DE DATOS (Para evitar el error de la Imagen 13) ---
+            const limpiarNum = (val) => {
+                if (typeof val === 'string' && val.includes('T')) return parseFloat(val) || 0; // Si es fecha, intenta sacar el numero
+                let n = parseFloat(val);
+                return isNaN(n) ? "0" : n.toFixed(2).replace('.00', '');
+            };
 
-            // CORRECCIÓN DE IMAGEN: Si reg[3] existe, se pone como fondo o imagen real
-            const htmlImagen = reg[3] && reg[3].length > 10 
-                ? `<img src="${reg[3]}" class="img-post-actividad" onerror="this.style.display='none'">` 
+            const dist = limpiarNum(reg[4]);
+            const vel = limpiarNum(reg[7]);
+            // ---------------------------------------------------------------
+
+            // Imagen (Solo si hay link real)
+            const htmlImagen = (reg[3] && reg[3].length > 10) 
+                ? `<img src="${reg[3]}" class="img-post-actividad" onerror="this.remove()">` 
                 : '';
 
             card.innerHTML = `
@@ -769,23 +778,18 @@ async function cargarHistorialEjercicios() {
                     <strong>${tituloVisual}</strong>
                     <small>${fechaStr}</small>
                 </div>
-
                 ${htmlImagen}
-                
                 <div class="bloque-blanco-datos">
-                    <div class="dato-celda"><label>DISTANCIA</label><span>${reg[4]} KM</span></div>
+                    <div class="dato-celda"><label>DISTANCIA</label><span>${dist} KM</span></div>
                     <div class="dato-celda"><label>TIEMPO</label><span>${reg[2]} MIN</span></div>
                     <div class="dato-celda"><label>DESNIVEL</label><span>${reg[6]} M</span></div>
                     <div class="dato-celda"><label>PASOS</label><span>${reg[5]}</span></div>
                 </div>
-
-                <div class="franja-velocidad">
-                    VEL. MEDIA: ${velMedia} KM/H
-                </div>
+                <div class="franja-velocidad">VEL. MEDIA: ${vel} KM/H</div>
             `;
             contenedor.appendChild(card);
         });
     } catch (e) {
-        contenedor.innerHTML = '<p style="text-align:center; color:gray;">Cargando historial...</p>';
+        console.log("Error cargando historial");
     }
 }
