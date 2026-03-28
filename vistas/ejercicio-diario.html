@@ -1,4 +1,4 @@
-<div class="vista-cabecera-fija" style="height: 410px;"> 
+<div class="vista-cabecera-fija" style="height: auto;"> 
     <div class="cabecera-barra">
         <button onclick="volverInicio()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
@@ -10,7 +10,6 @@
     </div>
 
     <div class="contenedor-principal-ejercicio" style="background: #78a978; padding: 10px 15px 20px 15px;">
-        
         <div class="fila-selectores-actividad">
             <button class="btn-actividad-selector activo" id="btn-walk" onclick="seleccionarActividad('Caminar')">
                 <i class="fas fa-walking"></i>
@@ -25,18 +24,16 @@
 
         <div class="fila-botones-imagen-moderna">
             <input type="file" id="input-captura" accept="image/*" style="display: none;" onchange="previsualizarImagen(this)">
-            
             <button onclick="intentarSubirCaptura()" class="btn-subir-imagen-blanco">
                 <i class="fas fa-image"></i> Subir Captura
             </button>
-            
             <button onclick="intentarHacerFoto()" class="btn-subir-imagen-blanco">
                 <i class="fas fa-camera"></i> Hacer Foto
             </button>
         </div>
         
         <div id="previsualizacion-contenedor" style="display: none; margin-bottom: 10px; position: relative;">
-            <img id="img-previa" src="" alt="Previa" style="width: 100%; border-radius: 10px; max-height: 150px; object-fit: cover;">
+            <img id="img-previa" src="" alt="Previa" style="width: 100%; border-radius: 10px; max-height: 200px; object-fit: cover;">
             <button onclick="quitarImagen()" class="btn-quitar-img" style="position: absolute; top: 5px; right: 5px; background: white; border-radius: 50%; border: none; color: red; width: 25px; height: 25px;">
                 <i class="fas fa-times"></i>
             </button>
@@ -79,7 +76,7 @@
     </div>
 </div>
 
-<div class="solapa-progreso-hoy" style="margin-top: 420px; padding: 0 15px;">
+<div class="solapa-progreso-hoy" style="margin-top: 10px; padding: 0 15px;">
     <div class="tarjeta-info-creditos" style="background: linear-gradient(135deg, #78a978, #5a8a5a); color: white; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px;">
         <i class="fas fa-fire"></i>
         <div>
@@ -89,47 +86,46 @@
     </div>
 </div>
 
-<div class="contenido-scroll-registros" style="margin-top: 490px; padding: 10px;">
-    <h3 class="subtitulo-seccion" style="color: white; margin-bottom: 15px; font-weight: 600;">TUS ACTIVIDADES RECIENTES</h3>
+<div class="contenido-scroll-registros" style="margin-top: 20px; padding: 10px;">
+    <h3 class="subtitulo-seccion" style="color: #333; margin-bottom: 15px; font-weight: 600;">TUS ACTIVIDADES RECIENTES</h3>
     
     <div id="lista-actividades-historial" class="contenedor-historial-strava">
-        <div class="vacio-mensaje" style="text-align: center; color: gray; padding: 20px;">Cargando actividades...</div>
-    </div>
+        </div>
 </div>
 
 <style>
-    /* Estilos Generales */
+    /* ... Tus estilos anteriores se mantienen igual ... */
     .cabecera-barra { background: #78a978; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
     .boton-nav-circular { background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-
     .fila-selectores-actividad { display: flex; justify-content: space-between; padding: 15px 0; }
-    .btn-actividad-selector { background: rgba(255, 255, 255, 0.2); color: white; border: none; width: 65px; height: 65px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+    .btn-actividad-selector { background: rgba(255, 255, 255, 0.2); color: white; border: none; width: 65px; height: 65px; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; }
     .btn-actividad-selector.activo { background: white; color: #78a978; box-shadow: 0 0 15px white; }
-
-    /* Botones de Imagen */
     .fila-botones-imagen-moderna { display: flex; gap: 10px; margin-bottom: 12px; }
-    .btn-subir-imagen-blanco { flex: 1; background: white; border: 1px solid white; color: #78a978; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-    /* Formulario */
+    .btn-subir-imagen-blanco { flex: 1; background: white; border: 1px solid white; color: #78a978; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .contenedor-formulario-datos { background: white; padding: 12px; border-radius: 15px; margin-bottom: 10px; }
     .fila-datos { display: flex; gap: 8px; margin-bottom: 8px; }
     .grupo-input { flex: 1; min-width: 0; }
     .etiqueta-verde { color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 3px; }
     .input-app-form { width: 100%; border: 1px solid #eee; padding: 8px; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
     .input-app-form.readonly { background: #f5f5f5; color: #999; }
-
-    /* Botones principales */
     .btn-strava-enlace { background: #FC6100; color: white; border: none; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 10px; }
     .btn-guardar-principal { background: #78a978; color: white; border: 2px solid white; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-    /* --- ESTILOS TARJETAS HISTORIAL (IMAGEN 8) --- */
+    /* ESTILO TARJETA REVISADO PARA QUE LA FOTO SE VEA GRANDE */
     .tarjeta-actividad-final {
         background: #242424; 
         border-radius: 15px;
         overflow: hidden;
         border: 1px solid #444;
-        margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .img-historial-grande {
+        width: 100%;
+        height: 250px; /* Forzamos altura para que se vea */
+        object-fit: cover;
+        display: block;
+        background: #333; /* Fondo por si la imagen tarda en cargar */
     }
     .bloque-datos-blanco {
         background: white; 
@@ -138,7 +134,6 @@
         grid-template-columns: 1fr 1fr; 
         gap: 12px;
     }
-    .dato-item-historial { border-bottom: 1px solid #eee; padding-bottom: 5px; }
-    .dato-item-historial label { color: #78a978; font-size: 10px; font-weight: bold; display: block; text-transform: uppercase; }
+    .dato-item-historial label { color: #78a978; font-size: 10px; font-weight: bold; display: block; }
     .dato-item-historial span { color: #333; font-weight: bold; font-size: 1.1em; }
 </style>

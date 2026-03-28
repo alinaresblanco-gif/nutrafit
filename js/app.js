@@ -619,7 +619,7 @@ function actualizarInterfazCompra() {
 }
 /* ============================================================
     LÓGICA UNIFICADA DE EJERCICIO - NUTRAFIT (ANTONIO)
-    ACTUALIZADO: DISEÑO DE TARJETAS CON ETIQUETAS VERDES
+    ACTUALIZADO: FOTOS GRANDES Y ETIQUETAS CORPORATIVAS
    ============================================================ */
 
 let actividadActual = 'Caminar';
@@ -707,7 +707,6 @@ async function validarYGuardarEjercicio() {
     btnSave.disabled = true;
 
     const ahora = new Date();
-    // Guardamos solo el tipo para que luego el historial decida el título visual
     let tipoAct = actividadActual; 
 
     const datos = {
@@ -748,7 +747,7 @@ function reiniciarFormularioEjercicio() {
     console.log("Formulario reiniciado.");
 }
 
-// 7. HISTORIAL MEJORADO CON ETIQUETAS VERDES
+// 7. HISTORIAL MEJORADO (FOTOS GRANDES Y ETIQUETAS VERDES)
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     if (!contenedor) return;
@@ -761,12 +760,11 @@ async function cargarHistorialEjercicios() {
         registros.reverse().forEach(reg => {
             const card = document.createElement('div');
             card.className = "tarjeta-actividad-final";
-            card.style = "background: #242424; border-radius: 15px; margin-bottom: 25px; overflow: hidden; border: 1px solid #444; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.4);";
             
-            // Lógica de títulos que pediste
+            // Lógica de títulos dinámica
             let tituloVisual = "MI CAMINATA DE HOY";
-            if (reg[1].includes("Ciclismo")) tituloVisual = "MI ACTIVIDAD EN BICI";
-            if (reg[1].includes("Gimnasio")) tituloVisual = "MI ACTIVIDAD DEL GIM";
+            if (reg[1] && reg[1].includes("Ciclismo")) tituloVisual = "MI ACTIVIDAD EN BICI";
+            if (reg[1] && reg[1].includes("Gimnasio")) tituloVisual = "MI ACTIVIDAD DEL GIM";
 
             // Formato de fecha
             const f = new Date(reg[0]);
@@ -778,24 +776,24 @@ async function cargarHistorialEjercicios() {
                     <div style="font-size: 0.85em; color: #aaa;">${fechaStr}</div>
                 </div>
 
-                ${reg[3] ? `<img src="${reg[3]}" style="width: 100%; display: block; max-height: 250px; object-fit: cover; border-bottom: 1px solid #444;">` : ''}
+                ${reg[3] ? `<img src="${reg[3]}" class="img-historial-grande">` : ''}
                 
-                <div style="background: white; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div style="border-bottom: 1px solid #eee; padding-bottom: 5px;">
-                        <label style="color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px;">DISTANCIA</label>
-                        <span style="color: #333; font-weight: bold; font-size: 1.1em;">${reg[4]} KM</span>
+                <div class="bloque-datos-blanco">
+                    <div class="dato-item-historial">
+                        <label>DISTANCIA</label>
+                        <span>${reg[4]} KM</span>
                     </div>
-                    <div style="border-bottom: 1px solid #eee; padding-bottom: 5px;">
-                        <label style="color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px;">TIEMPO</label>
-                        <span style="color: #333; font-weight: bold; font-size: 1.1em;">${reg[2]} MIN</span>
+                    <div class="dato-item-historial">
+                        <label>TIEMPO</label>
+                        <span>${reg[2]} MIN</span>
                     </div>
-                    <div style="border-bottom: 1px solid #eee; padding-bottom: 5px;">
-                        <label style="color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px;">DESNIVEL</label>
-                        <span style="color: #333; font-weight: bold; font-size: 1.1em;">${reg[6]} M</span>
+                    <div class="dato-item-historial">
+                        <label>DESNIVEL</label>
+                        <span>${reg[6]} M</span>
                     </div>
-                    <div style="border-bottom: 1px solid #eee; padding-bottom: 5px;">
-                        <label style="color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px;">PASOS DADOS</label>
-                        <span style="color: #333; font-weight: bold; font-size: 1.1em;">${reg[5]}</span>
+                    <div class="dato-item-historial">
+                        <label>PASOS DADOS</label>
+                        <span>${reg[5]}</span>
                     </div>
                 </div>
 
