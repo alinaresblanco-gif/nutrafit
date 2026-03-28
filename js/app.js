@@ -618,33 +618,49 @@ function actualizarInterfazCompra() {
     }
 }
 /* ============================================================
-    LÓGICA UNIFICADA DE EJERCICIO - NUTRAFIT (ANTONIO)
+    LÓGICA FINAL CORREGIDA - NUTRAFIT (ANTONIO)
    ============================================================ */
 
 let actividadActual = 'Caminar';
 let imagenParaEnviar = null; 
 
-// 1. CARGA AL ABRIR LA VISTA
-// Modifica tu función abrirVista en el archivo principal para que llame a cargarHistorialEjercicios()
-// O simplemente deja este intervalo que revisa si el contenedor existe:
-setInterval(() => {
+// 1. CARGA AUTOMÁTICA AL ENTRAR (SIN BUCLES)
+// Esta función se asegura de cargar el historial cada vez que la vista sea visible
+function chequearCargaInicial() {
     const contenedor = document.getElementById('lista-actividades-historial');
-    if (contenedor && contenedor.innerHTML === "") {
-        cargarHistorialEjercicios();
+    if (contenedor) {
+        // Solo cargamos si está vacío para no saturar
+        if (contenedor.children.length === 0) {
+            cargarHistorialEjercicios();
+        }
     }
-}, 2000);
+}
+// Ejecutamos el chequeo cada segundo por si cambias de vista
+setInterval(chequearCargaInicial, 1000);
 
-// 2. SELECTOR DE ACTIVIDAD
+// 2. FUNCIÓN PARA ABRIR STRAVA (Arregla el botón roto)
+function abrirStravaExterno() {
+    // Intenta abrir la app de Strava, si no, abre la web
+    const stravaUrl = "strava://run";
+    const webUrl = "https://www.strava.com/";
+    
+    window.location.href = stravaUrl;
+    setTimeout(() => {
+        if (!document.hidden) window.open(webUrl, '_blank');
+    }, 500);
+}
+
+// 3. SELECTORES DE ACTIVIDAD
 function seleccionarActividad(tipo) {
     actividadActual = tipo;
-    const botones = document.querySelectorAll('.btn-actividad-selector');
-    botones.forEach(btn => btn.classList.remove('activo'));
+    document.querySelectorAll('.btn-actividad-selector').forEach(btn => btn.classList.remove('activo'));
+    
     if (tipo === 'Caminar') document.getElementById('btn-walk').classList.add('activo');
     if (tipo === 'Ciclismo') document.getElementById('btn-bike').classList.add('activo');
     if (tipo === 'Gimnasio') document.getElementById('btn-gym').classList.add('activo');
 }
 
-// 3. GESTIÓN DE ENTRADA (COMA POR PUNTO)
+// 4. LIMPIEZA DE "AÑO 2026" Y DECIMALES
 document.addEventListener('input', function (e) {
     if (e.target.id === 'ej-distancia') {
         let valor = e.target.value.replace(',', '.'); 
@@ -656,16 +672,17 @@ document.addEventListener('input', function (e) {
     }
 });
 
-// 4. GESTIÓN DE FOTOS
+// 5. GESTIÓN DE FOTOS
 function previsualizarImagen(input) {
     if (input.files && input.files[0]) {
         const lector = new FileReader();
         lector.onload = function(e) {
             imagenParaEnviar = e.target.result.split(',')[1];
-            const vistaPrevia = document.getElementById('img-previa');
-            if (vistaPrevia) {
-                vistaPrevia.src = e.target.result;
-                document.getElementById('previsualizacion-contenedor').style.display = 'block';
+            const contenedorPrevia = document.getElementById('previsualizacion-contenedor');
+            const imgPrevia = document.getElementById('img-previa');
+            if (imgPrevia) {
+                imgPrevia.src = e.target.result;
+                contenedorPrevia.style.display = 'block';
             }
         };
         lector.readAsDataURL(input.files[0]);
@@ -688,7 +705,7 @@ function quitarImagen() {
     document.getElementById('previsualizacion-contenedor').style.display = 'none';
 }
 
-// 5. GUARDAR
+// 6. GUARDAR ENTRENAMIENTO
 async function validarYGuardarEjercicio() {
     const tiempo = document.getElementById('ej-tiempo').value;
     const distancia = document.getElementById('ej-distancia').value.replace(',', '.');
@@ -715,11 +732,12 @@ async function validarYGuardarEjercicio() {
             mode: 'no-cors',
             body: JSON.stringify(datos)
         });
-        alert("¡Guardado correctamente!");
+        alert("¡Recibido con éxito!");
         reiniciarFormularioEjercicio(); 
-        setTimeout(cargarHistorialEjercicios, 1500);
+        // Forzamos recarga tras guardar
+        setTimeout(cargarHistorialEjercicios, 2000);
     } catch (e) {
-        alert("Error al guardar.");
+        alert("Error de red.");
     } finally {
         btnSave.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';
         btnSave.disabled = false;
@@ -734,7 +752,7 @@ function reiniciarFormularioEjercicio() {
     quitarImagen();
 }
 
-// 6. HISTORIAL (CON LIMPIEZA DE "NÚMEROS FEOS")
+// 7. HISTORIAL (EL FILTRO CONTRA EL "2026")
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     if (!contenedor) return;
@@ -748,29 +766,33 @@ async function cargarHistorialEjercicios() {
             const card = document.createElement('div');
             card.className = "tarjeta-actividad-final";
             
-            // Títulos
-            let tituloVisual = "MI CAMINATA";
+            // Títulos dinámicos
+            let tituloVisual = "MI CAMINATA DE HOY";
             if (reg[1] && reg[1].includes("Ciclismo")) tituloVisual = "MI RUTA EN BICI";
             if (reg[1] && reg[1].includes("Gimnasio")) tituloVisual = "MI SESIÓN DE GYM";
 
-            // Fecha
+            // Fecha formateada
             const f = new Date(reg[0]);
             const fechaStr = isNaN(f) ? "Reciente" : `${f.getDate()}/${f.getMonth()+1}/${f.getFullYear()}`;
 
-            // --- LIMPIEZA DE DATOS (Para evitar el error de la Imagen 13) ---
-            const limpiarNum = (val) => {
-                if (typeof val === 'string' && val.includes('T')) return parseFloat(val) || 0; // Si es fecha, intenta sacar el numero
-                let n = parseFloat(val);
-                return isNaN(n) ? "0" : n.toFixed(2).replace('.00', '');
+            // --- TRUCO CONTRA EL ERROR DEL 2026 ---
+            // Si Google manda una fecha en lugar de un número, intentamos extraer solo el número
+            const limpiarDato = (dato) => {
+                if (typeof dato === 'string' && dato.includes('-')) {
+                    // Es una fecha como "2026-05...", buscamos si hay un número antes
+                    let partes = dato.split('T')[0].split('-');
+                    return partes[partes.length - 1]; // Intenta coger el último trozo
+                }
+                return dato;
             };
 
-            const dist = limpiarNum(reg[4]);
-            const vel = limpiarNum(reg[7]);
-            // ---------------------------------------------------------------
+            const distanciaLimpia = limpiarDato(reg[4]);
+            const velocidadLimpia = limpiarDato(reg[7]);
+            // --------------------------------------
 
-            // Imagen (Solo si hay link real)
+            // Imagen corregida (Contenedor negro si existe)
             const htmlImagen = (reg[3] && reg[3].length > 10) 
-                ? `<img src="${reg[3]}" class="img-post-actividad" onerror="this.remove()">` 
+                ? `<div style="background:#000; text-align:center;"><img src="${reg[3]}" class="img-post-actividad" onerror="this.parentElement.remove()"></div>` 
                 : '';
 
             card.innerHTML = `
@@ -778,18 +800,23 @@ async function cargarHistorialEjercicios() {
                     <strong>${tituloVisual}</strong>
                     <small>${fechaStr}</small>
                 </div>
+
                 ${htmlImagen}
+                
                 <div class="bloque-blanco-datos">
-                    <div class="dato-celda"><label>DISTANCIA</label><span>${dist} KM</span></div>
+                    <div class="dato-celda"><label>DISTANCIA</label><span>${distanciaLimpia} KM</span></div>
                     <div class="dato-celda"><label>TIEMPO</label><span>${reg[2]} MIN</span></div>
                     <div class="dato-celda"><label>DESNIVEL</label><span>${reg[6]} M</span></div>
                     <div class="dato-celda"><label>PASOS</label><span>${reg[5]}</span></div>
                 </div>
-                <div class="franja-velocidad">VEL. MEDIA: ${vel} KM/H</div>
+
+                <div class="franja-velocidad">
+                    VEL. MEDIA: ${velocidadLimpia} KM/H
+                </div>
             `;
             contenedor.appendChild(card);
         });
     } catch (e) {
-        console.log("Error cargando historial");
+        console.error("Error al cargar:", e);
     }
 }
