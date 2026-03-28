@@ -618,36 +618,80 @@ function actualizarInterfazCompra() {
     }
 }
 /* ============================================================
-    CONTROL TOTAL NUTRAFIT - ANTONIO (VERSIÓN ANTI-CACHÉ)
+    CONTROL TOTAL NUTRAFIT - ANTONIO (RESTAURADO Y CORREGIDO)
    ============================================================ */
 
 let actividadActual = 'Caminar';
 let imagenParaEnviar = null;
 
-// 1. FORZAR CARGA AL ABRIR LA VISTA (NUEVO MÉTODO)
-// Este código revisa cada segundo si el hueco del historial existe. 
-// Si existe y está vacío, LANZA la carga sin que tengas que tocar nada.
+// 1. CARGA AUTOMÁTICA Y CONTADORES
 setInterval(() => {
     const lista = document.getElementById('lista-actividades-historial');
+    // Si la lista existe y está vacía, cargamos
     if (lista && lista.innerHTML.trim() === "") {
-        console.log("Detectada vista de ejercicios vacía, cargando...");
         cargarHistorialEjercicios();
     }
 }, 1500);
 
-// 2. FUNCIÓN STRAVA (FORZADA)
+// 2. CÁLCULO DE PASOS Y GESTIÓN DE ENTRADA
+document.addEventListener('input', function (e) {
+    if (e.target.id === 'ej-distancia') {
+        let valor = e.target.value.replace(',', '.'); 
+        const km = parseFloat(valor);
+        if (!isNaN(km)) {
+            // Cálculo de pasos: 1km aprox 1538 pasos (según tu código anterior)
+            const pasos = Math.round((km * 1000) / 0.65);
+            document.getElementById('ej-pasos').value = pasos;
+        }
+    }
+});
+
+// 3. FUNCIONES DE CÁMARA Y FOTOS (RESTAURADAS)
+function intentarHacerFoto() {
+    const input = document.getElementById('input-captura');
+    if (input) { 
+        input.setAttribute('capture', 'environment'); 
+        input.click(); 
+    }
+}
+
+function intentarSubirCaptura() {
+    const input = document.getElementById('input-captura');
+    if (input) { 
+        input.removeAttribute('capture'); 
+        input.click(); 
+    }
+}
+
+function previsualizarImagen(input) {
+    if (input.files && input.files[0]) {
+        const lector = new FileReader();
+        lector.onload = e => {
+            imagenParaEnviar = e.target.result.split(',')[1];
+            const vistaPrevia = document.getElementById('img-previa');
+            if(vistaPrevia) {
+                vistaPrevia.src = e.target.result;
+                document.getElementById('previsualizacion-contenedor').style.display = 'block';
+            }
+        };
+        lector.readAsDataURL(input.files[0]);
+    }
+}
+
+function quitarImagen() {
+    imagenParaEnviar = null;
+    document.getElementById('input-captura').value = "";
+    document.getElementById('previsualizacion-contenedor').style.display = 'none';
+}
+
+// 4. STRAVA Y SELECTORES
 function abrirStravaExterno() {
-    console.log("Intentando abrir Strava...");
-    // Intentamos abrir la App primero
     window.location.href = "strava://run";
-    
-    // Si en 1 segundo no se ha movido, abrimos la web en pestaña nueva
     setTimeout(() => {
         window.open("https://www.strava.com/mobile", "_blank");
     }, 1000);
 }
 
-// 3. SELECTOR DE ACTIVIDAD
 function seleccionarActividad(tipo) {
     actividadActual = tipo;
     document.querySelectorAll('.btn-actividad-selector').forEach(btn => btn.classList.remove('activo'));
@@ -656,87 +700,69 @@ function seleccionarActividad(tipo) {
     if (tipo === 'Gimnasio') document.getElementById('btn-gym').classList.add('activo');
 }
 
-// 4. LIMPIEZA DE NÚMEROS (EVITAR EL 2026)
-function limpiarDatoGoogle(dato) {
-    if (!dato) return "0";
-    let texto = dato.toString();
-    // Si Google envía una fecha tipo 2026-03-28T...
-    if (texto.includes('T') && texto.includes('-')) {
-        // Intentamos coger solo el número que escribiste (suele ser el final o estar antes de la T)
-        return "Rev. Formato"; 
-    }
-    return texto;
-}
-
-// 5. CARGAR HISTORIAL (CON LOGS PARA VER QUÉ PASA)
+// 5. CARGAR HISTORIAL Y MINUTOS TOTALES
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
+    const resumenMinutos = document.getElementById('minutos-hoy-resumen');
     if (!contenedor) return;
 
     try {
-        const respuesta = await fetch(`${URL_GOOGLE_SCRIPT}?tabla=ejercicio&cache=no${Date.now()}`);
+        const respuesta = await fetch(`${URL_GOOGLE_SCRIPT}?tabla=ejercicio&t=${Date.now()}`);
         const datos = await respuesta.json();
         
-        if (!datos || datos.length === 0) {
-            contenedor.innerHTML = "<p style='color:gray; text-align:center;'>No hay actividades aún.</p>";
-            return;
-        }
+        let minutosTotalesHoy = 0;
+        const hoyFecha = new Date().toISOString().split('T')[0];
 
-        contenedor.innerHTML = ""; // Limpiamos "Cargando..."
+        contenedor.innerHTML = ""; 
         
         datos.reverse().forEach(fila => {
+            // Sumar minutos si es de hoy
+            const fechaFila = fila[0] ? fila[0].split('T')[0] : "";
+            if (fechaFila === hoyFecha) {
+                minutosTotalesHoy += parseFloat(fila[2] || 0);
+            }
+
             const card = document.createElement('div');
             card.className = "tarjeta-actividad-final";
             
-            // Fecha y Título
-            const fecha = fila[0] ? fila[0].split('T')[0] : "Hoy";
-            let icono = "walking";
-            if (fila[1].includes("Bici") || fila[1].includes("Ciclismo")) icono = "bicycle";
-            if (fila[1].includes("Gym") || fila[1].includes("Gimnasio")) icono = "dumbbell";
+            // Limpieza del error "2026"
+            let dist = fila[4];
+            if (typeof dist === 'string' && dist.includes('T')) dist = "Error Formato";
 
-            // Imagen (Si la URL es muy corta, es que no hay imagen real)
+            // Imagen (Si empieza por http o data, la mostramos)
             const imgHtml = (fila[3] && fila[3].length > 50) 
-                ? `<div style="background:#000;"><img src="${fila[3]}" class="img-post-actividad" style="width:100%; display:block;"></div>` 
+                ? `<div style="background:#000; padding:5px;"><img src="${fila[3]}" class="img-post-actividad" style="width:100%; border-radius:8px;"></div>` 
                 : '';
 
             card.innerHTML = `
                 <div class="cabecera-card">
-                    <strong><i class="fas fa-${icono}"></i> ${fila[1].toUpperCase()}</strong>
-                    <small>${fecha}</small>
+                    <strong>${fila[1].toUpperCase()}</strong>
+                    <small>${fechaFila}</small>
                 </div>
                 ${imgHtml}
                 <div class="bloque-blanco-datos">
-                    <div class="dato-celda"><label>DISTANCIA</label><span>${limpiarDatoGoogle(fila[4])} KM</span></div>
+                    <div class="dato-celda"><label>DISTANCIA</label><span>${dist} KM</span></div>
                     <div class="dato-celda"><label>TIEMPO</label><span>${fila[2]} MIN</span></div>
                     <div class="dato-celda"><label>DESNIVEL</label><span>${fila[6] || 0} M</span></div>
                     <div class="dato-celda"><label>PASOS</label><span>${fila[5] || 0}</span></div>
                 </div>
-                <div class="franja-velocidad">VEL. MEDIA: ${limpiarDatoGoogle(fila[7])} KM/H</div>
+                <div class="franja-velocidad">VEL. MEDIA: ${fila[7] || 0} KM/H</div>
             `;
             contenedor.appendChild(card);
         });
+
+        if(resumenMinutos) resumenMinutos.innerText = minutosTotalesHoy + " min";
+
     } catch (error) {
-        contenedor.innerHTML = "<p style='color:red;'>Error de conexión</p>";
+        console.log("Error cargando historial");
     }
 }
 
-// 6. FUNCIONES DE IMAGEN Y GUARDADO (SE MANTIENEN)
-function previsualizarImagen(input) {
-    if (input.files && input.files[0]) {
-        const lector = new FileReader();
-        lector.onload = e => {
-            imagenParaEnviar = e.target.result.split(',')[1];
-            document.getElementById('img-previa').src = e.target.result;
-            document.getElementById('previsualizacion-contenedor').style.display = 'block';
-        };
-        lector.readAsDataURL(input.files[0]);
-    }
-}
-
+// 6. GUARDAR
 async function validarYGuardarEjercicio() {
     const tiempo = document.getElementById('ej-tiempo').value;
     const distancia = document.getElementById('ej-distancia').value;
-    if (!tiempo || !distancia) return alert("Faltan datos");
+    if (!tiempo || !distancia) return alert("Antonio, rellena tiempo y distancia.");
 
     const btn = document.querySelector('.btn-guardar-principal');
     btn.disabled = true;
@@ -754,11 +780,21 @@ async function validarYGuardarEjercicio() {
 
     try {
         await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        alert("¡Guardado!");
-        location.reload(); // ESTO FUERZA QUE LA APP SE REFREQUE Y CARGUE TODO DE CERO
+        alert("¡Entrenamiento guardado!");
+        reiniciarFormularioEjercicio();
+        cargarHistorialEjercicios();
     } catch (e) {
-        alert("Error");
+        alert("Error de red");
+    } finally {
         btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';
     }
 }
-// Las funciones auxiliares (quitarImagen, etc) se quedan igual
+
+function reiniciarFormularioEjercicio() {
+    document.getElementById('ej-tiempo').value = "";
+    document.getElementById('ej-distancia').value = "";
+    document.getElementById('ej-desnivel').value = "";
+    document.getElementById('ej-pasos').value = "";
+    quitarImagen();
+}
