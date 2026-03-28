@@ -619,13 +619,19 @@ function actualizarInterfazCompra() {
 }
 /* ============================================================
     LÓGICA UNIFICADA DE EJERCICIO - NUTRAFIT (ANTONIO)
-    ACTUALIZADO: FOTOS GRANDES Y ETIQUETAS CORPORATIVAS
    ============================================================ */
 
 let actividadActual = 'Caminar';
 let imagenParaEnviar = null; 
 
-// 1. SELECTOR DE ACTIVIDAD
+// 1. CARGA AUTOMÁTICA AL ABRIR
+// Esta función detecta cuando entras en la vista y carga el historial
+document.addEventListener('DOMContentLoaded', () => {
+    // Si ya estás en la vista de ejercicio al cargar, o cuando cambies a ella:
+    cargarHistorialEjercicios();
+});
+
+// 2. SELECTOR DE ACTIVIDAD
 function seleccionarActividad(tipo) {
     actividadActual = tipo;
     const botones = document.querySelectorAll('.btn-actividad-selector');
@@ -634,22 +640,23 @@ function seleccionarActividad(tipo) {
     if (tipo === 'Caminar') document.getElementById('btn-walk').classList.add('activo');
     if (tipo === 'Ciclismo') document.getElementById('btn-bike').classList.add('activo');
     if (tipo === 'Gimnasio') document.getElementById('btn-gym').classList.add('activo');
-
-    console.log("Actividad seleccionada: " + actividadActual);
 }
 
-// 2. CÁLCULO DE PASOS AUTOMÁTICO
+// 3. CÁLCULO DE PASOS Y GESTIÓN DE DECIMALES
+// IMPORTANTE: En el móvil, usa siempre el PUNTO para decimales si el teclado te lo permite.
+// He añadido una limpieza para que si pones coma, la convierta en punto internamente.
 document.addEventListener('input', function (e) {
     if (e.target.id === 'ej-distancia') {
-        const km = parseFloat(e.target.value);
+        let valor = e.target.value.replace(',', '.'); 
+        const km = parseFloat(valor);
         if (!isNaN(km)) {
             const pasos = Math.round((km * 1000) / 0.65);
-            document.getElementById('ej-pasos').value = pasos.toLocaleString();
+            document.getElementById('ej-pasos').value = pasos;
         }
     }
 });
 
-// 3. GESTIÓN DE FOTOS (VISTA PREVIA Y BOTONES)
+// 4. GESTIÓN DE FOTOS
 function previsualizarImagen(input) {
     if (input.files && input.files[0]) {
         const lector = new FileReader();
@@ -667,18 +674,12 @@ function previsualizarImagen(input) {
 
 function intentarHacerFoto() {
     const input = document.getElementById('input-captura');
-    if (input) {
-        input.setAttribute('capture', 'environment');
-        input.click();
-    }
+    if (input) { input.setAttribute('capture', 'environment'); input.click(); }
 }
 
 function intentarSubirCaptura() {
     const input = document.getElementById('input-captura');
-    if (input) {
-        input.removeAttribute('capture');
-        input.click();
-    }
+    if (input) { input.removeAttribute('capture'); input.click(); }
 }
 
 function quitarImagen() {
@@ -687,18 +688,10 @@ function quitarImagen() {
     document.getElementById('previsualizacion-contenedor').style.display = 'none';
 }
 
-// 4. STRAVA
-function abrirStravaExterno() {
-    const instalada = "strava://feed";
-    const web = "https://www.strava.com/dashboard";
-    window.location.href = instalada;
-    setTimeout(() => { if (!document.hidden) window.open(web, "_blank"); }, 1500);
-}
-
-// 5. GUARDAR Y ENVIAR
+// 5. GUARDAR
 async function validarYGuardarEjercicio() {
     const tiempo = document.getElementById('ej-tiempo').value;
-    const distancia = document.getElementById('ej-distancia').value;
+    const distancia = document.getElementById('ej-distancia').value.replace(',', '.');
     const btnSave = document.querySelector('.btn-guardar-principal');
 
     if (!tiempo || !distancia) return alert("Antonio, rellena tiempo y distancia.");
@@ -706,12 +699,9 @@ async function validarYGuardarEjercicio() {
     btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> GUARDANDO...';
     btnSave.disabled = true;
 
-    const ahora = new Date();
-    let tipoAct = actividadActual; 
-
     const datos = {
         tipo: "guardar_ejercicio",
-        actividad: tipoAct, 
+        actividad: actividadActual, 
         tiempo: tiempo,
         distancia: distancia,
         pasos: document.getElementById('ej-pasos').value,
@@ -725,29 +715,26 @@ async function validarYGuardarEjercicio() {
             mode: 'no-cors',
             body: JSON.stringify(datos)
         });
-
         alert("¡Recibido con éxito!");
         reiniciarFormularioEjercicio(); 
-        setTimeout(cargarHistorialEjercicios, 3000);
+        setTimeout(cargarHistorialEjercicios, 2000);
     } catch (e) {
-        alert("Error de red, comprueba tu internet.");
+        alert("Error de red.");
     } finally {
         btnSave.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';
         btnSave.disabled = false;
     }
 }
 
-// 6. REINICIAR / LIMPIAR
 function reiniciarFormularioEjercicio() {
     document.getElementById('ej-tiempo').value = "";
     document.getElementById('ej-distancia').value = "";
     document.getElementById('ej-desnivel').value = "";
     document.getElementById('ej-pasos').value = "";
     quitarImagen();
-    console.log("Formulario reiniciado.");
 }
 
-// 7. HISTORIAL MEJORADO (FOTOS GRANDES Y ETIQUETAS VERDES)
+// 6. HISTORIAL (EL CORAZÓN DEL DISEÑO)
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     if (!contenedor) return;
@@ -761,49 +748,44 @@ async function cargarHistorialEjercicios() {
             const card = document.createElement('div');
             card.className = "tarjeta-actividad-final";
             
-            // Lógica de títulos dinámica
             let tituloVisual = "MI CAMINATA DE HOY";
-            if (reg[1] && reg[1].includes("Ciclismo")) tituloVisual = "MI ACTIVIDAD EN BICI";
-            if (reg[1] && reg[1].includes("Gimnasio")) tituloVisual = "MI ACTIVIDAD DEL GIM";
+            if (reg[1] && reg[1].includes("Ciclismo")) tituloVisual = "MI RUTA EN BICI";
+            if (reg[1] && reg[1].includes("Gimnasio")) tituloVisual = "MI SESIÓN DE GYM";
 
-            // Formato de fecha
             const f = new Date(reg[0]);
-            const fechaStr = `${f.getDate().toString().padStart(2,'0')}/${(f.getMonth()+1).toString().padStart(2,'0')}/${f.getFullYear()} ${f.getHours().toString().padStart(2,'0')}:${f.getMinutes().toString().padStart(2,'0')}`;
+            const fechaStr = isNaN(f) ? "Reciente" : `${f.getDate()}/${f.getMonth()+1}/${f.getFullYear()}`;
+
+            // LIMPIEZA DE VELOCIDAD MEDIA (Evita formatos raros)
+            let velMedia = parseFloat(reg[7]);
+            velMedia = isNaN(velMedia) ? "0.00" : velMedia.toFixed(2);
+
+            // CORRECCIÓN DE IMAGEN: Si reg[3] existe, se pone como fondo o imagen real
+            const htmlImagen = reg[3] && reg[3].length > 10 
+                ? `<img src="${reg[3]}" class="img-post-actividad" onerror="this.style.display='none'">` 
+                : '';
 
             card.innerHTML = `
-                <div style="padding: 15px; background: rgba(120, 169, 120, 0.1);">
-                    <div style="font-weight: bold; color: #78a978; font-size: 1.1em; text-transform: uppercase;">${tituloVisual}</div>
-                    <div style="font-size: 0.85em; color: #aaa;">${fechaStr}</div>
+                <div class="cabecera-card">
+                    <strong>${tituloVisual}</strong>
+                    <small>${fechaStr}</small>
                 </div>
 
-                ${reg[3] ? `<img src="${reg[3]}" class="img-historial-grande">` : ''}
+                ${htmlImagen}
                 
-                <div class="bloque-datos-blanco">
-                    <div class="dato-item-historial">
-                        <label>DISTANCIA</label>
-                        <span>${reg[4]} KM</span>
-                    </div>
-                    <div class="dato-item-historial">
-                        <label>TIEMPO</label>
-                        <span>${reg[2]} MIN</span>
-                    </div>
-                    <div class="dato-item-historial">
-                        <label>DESNIVEL</label>
-                        <span>${reg[6]} M</span>
-                    </div>
-                    <div class="dato-item-historial">
-                        <label>PASOS DADOS</label>
-                        <span>${reg[5]}</span>
-                    </div>
+                <div class="bloque-blanco-datos">
+                    <div class="dato-celda"><label>DISTANCIA</label><span>${reg[4]} KM</span></div>
+                    <div class="dato-celda"><label>TIEMPO</label><span>${reg[2]} MIN</span></div>
+                    <div class="dato-celda"><label>DESNIVEL</label><span>${reg[6]} M</span></div>
+                    <div class="dato-celda"><label>PASOS</label><span>${reg[5]}</span></div>
                 </div>
 
-                <div style="background: #78a978; color: white; padding: 8px 15px; text-align: right; font-size: 12px; font-weight: bold;">
-                    VEL. MEDIA: ${reg[7]} KM/H
+                <div class="franja-velocidad">
+                    VEL. MEDIA: ${velMedia} KM/H
                 </div>
             `;
             contenedor.appendChild(card);
         });
     } catch (e) {
-        contenedor.innerHTML = '<p style="text-align:center; color:gray; padding: 20px;">Todavía no hay actividades recientes.</p>';
+        contenedor.innerHTML = '<p style="text-align:center; color:gray;">Cargando historial...</p>';
     }
 }
