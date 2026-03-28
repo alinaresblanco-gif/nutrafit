@@ -619,12 +619,13 @@ function actualizarInterfazCompra() {
 }
 /* ============================================================
     LÓGICA UNIFICADA DE EJERCICIO - NUTRAFIT (ANTONIO)
+    ACTUALIZADO: DISEÑO DE TARJETAS CON ETIQUETAS VERDES
    ============================================================ */
 
 let actividadActual = 'Caminar';
-let imagenParaEnviar = null; // Almacén de la foto
+let imagenParaEnviar = null; 
 
-// 1. SELECTOR DE ACTIVIDAD (UNIFICADO)
+// 1. SELECTOR DE ACTIVIDAD
 function seleccionarActividad(tipo) {
     actividadActual = tipo;
     const botones = document.querySelectorAll('.btn-actividad-selector');
@@ -686,7 +687,7 @@ function quitarImagen() {
     document.getElementById('previsualizacion-contenedor').style.display = 'none';
 }
 
-// 4. STRAVA (RECONECTADO)
+// 4. STRAVA
 function abrirStravaExterno() {
     const instalada = "strava://feed";
     const web = "https://www.strava.com/dashboard";
@@ -694,7 +695,7 @@ function abrirStravaExterno() {
     setTimeout(() => { if (!document.hidden) window.open(web, "_blank"); }, 1500);
 }
 
-// 5. GUARDAR Y ENVIAR (SIN ERRORES CRÍTICOS)
+// 5. GUARDAR Y ENVIAR
 async function validarYGuardarEjercicio() {
     const tiempo = document.getElementById('ej-tiempo').value;
     const distancia = document.getElementById('ej-distancia').value;
@@ -706,11 +707,12 @@ async function validarYGuardarEjercicio() {
     btnSave.disabled = true;
 
     const ahora = new Date();
-    let tituloActividad = (actividadActual === 'Caminar') ? "CAMINATA" : (actividadActual === 'Ciclismo' ? "RUTA BICI" : "GIMNASIO");
+    // Guardamos solo el tipo para que luego el historial decida el título visual
+    let tipoAct = actividadActual; 
 
     const datos = {
         tipo: "guardar_ejercicio",
-        actividad: `${tituloActividad} (${ahora.toLocaleDateString()} - ${ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`,
+        actividad: tipoAct, 
         tiempo: tiempo,
         distancia: distancia,
         pasos: document.getElementById('ej-pasos').value,
@@ -726,7 +728,7 @@ async function validarYGuardarEjercicio() {
         });
 
         alert("¡Recibido con éxito!");
-        reiniciarFormularioEjercicio(); // Limpia todo al terminar
+        reiniciarFormularioEjercicio(); 
         setTimeout(cargarHistorialEjercicios, 3000);
     } catch (e) {
         alert("Error de red, comprueba tu internet.");
@@ -736,7 +738,7 @@ async function validarYGuardarEjercicio() {
     }
 }
 
-// 6. REINICIAR / LIMPIAR (EL NUEVO BOTÓN)
+// 6. REINICIAR / LIMPIAR
 function reiniciarFormularioEjercicio() {
     document.getElementById('ej-tiempo').value = "";
     document.getElementById('ej-distancia').value = "";
@@ -746,7 +748,7 @@ function reiniciarFormularioEjercicio() {
     console.log("Formulario reiniciado.");
 }
 
-// 7. HISTORIAL ESTILO STRAVA
+// 7. HISTORIAL MEJORADO CON ETIQUETAS VERDES
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     if (!contenedor) return;
@@ -758,22 +760,52 @@ async function cargarHistorialEjercicios() {
         
         registros.reverse().forEach(reg => {
             const card = document.createElement('div');
-            card.className = "tarjeta-strava";
-            card.style = "background: #242424; border-radius: 12px; margin-bottom: 20px; overflow: hidden; border: 1px solid #333; color: white;";
+            card.className = "tarjeta-actividad-final";
+            card.style = "background: #242424; border-radius: 15px; margin-bottom: 25px; overflow: hidden; border: 1px solid #444; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.4);";
+            
+            // Lógica de títulos que pediste
+            let tituloVisual = "MI CAMINATA DE HOY";
+            if (reg[1].includes("Ciclismo")) tituloVisual = "MI ACTIVIDAD EN BICI";
+            if (reg[1].includes("Gimnasio")) tituloVisual = "MI ACTIVIDAD DEL GIM";
+
+            // Formato de fecha
+            const f = new Date(reg[0]);
+            const fechaStr = `${f.getDate().toString().padStart(2,'0')}/${(f.getMonth()+1).toString().padStart(2,'0')}/${f.getFullYear()} ${f.getHours().toString().padStart(2,'0')}:${f.getMinutes().toString().padStart(2,'0')}`;
+
             card.innerHTML = `
-                <div style="padding: 15px; border-bottom: 1px solid #333;">
-                    <div style="font-weight: bold; color: #fc4c02;">${reg[1]}</div>
+                <div style="padding: 15px; background: rgba(120, 169, 120, 0.1);">
+                    <div style="font-weight: bold; color: #78a978; font-size: 1.1em; text-transform: uppercase;">${tituloVisual}</div>
+                    <div style="font-size: 0.85em; color: #aaa;">${fechaStr}</div>
                 </div>
-                ${reg[3] ? `<img src="${reg[3]}" style="width: 100%; display: block;">` : ''}
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 15px; text-align: center; background: #1a1a1a;">
-                    <div><small>Km</small><br><strong>${reg[4]}</strong></div>
-                    <div><small>Min</small><br><strong>${reg[2]}</strong></div>
-                    <div><small>Km/h</small><br><strong>${reg[7]}</strong></div>
+
+                ${reg[3] ? `<img src="${reg[3]}" style="width: 100%; display: block; max-height: 250px; object-fit: cover; border-bottom: 1px solid #444;">` : ''}
+                
+                <div style="background: white; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                        <label style="color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px;">DISTANCIA</label>
+                        <span style="color: #333; font-weight: bold; font-size: 1.1em;">${reg[4]} KM</span>
+                    </div>
+                    <div style="border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                        <label style="color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px;">TIEMPO</label>
+                        <span style="color: #333; font-weight: bold; font-size: 1.1em;">${reg[2]} MIN</span>
+                    </div>
+                    <div style="border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                        <label style="color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px;">DESNIVEL</label>
+                        <span style="color: #333; font-weight: bold; font-size: 1.1em;">${reg[6]} M</span>
+                    </div>
+                    <div style="border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                        <label style="color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px;">PASOS DADOS</label>
+                        <span style="color: #333; font-weight: bold; font-size: 1.1em;">${reg[5]}</span>
+                    </div>
+                </div>
+
+                <div style="background: #78a978; color: white; padding: 8px 15px; text-align: right; font-size: 12px; font-weight: bold;">
+                    VEL. MEDIA: ${reg[7]} KM/H
                 </div>
             `;
             contenedor.appendChild(card);
         });
     } catch (e) {
-        contenedor.innerHTML = '<p style="text-align:center; color:gray;">No hay actividades.</p>';
+        contenedor.innerHTML = '<p style="text-align:center; color:gray; padding: 20px;">Todavía no hay actividades recientes.</p>';
     }
 }
