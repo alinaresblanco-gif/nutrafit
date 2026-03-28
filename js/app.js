@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxodazQkUajfn1B4kQR6uVyKOIQ_Khf5-Hxwl5Y5e69xtO2FgLYA-N7POMJyJx5hEU/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyOjOeJ0Lo43VLjqf_K-2sf3y17QucQgy-jaDvxAG-xRPhORX6vjpiRHoDwHXsjvlM8/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -698,7 +698,7 @@ function seleccionarActividad(tipo) {
     if (tipo === 'Gimnasio') document.getElementById('btn-gym').classList.add('activo');
 }
 
-// 5. CARGAR HISTORIAL (FIX IMAGEN VISUAL)
+// 5. CARGAR HISTORIAL (CON PLAN B DE IMAGEN)
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     const resumenMinutos = document.getElementById('minutos-hoy-resumen');
@@ -721,21 +721,20 @@ async function cargarHistorialEjercicios() {
             const card = document.createElement('div');
             card.className = "tarjeta-actividad-final";
             
-            // Limpiar el 2026: si detectamos formato fecha en la distancia, lo corregimos
             let dist = fila[4];
             if (dist && dist.toString().includes('2026')) {
-                 // Si llega como fecha, intentamos mostrarlo como número o avisar
                  dist = parseFloat(dist) || dist;
             }
 
-            // --- FIX IMAGEN: Contenedor negro estilo Imagen 10 ---
+            // --- BLOQUE SUSTITUIDO: Imagen Corregida (Plan B: Base64 directo) ---
             let htmlImagen = '';
-            if (fila[3] && fila[3].length > 50) {
+            if (fila[3] && fila[3].toString().startsWith('data:image')) {
                 htmlImagen = `
-                    <div style="background:#000; width:100%; display:flex; justify-content:center; align-items:center; overflow:hidden;">
-                        <img src="${fila[3]}" style="width:100%; max-height:300px; object-fit:contain; display:block;">
+                    <div style="background:#000; width:100%; text-align:center; padding:5px; box-sizing:border-box;">
+                        <img src="${fila[3]}" style="width:100%; max-height:300px; object-fit:contain; display:block; border-radius:8px;">
                     </div>`;
             }
+            // --------------------------------------------------------------------
 
             card.innerHTML = `
                 <div class="cabecera-card">
@@ -771,14 +770,13 @@ async function validarYGuardarEjercicio() {
     btn.disabled = true;
     btn.innerHTML = "GUARDANDO...";
 
-    // Forzamos que la distancia sea un número limpio para evitar el error de fecha
     const distanciaLimpia = distanciaOriginal.replace(',', '.');
 
     const datos = {
         tipo: "guardar_ejercicio",
         actividad: actividadActual,
         tiempo: tiempo,
-        distancia: "'" + distanciaLimpia, // El truco del apóstrofe (') obliga a Sheets a guardarlo como texto literal/número
+        distancia: "'" + distanciaLimpia, 
         pasos: document.getElementById('ej-pasos').value,
         desnivel: document.getElementById('ej-desnivel').value || 0,
         imagenBase64: imagenParaEnviar
