@@ -618,7 +618,7 @@ function actualizarInterfazCompra() {
     }
 }
 /* ============================================================
-    CONTROL TOTAL NUTRAFIT - ANTONIO (RESTAURADO Y CORREGIDO)
+    CONTROL TOTAL NUTRAFIT - ANTONIO (FIX IMAGEN Y DISTANCIA)
    ============================================================ */
 
 let actividadActual = 'Caminar';
@@ -627,26 +627,24 @@ let imagenParaEnviar = null;
 // 1. CARGA AUTOMÁTICA Y CONTADORES
 setInterval(() => {
     const lista = document.getElementById('lista-actividades-historial');
-    // Si la lista existe y está vacía, cargamos
     if (lista && lista.innerHTML.trim() === "") {
         cargarHistorialEjercicios();
     }
 }, 1500);
 
-// 2. CÁLCULO DE PASOS Y GESTIÓN DE ENTRADA
+// 2. CÁLCULO DE PASOS
 document.addEventListener('input', function (e) {
     if (e.target.id === 'ej-distancia') {
         let valor = e.target.value.replace(',', '.'); 
         const km = parseFloat(valor);
         if (!isNaN(km)) {
-            // Cálculo de pasos: 1km aprox 1538 pasos (según tu código anterior)
             const pasos = Math.round((km * 1000) / 0.65);
             document.getElementById('ej-pasos').value = pasos;
         }
     }
 });
 
-// 3. FUNCIONES DE CÁMARA Y FOTOS (RESTAURADAS)
+// 3. FUNCIONES DE CÁMARA
 function intentarHacerFoto() {
     const input = document.getElementById('input-captura');
     if (input) { 
@@ -700,7 +698,7 @@ function seleccionarActividad(tipo) {
     if (tipo === 'Gimnasio') document.getElementById('btn-gym').classList.add('activo');
 }
 
-// 5. CARGAR HISTORIAL Y MINUTOS TOTALES
+// 5. CARGAR HISTORIAL (FIX IMAGEN VISUAL)
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     const resumenMinutos = document.getElementById('minutos-hoy-resumen');
@@ -712,11 +710,9 @@ async function cargarHistorialEjercicios() {
         
         let minutosTotalesHoy = 0;
         const hoyFecha = new Date().toISOString().split('T')[0];
-
         contenedor.innerHTML = ""; 
         
         datos.reverse().forEach(fila => {
-            // Sumar minutos si es de hoy
             const fechaFila = fila[0] ? fila[0].split('T')[0] : "";
             if (fechaFila === hoyFecha) {
                 minutosTotalesHoy += parseFloat(fila[2] || 0);
@@ -725,21 +721,28 @@ async function cargarHistorialEjercicios() {
             const card = document.createElement('div');
             card.className = "tarjeta-actividad-final";
             
-            // Limpieza del error "2026"
+            // Limpiar el 2026: si detectamos formato fecha en la distancia, lo corregimos
             let dist = fila[4];
-            if (typeof dist === 'string' && dist.includes('T')) dist = "Error Formato";
+            if (dist && dist.toString().includes('2026')) {
+                 // Si llega como fecha, intentamos mostrarlo como número o avisar
+                 dist = parseFloat(dist) || dist;
+            }
 
-            // Imagen (Si empieza por http o data, la mostramos)
-            const imgHtml = (fila[3] && fila[3].length > 50) 
-                ? `<div style="background:#000; padding:5px;"><img src="${fila[3]}" class="img-post-actividad" style="width:100%; border-radius:8px;"></div>` 
-                : '';
+            // --- FIX IMAGEN: Contenedor negro estilo Imagen 10 ---
+            let htmlImagen = '';
+            if (fila[3] && fila[3].length > 50) {
+                htmlImagen = `
+                    <div style="background:#000; width:100%; display:flex; justify-content:center; align-items:center; overflow:hidden;">
+                        <img src="${fila[3]}" style="width:100%; max-height:300px; object-fit:contain; display:block;">
+                    </div>`;
+            }
 
             card.innerHTML = `
                 <div class="cabecera-card">
                     <strong>${fila[1].toUpperCase()}</strong>
                     <small>${fechaFila}</small>
                 </div>
-                ${imgHtml}
+                ${htmlImagen}
                 <div class="bloque-blanco-datos">
                     <div class="dato-celda"><label>DISTANCIA</label><span>${dist} KM</span></div>
                     <div class="dato-celda"><label>TIEMPO</label><span>${fila[2]} MIN</span></div>
@@ -758,21 +761,24 @@ async function cargarHistorialEjercicios() {
     }
 }
 
-// 6. GUARDAR
+// 6. GUARDAR (FIX PARA FORZAR NÚMERO)
 async function validarYGuardarEjercicio() {
     const tiempo = document.getElementById('ej-tiempo').value;
-    const distancia = document.getElementById('ej-distancia').value;
-    if (!tiempo || !distancia) return alert("Antonio, rellena tiempo y distancia.");
+    const distanciaOriginal = document.getElementById('ej-distancia').value;
+    if (!tiempo || !distanciaOriginal) return alert("Rellena tiempo y distancia.");
 
     const btn = document.querySelector('.btn-guardar-principal');
     btn.disabled = true;
     btn.innerHTML = "GUARDANDO...";
 
+    // Forzamos que la distancia sea un número limpio para evitar el error de fecha
+    const distanciaLimpia = distanciaOriginal.replace(',', '.');
+
     const datos = {
         tipo: "guardar_ejercicio",
         actividad: actividadActual,
         tiempo: tiempo,
-        distancia: distancia.replace(',', '.'),
+        distancia: "'" + distanciaLimpia, // El truco del apóstrofe (') obliga a Sheets a guardarlo como texto literal/número
         pasos: document.getElementById('ej-pasos').value,
         desnivel: document.getElementById('ej-desnivel').value || 0,
         imagenBase64: imagenParaEnviar
@@ -780,9 +786,9 @@ async function validarYGuardarEjercicio() {
 
     try {
         await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        alert("¡Entrenamiento guardado!");
+        alert("¡Guardado!");
         reiniciarFormularioEjercicio();
-        cargarHistorialEjercicios();
+        setTimeout(cargarHistorialEjercicios, 1500);
     } catch (e) {
         alert("Error de red");
     } finally {
@@ -792,9 +798,9 @@ async function validarYGuardarEjercicio() {
 }
 
 function reiniciarFormularioEjercicio() {
-    document.getElementById('ej-tiempo').value = "";
-    document.getElementById('ej-distancia').value = "";
-    document.getElementById('ej-desnivel').value = "";
-    document.getElementById('ej-pasos').value = "";
+    document.getElementById('ej-tiempo').value = "0";
+    document.getElementById('ej-distancia').value = "0";
+    document.getElementById('ej-desnivel').value = "0";
+    document.getElementById('ej-pasos').value = "0";
     quitarImagen();
 }
