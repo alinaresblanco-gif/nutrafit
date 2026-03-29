@@ -834,3 +834,8 @@ function reiniciarFormularioEjercicio() {
     document.getElementById('ej-pasos').value = "0";
     quitarImagen();
 }
+
+// FUNCIÓN PARA ABRIR LA VISTA GPS
+function abrirGpsTracker() {
+    window.location.href = "GPS Tracker.html";
+}
