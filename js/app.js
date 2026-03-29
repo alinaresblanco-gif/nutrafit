@@ -827,5 +827,5 @@ function reiniciarFormularioEjercicio() {
 
 // 8. FUNCIÓN PARA ABRIR EL GPS (Accionada por el botón principal)
 function abrirGpsTracker() {
-    window.location.href = "GPS-Tracker.html";
+    window.location.href = "vistas/GPS-Tracker.html";
 }
