@@ -6,9 +6,7 @@
             <i class="fas fa-chevron-left"></i>
         </button>
         <span class="titulo-vista">MI ACTIVIDAD FÍSICA</span>
-        <button onclick="abrirGpsTracker()" class="boton-nav-circular">
-            <i class="fas fa-map-marker-alt"></i>
-        </button>
+        <div style="width:38px;"></div> 
     </div>
 
     <div class="contenedor-principal-ejercicio">
@@ -64,8 +62,8 @@
             </div>
         </div>
 
-        <button onclick="abrirStravaExterno()" class="btn-strava-enlace">
-            <i class="fab fa-strava"></i> ABRIR STRAVA
+        <button onclick="abrirGpsTracker()" class="btn-strava-enlace" style="background: #2196F3;">
+            <i class="fas fa-map-marked-alt"></i> ABRIR MI NAVEGADOR
         </button>
 
         <button onclick="validarYGuardarEjercicio()" class="btn-guardar-principal">
@@ -94,7 +92,6 @@
 </div>
 
 <style>
-    /* Estilos originales preservados */
     .vista-cabecera-fija { height: auto; position: relative; }
     .cabecera-barra { background: #78a978; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
     .boton-nav-circular { background: rgba(255,255,255,0.2); border:none; color:white; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; }

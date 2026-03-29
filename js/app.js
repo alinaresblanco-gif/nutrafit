@@ -618,7 +618,7 @@ function actualizarInterfazCompra() {
     }
 }
 /* ============================================================
-    CONTROL TOTAL NUTRAFIT - ANTONIO (FIX IMAGEN Y DISTANCIA)
+    CONTROL TOTAL NUTRAFIT - ANTONIO (SISTEMA NAVEGADOR GPS)
    ============================================================ */
 
 let actividadActual = 'Caminar';
@@ -682,14 +682,7 @@ function quitarImagen() {
     document.getElementById('previsualizacion-contenedor').style.display = 'none';
 }
 
-// 4. STRAVA Y SELECTORES
-function abrirStravaExterno() {
-    window.location.href = "strava://run";
-    setTimeout(() => {
-        window.open("https://www.strava.com/mobile", "_blank");
-    }, 1000);
-}
-
+// 4. SELECTORES DE ACTIVIDAD
 function seleccionarActividad(tipo) {
     actividadActual = tipo;
     document.querySelectorAll('.btn-actividad-selector').forEach(btn => btn.classList.remove('activo'));
@@ -698,7 +691,7 @@ function seleccionarActividad(tipo) {
     if (tipo === 'Gimnasio') document.getElementById('btn-gym').classList.add('activo');
 }
 
-// 5. CARGAR HISTORIAL (CON PLAN B DE IMAGEN Y COMPARTIR)
+// 5. CARGAR HISTORIAL
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     const resumenMinutos = document.getElementById('minutos-hoy-resumen');
@@ -726,7 +719,6 @@ async function cargarHistorialEjercicios() {
                  dist = parseFloat(dist) || dist;
             }
 
-            // --- BLOQUE IMAGEN (Plan B: Base64 directo) ---
             let htmlImagen = '';
             if (fila[3] && fila[3].toString().startsWith('data:image')) {
                 htmlImagen = `
@@ -735,7 +727,6 @@ async function cargarHistorialEjercicios() {
                     </div>`;
             }
 
-            // --- DATOS PARA COMPARTIR ---
             const datosCompartir = {
                 act: fila[1],
                 dist: dist,
@@ -773,7 +764,7 @@ async function cargarHistorialEjercicios() {
     }
 }
 
-// --- FUNCIÓN COMPARTIR ---
+// 6. FUNCIÓN COMPARTIR
 function compartirActividad(json) {
     const d = JSON.parse(json);
     const texto = `¡Entrenamiento completado en NutraFit! 💪\n\n🏃 Actividad: ${d.act}\n📏 Distancia: ${d.dist} KM\n⏱️ Tiempo: ${d.tiempo} MIN\n🚀 Velocidad: ${d.vel} KM/H\n\n#NutraFitAntonio`;
@@ -785,7 +776,7 @@ function compartirActividad(json) {
     }
 }
 
-// 6. GUARDAR (CON TRUCO DEL APÓSTROFO EN DISTANCIA Y VELOCIDAD)
+// 7. GUARDAR EJERCICIO
 async function validarYGuardarEjercicio() {
     const tiempo = document.getElementById('ej-tiempo').value;
     const distanciaOriginal = document.getElementById('ej-distancia').value;
@@ -797,7 +788,6 @@ async function validarYGuardarEjercicio() {
 
     const distanciaLimpia = distanciaOriginal.replace(',', '.');
     
-    // Calculamos velocidad media antes de enviar
     let velMedia = 0;
     if (parseFloat(tiempo) > 0) {
         velMedia = (parseFloat(distanciaLimpia) / (parseFloat(tiempo) / 60)).toFixed(2);
@@ -810,7 +800,7 @@ async function validarYGuardarEjercicio() {
         distancia: "'" + distanciaLimpia, 
         pasos: document.getElementById('ej-pasos').value,
         desnivel: document.getElementById('ej-desnivel').value || 0,
-        velocidad: "'" + velMedia, // <-- AQUI EL APOSTROFO PARA LA VELOCIDAD
+        velocidad: "'" + velMedia,
         imagenBase64: imagenParaEnviar
     };
 
@@ -835,7 +825,7 @@ function reiniciarFormularioEjercicio() {
     quitarImagen();
 }
 
-// FUNCIÓN PARA ABRIR LA VISTA GPS (Nombre actualizado con guion)
+// 8. FUNCIÓN PARA ABRIR EL GPS (Accionada por el botón principal)
 function abrirGpsTracker() {
     window.location.href = "GPS-Tracker.html";
 }
