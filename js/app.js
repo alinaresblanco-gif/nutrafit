@@ -785,7 +785,7 @@ function compartirActividad(json) {
     }
 }
 
-// 6. GUARDAR (FIX PARA FORZAR NÚMERO)
+// 6. GUARDAR (CON TRUCO DEL APÓSTROFO EN DISTANCIA Y VELOCIDAD)
 async function validarYGuardarEjercicio() {
     const tiempo = document.getElementById('ej-tiempo').value;
     const distanciaOriginal = document.getElementById('ej-distancia').value;
@@ -796,6 +796,12 @@ async function validarYGuardarEjercicio() {
     btn.innerHTML = "GUARDANDO...";
 
     const distanciaLimpia = distanciaOriginal.replace(',', '.');
+    
+    // Calculamos velocidad media antes de enviar
+    let velMedia = 0;
+    if (parseFloat(tiempo) > 0) {
+        velMedia = (parseFloat(distanciaLimpia) / (parseFloat(tiempo) / 60)).toFixed(2);
+    }
 
     const datos = {
         tipo: "guardar_ejercicio",
@@ -804,6 +810,7 @@ async function validarYGuardarEjercicio() {
         distancia: "'" + distanciaLimpia, 
         pasos: document.getElementById('ej-pasos').value,
         desnivel: document.getElementById('ej-desnivel').value || 0,
+        velocidad: "'" + velMedia, // <-- AQUI EL APOSTROFO PARA LA VELOCIDAD
         imagenBase64: imagenParaEnviar
     };
 
@@ -822,8 +829,4 @@ async function validarYGuardarEjercicio() {
 
 function reiniciarFormularioEjercicio() {
     document.getElementById('ej-tiempo').value = "0";
-    document.getElementById('ej-distancia').value = "0";
-    document.getElementById('ej-desnivel').value = "0";
-    document.getElementById('ej-pasos').value = "0";
-    quitarImagen();
-}
+    document.getElementById('ej
