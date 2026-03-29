@@ -829,4 +829,8 @@ async function validarYGuardarEjercicio() {
 
 function reiniciarFormularioEjercicio() {
     document.getElementById('ej-tiempo').value = "0";
-    document.getElementById('ej
+    document.getElementById('ej-distancia').value = "0";
+    document.getElementById('ej-desnivel').value = "0";
+    document.getElementById('ej-pasos').value = "0";
+    quitarImagen();
+}
