@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutraFit - GPS Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f4f4f4; }
+        
+        /* Cabecera Corporativa */
+        .cabecera-barra { 
+            background: #78a978; 
+            padding: 10px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .boton-nav-circular { 
+            background: rgba(255,255,255,0.2); 
+            border:none; 
+            color:white; 
+            width:38px; 
+            height:38px; 
+            border-radius:50%; 
+            display:flex; 
+            align-items:center; 
+            justify-content:center;
+            font-size: 18px;
+        }
+
+        /* Contenedor del Mapa */
+        #mapa-gps {
+            width: 100%;
+            height: 300px;
+            background: #eee;
+            border-bottom: 4px solid #78a978;
+        }
+
+        /* Panel de Control */
+        .contenedor-controles {
+            padding: 20px;
+            background: #78a978;
+            border-radius: 0 0 30px 30px;
+        }
+
+        /* Marcadores Digitales */
+        .pantalla-cronometro {
+            background: #1a1a1a;
+            color: #78a978;
+            text-align: center;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 45px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border: 2px solid #5a8a5a;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Botonera */
+        .fila-botones { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-gps {
+            border: 2px solid white;
+            border-radius: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-inicio { background: #28a745; width: 100%; padding: 18px; font-size: 18px; }
+        .btn-pausa { background: #ffc107; flex: 1; padding: 15px; color: #333; border-color: #333; }
+        .btn-reinicio { background: #6c757d; flex: 1; padding: 15px; }
+        .btn-parar { background: #dc3545; width: 100%; padding: 18px; font-size: 18px; }
+
+        /* Rejilla de Datos */
+        .grid-datos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .dato-card {
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .dato-card label {
+            display: block;
+            color: #78a978;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .dato-card span {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .btn-guardar-final {
+            background: white;
+            color: #78a978;
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cabecera-barra">
+        <button onclick="window.history.back()" class="boton-nav-circular">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <strong class="titulo-vista">GRABAR MI RUTA</strong>
+        <button onclick="location.reload()" class="boton-nav-circular">
+            <i class="fas fa-redo-alt"></i>
+        </button>
+    </div>
+
+    <div id="mapa-gps"></div>
+
+    <div class="contenedor-controles">
+        <div class="pantalla-cronometro" id="display-tiempo">00:00:00</div>
+
+        <button class="btn-gps btn-inicio" id="btn-start">
+            <i class="fas fa-play"></i> INICIAR MARCHA
+        </button>
+
+        <div class="fila-botones">
+            <button class="btn-gps btn-pausa" id="btn-pause">
+                <i class="fas fa-pause"></i> PAUSAR
+            </button>
+            <button class="btn-gps btn-reinicio" id="btn-reset">
+                <i class="fas fa-undo"></i> REINICIAR
+            </button>
+        </div>
+
+        <button class="btn-gps btn-parar" id="btn-stop">
+            <i class="fas fa-stop"></i> TERMINAR RUTA
+        </button>
+
+        <div class="grid-datos">
+            <div class="dato-card">
+                <label>Distancia</label>
+                <span id="stat-dist">0.00 KM</span>
+            </div>
+            <div class="dato-card">
+                <label>Vel. Media</label>
+                <span id="stat-vel">0.0 KM/H</span>
+            </div>
+            <div class="dato-card">
+                <label>Pasos</label>
+                <span id="stat-pasos">0</span>
+            </div>
+            <div class="dato-card">
+                <label>Desnivel</label>
+                <span id="stat-desnivel">0 M</span>
+            </div>
+        </div>
+
+        <button class="btn-guardar-final">
+            <i class="fas fa-cloud-upload-alt"></i> GUARDAR EN HISTORIAL
+        </button>
+    </div>
+
+    <script>
+        // Aquí irá la lógica del GPS y el mapa en el siguiente paso
+        // Inicializamos un mapa básico de muestra
+        var map = L.map('mapa-gps').setView([40.4167, -3.7033], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    </script>
+
+</body>
+</html>
