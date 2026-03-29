@@ -624,7 +624,28 @@ function actualizarInterfazCompra() {
 let actividadActual = 'Caminar';
 let imagenParaEnviar = null;
 
-// 1. CARGA AUTOMÁTICA Y CONTADORES
+// --- 1. IMPORTACIÓN AUTOMÁTICA DESDE EL GPS ---
+window.addEventListener('load', () => {
+    const gpsDist = localStorage.getItem('gps_distancia');
+    
+    if (gpsDist) {
+        // Inyectamos los valores capturados del GPS en los inputs
+        if(document.getElementById('ej-distancia')) document.getElementById('ej-distancia').value = gpsDist;
+        if(document.getElementById('ej-tiempo')) document.getElementById('ej-tiempo').value = localStorage.getItem('gps_tiempo');
+        if(document.getElementById('ej-pasos')) document.getElementById('ej-pasos').value = localStorage.getItem('gps_pasos');
+        if(document.getElementById('ej-desnivel')) document.getElementById('ej-desnivel').value = localStorage.getItem('gps_desnivel');
+
+        // Borramos solo los datos temporales del GPS para dejar la memoria limpia
+        localStorage.removeItem('gps_distancia');
+        localStorage.removeItem('gps_tiempo');
+        localStorage.removeItem('gps_pasos');
+        localStorage.removeItem('gps_desnivel');
+        
+        alert("📊 ¡Datos de tu ruta importados correctamente!");
+    }
+});
+
+// --- 2. CONTADORES Y CARGA DE HISTORIAL ---
 setInterval(() => {
     const lista = document.getElementById('lista-actividades-historial');
     if (lista && lista.innerHTML.trim() === "") {
@@ -632,7 +653,7 @@ setInterval(() => {
     }
 }, 1500);
 
-// 2. CÁLCULO DE PASOS
+// --- 3. CÁLCULO MANUAL DE PASOS (Si se edita la distancia a mano) ---
 document.addEventListener('input', function (e) {
     if (e.target.id === 'ej-distancia') {
         let valor = e.target.value.replace(',', '.'); 
@@ -644,7 +665,7 @@ document.addEventListener('input', function (e) {
     }
 });
 
-// 3. FUNCIONES DE CÁMARA
+// --- 4. FUNCIONES DE CÁMARA Y CAPTURA ---
 function intentarHacerFoto() {
     const input = document.getElementById('input-captura');
     if (input) { 
@@ -682,7 +703,7 @@ function quitarImagen() {
     document.getElementById('previsualizacion-contenedor').style.display = 'none';
 }
 
-// 4. SELECTORES DE ACTIVIDAD
+// --- 5. SELECTORES DE ACTIVIDAD ---
 function seleccionarActividad(tipo) {
     actividadActual = tipo;
     document.querySelectorAll('.btn-actividad-selector').forEach(btn => btn.classList.remove('activo'));
@@ -691,7 +712,7 @@ function seleccionarActividad(tipo) {
     if (tipo === 'Gimnasio') document.getElementById('btn-gym').classList.add('activo');
 }
 
-// 5. CARGAR HISTORIAL
+// --- 6. CARGAR HISTORIAL DESDE GOOGLE SHEETS ---
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     const resumenMinutos = document.getElementById('minutos-hoy-resumen');
@@ -764,7 +785,7 @@ async function cargarHistorialEjercicios() {
     }
 }
 
-// 6. FUNCIÓN COMPARTIR
+// --- 7. COMPARTIR EN REDES ---
 function compartirActividad(json) {
     const d = JSON.parse(json);
     const texto = `¡Entrenamiento completado en NutraFit! 💪\n\n🏃 Actividad: ${d.act}\n📏 Distancia: ${d.dist} KM\n⏱️ Tiempo: ${d.tiempo} MIN\n🚀 Velocidad: ${d.vel} KM/H\n\n#NutraFitAntonio`;
@@ -776,7 +797,7 @@ function compartirActividad(json) {
     }
 }
 
-// 7. GUARDAR EJERCICIO
+// --- 8. GUARDAR EN GOOGLE SHEETS ---
 async function validarYGuardarEjercicio() {
     const tiempo = document.getElementById('ej-tiempo').value;
     const distanciaOriginal = document.getElementById('ej-distancia').value;
@@ -825,7 +846,7 @@ function reiniciarFormularioEjercicio() {
     quitarImagen();
 }
 
-// 8. FUNCIÓN PARA ABRIR EL GPS (Accionada por el botón principal)
+// --- 9. NAVEGACIÓN AL GPS ---
 function abrirGpsTracker() {
     window.location.href = "vistas/GPS-Tracker.html";
 }
