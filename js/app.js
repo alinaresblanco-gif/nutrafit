@@ -835,7 +835,7 @@ function reiniciarFormularioEjercicio() {
     quitarImagen();
 }
 
-// FUNCIÓN PARA ABRIR LA VISTA GPS
+// FUNCIÓN PARA ABRIR LA VISTA GPS (Nombre exacto del archivo)
 function abrirGpsTracker() {
     window.location.href = "GPS Tracker.html";
 }
