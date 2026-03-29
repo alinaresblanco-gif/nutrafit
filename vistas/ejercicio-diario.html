@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 <div class="vista-cabecera-fija"> 
     <div class="cabecera-barra">
         <button onclick="volverInicio()" class="boton-nav-circular">
@@ -126,7 +128,25 @@
     .dato-celda span { color: #333; font-weight: bold; font-size: 1.1em; }
     .franja-velocidad { background: #78a978; color: white; padding: 10px; text-align: right; font-size: 12px; font-weight: bold; }
 
-    /* ESTILO NUEVO BOTÓN COMPARTIR */
-    .btn-compartir-mini { background: none; border: none; color: #78a978; font-size: 18px; padding: 5px; cursor: pointer; transition: 0.3s; }
-    .btn-compartir-mini:active { transform: scale(1.2); color: white; }
+    /* ESTILO NUEVO BOTÓN COMPARTIR - ACTUALIZADO */
+    .btn-compartir-mini { 
+        background: rgba(255,255,255,0.1); 
+        border: none; 
+        color: #78a978 !important; /* Forzamos el color verde */
+        font-size: 20px; 
+        padding: 8px; 
+        cursor: pointer; 
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        transition: 0.3s;
+    }
+    .btn-compartir-mini:active { transform: scale(1.2); color: white !important; }
+    .btn-compartir-mini i {
+        pointer-events: none; /* Para que el click siempre detecte el botón */
+    }
 </style>
