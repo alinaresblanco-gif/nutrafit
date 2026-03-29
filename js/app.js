@@ -698,7 +698,7 @@ function seleccionarActividad(tipo) {
     if (tipo === 'Gimnasio') document.getElementById('btn-gym').classList.add('activo');
 }
 
-// 5. CARGAR HISTORIAL (CON PLAN B DE IMAGEN)
+// 5. CARGAR HISTORIAL (CON PLAN B DE IMAGEN Y COMPARTIR)
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     const resumenMinutos = document.getElementById('minutos-hoy-resumen');
@@ -726,7 +726,7 @@ async function cargarHistorialEjercicios() {
                  dist = parseFloat(dist) || dist;
             }
 
-            // --- BLOQUE SUSTITUIDO: Imagen Corregida (Plan B: Base64 directo) ---
+            // --- BLOQUE IMAGEN (Plan B: Base64 directo) ---
             let htmlImagen = '';
             if (fila[3] && fila[3].toString().startsWith('data:image')) {
                 htmlImagen = `
@@ -734,12 +734,25 @@ async function cargarHistorialEjercicios() {
                         <img src="${fila[3]}" style="width:100%; max-height:300px; object-fit:contain; display:block; border-radius:8px;">
                     </div>`;
             }
-            // --------------------------------------------------------------------
+
+            // --- DATOS PARA COMPARTIR ---
+            const datosCompartir = {
+                act: fila[1],
+                dist: dist,
+                tiempo: fila[2],
+                vel: fila[7]
+            };
+            const jsonDatos = JSON.stringify(datosCompartir).replace(/"/g, '&quot;');
 
             card.innerHTML = `
-                <div class="cabecera-card">
-                    <strong>${fila[1].toUpperCase()}</strong>
-                    <small>${fechaFila}</small>
+                <div class="cabecera-card" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <strong>${fila[1].toUpperCase()}</strong>
+                        <small>${fechaFila}</small>
+                    </div>
+                    <button onclick="compartirActividad('${jsonDatos}')" class="btn-compartir-mini">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
                 </div>
                 ${htmlImagen}
                 <div class="bloque-blanco-datos">
@@ -757,6 +770,18 @@ async function cargarHistorialEjercicios() {
 
     } catch (error) {
         console.log("Error cargando historial");
+    }
+}
+
+// --- FUNCIÓN COMPARTIR ---
+function compartirActividad(json) {
+    const d = JSON.parse(json);
+    const texto = `¡Entrenamiento completado en NutraFit! 💪\n\n🏃 Actividad: ${d.act}\n📏 Distancia: ${d.dist} KM\n⏱️ Tiempo: ${d.tiempo} MIN\n🚀 Velocidad: ${d.vel} KM/H\n\n#NutraFitAntonio`;
+
+    if (navigator.share) {
+        navigator.share({ title: 'Mi Actividad', text: texto }).catch(console.error);
+    } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
     }
 }
 

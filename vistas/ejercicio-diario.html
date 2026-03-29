@@ -88,12 +88,11 @@
 
 <div class="contenido-scroll-registros">
     <h3 class="subtitulo-seccion">TUS ACTIVIDADES RECIENTES</h3>
-    <div id="lista-actividades-historial">
-        </div>
+    <div id="lista-actividades-historial"></div>
 </div>
 
 <style>
-    /* Estilos mantenidos y optimizados para la imagen negra */
+    /* Estilos originales */
     .vista-cabecera-fija { height: auto; position: relative; }
     .cabecera-barra { background: #78a978; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
     .boton-nav-circular { background: rgba(255,255,255,0.2); border:none; color:white; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
@@ -112,7 +111,6 @@
     .btn-guardar-principal { background: #78a978; color: white; border: 2px solid white; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; display:flex; align-items:center; justify-content:center; gap:8px; }
     .btn-reiniciar { background: #666 !important; margin-top: 10px; border:none !important; }
 
-    /* Estilos del Historial (Imagen 12/13) */
     .solapa-progreso-hoy { margin-top: 10px; padding: 0 15px; }
     .tarjeta-info-creditos { background: linear-gradient(135deg, #78a978, #5a8a5a); color: white; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
     .contenido-scroll-registros { padding: 15px; }
@@ -123,10 +121,12 @@
     .cabecera-card strong { color: #78a978; display: block; font-size: 1.1em; }
     .cabecera-card small { color: #888; }
     
-    .img-post-actividad { width: 100%; max-height: 300px; object-fit: cover; display: block; }
-    
     .bloque-blanco-datos { background: white; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
     .dato-celda label { color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px; }
     .dato-celda span { color: #333; font-weight: bold; font-size: 1.1em; }
     .franja-velocidad { background: #78a978; color: white; padding: 10px; text-align: right; font-size: 12px; font-weight: bold; }
+
+    /* ESTILO NUEVO BOTÓN COMPARTIR */
+    .btn-compartir-mini { background: none; border: none; color: #78a978; font-size: 18px; padding: 5px; cursor: pointer; transition: 0.3s; }
+    .btn-compartir-mini:active { transform: scale(1.2); color: white; }
 </style>
