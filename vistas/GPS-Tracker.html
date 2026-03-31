@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NutraFit - GPS Tracker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -10,136 +10,30 @@
 
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f4f4f4; }
-        
-        /* Cabecera Corporativa */
-        .cabecera-barra { 
-            background: #78a978; 
-            padding: 10px 15px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            color: white;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .boton-nav-circular { 
-            background: rgba(255,255,255,0.2); 
-            border:none; 
-            color:white; 
-            width:38px; 
-            height:38px; 
-            border-radius:50%; 
-            display:flex; 
-            align-items:center; 
-            justify-content:center;
-            font-size: 18px;
-        }
-
-        /* Contenedor del Mapa */
-        #mapa-gps {
-            width: 100%;
-            height: 300px;
-            background: #eee;
-            border-bottom: 4px solid #78a978;
-        }
-
-        /* Panel de Control */
-        .contenedor-controles {
-            padding: 20px;
-            background: #78a978;
-            border-radius: 0 0 30px 30px;
-        }
-
-        /* Marcadores Digitales */
-        .pantalla-cronometro {
-            background: #1a1a1a;
-            color: #78a978;
-            text-align: center;
-            padding: 20px;
-            border-radius: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 45px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            border: 2px solid #5a8a5a;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-        }
-
-        /* Botonera */
-        .fila-botones { display: flex; gap: 10px; margin-bottom: 10px; }
-        .btn-gps {
-            border: 2px solid white;
-            border-radius: 12px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            color: white;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .btn-inicio { background: #28a745; width: 100%; padding: 18px; font-size: 18px; }
-        .btn-pausa { background: #ffc107; flex: 1; padding: 15px; color: #333; border-color: #333; }
-        .btn-reinicio { background: #6c757d; flex: 1; padding: 15px; }
-        .btn-parar { background: #dc3545; width: 100%; padding: 18px; font-size: 18px; }
-
-        /* Rejilla de Datos */
-        .grid-datos {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .dato-card {
-            background: white;
-            padding: 12px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .dato-card label {
-            display: block;
-            color: #78a978;
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .dato-card span {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .btn-guardar-final {
-            background: white;
-            color: #78a978;
-            width: 100%;
-            padding: 15px;
-            border-radius: 12px;
-            border: none;
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
+        .cabecera-barra { background: #78a978; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 1000; }
+        .boton-nav-circular { background: rgba(255,255,255,0.2); border:none; color:white; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size: 18px; }
+        #mapa-gps { width: 100%; height: 250px; background: #eee; border-bottom: 4px solid #78a978; }
+        .contenedor-controles { padding: 15px; background: #78a978; border-radius: 0 0 30px 30px; }
+        .pantalla-cronometro { background: #1a1a1a; color: #78a978; text-align: center; padding: 15px; border-radius: 15px; font-family: 'Courier New', monospace; font-size: 40px; font-weight: bold; margin-bottom: 15px; border: 2px solid #5a8a5a; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .btn-gps { border: 2px solid white; border-radius: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-inicio { background: #28a745; padding: 15px; font-size: 18px; }
+        .btn-pausa { background: #ffc107; flex: 1; padding: 12px; color: #333; border-color: #333; }
+        .btn-reinicio { background: #6c757d; flex: 1; padding: 12px; }
+        .btn-parar { background: #dc3545; padding: 15px; font-size: 18px; margin-top: 10px; }
+        .fila-botones { display: flex; gap: 10px; margin-top: 10px; }
+        .grid-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .dato-card { background: white; padding: 10px; border-radius: 12px; text-align: center; }
+        .dato-card label { display: block; color: #78a978; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .dato-card span { font-size: 18px; font-weight: bold; color: #333; }
+        .btn-guardar-final { background: white; color: #78a978; width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
     </style>
 </head>
 <body>
 
     <div class="cabecera-barra">
-        <button onclick="window.history.back()" class="boton-nav-circular">
-            <i class="fas fa-chevron-left"></i>
-        </button>
-        <strong class="titulo-vista">GRABAR MI RUTA</strong>
-        <button onclick="location.reload()" class="boton-nav-circular">
-            <i class="fas fa-redo-alt"></i>
-        </button>
+        <button onclick="window.history.back()" class="boton-nav-circular"><i class="fas fa-chevron-left"></i></button>
+        <strong>GRABAR MI RUTA</strong>
+        <button onclick="location.reload()" class="boton-nav-circular"><i class="fas fa-redo-alt"></i></button>
     </div>
 
     <div id="mapa-gps"></div>
@@ -151,203 +45,106 @@
             <i class="fas fa-play"></i> INICIAR MARCHA
         </button>
 
-        <div class="fila-botones" style="margin-top:10px;">
-            <button class="btn-gps btn-pausa" onclick="pausarSeguimiento()">
-                <i class="fas fa-pause"></i> PAUSAR
-            </button>
-            <button class="btn-gps btn-reinicio" onclick="reiniciarSeguimiento()">
-                <i class="fas fa-undo"></i> REINICIAR
-            </button>
+        <div class="fila-botones">
+            <button class="btn-gps btn-pausa" onclick="pausarSeguimiento()"><i class="fas fa-pause"></i> PAUSAR</button>
+            <button class="btn-gps btn-reinicio" onclick="reiniciarSeguimiento()"><i class="fas fa-undo"></i> RESET</button>
         </div>
 
-        <button class="btn-gps btn-parar" style="margin-top:10px;" onclick="finalizarRuta()">
-            <i class="fas fa-stop"></i> TERMINAR RUTA
-        </button>
+        <button class="btn-gps btn-parar" onclick="finalizarRuta()"><i class="fas fa-stop"></i> TERMINAR RUTA</button>
 
         <div class="grid-datos">
-            <div class="dato-card">
-                <label>Distancia</label>
-                <span id="stat-dist">0.00 KM</span>
-            </div>
-            <div class="dato-card">
-                <label>Vel. Media</label>
-                <span id="stat-vel">0.0 KM/H</span>
-            </div>
-            <div class="dato-card">
-                <label>Pasos</label>
-                <span id="stat-pasos">0</span>
-            </div>
-            <div class="dato-card">
-                <label>Desnivel</label>
-                <span id="stat-desnivel">0 M</span>
-            </div>
+            <div class="dato-card"><label>Distancia</label><span id="stat-dist">0.00 KM</span></div>
+            <div class="dato-card"><label>Vel. Media</label><span id="stat-vel">0.0 KM/H</span></div>
+            <div class="dato-card"><label>Pasos</label><span id="stat-pasos">0</span></div>
+            <div class="dato-card"><label>Desnivel</label><span id="stat-desnivel">0 M</span></div>
         </div>
 
         <button class="btn-guardar-final" onclick="guardarEnHistorial()">
-            <i class="fas fa-cloud-upload-alt"></i> GUARDAR EN HISTORIAL
+            <i class="fas fa-cloud-upload-alt"></i> VOLVER Y CARGAR DATOS
         </button>
     </div>
 
     <script>
-        // --- VARIABLES DE CONTROL ---
-        let map, marker, routeLine;
+        let map, marker, routeLine, watchID;
         let pathCoordinadas = [];
-        let totalMetros = 0;
-        let estaCorriendo = false;
-        let tiempoInicio, intervaloTiempo;
-        let tiempoTranscurrido = 0;
-        let watchID = null;
+        let totalMetros = 0, estaCorriendo = false, tiempoInicio, intervaloTiempo, tiempoTranscurrido = 0;
+        let altitudAnterior = null, desnivelAcumulado = 0;
 
-        let altitudAnterior = null;
-        let desnivelAcumulado = 0;
-        let wakeLock = null;
-
-        // --- MANTENER PANTALLA ENCENDIDA ---
-        async function activarWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                }
-            } catch (err) {
-                console.error('Wake Lock error:', err);
-            }
-        }
-
-        function liberarWakeLock() {
-            if (wakeLock !== null) {
-                wakeLock.release().then(() => { wakeLock = null; });
-            }
-        }
-
-        // --- INICIALIZAR EL MAPA ---
         function initMap() {
-            map = L.map('mapa-gps').setView([40.4167, -3.7033], 15);
+            map = L.map('mapa-gps').setView([40.41, -3.70], 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            routeLine = L.polyline([], {color: '#2196F3', weight: 6}).addTo(map);
+            marker = L.circleMarker([0,0], {radius: 7, color: 'white', fillColor: '#2196F3', fillOpacity: 1}).addTo(map);
             
-            routeLine = L.polyline([], {color: '#2196F3', weight: 6, opacity: 0.8}).addTo(map);
-            marker = L.circleMarker([0,0], {radius: 7, color: 'white', fillColor: '#2196F3', fillOpacity: 1, weight: 2}).addTo(map);
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    const latlng = [pos.coords.latitude, pos.coords.longitude];
-                    map.setView(latlng, 17);
-                    marker.setLatLng(latlng);
-                });
-            }
+            navigator.geolocation.getCurrentPosition(pos => {
+                const latlng = [pos.coords.latitude, pos.coords.longitude];
+                map.setView(latlng, 17);
+                marker.setLatLng(latlng);
+            });
         }
 
         function actualizarReloj() {
-            let actual = Date.now();
-            let diferencia = actual - tiempoInicio + tiempoTranscurrido;
+            let diferencia = Date.now() - tiempoInicio + tiempoTranscurrido;
             let hh = Math.floor(diferencia / 3600000);
             let mm = Math.floor((diferencia % 3600000) / 60000);
             let ss = Math.floor((diferencia % 60000) / 1000);
-            document.getElementById('display-tiempo').innerText = 
-                `${hh.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;
+            document.getElementById('display-tiempo').innerText = `${hh.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;
         }
 
         function toggleSeguimiento() {
             if (!estaCorriendo) {
                 estaCorriendo = true;
-                activarWakeLock();
                 tiempoInicio = Date.now();
                 intervaloTiempo = setInterval(actualizarReloj, 1000);
                 document.getElementById('btn-start').innerHTML = '<i class="fas fa-running"></i> GRABANDO...';
-                document.getElementById('btn-start').style.background = '#1e7e34';
-
-                watchID = navigator.geolocation.watchPosition(procesarPosicion, 
-                    err => console.error("Error GPS:", err), 
-                    { enableHighAccuracy: true, maximumAge: 0 }
-                );
-            }
-        }
-
-        function procesarPosicion(pos) {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            const alt = pos.coords.altitude;
-            const punto = [lat, lon];
-            
-            if (pathCoordinadas.length > 0) {
-                const ultimo = pathCoordinadas[pathCoordinadas.length - 1];
-                const d = map.distance(ultimo, punto);
-                if (d > 3) {
-                    totalMetros += d;
-                    if (alt !== null && altitudAnterior !== null) {
-                        let diferenciaAltitud = alt - altitudAnterior;
-                        if (diferenciaAltitud > 0) desnivelAcumulado += diferenciaAltitud;
+                watchID = navigator.geolocation.watchPosition(pos => {
+                    const lat = pos.coords.latitude, lon = pos.coords.longitude, alt = pos.coords.altitude;
+                    const punto = [lat, lon];
+                    if (pathCoordinadas.length > 0) {
+                        const d = map.distance(pathCoordinadas[pathCoordinadas.length-1], punto);
+                        if (d > 3) {
+                            totalMetros += d;
+                            if (alt !== null && altitudAnterior !== null && alt > altitudAnterior) desnivelAcumulado += (alt - altitudAnterior);
+                            actualizarStats();
+                        }
                     }
-                    actualizarStats();
-                }
+                    altitudAnterior = alt;
+                    pathCoordinadas.push(punto);
+                    routeLine.setLatLngs(pathCoordinadas);
+                    marker.setLatLng(punto);
+                    map.panTo(punto);
+                }, null, { enableHighAccuracy: true });
             }
-            if (alt !== null) altitudAnterior = alt;
-            pathCoordinadas.push(punto);
-            routeLine.setLatLngs(pathCoordinadas);
-            marker.setLatLng(punto);
-            map.panTo(punto);
         }
 
         function actualizarStats() {
             const km = (totalMetros / 1000).toFixed(2);
-            const pasos = Math.round(totalMetros / 0.72);
             document.getElementById('stat-dist').innerText = km + " KM";
-            document.getElementById('stat-pasos').innerText = pasos;
+            document.getElementById('stat-pasos').innerText = Math.round(totalMetros / 0.72);
             document.getElementById('stat-desnivel').innerText = Math.round(desnivelAcumulado) + " M";
-
-            let totalSegundos = (tiempoTranscurrido + (estaCorriendo ? Date.now() - tiempoInicio : 0)) / 1000;
-            if (totalSegundos > 5) {
-                let vel = (km / (totalSegundos / 3600)).toFixed(1);
-                document.getElementById('stat-vel').innerText = vel + " KM/H";
-            }
         }
 
         function pausarSeguimiento() {
             if (estaCorriendo) {
                 estaCorriendo = false;
-                liberarWakeLock();
                 clearInterval(intervaloTiempo);
                 tiempoTranscurrido += Date.now() - tiempoInicio;
                 navigator.geolocation.clearWatch(watchID);
                 document.getElementById('btn-start').innerHTML = '<i class="fas fa-play"></i> REANUDAR';
-                document.getElementById('btn-start').style.background = '#28a745';
             }
         }
 
-        function reiniciarSeguimiento() {
-            if (confirm("¿Quieres borrar la ruta actual y empezar de cero?")) {
-                pausarSeguimiento();
-                tiempoTranscurrido = 0; totalMetros = 0; desnivelAcumulado = 0; altitudAnterior = null;
-                pathCoordinadas = []; routeLine.setLatLngs([]);
-                document.getElementById('display-tiempo').innerText = "00:00:00";
-                document.getElementById('stat-dist').innerText = "0.00 KM";
-                document.getElementById('stat-pasos').innerText = "0";
-                document.getElementById('stat-vel').innerText = "0.0 KM/H";
-                document.getElementById('stat-desnivel').innerText = "0 M";
-            }
-        }
+        function finalizarRuta() { pausarSeguimiento(); alert("Ruta finalizada."); }
 
-        function finalizarRuta() {
-            pausarSeguimiento();
-            alert("Ruta completada con éxito. Dale a GUARDAR EN HISTORIAL.");
-        }
-
-        // --- FUNCIÓN DE GUARDADO E INYECCIÓN DE DATOS (CORREGIDA) ---
         function guardarEnHistorial() {
             const distFinal = (totalMetros / 1000).toFixed(2);
-            let msTotales = tiempoTranscurrido + (estaCorriendo ? (Date.now() - tiempoInicio) : 0);
-            const minutosFinal = Math.round(msTotales / 60000);
-            const desnivelFinal = Math.round(desnivelAcumulado);
-            const pasosFinal = document.getElementById('stat-pasos').innerText;
+            const minutosFinal = Math.round((tiempoTranscurrido + (estaCorriendo ? Date.now()-tiempoInicio : 0)) / 60000);
             
-            // Guardamos con los nombres que busca tu app.js
             localStorage.setItem('gps_distancia', distFinal);
             localStorage.setItem('gps_tiempo', minutosFinal);
-            localStorage.setItem('gps_pasos', pasosFinal);
-            localStorage.setItem('gps_desnivel', desnivelFinal);
+            localStorage.setItem('gps_pasos', Math.round(totalMetros / 0.72));
+            localStorage.setItem('gps_desnivel', Math.round(desnivelAcumulado));
 
-            alert("✅ Datos capturados correctamente.");
-            
-            // CORRECCIÓN: Al estar en la misma carpeta "vistas", solo ponemos el nombre del archivo
             window.location.href = "ejercicio-diario.html"; 
         }
 
