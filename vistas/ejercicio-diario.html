@@ -22,11 +22,11 @@
         .btn-subir-imagen-blanco { flex:1; background:white; border:none; color:#78a978; padding:12px; border-radius:10px; font-weight:bold; font-size:12px; display:flex; align-items:center; justify-content:center; gap:5px; }
         
         .contenedor-formulario-datos { background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .fila-datos { display: flex; gap: 10px; margin-bottom: 10px; }
+        .fila-datos { display: flex; gap: 8px; margin-bottom: 8px; }
         .grupo-input { flex: 1; }
-        .etiqueta-verde { color: #78a978; font-size: 11px; font-weight: bold; display: block; margin-bottom: 5px; text-transform: uppercase; }
-        .input-app-form { width: 100%; border: 1px solid #ddd; padding: 10px; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: #fafafa; }
-        .input-app-form:focus { border-color: #78a978; outline: none; background: white; }
+        .etiqueta-verde { color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 3px; }
+        .input-app-form { width: 100%; border: 1px solid #eee; padding: 10px; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .input-app-form.readonly { background: #f5f5f5; color: #999; }
         
         .btn-strava-enlace { background: #2196F3; color: white; width: 100%; padding: 14px; border-radius: 12px; border:none; font-weight:bold; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px; font-size: 14px; }
         .btn-guardar-principal { background: #78a978; color: white; border: 2px solid white; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; display:flex; align-items:center; justify-content:center; gap:8px; cursor: pointer; }
@@ -35,14 +35,14 @@
         .solapa-progreso-hoy { margin-top: 15px; padding: 0 15px; }
         .tarjeta-info-creditos { background: linear-gradient(135deg, #78a978, #5a8a5a); color: white; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
         .contenido-scroll-registros { padding: 20px 15px; }
-        .subtitulo-seccion { color: #333; font-size: 14px; margin-bottom: 15px; font-weight: bold; border-left: 4px solid #78a978; padding-left: 10px; }
+        .subtitulo-seccion { color: #333; font-size: 14px; margin-bottom: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="vista-cabecera-fija"> 
     <div class="cabecera-barra">
-        <button onclick="window.history.back()" class="boton-nav-circular">
+        <button onclick="volverInicio()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
         </button>
         <span class="titulo-vista">MI ACTIVIDAD FÍSICA</span>
@@ -51,23 +51,31 @@
 
     <div class="contenedor-principal-ejercicio">
         <div class="fila-selectores-actividad">
-            <button class="btn-actividad-selector activo" id="btn-walk">
+            <button class="btn-actividad-selector activo" id="btn-walk" onclick="seleccionarActividad('Caminar')">
                 <i class="fas fa-walking"></i>
             </button>
-            <button class="btn-actividad-selector" id="btn-bike">
+            <button class="btn-actividad-selector" id="btn-bike" onclick="seleccionarActividad('Ciclismo')">
                 <i class="fas fa-bicycle"></i>
             </button>
-            <button class="btn-actividad-selector" id="btn-gym">
+            <button class="btn-actividad-selector" id="btn-gym" onclick="seleccionarActividad('Gimnasio')">
                 <i class="fas fa-dumbbell"></i>
             </button>
         </div>
 
         <div class="fila-botones-imagen-moderna">
-            <button class="btn-subir-imagen-blanco">
+            <input type="file" id="input-captura" accept="image/*" style="display: none;" onchange="previsualizarImagen(this)">
+            <button onclick="intentarSubirCaptura()" class="btn-subir-imagen-blanco">
                 <i class="fas fa-image"></i> Subir Captura
             </button>
-            <button class="btn-subir-imagen-blanco">
+            <button onclick="intentarHacerFoto()" class="btn-subir-imagen-blanco">
                 <i class="fas fa-camera"></i> Hacer Foto
+            </button>
+        </div>
+        
+        <div id="previsualizacion-contenedor" style="display:none; margin-bottom:10px; position:relative;">
+            <img id="img-previa" src="" style="width:100%; border-radius:10px; max-height:200px; object-fit:cover; border: 2px solid white;">
+            <button onclick="quitarImagen()" style="position:absolute; top:5px; right:5px; background:white; border-radius:50%; width:25px; height:25px; border:none; color:red;">
+                <i class="fas fa-times"></i>
             </button>
         </div>
 
@@ -94,16 +102,16 @@
             </div>
         </div>
 
-        <button onclick="window.location.href='gps-tracker.html'" class="btn-strava-enlace">
-            <i class="fas fa-map-marked-alt"></i> ABRIR GRABADOR GPS
+        <button onclick="abrirGpsTracker()" class="btn-strava-enlace">
+            <i class="fas fa-map-marked-alt"></i> ABRIR MI NAVEGADOR
         </button>
 
-        <button class="btn-guardar-principal">
+        <button onclick="validarYGuardarEjercicio()" class="btn-guardar-principal">
             <i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO
         </button>
 
-        <button onclick="reiniciarTodo()" class="btn-guardar-principal btn-reiniciar">
-            <i class="fas fa-redo-alt"></i> LIMPIAR TODO
+        <button onclick="reiniciarFormularioEjercicio()" class="btn-guardar-principal btn-reiniciar">
+            <i class="fas fa-redo-alt"></i> LIMPIAR VISTA
         </button>
     </div>
 </div>
@@ -120,41 +128,50 @@
 
 <div class="contenido-scroll-registros">
     <h3 class="subtitulo-seccion">TUS ACTIVIDADES RECIENTES</h3>
-    <div id="lista-actividades-historial">
-        </div>
+    <div id="lista-actividades-historial"></div>
 </div>
 
 <script>
-    // ESTE SCRIPT RECOGE LOS DATOS DEL GPS AL CARGAR LA PÁGINA
+    // --- LÓGICA DE CARGA DE DATOS GPS ---
     document.addEventListener('DOMContentLoaded', () => {
-        console.log("Revisando datos del GPS...");
-
-        // Verificamos si existe al menos la distancia guardada
         if(localStorage.getItem('gps_distancia')) {
-            
-            // Asignamos los valores a los IDs correctos del formulario
             document.getElementById('ej-distancia').value = localStorage.getItem('gps_distancia');
             document.getElementById('ej-tiempo').value    = localStorage.getItem('gps_tiempo');
             document.getElementById('ej-pasos').value     = localStorage.getItem('gps_pasos');
             document.getElementById('ej-desnivel').value  = localStorage.getItem('gps_desnivel');
-            
-            console.log("¡Datos del GPS cargados con éxito!");
-
-            // OPCIONAL: Si quieres que los datos se borren de la memoria una vez mostrados, 
-            // para que no vuelvan a aparecer si recargas la página sin usar el GPS:
-            // localStorage.removeItem('gps_distancia');
-            // localStorage.removeItem('gps_tiempo');
-            // localStorage.removeItem('gps_pasos');
-            // localStorage.removeItem('gps_desnivel');
+            console.log("Datos recuperados del GPS");
         }
     });
 
-    function reiniciarTodo() {
-        if(confirm("¿Quieres limpiar los datos?")) {
+    // --- TUS FUNCIONES ORIGINALES (Asegúrate de que existan en tu app.js o añádelas aquí) ---
+    function abrirGpsTracker() {
+        // Redirige al archivo del grabador
+        window.location.href = 'gps-tracker.html';
+    }
+
+    function volverInicio() {
+        window.history.back();
+    }
+
+    function seleccionarActividad(tipo) {
+        // Tu lógica para cambiar el botón activo
+        console.log("Actividad seleccionada: " + tipo);
+        document.querySelectorAll('.btn-actividad-selector').forEach(b => b.classList.remove('activo'));
+        event.currentTarget.classList.add('activo');
+    }
+
+    function intentarSubirCaptura() {
+        document.getElementById('input-captura').click();
+    }
+
+    function reiniciarFormularioEjercicio() {
+        if(confirm("¿Limpiar todos los datos?")) {
             localStorage.clear();
             window.location.reload();
         }
     }
+
+    // Aquí irían validarYGuardarEjercicio() y previsualizarImagen()...
 </script>
 
 </body>
