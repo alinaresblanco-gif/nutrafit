@@ -1,38 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NutraFit - Mi Actividad</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
-    <style>
-        /* AQUÍ ESTÁ TU CSS ORIGINAL INTACTO */
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f4f4f4; color: #333; }
-        .vista-cabecera-fija { height: auto; position: relative; }
-        .cabecera-barra { background: #78a978; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
-        .boton-nav-circular { background: rgba(255,255,255,0.2); border:none; color:white; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
-        .contenedor-principal-ejercicio { background: #78a978; padding: 10px 15px 20px 15px; }
-        .fila-selectores-actividad { display: flex; justify-content: space-between; padding: 15px 0; }
-        .btn-actividad-selector { background: rgba(255,255,255,0.2); color:white; border:none; width:65px; height:65px; border-radius:50%; font-size:24px; display:flex; align-items:center; justify-content:center; transition: 0.3s; }
-        .btn-actividad-selector.activo { background:white; color:#78a978; box-shadow: 0 0 15px white; }
-        .fila-botones-imagen-moderna { display: flex; gap: 10px; margin-bottom: 12px; }
-        .btn-subir-imagen-blanco { flex:1; background:white; border:none; color:#78a978; padding:12px; border-radius:10px; font-weight:bold; font-size:12px; display:flex; align-items:center; justify-content:center; gap:5px; }
-        .contenedor-formulario-datos { background: white; padding: 12px; border-radius: 15px; margin-bottom: 10px; }
-        .fila-datos { display: flex; gap: 8px; margin-bottom: 8px; }
-        .etiqueta-verde { color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 3px; }
-        .input-app-form { width: 100%; border: 1px solid #eee; padding: 8px; border-radius: 8px; box-sizing: border-box; }
-        .input-app-form.readonly { background: #f5f5f5; color: #999; }
-        .btn-strava-enlace { background: #2196F3; color: white; width: 100%; padding: 12px; border-radius: 10px; border:none; font-weight:bold; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px; }
-        .btn-guardar-principal { background: #78a978; color: white; border: 2px solid white; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; display:flex; align-items:center; justify-content:center; gap:8px; }
-        .btn-reiniciar { background: #666 !important; margin-top: 10px; border:none !important; }
-        .solapa-progreso-hoy { margin-top: 10px; padding: 0 15px; }
-        .tarjeta-info-creditos { background: linear-gradient(135deg, #78a978, #5a8a5a); color: white; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
-        .contenido-scroll-registros { padding: 15px; }
-        .subtitulo-seccion { color: #333; font-size: 14px; margin-bottom: 15px; font-weight: bold; }
-    </style>
-</head>
-<body>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <div class="vista-cabecera-fija"> 
     <div class="cabecera-barra">
@@ -96,7 +62,7 @@
             </div>
         </div>
 
-        <button onclick="abrirGpsTracker()" class="btn-strava-enlace">
+        <button onclick="abrirGpsTracker()" class="btn-strava-enlace" style="background: #2196F3;">
             <i class="fas fa-map-marked-alt"></i> ABRIR MI NAVEGADOR
         </button>
 
@@ -125,25 +91,37 @@
     <div id="lista-actividades-historial"></div>
 </div>
 
-<script>
-    // ESTA ES LA ÚNICA PARTE NUEVA: Carga los datos al entrar
-    document.addEventListener('DOMContentLoaded', () => {
-        if(localStorage.getItem('gps_distancia')) {
-            document.getElementById('ej-distancia').value = localStorage.getItem('gps_distancia');
-            document.getElementById('ej-tiempo').value    = localStorage.getItem('gps_tiempo');
-            document.getElementById('ej-pasos').value     = localStorage.getItem('gps_pasos');
-            document.getElementById('ej-desnivel').value  = localStorage.getItem('gps_desnivel');
-            // Opcional: limpiar para que no se repitan datos viejos
-            // localStorage.clear(); 
-        }
-    });
-
-    function abrirGpsTracker() {
-        window.location.href = 'gps-tracker.html';
-    }
-
-    // Aquí van el resto de tus funciones (seleccionarActividad, etc.) que ya tienes en tu app.js
-</script>
-
-</body>
-</html>
+<style>
+    .vista-cabecera-fija { height: auto; position: relative; }
+    .cabecera-barra { background: #78a978; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; color: white; }
+    .boton-nav-circular { background: rgba(255,255,255,0.2); border:none; color:white; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+    .contenedor-principal-ejercicio { background: #78a978; padding: 10px 15px 20px 15px; }
+    .fila-selectores-actividad { display: flex; justify-content: space-between; padding: 15px 0; }
+    .btn-actividad-selector { background: rgba(255,255,255,0.2); color:white; border:none; width:65px; height:65px; border-radius:50%; font-size:24px; display:flex; align-items:center; justify-content:center; transition: 0.3s; }
+    .btn-actividad-selector.activo { background:white; color:#78a978; box-shadow: 0 0 15px white; }
+    .fila-botones-imagen-moderna { display: flex; gap: 10px; margin-bottom: 12px; }
+    .btn-subir-imagen-blanco { flex:1; background:white; border:none; color:#78a978; padding:12px; border-radius:10px; font-weight:bold; font-size:12px; display:flex; align-items:center; justify-content:center; gap:5px; }
+    .contenedor-formulario-datos { background: white; padding: 12px; border-radius: 15px; margin-bottom: 10px; }
+    .fila-datos { display: flex; gap: 8px; margin-bottom: 8px; }
+    .etiqueta-verde { color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 3px; }
+    .input-app-form { width: 100%; border: 1px solid #eee; padding: 8px; border-radius: 8px; box-sizing: border-box; }
+    .input-app-form.readonly { background: #f5f5f5; color: #999; }
+    .btn-strava-enlace { background: #FC6100; color: white; width: 100%; padding: 12px; border-radius: 10px; border:none; font-weight:bold; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .btn-guardar-principal { background: #78a978; color: white; border: 2px solid white; width: 100%; padding: 14px; border-radius: 12px; font-weight: bold; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .btn-reiniciar { background: #666 !important; margin-top: 10px; border:none !important; }
+    .solapa-progreso-hoy { margin-top: 10px; padding: 0 15px; }
+    .tarjeta-info-creditos { background: linear-gradient(135deg, #78a978, #5a8a5a); color: white; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
+    .contenido-scroll-registros { padding: 15px; }
+    .subtitulo-seccion { color: #333; font-size: 14px; margin-bottom: 15px; font-weight: bold; }
+    .tarjeta-actividad-final { background: #1a1a1a; border-radius: 12px; margin-bottom: 25px; overflow: hidden; border: 1px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .cabecera-card { padding: 12px; background: #242424; border-bottom: 1px solid #333; }
+    .cabecera-card strong { color: #78a978; display: block; font-size: 1.1em; }
+    .cabecera-card small { color: #888; }
+    .bloque-blanco-datos { background: white; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .dato-celda label { color: #78a978; font-size: 10px; font-weight: bold; display: block; margin-bottom: 2px; }
+    .dato-celda span { color: #333; font-weight: bold; font-size: 1.1em; }
+    .franja-velocidad { background: #78a978; color: white; padding: 10px; text-align: right; font-size: 12px; font-weight: bold; }
+    .btn-compartir-mini { background: rgba(255,255,255,0.1); border: none; color: #78a978 !important; font-size: 20px; padding: 8px; cursor: pointer; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; z-index: 10; transition: 0.3s; }
+    .btn-compartir-mini:active { transform: scale(1.2); color: white !important; }
+    .btn-compartir-mini i { pointer-events: none; }
+</style>
