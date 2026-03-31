@@ -331,7 +331,7 @@
             alert("Ruta completada con éxito. Dale a GUARDAR EN HISTORIAL.");
         }
 
-        // --- FUNCIÓN DE GUARDADO E INYECCIÓN DE DATOS (ACTUALIZADA) ---
+        // --- FUNCIÓN DE GUARDADO E INYECCIÓN DE DATOS (CORREGIDA) ---
         function guardarEnHistorial() {
             const distFinal = (totalMetros / 1000).toFixed(2);
             let msTotales = tiempoTranscurrido + (estaCorriendo ? (Date.now() - tiempoInicio) : 0);
@@ -347,8 +347,8 @@
 
             alert("✅ Datos capturados correctamente.");
             
-            // Redirección directa a la vista del formulario
-            window.location.href = "../ejercicio-diario.html"; 
+            // CORRECCIÓN: Al estar en la misma carpeta "vistas", solo ponemos el nombre del archivo
+            window.location.href = "ejercicio-diario.html"; 
         }
 
         window.onload = initMap;
