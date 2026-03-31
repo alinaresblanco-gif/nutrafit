@@ -198,6 +198,27 @@
         let tiempoTranscurrido = 0;
         let watchID = null;
 
+        let altitudAnterior = null;
+        let desnivelAcumulado = 0;
+        let wakeLock = null;
+
+        // --- MANTENER PANTALLA ENCENDIDA ---
+        async function activarWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.error('Wake Lock error:', err);
+            }
+        }
+
+        function liberarWakeLock() {
+            if (wakeLock !== null) {
+                wakeLock.release().then(() => { wakeLock = null; });
+            }
+        }
+
         // --- INICIALIZAR EL MAPA ---
         function initMap() {
             map = L.map('mapa-gps').setView([40.4167, -3.7033], 15);
@@ -228,6 +249,7 @@
         function toggleSeguimiento() {
             if (!estaCorriendo) {
                 estaCorriendo = true;
+                activarWakeLock();
                 tiempoInicio = Date.now();
                 intervaloTiempo = setInterval(actualizarReloj, 1000);
                 document.getElementById('btn-start').innerHTML = '<i class="fas fa-running"></i> GRABANDO...';
@@ -243,15 +265,22 @@
         function procesarPosicion(pos) {
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
+            const alt = pos.coords.altitude;
             const punto = [lat, lon];
+            
             if (pathCoordinadas.length > 0) {
                 const ultimo = pathCoordinadas[pathCoordinadas.length - 1];
                 const d = map.distance(ultimo, punto);
                 if (d > 3) {
                     totalMetros += d;
+                    if (alt !== null && altitudAnterior !== null) {
+                        let diferenciaAltitud = alt - altitudAnterior;
+                        if (diferenciaAltitud > 0) desnivelAcumulado += diferenciaAltitud;
+                    }
                     actualizarStats();
                 }
             }
+            if (alt !== null) altitudAnterior = alt;
             pathCoordinadas.push(punto);
             routeLine.setLatLngs(pathCoordinadas);
             marker.setLatLng(punto);
@@ -259,10 +288,12 @@
         }
 
         function actualizarStats() {
-            const km = totalMetros / 1000;
+            const km = (totalMetros / 1000).toFixed(2);
             const pasos = Math.round(totalMetros / 0.72);
-            document.getElementById('stat-dist').innerText = km.toFixed(2) + " KM";
+            document.getElementById('stat-dist').innerText = km + " KM";
             document.getElementById('stat-pasos').innerText = pasos;
+            document.getElementById('stat-desnivel').innerText = Math.round(desnivelAcumulado) + " M";
+
             let totalSegundos = (tiempoTranscurrido + (estaCorriendo ? Date.now() - tiempoInicio : 0)) / 1000;
             if (totalSegundos > 5) {
                 let vel = (km / (totalSegundos / 3600)).toFixed(1);
@@ -273,6 +304,7 @@
         function pausarSeguimiento() {
             if (estaCorriendo) {
                 estaCorriendo = false;
+                liberarWakeLock();
                 clearInterval(intervaloTiempo);
                 tiempoTranscurrido += Date.now() - tiempoInicio;
                 navigator.geolocation.clearWatch(watchID);
@@ -284,38 +316,39 @@
         function reiniciarSeguimiento() {
             if (confirm("¿Quieres borrar la ruta actual y empezar de cero?")) {
                 pausarSeguimiento();
-                tiempoTranscurrido = 0;
-                totalMetros = 0;
-                pathCoordinadas = [];
-                routeLine.setLatLngs([]);
+                tiempoTranscurrido = 0; totalMetros = 0; desnivelAcumulado = 0; altitudAnterior = null;
+                pathCoordinadas = []; routeLine.setLatLngs([]);
                 document.getElementById('display-tiempo').innerText = "00:00:00";
                 document.getElementById('stat-dist').innerText = "0.00 KM";
                 document.getElementById('stat-pasos').innerText = "0";
                 document.getElementById('stat-vel').innerText = "0.0 KM/H";
+                document.getElementById('stat-desnivel').innerText = "0 M";
             }
         }
 
         function finalizarRuta() {
             pausarSeguimiento();
-            alert("Ruta completada con éxito. No olvides guardar en historial.");
+            alert("Ruta completada con éxito. Dale a GUARDAR EN HISTORIAL.");
         }
 
-        // --- FUNCIÓN DE GUARDADO E INYECCIÓN DE DATOS ---
+        // --- FUNCIÓN DE GUARDADO E INYECCIÓN DE DATOS (ACTUALIZADA) ---
         function guardarEnHistorial() {
             const distFinal = (totalMetros / 1000).toFixed(2);
-            let totalSegundos = (tiempoTranscurrido + (estaCorriendo ? Date.now() - tiempoInicio : 0)) / 1000;
-            const minutosFinal = Math.round(totalSegundos / 60);
+            let msTotales = tiempoTranscurrido + (estaCorriendo ? (Date.now() - tiempoInicio) : 0);
+            const minutosFinal = Math.round(msTotales / 60000);
+            const desnivelFinal = Math.round(desnivelAcumulado);
+            const pasosFinal = document.getElementById('stat-pasos').innerText;
             
-            // Guardamos en la memoria local del navegador
+            // Guardamos con los nombres que busca tu app.js
             localStorage.setItem('gps_distancia', distFinal);
             localStorage.setItem('gps_tiempo', minutosFinal);
-            localStorage.setItem('gps_pasos', document.getElementById('stat-pasos').innerText);
-            localStorage.setItem('gps_desnivel', document.getElementById('stat-desnivel').innerText.replace(' M', ''));
+            localStorage.setItem('gps_pasos', pasosFinal);
+            localStorage.setItem('gps_desnivel', desnivelFinal);
 
-            alert("Datos capturados. Volviendo al formulario...");
+            alert("✅ Datos capturados correctamente.");
             
-            // Volvemos al index (Asegúrate de que la ruta sea correcta)
-            window.location.href = "../index.html"; 
+            // Redirección directa a la vista del formulario
+            window.location.href = "../ejercicio-diario.html"; 
         }
 
         window.onload = initMap;
