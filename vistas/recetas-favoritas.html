@@ -9,6 +9,7 @@
         :root { --verde-corp: #78a978; --verde-oscuro: #5a8a5a; --gris-fondo: #f4f4f4; }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
 
+        /* CABECERA */
         .cabecera-barra { 
             background: var(--verde-corp); padding: 10px 15px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -23,6 +24,7 @@
         .contenedor-principal { padding: 15px; }
         .grid-recetas { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
+        /* TARJETAS EXPLORADOR */
         .tarjeta-receta { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .tarjeta-receta img { width: 100%; height: 120px; object-fit: cover; }
         .info-tarjeta { padding: 10px; text-align: center; }
@@ -31,15 +33,53 @@
 
         .btn-flotante { position: fixed; bottom: 30px; right: 25px; background: var(--verde-corp); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; z-index: 999; cursor: pointer; }
 
+        /* SECCIONES */
         #seccion-formulario, #modal-detalle-receta { display: none; }
 
-        .campo-grupo { margin-bottom: 15px; }
-        .campo-grupo label { display: block; color: var(--verde-corp); font-weight: bold; margin-bottom: 5px; }
-        .campo-grupo input, .campo-grupo textarea, .campo-grupo select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        /* DISEÑO FORMULARIO NUEVA RECETA */
+        .titulo-seccion-verde {
+            background: var(--verde-corp);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin: -15px -15px 20px -15px; /* Para que pegue a los bordes */
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
 
+        .campo-grupo { margin-bottom: 20px; }
+        .campo-grupo label { display: block; color: var(--verde-corp); font-weight: bold; margin-bottom: 8px; }
+        .campo-grupo input, .campo-grupo textarea, .campo-grupo select { 
+            width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; 
+            box-sizing: border-box; font-size: 1rem; background: #fff;
+        }
+
+        /* BOTONES FOTO */
+        .contenedor-fotos-flex { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-foto {
+            flex: 1; background: #f0f7f0; color: var(--verde-corp); border: 2px dashed var(--verde-corp);
+            padding: 15px; border-radius: 12px; text-align: center; cursor: pointer; font-weight: bold;
+        }
+
+        /* BOTONES ACCIÓN FINAL */
+        .btn-accion-verde {
+            background: var(--verde-corp); color: white; border: none; padding: 16px; 
+            width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; 
+            cursor: pointer; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-accion-cancelar {
+            background: #666; color: white; border: none; padding: 16px; 
+            width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; 
+            cursor: pointer;
+        }
+
+        /* MODAL DETALLE */
         .modal-detalle { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; overflow-y: auto; }
         .img-detalle-full { width: 100%; height: 250px; object-fit: cover; }
         .contenido-detalle { padding: 20px; background: white; border-radius: 30px 30px 0 0; position: relative; top: -30px; }
+
+        /* PREVISUALIZACION FOTO */
+        #previa-receta-cont { width: 100%; height: 150px; border-radius: 12px; margin-bottom: 15px; display: none; object-fit: cover; }
     </style>
 </head>
 <body>
@@ -68,42 +108,86 @@
     </div>
 
     <div id="seccion-formulario" class="contenedor-principal" style="background:white; min-height:100vh;">
-        <h2 style="color:var(--verde-corp)">Nueva Receta</h2>
-        <div class="campo-grupo">
-            <label>Nombre</label>
-            <input type="text" id="form-nombre">
+        <div class="titulo-seccion-verde">Nueva Receta</div>
+
+        <div class="contenedor-fotos-flex">
+            <div class="btn-foto" onclick="intentarHacerFoto()">
+                <i class="fas fa-camera"></i><br>Hacer Foto
+            </div>
+            <div class="btn-foto" onclick="intentarSubirCaptura()">
+                <i class="fas fa-image"></i><br>Galería
+            </div>
         </div>
+        <img id="previa-receta-cont" src="">
+        <input type="file" id="input-captura" accept="image/*" style="display:none" onchange="previsualizarImagen(this)">
+
+        <div class="campo-grupo">
+            <label>Nombre de la Receta</label>
+            <input type="text" id="form-nombre" placeholder="Ej: Tortilla Saludable">
+        </div>
+
         <div class="campo-grupo">
             <label>Categoría</label>
             <select id="form-categoria">
-                <option>Desayuno</option><option selected>Almuerzo/Cena</option>
+                <option value="Desayuno">Desayuno</option>
+                <option value="Almuerzo" selected>Almuerzo</option>
+                <option value="Cena">Cena</option>
+                <option value="Snack">Snack</option>
             </select>
         </div>
+
         <div class="campo-grupo">
             <label>Ingredientes</label>
-            <textarea id="form-ingredientes" rows="4"></textarea>
+            <textarea id="form-ingredientes" rows="6" placeholder="Escribe los ingredientes..."></textarea>
         </div>
+
         <div class="campo-grupo">
             <label>Elaboración</label>
-            <textarea id="form-elaboracion" rows="4"></textarea>
+            <textarea id="form-elaboracion" rows="8" placeholder="Explica paso a paso cómo cocinarlo..."></textarea>
         </div>
-        <button onclick="guardarRecetaJS()" style="background:var(--verde-corp); color:white; border:none; padding:15px; width:100%; border-radius:10px; font-weight:bold;">GUARDAR EN EXCEL</button>
-        <button onclick="cerrarTodo()" style="width:100%; margin-top:10px; border:none; background:none;">Cancelar</button>
+
+        <button onclick="guardarRecetaJS()" class="btn-accion-verde">GUARDAR EN LIBRO</button>
+        <button onclick="cerrarTodo()" class="btn-accion-cancelar">CANCELAR</button>
     </div>
 
     <div id="modal-detalle-receta" class="modal-detalle">
         <button onclick="cerrarTodo()" style="position:absolute; top:20px; left:20px; background:rgba(0,0,0,0.5); color:white; border:none; width:40px; height:40px; border-radius:50%; z-index:10;">X</button>
-        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c" class="img-detalle-full">
+        <img src="" id="det-img-full" class="img-detalle-full">
         <div class="contenido-detalle">
-            <h2 id="det-nombre">Ensalada NutraFit</h2>
+            <h2 id="det-nombre">Nombre Receta</h2>
             <p><strong>Ingredientes:</strong></p>
-            <p id="det-ing">Lechuga, tomate, aguacate, pollo.</p>
+            <p id="det-ing">...</p>
             <p><strong>Elaboración:</strong></p>
-            <p id="det-elab">Mezclar todo en un bol y disfrutar.</p>
+            <p id="det-elab">...</p>
         </div>
     </div>
 
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
+
+    <script>
+        const areaIngredientes = document.getElementById('form-ingredientes');
+        
+        areaIngredientes.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Usamos un icono chulo (punto grueso o flecha)
+                const bullet = "\n• "; 
+                const cursorPosition = this.selectionStart;
+                const textBefore = this.value.substring(0, cursorPosition);
+                const textAfter = this.value.substring(cursorPosition);
+                
+                this.value = textBefore + bullet + textAfter;
+                this.selectionStart = this.selectionEnd = cursorPosition + bullet.length;
+            }
+        });
+
+        // Al enfocar por primera vez si está vacío, poner la primera viñeta
+        areaIngredientes.addEventListener('focus', function() {
+            if (this.value === "") {
+                this.value = "• ";
+            }
+        });
+    </script>
 </body>
 </html>
