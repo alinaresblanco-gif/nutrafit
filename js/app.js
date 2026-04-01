@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw9WyXiOsAOvD95e6S9RL-hNy0ysY-5RxWA_wQydyy9kmwPNfwn-XZI76qQmx-WbnyQ/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyBxGlKSx3WTtjdsK400CO0dOD1iqmMSEsaEVi81j3ymBpJhVLCCAKqJi_xRq8kkjIU/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -894,8 +894,10 @@ function cerrarGpsMini() {
     }
 }
 /* ============================================================
-    ACCIONES PARA MI LIBRO DE RECETAS (AÑADIR AL FINAL DE APP.JS)
+    ACCIONES PARA MI LIBRO DE RECETAS (ACTUALIZADO CON FOTO)
    ============================================================ */
+
+let imagenRecetaBase64 = null; // Variable global para la foto
 
 // Función volver (MODIFICADA PARA DETECTAR RUTA CORRECTA)
 function volverInicio() {
@@ -906,15 +908,36 @@ function volverInicio() {
     }
 }
 
+// Funciones para Captura de Imagen (Cámara y Galería)
+function intentarHacerFoto() {
+    const input = document.getElementById('input-captura');
+    if(input) { input.setAttribute('capture', 'environment'); input.click(); }
+}
+
+function intentarSubirCaptura() {
+    const input = document.getElementById('input-captura');
+    if(input) { input.removeAttribute('capture'); input.click(); }
+}
+
+function previsualizarImagen(input) {
+    if (input.files && input.files[0]) {
+        const lector = new FileReader();
+        lector.onload = e => {
+            imagenRecetaBase64 = e.target.result.split(',')[1];
+            const vistaPrevia = document.getElementById('previa-receta-cont');
+            if(vistaPrevia) {
+                vistaPrevia.src = e.target.result;
+                vistaPrevia.style.display = 'block';
+            }
+        };
+        lector.readAsDataURL(input.files[0]);
+    }
+}
+
 // Abre el formulario al dar al botón +
 function abrirFormulario() {
     document.getElementById('seccion-explorar').style.display = 'none';
     document.getElementById('seccion-formulario').style.display = 'block';
-}
-
-// Abre la ventana emergente de la receta
-function verRecetaDemo() {
-    document.getElementById('modal-detalle-receta').style.display = 'block';
 }
 
 // Cierra todo y vuelve al listado
@@ -922,31 +945,49 @@ function cerrarTodo() {
     document.getElementById('seccion-formulario').style.display = 'none';
     document.getElementById('modal-detalle-receta').style.display = 'none';
     document.getElementById('seccion-explorar').style.display = 'block';
+    // Limpiamos rastro de fotos al cerrar o cancelar
+    imagenRecetaBase64 = null;
+    if(document.getElementById('previa-receta-cont')) document.getElementById('previa-receta-cont').style.display = 'none';
 }
 
-// Guarda en el Excel
+// Guarda en el Excel (Con envío de imagenBase64)
 async function guardarRecetaJS() {
     const nombre = document.getElementById('form-nombre').value;
     if(!nombre) return alert("Por favor, escribe el nombre de la receta");
+
+    const btn = document.querySelector('.btn-accion-verde');
+    const textoOriginal = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = "GUARDANDO...";
 
     const datos = {
         tipo: "guardar_receta",
         nombre: nombre,
         categoria: document.getElementById('form-categoria').value,
         ingredientes: document.getElementById('form-ingredientes').value,
-        elaboracion: document.getElementById('form-elaboracion').value
+        elaboracion: document.getElementById('form-elaboracion').value,
+        imagenBase64: imagenRecetaBase64 // <-- Aquí enviamos la foto
     };
 
     try {
-        // Asegúrate de que URL_GOOGLE_SCRIPT esté en tu config.js
         await fetch(URL_GOOGLE_SCRIPT, { 
             method: 'POST', 
             mode: 'no-cors', 
             body: JSON.stringify(datos) 
         });
+        
         alert("¡Receta guardada con éxito!");
+        
+        // Resetear campos tras éxito
+        document.getElementById('form-nombre').value = "";
+        document.getElementById('form-ingredientes').value = "";
+        document.getElementById('form-elaboracion').value = "";
         cerrarTodo();
+        
     } catch(e) {
         alert("Error al conectar con el servidor");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
     }
 }
