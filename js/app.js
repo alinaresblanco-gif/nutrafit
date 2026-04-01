@@ -624,18 +624,32 @@ function actualizarInterfazCompra() {
 let actividadActual = 'Caminar';
 let imagenParaEnviar = null;
 
-// --- 1. IMPORTACIÓN AUTOMÁTICA DESDE EL GPS ---
+// --- NUEVO: ESCUCHAR DATOS DESDE EL IFRAME GPS (SISTEMA DE MENSAJERÍA) ---
+window.addEventListener('message', function(event) {
+    const d = event.data;
+    if (d.tipo === 'RUTA_FINALIZADA') {
+        // Inyectamos los valores capturados del GPS directamente en los inputs
+        if(document.getElementById('ej-distancia')) document.getElementById('ej-distancia').value = d.distancia;
+        if(document.getElementById('ej-tiempo')) document.getElementById('ej-tiempo').value = d.tiempo;
+        if(document.getElementById('ej-pasos')) document.getElementById('ej-pasos').value = d.pasos;
+        if(document.getElementById('ej-desnivel')) document.getElementById('ej-desnivel').value = d.desnivel;
+        
+        // Cerramos el contenedor del mapa automáticamente
+        cerrarGpsMini();
+        alert("📊 ¡Datos de tu ruta importados correctamente!");
+    }
+});
+
+// --- 1. IMPORTACIÓN AUTOMÁTICA DESDE EL GPS (PARA CARGA TRADICIONAL) ---
 window.addEventListener('load', () => {
     const gpsDist = localStorage.getItem('gps_distancia');
     
     if (gpsDist) {
-        // Inyectamos los valores capturados del GPS en los inputs
         if(document.getElementById('ej-distancia')) document.getElementById('ej-distancia').value = gpsDist;
         if(document.getElementById('ej-tiempo')) document.getElementById('ej-tiempo').value = localStorage.getItem('gps_tiempo');
         if(document.getElementById('ej-pasos')) document.getElementById('ej-pasos').value = localStorage.getItem('gps_pasos');
         if(document.getElementById('ej-desnivel')) document.getElementById('ej-desnivel').value = localStorage.getItem('gps_desnivel');
 
-        // Borramos solo los datos temporales del GPS para dejar la memoria limpia
         localStorage.removeItem('gps_distancia');
         localStorage.removeItem('gps_tiempo');
         localStorage.removeItem('gps_pasos');
@@ -846,7 +860,36 @@ function reiniciarFormularioEjercicio() {
     quitarImagen();
 }
 
-// --- 9. NAVEGACIÓN AL GPS ---
+// --- 9. NAVEGACIÓN AL GPS (MODIFICADO PARA INTEGRACIÓN EN VENTANA) ---
 function abrirGpsTracker() {
-    window.location.href = "vistas/GPS-Tracker.html";
+    const contenedor = document.getElementById('gps-mini-container');
+    const iframe = document.getElementById('iframe-gps');
+    const btnGps = document.getElementById('btn-gps-control');
+    
+    if (contenedor.style.display === 'none' || contenedor.style.display === '') {
+        contenedor.style.display = 'block';
+        // Cargamos el GPS con el parámetro modo=mini para ajustar su diseño
+        iframe.src = "vistas/GPS-Tracker.html?modo=mini"; 
+        
+        if(btnGps) {
+            btnGps.innerHTML = '<i class="fas fa-times"></i> CERRAR MAPA';
+            btnGps.style.background = '#666';
+        }
+    } else {
+        cerrarGpsMini();
+    }
+}
+
+function cerrarGpsMini() {
+    const contenedor = document.getElementById('gps-mini-container');
+    const iframe = document.getElementById('iframe-gps');
+    const btnGps = document.getElementById('btn-gps-control');
+
+    if(contenedor) contenedor.style.display = 'none';
+    if(iframe) iframe.src = ""; // Detenemos el GPS para ahorrar batería
+    
+    if(btnGps) {
+        btnGps.innerHTML = '<i class="fas fa-map-marked-alt"></i> USAR GPS EN VIVO';
+        btnGps.style.background = '#2196F3';
+    }
 }
