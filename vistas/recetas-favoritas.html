@@ -15,7 +15,6 @@
             padding: 10px 15px; 
             display: flex; justify-content: space-between; align-items: center; 
             color: white; position: sticky; top: 0; z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .boton-nav-circular { 
             background: rgba(255,255,255,0.2); border:none; color:white; 
@@ -24,18 +23,10 @@
             font-size: 18px; cursor: pointer;
         }
 
-        /* EXPLORADOR */
         .contenedor-principal { padding: 15px; }
-        .buscador-contenedor {
-            background: white; border-radius: 25px; padding: 10px 20px;
-            display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;
-        }
-        .buscador-contenedor input { border: none; outline: none; width: 100%; font-size: 16px; }
-        
         .grid-recetas { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
-        /* TARJETAS */
+        /* TARJETA VISUAL (RESTAURADA) */
         .tarjeta-receta {
             background: white; border-radius: 15px; overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -43,11 +34,13 @@
         .tarjeta-receta img { width: 100%; height: 120px; object-fit: cover; }
         .info-tarjeta { padding: 10px; text-align: center; }
         .info-tarjeta h3 { margin: 0 0 10px; font-size: 0.9rem; color: #444; height: 40px; overflow: hidden; }
+        
         .btn-ver-receta {
             background: var(--verde-corp); color: white; border: none;
             padding: 8px 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer;
         }
 
+        /* BOTÓN + */
         .btn-flotante {
             position: fixed; bottom: 30px; right: 25px;
             background: var(--verde-corp); color: white;
@@ -57,33 +50,22 @@
             border: none; z-index: 999; cursor: pointer;
         }
 
-        /* FORMULARIO */
-        #seccion-formulario { display: none; background: white; min-height: 100vh; padding: 20px; }
-        .campo-grupo { margin-bottom: 15px; }
-        .campo-grupo label { display: block; color: var(--verde-corp); font-weight: bold; margin-bottom: 5px; }
-        .campo-grupo input, .campo-grupo textarea, .campo-grupo select {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box;
-        }
-        .btn-accion-form { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; }
-
-        /* MODAL DETALLE */
+        /* MODALES Y SECCIONES */
+        #seccion-formulario, #modal-detalle-receta { display: none; }
+        
         .modal-detalle {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 2000; display: none; overflow-y: auto;
+            background: white; z-index: 2000; overflow-y: auto;
         }
         .img-detalle-full { width: 100%; height: 250px; object-fit: cover; }
         .contenido-detalle { padding: 20px; position: relative; top: -30px; background: white; border-radius: 30px 30px 0 0; }
-        .lista-ingredientes { list-style: none; padding: 0; }
-        .lista-ingredientes li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px inset #eee; align-items: center; }
-        .btn-carrito { color: var(--verde-corp); font-size: 1.2rem; cursor: pointer; }
         
-        /* PREVISUALIZACION */
-        #previsualizacion-receta { 
-            width: 100%; height: 200px; background: #eee; border-radius: 15px; 
-            display: flex; align-items: center; justify-content: center; overflow: hidden;
-            margin-bottom: 15px; border: 2px dashed var(--verde-corp);
+        /* ESTILO FORMULARIO */
+        .campo-grupo { margin-bottom: 15px; }
+        .campo-grupo label { display: block; color: var(--verde-corp); font-weight: bold; margin-bottom: 5px; }
+        .campo-grupo input, .campo-grupo textarea {
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box;
         }
-        #img-previa-receta { width: 100%; height: 100%; object-fit: cover; display: none; }
     </style>
 </head>
 <body>
@@ -92,89 +74,73 @@
         <button onclick="window.location.href='../index.html'" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
         </button>
-        <div class="titulo-centro">
-            <i class="fas fa-book-open"></i>
-            <strong>MI LIBRO DE RECETAS</strong>
-        </div>
+        <strong>MI LIBRO DE RECETAS</strong>
         <div style="width:38px;"></div> 
     </div>
 
     <div id="seccion-explorar" class="contenedor-principal">
-        <div class="buscador-contenedor">
-            <i class="fas fa-search"></i>
-            <input type="text" id="buscador-recetas" placeholder="Buscar mi receta favorita..." oninput="filtrarRecetas()">
-        </div>
-
         <div id="contenedor-cards" class="grid-recetas">
-            <div class="tarjeta-receta" id="card-ejemplo">
+            <div class="tarjeta-receta">
                 <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c" alt="Receta">
                 <div class="info-tarjeta">
-                    <h3>Tu primera receta aparecerá aquí</h3>
-                    <button class="btn-ver-receta" onclick="mostrarFormulario()">CREAR AHORA</button>
+                    <h3>Ensalada NutraFit</h3>
+                    <button class="btn-ver-receta" onclick="abrirDetalleDemo()">VER RECETA</button>
                 </div>
             </div>
         </div>
 
-        <button class="btn-flotante" onclick="mostrarFormulario()">
+        <button class="btn-flotante" onclick="abrirFormularioReceta()">
             <i class="fas fa-plus"></i>
         </button>
     </div>
 
-    <div id="seccion-formulario">
-        <h2 style="color: var(--verde-corp); margin-top: 0;">Nueva Receta</h2>
-        <div id="previsualizacion-receta" onclick="document.getElementById('input-foto-receta').click()">
-            <i class="fas fa-camera" id="icono-camara" style="font-size: 30px; color: #aaa;"></i>
-            <img src="" id="img-previa-receta">
-        </div>
-        <input type="file" id="input-foto-receta" accept="image/*" style="display:none" onchange="previsualizarFotoReceta(this)">
-
+    <div id="seccion-formulario" class="contenedor-principal" style="background: white; min-height: 100vh;">
+        <h2 style="color: var(--verde-corp);">Nueva Receta</h2>
         <div class="campo-grupo">
             <label>Nombre</label>
-            <input type="text" id="form-nombre" placeholder="Ej: Ensalada César">
+            <input type="text" id="form-nombre">
         </div>
         <div class="campo-grupo">
-            <label>Categoría</label>
-            <select id="form-categoria">
-                <option>Desayuno</option><option selected>Almuerzo/Cena</option><option>Snack/Postre</option>
-            </select>
+            <label>Ingredientes</label>
+            <textarea id="form-ingredientes" rows="5"></textarea>
         </div>
-        <div class="campo-grupo">
-            <label>Ingredientes (uno por línea)</label>
-            <textarea id="form-ingredientes" rows="5" placeholder="1 Lechuga&#10;Pollo a la plancha..."></textarea>
-        </div>
-        <div class="campo-grupo">
-            <label>Elaboración</label>
-            <textarea id="form-elaboracion" rows="8" placeholder="Pasos a seguir..."></textarea>
-        </div>
-
-        <button class="btn-accion-form" style="background: var(--verde-corp); color: white;" onclick="guardarNuevaReceta()">
-            <i class="fas fa-save"></i> GUARDAR RECETA
+        <button onclick="guardarNuevaReceta()" style="background: var(--verde-corp); color: white; padding: 15px; width: 100%; border-radius: 10px; border: none; font-weight: bold;">
+            GUARDAR RECETA
         </button>
-        <button class="btn-accion-form" style="background: #eee; color: #666;" onclick="volverExplorador()">
-            CANCELAR
+        <button onclick="cerrarTodo()" style="width: 100%; margin-top: 10px; border: none; background: none; color: #666;">
+            Cancelar
         </button>
     </div>
 
     <div id="modal-detalle-receta" class="modal-detalle">
-        <button onclick="cerrarDetalle()" class="boton-nav-circular" style="position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(0,0,0,0.5);">
-            <i class="fas fa-times"></i>
-        </button>
-        <img id="det-img" src="" class="img-detalle-full">
+        <button onclick="cerrarTodo()" style="position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(0,0,0,0.5); color: white; border: none; width: 40px; height: 40px; border-radius: 50%;">X</button>
+        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c" class="img-detalle-full">
         <div class="contenido-detalle">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 id="det-nombre"></h2>
-                <button onclick="compartirReceta()" style="border:none; background:none; color:var(--verde-corp); font-size:1.5rem;">
-                    <i class="fas fa-share-alt"></i>
-                </button>
-            </div>
-            <p id="det-cat" style="color: var(--verde-corp); font-weight: bold;"></p>
-            <hr>
-            <h3>Ingredientes</h3>
-            <ul id="det-ingredientes" class="lista-ingredientes"></ul>
-            <h3>Elaboración</h3>
-            <div id="det-elaboracion" style="white-space: pre-wrap; text-align: justify;"></div>
+            <h2 id="det-nombre">Ensalada NutraFit</h2>
+            <p><strong>Ingredientes:</strong></p>
+            <p>Lechuga, tomate, aguacate, pollo a la plancha y aderezo ligero.</p>
+            <p><strong>Elaboración:</strong></p>
+            <p>Mezclar todos los ingredientes frescos en un bol y añadir la proteína al final.</p>
         </div>
     </div>
+
+    <script>
+        // Lógica de navegación INFALIBLE dentro del HTML
+        function abrirFormularioReceta() {
+            document.getElementById('seccion-explorar').style.display = 'none';
+            document.getElementById('seccion-formulario').style.display = 'block';
+        }
+
+        function abrirDetalleDemo() {
+            document.getElementById('modal-detalle-receta').style.display = 'block';
+        }
+
+        function cerrarTodo() {
+            document.getElementById('seccion-formulario').style.display = 'none';
+            document.getElementById('modal-detalle-receta').style.display = 'none';
+            document.getElementById('seccion-explorar').style.display = 'block';
+        }
+    </script>
 
     <script src="../js/config.js"></script>
     <script src="../js/recetas.js"></script>
