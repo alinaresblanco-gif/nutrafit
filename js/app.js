@@ -897,9 +897,13 @@ function cerrarGpsMini() {
     ACCIONES PARA MI LIBRO DE RECETAS (AÑADIR AL FINAL DE APP.JS)
    ============================================================ */
 
-// Función volver (Igual que en ejercicio)
+// Función volver (MODIFICADA PARA DETECTAR RUTA CORRECTA)
 function volverInicio() {
-    window.location.href = '../index.html';
+    if (window.location.pathname.includes('/vistas/')) {
+        window.location.href = '../index.html';
+    } else {
+        window.location.href = 'index.html';
+    }
 }
 
 // Abre el formulario al dar al botón +
