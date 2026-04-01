@@ -152,7 +152,7 @@
             border-bottom: 1px inset #eee;
         }
         .btn-carrito { color: var(--verde-corp); font-size: 1.2rem; cursor: pointer; }
-        .elaboracion-texto { line-height: 1.6; text-align: justify; color: #555; }
+        .elaboracion-texto { line-height: 1.6; text-align: justify; color: #555; white-space: pre-wrap; }
 
         /* Utilidades Imagen */
         #previsualizacion-receta { 
@@ -161,6 +161,7 @@
             display: flex; align-items: center; justify-content: center;
             overflow: hidden; margin-bottom: 15px;
             border: 2px dashed var(--verde-corp);
+            cursor: pointer;
         }
         #img-previa-receta { width: 100%; height: 100%; object-fit: cover; display: none; }
     </style>
@@ -168,14 +169,15 @@
 <body>
 
     <div class="cabecera-barra">
-        <button onclick="volverExplorador()" class="boton-nav-circular">
+        <button onclick="irAlMenuPrincipal()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
         </button>
         <div class="titulo-centro">
             <i class="fas fa-book-open"></i>
             <strong>MI LIBRO DE RECETAS</strong>
         </div>
-        <div style="width:38px;"></div> </div>
+        <div style="width:38px;"></div> 
+    </div>
 
     <div id="seccion-explorar" class="contenedor-principal">
         <div class="buscador-contenedor">
@@ -184,13 +186,6 @@
         </div>
 
         <div id="contenedor-cards" class="grid-recetas">
-            <div class="tarjeta-receta">
-                <img src="https://via.placeholder.com/150" alt="Receta">
-                <div class="info-tarjeta">
-                    <h3>Tortilla de Patatas Saludable</h3>
-                    <button class="btn-ver-receta" onclick="abrirDetalleReceta()">VER RECETA</button>
-                </div>
-            </div>
             </div>
 
         <button class="btn-flotante" onclick="mostrarFormulario()">
@@ -248,7 +243,7 @@
         <div class="contenido-detalle">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2 id="det-nombre" style="margin: 0; color: #333;">Nombre Receta</h2>
-                <button onclick="compartirReceta()" style="border:none; background:none; color:var(--verde-corp); font-size:1.5rem;">
+                <button onclick="compartirReceta()" style="border:none; background:none; color:var(--verde-corp); font-size:1.5rem; cursor:pointer;">
                     <i class="fas fa-share-alt"></i>
                 </button>
             </div>
@@ -265,57 +260,8 @@
         </div>
     </div>
 
-    <script>
-        // --- LÓGICA DE NAVEGACIÓN ---
-        function mostrarFormulario() {
-            document.getElementById('seccion-explorar').style.display = 'none';
-            document.getElementById('seccion-formulario').style.display = 'block';
-            window.scrollTo(0,0);
-        }
-
-        function volverExplorador() {
-            document.getElementById('seccion-formulario').style.display = 'none';
-            document.getElementById('modal-detalle-receta').style.display = 'none';
-            document.getElementById('seccion-explorar').style.display = 'block';
-        }
-
-        function abrirDetalleReceta() {
-            document.getElementById('modal-detalle-receta').style.display = 'block';
-        }
-
-        function cerrarDetalle() {
-            document.getElementById('modal-detalle-receta').style.display = 'none';
-        }
-
-        // --- LÓGICA DE IMAGEN (Reutilizada) ---
-        function previsualizarFotoReceta(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('img-previa-receta').src = e.target.result;
-                    document.getElementById('img-previa-receta').style.display = 'block';
-                    document.getElementById('icono-camara').style.display = 'none';
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // --- PLACEHOLDERS PARA FUNCIONES FUTURAS ---
-        function filtrarRecetas() {
-            // Aquí irá el código del buscador
-            console.log("Buscando...");
-        }
-
-        function guardarNuevaReceta() {
-            // Aquí irá la conexión con Google Sheets
-            alert("Enviando a tu Excel...");
-            volverExplorador();
-        }
-
-        function añadirAListaCompra(item) {
-            alert("Añadiendo a la lista de compra: " + item);
-        }
-    </script>
+    <script src="../js/config.js"></script> 
+    <script src="../js/recetas.js"></script>
 
 </body>
 </html>
