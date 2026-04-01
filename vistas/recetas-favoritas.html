@@ -11,61 +11,40 @@
 
         /* CABECERA */
         .cabecera-barra { 
-            background: var(--verde-corp); 
-            padding: 10px 15px; 
+            background: var(--verde-corp); padding: 10px 15px; 
             display: flex; justify-content: space-between; align-items: center; 
             color: white; position: sticky; top: 0; z-index: 1000;
         }
         .boton-nav-circular { 
             background: rgba(255,255,255,0.2); border:none; color:white; 
-            width:38px; height:38px; border-radius:50%; 
-            display:flex; align-items:center; justify-content:center;
-            font-size: 18px; cursor: pointer;
+            width:38px; height:38px; border-radius:50%; display:flex; 
+            align-items:center; justify-content:center; cursor: pointer;
         }
 
         .contenedor-principal { padding: 15px; }
         .grid-recetas { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
-        /* TARJETA VISUAL (RESTAURADA) */
-        .tarjeta-receta {
-            background: white; border-radius: 15px; overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
+        /* TARJETA */
+        .tarjeta-receta { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .tarjeta-receta img { width: 100%; height: 120px; object-fit: cover; }
         .info-tarjeta { padding: 10px; text-align: center; }
-        .info-tarjeta h3 { margin: 0 0 10px; font-size: 0.9rem; color: #444; height: 40px; overflow: hidden; }
-        
-        .btn-ver-receta {
-            background: var(--verde-corp); color: white; border: none;
-            padding: 8px 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer;
-        }
+        .info-tarjeta h3 { margin: 0 0 10px; font-size: 0.9rem; height: 40px; overflow: hidden; }
+        .btn-ver-receta { background: var(--verde-corp); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
 
-        /* BOTÓN + */
-        .btn-flotante {
-            position: fixed; bottom: 30px; right: 25px;
-            background: var(--verde-corp); color: white;
-            width: 60px; height: 60px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: none; z-index: 999; cursor: pointer;
-        }
+        .btn-flotante { position: fixed; bottom: 30px; right: 25px; background: var(--verde-corp); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; z-index: 999; cursor: pointer; }
 
-        /* MODALES Y SECCIONES */
+        /* SECCIONES OCULTAS */
         #seccion-formulario, #modal-detalle-receta { display: none; }
-        
-        .modal-detalle {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 2000; overflow-y: auto;
-        }
-        .img-detalle-full { width: 100%; height: 250px; object-fit: cover; }
-        .contenido-detalle { padding: 20px; position: relative; top: -30px; background: white; border-radius: 30px 30px 0 0; }
-        
-        /* ESTILO FORMULARIO */
+
+        /* FORMULARIO */
         .campo-grupo { margin-bottom: 15px; }
         .campo-grupo label { display: block; color: var(--verde-corp); font-weight: bold; margin-bottom: 5px; }
-        .campo-grupo input, .campo-grupo textarea {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box;
-        }
+        .campo-grupo input, .campo-grupo textarea, .campo-grupo select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+
+        /* MODAL */
+        .modal-detalle { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; overflow-y: auto; }
+        .img-detalle-full { width: 100%; height: 250px; object-fit: cover; }
+        .contenido-detalle { padding: 20px; background: white; border-radius: 30px 30px 0 0; position: relative; top: -30px; }
     </style>
 </head>
 <body>
@@ -75,7 +54,7 @@
             <i class="fas fa-chevron-left"></i>
         </button>
         <strong>MI LIBRO DE RECETAS</strong>
-        <div style="width:38px;"></div> 
+        <div style="width:38px;"></div>
     </div>
 
     <div id="seccion-explorar" class="contenedor-principal">
@@ -84,54 +63,60 @@
                 <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c" alt="Receta">
                 <div class="info-tarjeta">
                     <h3>Ensalada NutraFit</h3>
-                    <button class="btn-ver-receta" onclick="abrirDetalleDemo()">VER RECETA</button>
+                    <button class="btn-ver-receta" onclick="verRecetaDemo()">VER RECETA</button>
                 </div>
             </div>
         </div>
-
-        <button class="btn-flotante" onclick="abrirFormularioReceta()">
+        <button class="btn-flotante" onclick="abrirFormulario()">
             <i class="fas fa-plus"></i>
         </button>
     </div>
 
-    <div id="seccion-formulario" class="contenedor-principal" style="background: white; min-height: 100vh;">
-        <h2 style="color: var(--verde-corp);">Nueva Receta</h2>
+    <div id="seccion-formulario" class="contenedor-principal" style="background:white; min-height:100vh;">
+        <h2 style="color:var(--verde-corp)">Nueva Receta</h2>
         <div class="campo-grupo">
             <label>Nombre</label>
             <input type="text" id="form-nombre">
         </div>
         <div class="campo-grupo">
-            <label>Ingredientes</label>
-            <textarea id="form-ingredientes" rows="5"></textarea>
+            <label>Categoría</label>
+            <select id="form-categoria">
+                <option>Desayuno</option><option selected>Almuerzo/Cena</option>
+            </select>
         </div>
-        <button onclick="guardarNuevaReceta()" style="background: var(--verde-corp); color: white; padding: 15px; width: 100%; border-radius: 10px; border: none; font-weight: bold;">
-            GUARDAR RECETA
-        </button>
-        <button onclick="cerrarTodo()" style="width: 100%; margin-top: 10px; border: none; background: none; color: #666;">
-            Cancelar
-        </button>
+        <div class="campo-grupo">
+            <label>Ingredientes</label>
+            <textarea id="form-ingredientes" rows="4"></textarea>
+        </div>
+        <div class="campo-grupo">
+            <label>Elaboración</label>
+            <textarea id="form-elaboracion" rows="4"></textarea>
+        </div>
+        <button onclick="guardarRecetaJS()" style="background:var(--verde-corp); color:white; border:none; padding:15px; width:100%; border-radius:10px; font-weight:bold;">GUARDAR EN EXCEL</button>
+        <button onclick="cerrarTodo()" style="width:100%; margin-top:10px; border:none; background:none;">Cancelar</button>
     </div>
 
     <div id="modal-detalle-receta" class="modal-detalle">
-        <button onclick="cerrarTodo()" style="position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(0,0,0,0.5); color: white; border: none; width: 40px; height: 40px; border-radius: 50%;">X</button>
+        <button onclick="cerrarTodo()" style="position:absolute; top:20px; left:20px; background:rgba(0,0,0,0.5); color:white; border:none; width:40px; height:40px; border-radius:50%; z-index:10;">X</button>
         <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c" class="img-detalle-full">
         <div class="contenido-detalle">
             <h2 id="det-nombre">Ensalada NutraFit</h2>
             <p><strong>Ingredientes:</strong></p>
-            <p>Lechuga, tomate, aguacate, pollo a la plancha y aderezo ligero.</p>
+            <p id="det-ing">Lechuga, tomate, aguacate, pollo.</p>
             <p><strong>Elaboración:</strong></p>
-            <p>Mezclar todos los ingredientes frescos en un bol y añadir la proteína al final.</p>
+            <p id="det-elab">Mezclar todo en un bol y disfrutar.</p>
         </div>
     </div>
 
+    <script src="../js/config.js"></script>
     <script>
-        // Lógica de navegación INFALIBLE dentro del HTML
-        function abrirFormularioReceta() {
+        // NAVEGACIÓN
+        function abrirFormulario() {
             document.getElementById('seccion-explorar').style.display = 'none';
             document.getElementById('seccion-formulario').style.display = 'block';
         }
 
-        function abrirDetalleDemo() {
+        function verRecetaDemo() {
             document.getElementById('modal-detalle-receta').style.display = 'block';
         }
 
@@ -140,9 +125,28 @@
             document.getElementById('modal-detalle-receta').style.display = 'none';
             document.getElementById('seccion-explorar').style.display = 'block';
         }
-    </script>
 
-    <script src="../js/config.js"></script>
-    <script src="../js/recetas.js"></script>
+        // GUARDAR (Usando tu URL de config.js)
+        async function guardarRecetaJS() {
+            const nombre = document.getElementById('form-nombre').value;
+            if(!nombre) return alert("Pon un nombre");
+
+            const datos = {
+                tipo: "guardar_receta",
+                nombre: nombre,
+                categoria: document.getElementById('form-categoria').value,
+                ingredientes: document.getElementById('form-ingredientes').value,
+                elaboracion: document.getElementById('form-elaboracion').value
+            };
+
+            try {
+                await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
+                alert("Guardado correctamente");
+                cerrarTodo();
+            } catch(e) {
+                alert("Error de conexión");
+            }
+        }
+    </script>
 </body>
 </html>
