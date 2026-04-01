@@ -35,7 +35,7 @@
         
         .grid-recetas { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
-        /* TARJETAS (ESTILO) */
+        /* TARJETAS */
         .tarjeta-receta {
             background: white; border-radius: 15px; overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -45,7 +45,7 @@
         .info-tarjeta h3 { margin: 0 0 10px; font-size: 0.9rem; color: #444; height: 40px; overflow: hidden; }
         .btn-ver-receta {
             background: var(--verde-corp); color: white; border: none;
-            padding: 8px 12px; border-radius: 8px; font-weight: bold; width: 100%;
+            padding: 8px 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer;
         }
 
         .btn-flotante {
@@ -54,7 +54,7 @@
             width: 60px; height: 60px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: none; z-index: 999;
+            border: none; z-index: 999; cursor: pointer;
         }
 
         /* FORMULARIO */
@@ -64,7 +64,7 @@
         .campo-grupo input, .campo-grupo textarea, .campo-grupo select {
             width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box;
         }
-        .btn-accion-form { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; margin-top: 10px; }
+        .btn-accion-form { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; }
 
         /* MODAL DETALLE */
         .modal-detalle {
@@ -74,7 +74,7 @@
         .img-detalle-full { width: 100%; height: 250px; object-fit: cover; }
         .contenido-detalle { padding: 20px; position: relative; top: -30px; background: white; border-radius: 30px 30px 0 0; }
         .lista-ingredientes { list-style: none; padding: 0; }
-        .lista-ingredientes li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px inset #eee; }
+        .lista-ingredientes li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px inset #eee; align-items: center; }
         .btn-carrito { color: var(--verde-corp); font-size: 1.2rem; cursor: pointer; }
         
         /* PREVISUALIZACION */
@@ -106,7 +106,13 @@
         </div>
 
         <div id="contenedor-cards" class="grid-recetas">
-            <p style="text-align:center; grid-column: 1/-1;">Cargando tus recetas...</p>
+            <div class="tarjeta-receta" id="card-ejemplo">
+                <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c" alt="Receta">
+                <div class="info-tarjeta">
+                    <h3>Tu primera receta aparecerá aquí</h3>
+                    <button class="btn-ver-receta" onclick="mostrarFormulario()">CREAR AHORA</button>
+                </div>
+            </div>
         </div>
 
         <button class="btn-flotante" onclick="mostrarFormulario()">
@@ -124,7 +130,7 @@
 
         <div class="campo-grupo">
             <label>Nombre</label>
-            <input type="text" id="form-nombre">
+            <input type="text" id="form-nombre" placeholder="Ej: Ensalada César">
         </div>
         <div class="campo-grupo">
             <label>Categoría</label>
@@ -134,15 +140,15 @@
         </div>
         <div class="campo-grupo">
             <label>Ingredientes (uno por línea)</label>
-            <textarea id="form-ingredientes" rows="5"></textarea>
+            <textarea id="form-ingredientes" rows="5" placeholder="1 Lechuga&#10;Pollo a la plancha..."></textarea>
         </div>
         <div class="campo-grupo">
             <label>Elaboración</label>
-            <textarea id="form-elaboracion" rows="8"></textarea>
+            <textarea id="form-elaboracion" rows="8" placeholder="Pasos a seguir..."></textarea>
         </div>
 
         <button class="btn-accion-form" style="background: var(--verde-corp); color: white;" onclick="guardarNuevaReceta()">
-            <i class="fas fa-save"></i> GUARDAR
+            <i class="fas fa-save"></i> GUARDAR RECETA
         </button>
         <button class="btn-accion-form" style="background: #eee; color: #666;" onclick="volverExplorador()">
             CANCELAR
@@ -169,22 +175,6 @@
             <div id="det-elaboracion" style="white-space: pre-wrap; text-align: justify;"></div>
         </div>
     </div>
-
-    <script>
-        function mostrarFormulario() {
-            document.getElementById('seccion-explorar').style.display = 'none';
-            document.getElementById('seccion-formulario').style.display = 'block';
-            window.scrollTo(0,0);
-        }
-        function volverExplorador() {
-            document.getElementById('seccion-formulario').style.display = 'none';
-            document.getElementById('modal-detalle-receta').style.display = 'none';
-            document.getElementById('seccion-explorar').style.display = 'block';
-        }
-        function cerrarDetalle() {
-            document.getElementById('modal-detalle-receta').style.display = 'none';
-        }
-    </script>
 
     <script src="../js/config.js"></script>
     <script src="../js/recetas.js"></script>
