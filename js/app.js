@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxQCHZAHiVYuoxKpg5m0YXQ0vlXvTHiMwR0cfZaQfceuwcN-bnISsnk9__zw_4UsLqd/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzC2iLa-_A-W9isennZF-a532imekO2Rt23XBuvc8zGee9i_3Eg5I8sDSwxvWSNVAXj/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -891,5 +891,58 @@ function cerrarGpsMini() {
     if(btnGps) {
         btnGps.innerHTML = '<i class="fas fa-map-marked-alt"></i> USAR GPS EN VIVO';
         btnGps.style.background = '#2196F3';
+    }
+}
+/* ============================================================
+    ACCIONES PARA MI LIBRO DE RECETAS (AÑADIR AL FINAL DE APP.JS)
+   ============================================================ */
+
+// Función volver (Igual que en ejercicio)
+function volverInicio() {
+    window.location.href = '../index.html';
+}
+
+// Abre el formulario al dar al botón +
+function abrirFormulario() {
+    document.getElementById('seccion-explorar').style.display = 'none';
+    document.getElementById('seccion-formulario').style.display = 'block';
+}
+
+// Abre la ventana emergente de la receta
+function verRecetaDemo() {
+    document.getElementById('modal-detalle-receta').style.display = 'block';
+}
+
+// Cierra todo y vuelve al listado
+function cerrarTodo() {
+    document.getElementById('seccion-formulario').style.display = 'none';
+    document.getElementById('modal-detalle-receta').style.display = 'none';
+    document.getElementById('seccion-explorar').style.display = 'block';
+}
+
+// Guarda en el Excel
+async function guardarRecetaJS() {
+    const nombre = document.getElementById('form-nombre').value;
+    if(!nombre) return alert("Por favor, escribe el nombre de la receta");
+
+    const datos = {
+        tipo: "guardar_receta",
+        nombre: nombre,
+        categoria: document.getElementById('form-categoria').value,
+        ingredientes: document.getElementById('form-ingredientes').value,
+        elaboracion: document.getElementById('form-elaboracion').value
+    };
+
+    try {
+        // Asegúrate de que URL_GOOGLE_SCRIPT esté en tu config.js
+        await fetch(URL_GOOGLE_SCRIPT, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(datos) 
+        });
+        alert("¡Receta guardada con éxito!");
+        cerrarTodo();
+    } catch(e) {
+        alert("Error al conectar con el servidor");
     }
 }

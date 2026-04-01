@@ -9,7 +9,6 @@
         :root { --verde-corp: #78a978; --verde-oscuro: #5a8a5a; --gris-fondo: #f4f4f4; }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
 
-        /* CABECERA */
         .cabecera-barra { 
             background: var(--verde-corp); padding: 10px 15px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -24,7 +23,6 @@
         .contenedor-principal { padding: 15px; }
         .grid-recetas { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
-        /* TARJETA */
         .tarjeta-receta { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .tarjeta-receta img { width: 100%; height: 120px; object-fit: cover; }
         .info-tarjeta { padding: 10px; text-align: center; }
@@ -33,15 +31,12 @@
 
         .btn-flotante { position: fixed; bottom: 30px; right: 25px; background: var(--verde-corp); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; z-index: 999; cursor: pointer; }
 
-        /* SECCIONES OCULTAS */
         #seccion-formulario, #modal-detalle-receta { display: none; }
 
-        /* FORMULARIO */
         .campo-grupo { margin-bottom: 15px; }
         .campo-grupo label { display: block; color: var(--verde-corp); font-weight: bold; margin-bottom: 5px; }
         .campo-grupo input, .campo-grupo textarea, .campo-grupo select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
 
-        /* MODAL */
         .modal-detalle { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; overflow-y: auto; }
         .img-detalle-full { width: 100%; height: 250px; object-fit: cover; }
         .contenido-detalle { padding: 20px; background: white; border-radius: 30px 30px 0 0; position: relative; top: -30px; }
@@ -50,7 +45,7 @@
 <body>
 
     <div class="cabecera-barra">
-        <button onclick="window.location.href='../index.html'" class="boton-nav-circular">
+        <button onclick="volverInicio()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
         </button>
         <strong>MI LIBRO DE RECETAS</strong>
@@ -109,44 +104,6 @@
     </div>
 
     <script src="../js/config.js"></script>
-    <script>
-        // NAVEGACIÓN
-        function abrirFormulario() {
-            document.getElementById('seccion-explorar').style.display = 'none';
-            document.getElementById('seccion-formulario').style.display = 'block';
-        }
-
-        function verRecetaDemo() {
-            document.getElementById('modal-detalle-receta').style.display = 'block';
-        }
-
-        function cerrarTodo() {
-            document.getElementById('seccion-formulario').style.display = 'none';
-            document.getElementById('modal-detalle-receta').style.display = 'none';
-            document.getElementById('seccion-explorar').style.display = 'block';
-        }
-
-        // GUARDAR (Usando tu URL de config.js)
-        async function guardarRecetaJS() {
-            const nombre = document.getElementById('form-nombre').value;
-            if(!nombre) return alert("Pon un nombre");
-
-            const datos = {
-                tipo: "guardar_receta",
-                nombre: nombre,
-                categoria: document.getElementById('form-categoria').value,
-                ingredientes: document.getElementById('form-ingredientes').value,
-                elaboracion: document.getElementById('form-elaboracion').value
-            };
-
-            try {
-                await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-                alert("Guardado correctamente");
-                cerrarTodo();
-            } catch(e) {
-                alert("Error de conexión");
-            }
-        }
-    </script>
+    <script src="../js/app.js"></script>
 </body>
 </html>
