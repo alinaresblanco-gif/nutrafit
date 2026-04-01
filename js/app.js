@@ -991,3 +991,70 @@ async function guardarRecetaJS() {
         btn.innerHTML = textoOriginal;
     }
 }
+/* ============================================================
+    LECTOR DE RECETAS REALES DESDE EL EXCEL
+   ============================================================ */
+
+// Esta función se ejecuta sola al abrir la página
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('contenedor-cards')) {
+        cargarRecetasDesdeExcel();
+    }
+});
+
+async function cargarRecetasDesdeExcel() {
+    const contenedor = document.getElementById('contenedor-cards');
+    if (!contenedor) return;
+
+    // 1. Ponemos un mensaje de carga
+    contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Cargando tus recetas...</p>";
+
+    try {
+        // 2. Llamamos al Apps Script pidiendo la tabla "recetas"
+        const respuesta = await fetch(`${URL_GOOGLE_SCRIPT}?tabla=recetas`);
+        const filas = await respuesta.json();
+
+        // 3. Limpiamos el contenedor (borra la ensalada fija)
+        contenedor.innerHTML = "";
+
+        if (filas.length === 0) {
+            contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Aún no tienes recetas. ¡Pulsa + para añadir la primera!</p>";
+            return;
+        }
+
+        // 4. Dibujamos cada tarjeta con los datos del Excel
+        // Orden en Excel: A:Fecha, B:Imagen, C:Nombre, D:Categoria, E:Ingredientes, F:Elaboracion
+        filas.forEach((receta, index) => {
+            const nombre = receta[2];
+            const imagen = receta[1] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c'; // Foto por defecto si no hay
+            const categoria = receta[3];
+            const ingredientes = receta[4];
+            const elaboracion = receta[5];
+
+            const tarjetaHTML = `
+                <div class="tarjeta-receta">
+                    <img src="${imagen}" alt="${nombre}">
+                    <div class="info-tarjeta">
+                        <span style="font-size:0.7rem; color:var(--verde-corp); font-weight:bold;">${categoria.toUpperCase()}</span>
+                        <h3>${nombre}</h3>
+                        <button class="btn-ver-receta" onclick="abrirDetalleReceta('${nombre}', '${ingredientes.replace(/\n/g, "<br>")}', '${elaboracion.replace(/\n/g, "<br>")}', '${imagen}')">VER RECETA</button>
+                    </div>
+                </div>
+            `;
+            contenedor.innerHTML += tarjetaHTML;
+        });
+
+    } catch (error) {
+        console.error("Error cargando recetas:", error);
+        contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:red;'>Error al conectar con el libro de recetas</p>";
+    }
+}
+
+// Función para llenar el Modal con la receta pinchada
+function abrirDetalleReceta(nombre, ing, elab, img) {
+    document.getElementById('det-nombre').innerText = nombre;
+    document.getElementById('det-ing').innerHTML = ing;
+    document.getElementById('det-elab').innerHTML = elab;
+    document.getElementById('det-img-full').src = img;
+    document.getElementById('modal-detalle-receta').style.display = 'block';
+}
