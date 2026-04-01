@@ -262,27 +262,45 @@
             }
         }
 
+        // --- FUNCIÓN CORREGIDA DE PROCESAMIENTO DE POSICIÓN ---
         function procesarPosicion(pos) {
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
-            const alt = pos.coords.altitude;
+            const alt = pos.coords.altitude; // Ojo: algunos móviles devuelven null si no tienen barómetro o buena señal 3D
             const punto = [lat, lon];
             
             if (pathCoordinadas.length > 0) {
                 const ultimo = pathCoordinadas[pathCoordinadas.length - 1];
                 const d = map.distance(ultimo, punto);
-                if (d > 3) {
+                
+                // Solo procesamos si nos hemos movido más de 3 metros
+                if (d > 3) { 
                     totalMetros += d;
+                    
+                    // Calculamos el desnivel comparando con el último punto VÁLIDO
                     if (alt !== null && altitudAnterior !== null) {
                         let diferenciaAltitud = alt - altitudAnterior;
-                        if (diferenciaAltitud > 0) desnivelAcumulado += diferenciaAltitud;
+                        // Solo sumamos si hemos subido
+                        if (diferenciaAltitud > 0) {
+                            desnivelAcumulado += diferenciaAltitud;
+                        }
                     }
+                    
+                    // Guardamos la altitud y el punto para la próxima comparación
+                    if (alt !== null) altitudAnterior = alt;
+                    
+                    pathCoordinadas.push(punto);
+                    routeLine.setLatLngs(pathCoordinadas);
                     actualizarStats();
                 }
+            } else {
+                // Es el primer punto de la ruta, lo guardamos para empezar
+                if (alt !== null) altitudAnterior = alt;
+                pathCoordinadas.push(punto);
+                routeLine.setLatLngs(pathCoordinadas);
             }
-            if (alt !== null) altitudAnterior = alt;
-            pathCoordinadas.push(punto);
-            routeLine.setLatLngs(pathCoordinadas);
+            
+            // Esto sí lo actualizamos siempre para ver dónde estamos
             marker.setLatLng(punto);
             map.panTo(punto);
         }
