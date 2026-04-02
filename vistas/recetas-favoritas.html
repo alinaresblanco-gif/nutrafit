@@ -23,7 +23,7 @@
 
         .contenedor-principal { padding: 15px; }
 
-        /* NUEVO: ESTILOS DEL BUSCADOR INTELIGENTE */
+        /* BUSCADOR INTELIGENTE */
         .contenedor-buscador {
             position: relative;
             margin-bottom: 20px;
@@ -65,25 +65,76 @@
         /* SECCIONES */
         #seccion-formulario, #modal-detalle-receta { display: none; }
 
-        /* DISEÑO FORMULARIO NUEVA RECETA */
+        /* ESTILOS PREMIUM DEL MODAL DETALLE */
+        .modal-detalle { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; overflow-y: auto; }
+        .img-detalle-full { width: 100%; height: 250px; object-fit: cover; }
+        .contenido-detalle { padding: 20px; background: white; border-radius: 30px 30px 0 0; position: relative; top: -30px; }
+        
+        #det-nombre {
+            background: var(--verde-corp);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 25px 25px 0 0;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .etiqueta-verde {
+            color: var(--verde-corp);
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .linea-divisoria {
+            border: 0;
+            height: 1px;
+            background: #e0e0e0;
+            width: 60%;
+            margin: 25px auto;
+        }
+
+        .lista-ingredientes-pro {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .lista-ingredientes-pro li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f2f2f2;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+        }
+        .lista-ingredientes-pro i {
+            color: var(--verde-corp);
+            width: 30px;
+            margin-right: 10px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* FORMULARIO */
         .titulo-seccion-verde {
             background: var(--verde-corp); color: white; text-align: center;
             padding: 15px; margin: -15px -15px 20px -15px; font-size: 1.4rem; font-weight: bold;
         }
-
         .campo-grupo { margin-bottom: 20px; }
         .campo-grupo label { display: block; color: var(--verde-corp); font-weight: bold; margin-bottom: 8px; }
         .campo-grupo input, .campo-grupo textarea, .campo-grupo select { 
             width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; 
             box-sizing: border-box; font-size: 1rem; background: #fff;
         }
-
         .contenedor-fotos-flex { display: flex; gap: 10px; margin-bottom: 20px; }
         .btn-foto {
             flex: 1; background: #f0f7f0; color: var(--verde-corp); border: 2px dashed var(--verde-corp);
             padding: 15px; border-radius: 12px; text-align: center; cursor: pointer; font-weight: bold;
         }
-
         .btn-accion-verde {
             background: var(--verde-corp); color: white; border: none; padding: 16px; 
             width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; 
@@ -93,11 +144,6 @@
             background: #666; color: white; border: none; padding: 16px; 
             width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer;
         }
-
-        /* MODAL DETALLE */
-        .modal-detalle { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; overflow-y: auto; }
-        .img-detalle-full { width: 100%; height: 250px; object-fit: cover; }
-        .contenido-detalle { padding: 20px; background: white; border-radius: 30px 30px 0 0; position: relative; top: -30px; }
         #previa-receta-cont { width: 100%; height: 150px; border-radius: 12px; margin-bottom: 15px; display: none; object-fit: cover; }
     </style>
 </head>
@@ -111,7 +157,6 @@
     </div>
 
     <div id="seccion-explorar" class="contenedor-principal">
-        
         <div class="contenedor-buscador">
             <i class="fas fa-search icono-buscar"></i>
             <input type="text" id="input-busqueda-recetas" class="input-busqueda" placeholder="Buscar por nombre o categoría..." onkeyup="filtrarRecetasLocales()">
@@ -167,14 +212,21 @@
     </div>
 
     <div id="modal-detalle-receta" class="modal-detalle">
-        <button onclick="cerrarTodo()" style="position:absolute; top:20px; left:20px; background:rgba(0,0,0,0.5); color:white; border:none; width:40px; height:40px; border-radius:50%; z-index:10;">X</button>
+        <button onclick="cerrarTodo()" style="position:absolute; top:20px; left:20px; background:rgba(0,0,0,0.5); color:white; border:none; width:40px; height:40px; border-radius:50%; z-index:10;">
+            <i class="fas fa-times"></i>
+        </button>
         <img src="" id="det-img-full" class="img-detalle-full">
+        
         <div class="contenido-detalle">
             <h2 id="det-nombre">Nombre Receta</h2>
-            <p><strong>Ingredientes:</strong></p>
-            <div id="det-ing" style="margin-bottom: 15px; line-height: 1.5;">...</div>
-            <p><strong>Elaboración:</strong></p>
-            <div id="det-elab" style="line-height: 1.5;">...</div>
+            
+            <span class="etiqueta-verde"><i class="fas fa-shopping-basket"></i> Ingredientes</span>
+            <div id="det-ing">...</div>
+            
+            <hr class="linea-divisoria">
+            
+            <span class="etiqueta-verde"><i class="fas fa-mitten"></i> Elaboración</span>
+            <div id="det-elab" style="line-height: 1.6; color: #444;">...</div>
         </div>
     </div>
 
@@ -182,20 +234,13 @@
     <script src="../js/app.js"></script>
 
     <script>
-        // Función para el buscador inteligente
         function filtrarRecetasLocales() {
             const texto = document.getElementById('input-busqueda-recetas').value.toLowerCase();
             const tarjetas = document.querySelectorAll('.tarjeta-receta');
-            
             tarjetas.forEach(tarjeta => {
                 const nombre = tarjeta.querySelector('h3').innerText.toLowerCase();
                 const categoria = tarjeta.querySelector('span').innerText.toLowerCase();
-                
-                if (nombre.includes(texto) || categoria.includes(texto)) {
-                    tarjeta.style.display = "block";
-                } else {
-                    tarjeta.style.display = "none";
-                }
+                tarjeta.style.display = (nombre.includes(texto) || categoria.includes(texto)) ? "block" : "none";
             });
         }
 
@@ -215,11 +260,8 @@
             if (this.value === "") this.value = "• ";
         });
 
-        // Forzar carga inmediata al entrar
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof cargarRecetasDesdeExcel === 'function') {
-                cargarRecetasDesdeExcel();
-            }
+            if (typeof cargarRecetasDesdeExcel === 'function') cargarRecetasDesdeExcel();
         });
     </script>
 </body>

@@ -899,8 +899,7 @@ function cerrarGpsMini() {
 
 let imagenRecetaBase64 = null;
 
-/** * NAVEGACIÓN Y UTILIDADES 
- */
+/** * NAVEGACIÓN Y UTILIDADES */
 function volverInicio() {
     if (window.location.pathname.includes('/vistas/')) {
         window.location.href = '../index.html';
@@ -928,8 +927,7 @@ function cerrarTodo() {
     if (vistaPrevia) vistaPrevia.style.display = 'none';
 }
 
-/** * GESTIÓN DE IMÁGENES (CÁMARA Y ARCHIVOS) 
- */
+/** * GESTIÓN DE IMÁGENES */
 function intentarHacerFoto() {
     const input = document.getElementById('input-captura');
     if (input) {
@@ -961,8 +959,7 @@ function previsualizarImagen(input) {
     }
 }
 
-/** * GUARDADO DE DATOS EN GOOGLE SHEETS 
- */
+/** * GUARDADO DE DATOS */
 async function guardarRecetaJS() {
     const nombre = document.getElementById('form-nombre').value;
     if (!nombre) return alert("Por favor, escribe el nombre de la receta");
@@ -987,20 +984,13 @@ async function guardarRecetaJS() {
             mode: 'no-cors',
             body: JSON.stringify(datos)
         });
-        
         alert("¡Receta guardada con éxito!");
-        
-        // Limpiar campos
         document.getElementById('form-nombre').value = "";
         document.getElementById('form-ingredientes').value = "";
         document.getElementById('form-elaboracion').value = "";
-        
         cerrarTodo();
-        
-        // Forzamos recarga vaciando el contenedor para que el intervalo la detecte
         const contenedor = document.getElementById('contenedor-cards');
         if (contenedor) contenedor.innerHTML = ""; 
-        
     } catch (e) {
         alert("Error al conectar con el servidor");
     } finally {
@@ -1009,106 +999,89 @@ async function guardarRecetaJS() {
     }
 }
 
-/* ============================================================
-    LECTOR DE RECETAS - SISTEMA DE CARGA DINÁMICA (ESTILO EJERCICIO)
-   ============================================================ */
-
+/** * SISTEMA DE CARGA DINÁMICA */
 async function cargarRecetasDesdeExcel() {
     const contenedor = document.getElementById('contenedor-cards');
-    
-    // Si no estamos en la vista de recetas o ya tiene contenido, no hacemos nada
-    if (!contenedor) return;
-    if (contenedor.querySelectorAll('.tarjeta-receta').length > 0) return;
+    if (!contenedor || contenedor.querySelectorAll('.tarjeta-receta').length > 0) return;
 
-    // Inyectar Loader visual
-    contenedor.innerHTML = `
-        <div id="loader-recetas" style="grid-column: 1/-1; text-align:center; padding: 60px 20px;">
-            <i class="fas fa-sync fa-spin" style="color:#78a978; font-size:3rem; margin-bottom:20px;"></i>
-            <p style="font-weight:bold; color:#444; font-size:1.2rem;">CARGANDO TU RECETARIO</p>
-            <span style="color:#888;">Sincronizando con la nube...</span>
-        </div>`;
+    contenedor.innerHTML = `<div id="loader-recetas" style="grid-column: 1/-1; text-align:center; padding: 60px 20px;">
+        <i class="fas fa-sync fa-spin" style="color:#78a978; font-size:3rem; margin-bottom:20px;"></i>
+        <p style="font-weight:bold; color:#444;">CARGANDO TU RECETARIO</p></div>`;
 
     try {
-        // Usamos timestamp para evitar caché, igual que en el módulo de ejercicios
         const urlFull = `${URL_GOOGLE_SCRIPT}?tabla=recetas&t=${Date.now()}`;
-        
         const respuesta = await fetch(urlFull);
         const filas = await respuesta.json();
-        
-        contenedor.innerHTML = ""; // Limpiar loader
+        contenedor.innerHTML = "";
 
         if (!filas || filas.length === 0) {
-            contenedor.innerHTML = `
-                <p style="grid-column: 1/-1; text-align:center; padding:40px; color:#666;">
-                    No hay recetas guardadas todavía.
-                </p>`;
+            contenedor.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding:40px;">No hay recetas guardadas.</p>`;
             return;
         }
 
-        // Dibujar tarjetas recorriendo los datos
         filas.reverse().forEach(fila => {
-            // Estructura esperada: [0]Fecha, [1]Imagen, [2]Nombre, [3]Categoría, [4]Ingredientes, [5]Elaboración
-            if (!fila[2]) return; // Si no hay nombre, saltar fila
-
-            const nombre = fila[2];
-            const imagen = (fila[1] && fila[1].length > 100) ? fila[1] : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
-            const categoria = fila[3] || "Varios";
-            const ingredientes = fila[4] || "";
-            const elaboracion = fila[5] || "";
+            if (!fila[2]) return;
+            const nombre = fila[2], imagen = (fila[1] && fila[1].length > 100) ? fila[1] : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
+            const categoria = fila[3] || "Varios", ing = fila[4] || "", elab = fila[5] || "";
 
             const card = document.createElement('div');
             card.className = 'tarjeta-receta';
             card.innerHTML = `
-                <img src="${imagen}" alt="${nombre}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c'">
+                <img src="${imagen}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c'">
                 <div class="info-tarjeta">
                     <span style="font-size:0.7rem; color:#78a978; font-weight:bold;">${categoria.toUpperCase()}</span>
                     <h3>${nombre}</h3>
                     <button class="btn-ver-receta">VER RECETA</button>
-                </div>
-            `;
-
-            // Configurar el botón de ver detalle
-            card.querySelector('.btn-ver-receta').onclick = () => {
-                abrirDetalleReceta(nombre, ingredientes, elaboracion, imagen);
-            };
-
+                </div>`;
+            card.querySelector('.btn-ver-receta').onclick = () => abrirDetalleReceta(nombre, ing, elab, imagen);
             contenedor.appendChild(card);
         });
-
     } catch (error) {
-        console.error("Error cargando recetas:", error);
-        contenedor.innerHTML = `
-            <div style="grid-column: 1/-1; text-align:center; padding: 40px;">
-                <p style="color:red; font-weight:bold;">No se pudo conectar con el recetario.</p>
-                <button onclick="location.reload()" style="padding:10px 20px; background:#78a978; color:white; border:none; border-radius:10px; margin-top:10px;">
-                    REINTENTAR
-                </button>
-            </div>`;
+        contenedor.innerHTML = `<div style="grid-column: 1/-1; text-align:center;"><p style="color:red;">Error de conexión</p></div>`;
     }
 }
 
-/** * EL MOTOR: Revisa cada 1.5s si el contenedor está listo pero vacío 
- */
 setInterval(() => {
     const lista = document.getElementById('contenedor-cards');
-    if (lista && lista.innerHTML.trim() === "") {
-        cargarRecetasDesdeExcel();
-    }
+    if (lista && lista.innerHTML.trim() === "") cargarRecetasDesdeExcel();
 }, 1500);
 
-/** * MODAL DE DETALLE 
- */
+/** * MODAL DE DETALLE PREMIUM CON ICONOS INTELIGENTES */
 function abrirDetalleReceta(nombre, ing, elab, img) {
-    const detNombre = document.getElementById('det-nombre');
-    const detIng = document.getElementById('det-ing');
-    const detElab = document.getElementById('det-elab');
-    const detImg = document.getElementById('det-img-full');
-    const modal = document.getElementById('modal-detalle-receta');
+    // 1. Insertar nombre e imagen
+    document.getElementById('det-nombre').innerText = nombre;
+    document.getElementById('det-img-full').src = img;
+    document.getElementById('det-elab').innerHTML = String(elab).replace(/\n/g, '<br>');
 
-    if (detNombre) detNombre.innerText = nombre;
-    if (detIng) detIng.innerHTML = String(ing).replace(/\n/g, '<br>');
-    if (detElab) detElab.innerHTML = String(elab).replace(/\n/g, '<br>');
-    if (detImg) detImg.src = img;
-    
-    if (modal) modal.style.display = 'block';
+    // 2. Lógica de ICONOS INTELIGENTES para ingredientes
+    const listaIng = String(ing).split(/\n|<br>/);
+    let htmlIngredientes = '<ul class="lista-ingredientes-pro">';
+
+    listaIng.forEach(linea => {
+        let textoLimpio = linea.replace(/[•\-\*]/g, "").trim();
+        if (textoLimpio === "") return;
+
+        // Buscador de iconos por palabras clave
+        let icono = "fa-check-circle"; // Icono por defecto
+        const t = textoLimpio.toLowerCase();
+
+        if (t.includes("huevo")) icono = "fa-egg";
+        else if (t.includes("aceite")) icono = "fa-tint";
+        else if (t.includes("patata") || t.includes("papa")) icono = "fa-seedling";
+        else if (t.includes("cebolla") || t.includes("ajo")) icono = "fa-leaf";
+        else if (t.includes("pollo") || t.includes("carne") || t.includes("pavo")) icono = "fa-drumstick-bite";
+        else if (t.includes("leche") || t.includes("queso") || t.includes("yogur")) icono = "fa-cheese";
+        else if (t.includes("pan") || t.includes("harina") || t.includes("avena")) icono = "fa-bread-slice";
+        else if (t.includes("sal") || t.includes("pimienta") || t.includes("especia")) icono = "fa-mortar-pestle";
+        else if (t.includes("agua")) icono = "fa-faucet";
+        else if (t.includes("tomate") || t.includes("verdura") || t.includes("ensalada")) icono = "fa-apple-alt";
+
+        htmlIngredientes += `<li><i class="fas ${icono}"></i> ${textoLimpio}</li>`;
+    });
+
+    htmlIngredientes += '</ul>';
+    document.getElementById('det-ing').innerHTML = htmlIngredientes;
+
+    // 3. Mostrar el modal
+    document.getElementById('modal-detalle-receta').style.display = 'block';
 }
