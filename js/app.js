@@ -1089,45 +1089,62 @@ async function compartirReceta() {
     const modalElemento = document.getElementById('modal-detalle-receta');
     const nombreReceta = document.getElementById('det-nombre').innerText;
     
-    // Mostramos un aviso visual de carga en el botón
-    const btnCompartir = document.querySelector('[onclick="compartirReceta()"]');
+    // 1. Buscamos el botón de compartir para feedback visual
+    // Buscamos el botón que tiene el icono fa-share-alt dentro del modal
+    const btnCompartir = document.querySelector('#modal-detalle-receta button[onclick="compartirReceta()"]');
     const iconoOriginal = btnCompartir.innerHTML;
     btnCompartir.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
     try {
-        // 1. Capturamos el contenido del modal como imagen
-        // Usamos scale: 2 para que se vea nítido en pantallas retina/móviles
-        const canvas = await html2canvas(modalElemento, {
-            useCORS: true, 
+        // 2. CONFIGURACIÓN DE CAPTURA
+        const opciones = {
+            useCORS: true,
+            allowTaint: false,
             logging: false,
             scale: 2,
-            backgroundColor: "#ffffff"
-        });
+            backgroundColor: "#ffffff",
+            width: modalElemento.offsetWidth,
+            height: modalElemento.scrollHeight
+        };
 
-        // 2. Convertimos el canvas a un archivo real (Blob)
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-        const archivo = new File([blob], `receta-${nombreReceta}.png`, { type: 'image/png' });
+        // 3. GENERAR EL CANVAS
+        const canvas = await html2canvas(modalElemento, opciones);
 
-        // 3. Compartimos el archivo usando la API nativa si está disponible
-        if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-            await navigator.share({
-                files: [archivo],
-                title: `Receta de ${nombreReceta}`,
-                text: `¡Mira esta receta de NutraFit: ${nombreReceta}! 🥗`
-            });
-        } else {
-            // Si el dispositivo no permite compartir archivos directamente (ej: algunos navegadores de PC)
-            const link = document.createElement('a');
-            link.download = `Receta-${nombreReceta}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-            alert("Imagen generada. Se ha descargado para que puedas enviarla.");
-        }
+        // 4. PROCESO DE COMPARTIR
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                btnCompartir.innerHTML = iconoOriginal;
+                return alert("No se pudo generar el archivo de imagen.");
+            }
+
+            const archivo = new File([blob], `${nombreReceta.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+
+            // 5. INTENTO DE COMPARTIR NATIVO
+            if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+                try {
+                    await navigator.share({
+                        files: [archivo],
+                        title: `Receta: ${nombreReceta}`,
+                        text: `¡Mira esta receta de NutraFit: ${nombreReceta}! 🥗`
+                    });
+                } catch (shareErr) {
+                    // Si el usuario cancela no hacemos nada, solo restauramos icono
+                    console.log("Compartir cancelado");
+                }
+            } else {
+                // Descarga automática como alternativa (PC o navegadores no compatibles)
+                const link = document.createElement('a');
+                link.download = `${nombreReceta}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                alert("La imagen se ha guardado en tu dispositivo.");
+            }
+            btnCompartir.innerHTML = iconoOriginal;
+        }, 'image/png');
+
     } catch (err) {
-        console.error("Error al compartir:", err);
-        alert("No se pudo generar la imagen para compartir.");
-    } finally {
-        // Restauramos el icono del botón
+        console.error("Error detallado:", err);
+        alert("Error al generar la imagen. Inténtalo de nuevo.");
         btnCompartir.innerHTML = iconoOriginal;
     }
 }
