@@ -1083,68 +1083,43 @@ function abrirDetalleReceta(nombre, ing, elab, img) {
 }
 
 /**
- * FUNCIÓN PREMIUM: CONVIERTE LA VISTA EN IMAGEN Y COMPARTE
+ * FUNCIÓN PARA COMPARTIR RECETA (SOLO TEXTO - MÁXIMA COMPATIBILIDAD)
  */
 async function compartirReceta() {
-    const modalElemento = document.getElementById('modal-detalle-receta');
-    const nombreReceta = document.getElementById('det-nombre').innerText;
+    const nombre = document.getElementById('det-nombre').innerText;
     
-    // 1. Buscamos el botón de compartir para feedback visual
-    // Buscamos el botón que tiene el icono fa-share-alt dentro del modal
-    const btnCompartir = document.querySelector('#modal-detalle-receta button[onclick="compartirReceta()"]');
-    const iconoOriginal = btnCompartir.innerHTML;
-    btnCompartir.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    // Obtenemos los ingredientes (limpiando los iconos de FontAwesome)
+    const listaIngredientes = document.querySelectorAll('.lista-ingredientes-pro li');
+    let ingredientesTexto = "";
+    listaIngredientes.forEach(li => {
+        ingredientesTexto += `• ${li.innerText}\n`;
+    });
 
-    try {
-        // 2. CONFIGURACIÓN DE CAPTURA
-        const opciones = {
-            useCORS: true,
-            allowTaint: false,
-            logging: false,
-            scale: 2,
-            backgroundColor: "#ffffff",
-            width: modalElemento.offsetWidth,
-            height: modalElemento.scrollHeight
-        };
+    // Obtenemos la elaboración y limpiamos etiquetas <br> si las hubiera
+    const elaboracionTexto = document.getElementById('det-elab').innerText;
 
-        // 3. GENERAR EL CANVAS
-        const canvas = await html2canvas(modalElemento, opciones);
+    // Construimos el mensaje final
+    const mensaje = `🥗 *RECETA NUTRAFIT: ${nombre.toUpperCase()}* 🥗\n\n` +
+                    `🛒 *INGREDIENTES:*\n${ingredientesTexto}\n` +
+                    `👩‍🍳 *ELABORACIÓN:*\n${elaboracionTexto}\n\n` +
+                    `_Compartido desde mi Libro de Recetas NutraFit_`;
 
-        // 4. PROCESO DE COMPARTIR
-        canvas.toBlob(async (blob) => {
-            if (!blob) {
-                btnCompartir.innerHTML = iconoOriginal;
-                return alert("No se pudo generar el archivo de imagen.");
-            }
-
-            const archivo = new File([blob], `${nombreReceta.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
-
-            // 5. INTENTO DE COMPARTIR NATIVO
-            if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-                try {
-                    await navigator.share({
-                        files: [archivo],
-                        title: `Receta: ${nombreReceta}`,
-                        text: `¡Mira esta receta de NutraFit: ${nombreReceta}! 🥗`
-                    });
-                } catch (shareErr) {
-                    // Si el usuario cancela no hacemos nada, solo restauramos icono
-                    console.log("Compartir cancelado");
-                }
-            } else {
-                // Descarga automática como alternativa (PC o navegadores no compatibles)
-                const link = document.createElement('a');
-                link.download = `${nombreReceta}.png`;
-                link.href = canvas.toDataURL("image/png");
-                link.click();
-                alert("La imagen se ha guardado en tu dispositivo.");
-            }
-            btnCompartir.innerHTML = iconoOriginal;
-        }, 'image/png');
-
-    } catch (err) {
-        console.error("Error detallado:", err);
-        alert("Error al generar la imagen. Inténtalo de nuevo.");
-        btnCompartir.innerHTML = iconoOriginal;
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: `Receta: ${nombre}`,
+                text: mensaje
+            });
+        } catch (err) {
+            console.log('Error al compartir:', err);
+        }
+    } else {
+        // Opción de reserva: Copiar al portapapeles
+        try {
+            await navigator.clipboard.writeText(mensaje);
+            alert("La receta se ha copiado al portapapeles. ¡Ya puedes pegarla en WhatsApp!");
+        } catch (err) {
+            alert("No se pudo compartir la receta.");
+        }
     }
 }
