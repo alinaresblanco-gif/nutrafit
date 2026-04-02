@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxCDFQulG80hW9XeS0wJv7QFBZtREwb5FGIhBYgRts6DxPT-QMTv6_knUdTvaNbe-na/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxgwNWU-345kFjmeCX3zRpt2Lamyjv-4XMapodbGwI8lGSAoh4zK0bZ7LJ0UNIV9bkn/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1022,7 +1022,7 @@ async function cargarRecetasDesdeExcel() {
     const contenedor = document.getElementById('contenedor-cards');
     if (!contenedor) return;
 
-    // MENSAJE DE CARGA SOLICITADO
+    // MENSAJE DE CARGA CON ICONO ANIMADO
     contenedor.innerHTML = `
         <div style="grid-column: 1/-1; text-align:center; padding: 40px;">
             <i class="fas fa-cookie-bite fa-spin" style="color:var(--verde-corp); font-size:2.5rem; margin-bottom:15px;"></i>
@@ -1030,26 +1030,31 @@ async function cargarRecetasDesdeExcel() {
         </div>`;
 
     try {
-        // Evitar caché con timestamp
+        // Generar URL con timestamp para evitar caché agresiva
         const urlFull = URL_GOOGLE_SCRIPT + "?tabla=recetas&v=" + new Date().getTime();
         
-        const respuesta = await fetch(urlFull);
+        // PETICIÓN CON CONFIGURACIÓN DE REDIRECCIÓN PARA GOOGLE APPS SCRIPT
+        const respuesta = await fetch(urlFull, {
+            method: 'GET',
+            mode: 'cors', 
+            redirect: 'follow'
+        });
         
-        if (!respuesta.ok) throw new Error("No se pudo obtener respuesta del servidor");
+        if (!respuesta.ok) throw new Error("HTTP Error: " + respuesta.status);
 
         const filas = await respuesta.json();
 
-        contenedor.innerHTML = ""; // Limpiar mensaje de carga
+        contenedor.innerHTML = ""; 
 
         if (!filas || filas.length === 0) {
             contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Tu libro está vacío. ¡Añade tu primera receta!</p>";
             return;
         }
 
-        // Dibujar tarjetas (Invertidas: lo nuevo arriba)
+        // Renderizar tarjetas (Lo más nuevo arriba)
         filas.reverse().forEach((receta) => {
-            // Ignorar filas sin nombre
-            if (!receta[2] || receta[2].trim() === "") return;
+            // Validación de estructura: Fecha[0], Imagen[1], Nombre[2]...
+            if (!receta || receta.length < 3 || !receta[2]) return;
 
             const imagen = (receta[1] && receta[1].length > 100) ? receta[1] : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
             const nombre = receta[2];
@@ -1068,6 +1073,7 @@ async function cargarRecetasDesdeExcel() {
                 </div>
             `;
 
+            // Acción del botón
             div.querySelector('.btn-ver-receta').onclick = () => {
                 abrirDetalleReceta(nombre, ingredientes, elaboracion, imagen);
             };
@@ -1076,9 +1082,7 @@ async function cargarRecetasDesdeExcel() {
         });
 
     } catch (error) {
-        console.error("Error al cargar:", error);
-        
-        // Mensaje de error con botón de reintento
+        console.error("Fallo crítico en carga:", error);
         contenedor.innerHTML = `
             <div style="grid-column: 1/-1; text-align:center; padding: 30px; border: 2px dashed #ffcccc; border-radius: 15px;">
                 <i class="fas fa-exclamation-circle" style="color: #ff5c5c; font-size: 2rem;"></i>
@@ -1094,6 +1098,7 @@ async function cargarRecetasDesdeExcel() {
 
 function abrirDetalleReceta(nombre, ing, elab, img) {
     document.getElementById('det-nombre').innerText = nombre;
+    // Reemplazo de saltos de línea para visualización correcta
     document.getElementById('det-ing').innerHTML = String(ing).replace(/\n/g, '<br>');
     document.getElementById('det-elab').innerHTML = String(elab).replace(/\n/g, '<br>');
     document.getElementById('det-img-full').src = img;
