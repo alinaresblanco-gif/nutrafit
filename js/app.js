@@ -1001,17 +1001,16 @@ async function guardarRecetaJS() {
 }
 
 /* ============================================================
-    LECTOR DE RECETAS REALES - VERSIÓN DE DIAGNÓSTICO SENIOR
+    LECTOR DE RECETAS REALES - CARGA AUTOMÁTICA E ICONO ANIMADO
    ============================================================ */
 
-// Carga al abrir la vista
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('contenedor-cards')) {
-        cargarRecetasDesdeExcel();
-    }
-});
+// 1. Intentar cargar en cuanto el DOM esté listo
+document.addEventListener('DOMContentLoaded', cargarRecetasDesdeExcel);
 
-// Listener para el menú
+// 2. Intentar cargar cuando la ventana termine de procesar todo (Seguro para móviles)
+window.addEventListener('load', cargarRecetasDesdeExcel);
+
+// 3. Listener para clics en menús
 document.addEventListener('click', (e) => {
     if (e.target.closest('#btn-menu-recetas') || e.target.closest('.enlace-recetas')) {
         cargarRecetasDesdeExcel();
@@ -1022,38 +1021,36 @@ async function cargarRecetasDesdeExcel() {
     const contenedor = document.getElementById('contenedor-cards');
     if (!contenedor) return;
 
-    // MENSAJE DE CARGA CON ICONO ANIMADO
+    // LIMPIEZA Y MENSAJE DE CARGA SOLICITADO (Sustituye a cualquier texto previo)
     contenedor.innerHTML = `
-        <div style="grid-column: 1/-1; text-align:center; padding: 40px;">
-            <i class="fas fa-cookie-bite fa-spin" style="color:var(--verde-corp); font-size:2.5rem; margin-bottom:15px;"></i>
-            <p style="font-weight:bold; color:#666;">Cargando Recetas...</p>
+        <div id="loader-recetas" style="grid-column: 1/-1; text-align:center; padding: 60px 20px;">
+            <i class="fas fa-spinner fa-spin" style="color:var(--verde-corp); font-size:3rem; margin-bottom:20px;"></i>
+            <p style="font-weight:bold; color:#444; font-size:1.2rem; letter-spacing:1px;">CARGANDO RECETAS</p>
+            <span style="color:#888; font-size:0.9rem;">Conectando con tu libro de cocina...</span>
         </div>`;
 
     try {
-        // Generar URL con timestamp para evitar caché agresiva
         const urlFull = URL_GOOGLE_SCRIPT + "?tabla=recetas&v=" + new Date().getTime();
         
-        // PETICIÓN CON CONFIGURACIÓN DE REDIRECCIÓN PARA GOOGLE APPS SCRIPT
         const respuesta = await fetch(urlFull, {
             method: 'GET',
             mode: 'cors', 
             redirect: 'follow'
         });
         
-        if (!respuesta.ok) throw new Error("HTTP Error: " + respuesta.status);
+        if (!respuesta.ok) throw new Error("Error de red");
 
         const filas = await respuesta.json();
 
+        // Solo limpiamos si hay respuesta para evitar parpadeos vacíos
         contenedor.innerHTML = ""; 
 
         if (!filas || filas.length === 0) {
-            contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Tu libro está vacío. ¡Añade tu primera receta!</p>";
+            contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center; padding:40px;'>Tu libro está vacío. ¡Añade tu primera receta!</p>";
             return;
         }
 
-        // Renderizar tarjetas (Lo más nuevo arriba)
         filas.reverse().forEach((receta) => {
-            // Validación de estructura: Fecha[0], Imagen[1], Nombre[2]...
             if (!receta || receta.length < 3 || !receta[2]) return;
 
             const imagen = (receta[1] && receta[1].length > 100) ? receta[1] : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
@@ -1073,7 +1070,6 @@ async function cargarRecetasDesdeExcel() {
                 </div>
             `;
 
-            // Acción del botón
             div.querySelector('.btn-ver-receta').onclick = () => {
                 abrirDetalleReceta(nombre, ingredientes, elaboracion, imagen);
             };
@@ -1082,25 +1078,23 @@ async function cargarRecetasDesdeExcel() {
         });
 
     } catch (error) {
-        console.error("Fallo crítico en carga:", error);
+        console.error("Error:", error);
         contenedor.innerHTML = `
-            <div style="grid-column: 1/-1; text-align:center; padding: 30px; border: 2px dashed #ffcccc; border-radius: 15px;">
-                <i class="fas fa-exclamation-circle" style="color: #ff5c5c; font-size: 2rem;"></i>
-                <p style="margin: 10px 0; font-weight: bold;">¡Ups! No pudimos cargar las recetas.</p>
-                <small style="color: #888; display: block; margin-bottom: 15px;">Error: ${error.message}</small>
-                <button onclick="cargarRecetasDesdeExcel()" 
-                        style="background: var(--verde-corp); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
-                    REINTENTAR AHORA
-                </button>
+            <div style="grid-column: 1/-1; text-align:center; padding: 40px;">
+                <i class="fas fa-exclamation-triangle" style="color: #ff5c5c; font-size: 2rem; margin-bottom:10px;"></i>
+                <p style="font-weight: bold;">No pudimos conectar con las recetas.</p>
+                <button onclick="cargarRecetasDesdeExcel()" style="margin-top:15px; background:var(--verde-corp); color:white; border:none; padding:10px 20px; border-radius:20px; cursor:pointer;">REINTENTAR</button>
             </div>`;
     }
 }
 
 function abrirDetalleReceta(nombre, ing, elab, img) {
     document.getElementById('det-nombre').innerText = nombre;
-    // Reemplazo de saltos de línea para visualización correcta
     document.getElementById('det-ing').innerHTML = String(ing).replace(/\n/g, '<br>');
     document.getElementById('det-elab').innerHTML = String(elab).replace(/\n/g, '<br>');
     document.getElementById('det-img-full').src = img;
     document.getElementById('modal-detalle-receta').style.display = 'block';
 }
+
+// Ejecución inmediata de seguridad al cargar el script
+cargarRecetasDesdeExcel();
