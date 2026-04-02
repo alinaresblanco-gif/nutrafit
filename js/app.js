@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyBxGlKSx3WTtjdsK400CO0dOD1iqmMSEsaEVi81j3ymBpJhVLCCAKqJi_xRq8kkjIU/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzYVWb5SrdcD8f_mhPBvT9LbLFEHVnCp2hI54wTnIc46ACtn_QxXLniulB8pbCs5lXa/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -894,12 +894,12 @@ function cerrarGpsMini() {
     }
 }
 /* ============================================================
-    ACCIONES PARA MI LIBRO DE RECETAS (ACTUALIZADO CON FOTO)
+    ACCIONES PARA MI LIBRO DE RECETAS (VERSION LIMPIA)
    ============================================================ */
 
-let imagenRecetaBase64 = null; // Variable global para la foto
+let imagenRecetaBase64 = null;
 
-// Función volver (MODIFICADA PARA DETECTAR RUTA CORRECTA)
+// Función volver corregida
 function volverInicio() {
     if (window.location.pathname.includes('/vistas/')) {
         window.location.href = '../index.html';
@@ -908,15 +908,21 @@ function volverInicio() {
     }
 }
 
-// Funciones para Captura de Imagen (Cámara y Galería)
+// Funciones para Captura de Imagen
 function intentarHacerFoto() {
     const input = document.getElementById('input-captura');
-    if(input) { input.setAttribute('capture', 'environment'); input.click(); }
+    if (input) {
+        input.setAttribute('capture', 'environment');
+        input.click();
+    }
 }
 
 function intentarSubirCaptura() {
     const input = document.getElementById('input-captura');
-    if(input) { input.removeAttribute('capture'); input.click(); }
+    if (input) {
+        input.removeAttribute('capture');
+        input.click();
+    }
 }
 
 function previsualizarImagen(input) {
@@ -925,7 +931,7 @@ function previsualizarImagen(input) {
         lector.onload = e => {
             imagenRecetaBase64 = e.target.result.split(',')[1];
             const vistaPrevia = document.getElementById('previa-receta-cont');
-            if(vistaPrevia) {
+            if (vistaPrevia) {
                 vistaPrevia.src = e.target.result;
                 vistaPrevia.style.display = 'block';
             }
@@ -934,26 +940,24 @@ function previsualizarImagen(input) {
     }
 }
 
-// Abre el formulario al dar al botón +
 function abrirFormulario() {
     document.getElementById('seccion-explorar').style.display = 'none';
     document.getElementById('seccion-formulario').style.display = 'block';
 }
 
-// Cierra todo y vuelve al listado
 function cerrarTodo() {
     document.getElementById('seccion-formulario').style.display = 'none';
     document.getElementById('modal-detalle-receta').style.display = 'none';
     document.getElementById('seccion-explorar').style.display = 'block';
-    // Limpiamos rastro de fotos al cerrar o cancelar
     imagenRecetaBase64 = null;
-    if(document.getElementById('previa-receta-cont')) document.getElementById('previa-receta-cont').style.display = 'none';
+    const vistaPrevia = document.getElementById('previa-receta-cont');
+    if (vistaPrevia) vistaPrevia.style.display = 'none';
 }
 
-// Guarda en el Excel (Con envío de imagenBase64)
+// Guardar Receta
 async function guardarRecetaJS() {
     const nombre = document.getElementById('form-nombre').value;
-    if(!nombre) return alert("Por favor, escribe el nombre de la receta");
+    if (!nombre) return alert("Por favor, escribe el nombre de la receta");
 
     const btn = document.querySelector('.btn-accion-verde');
     const textoOriginal = btn.innerHTML;
@@ -966,36 +970,34 @@ async function guardarRecetaJS() {
         categoria: document.getElementById('form-categoria').value,
         ingredientes: document.getElementById('form-ingredientes').value,
         elaboracion: document.getElementById('form-elaboracion').value,
-        imagenBase64: imagenRecetaBase64 // <-- Aquí enviamos la foto
+        imagenBase64: imagenRecetaBase64
     };
 
     try {
-        await fetch(URL_GOOGLE_SCRIPT, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify(datos) 
+        await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(datos)
         });
-        
         alert("¡Receta guardada con éxito!");
-        
-        // Resetear campos tras éxito
         document.getElementById('form-nombre').value = "";
         document.getElementById('form-ingredientes').value = "";
         document.getElementById('form-elaboracion').value = "";
         cerrarTodo();
-        
-    } catch(e) {
+        // Recargar la lista automáticamente tras guardar
+        cargarRecetasDesdeExcel();
+    } catch (e) {
         alert("Error al conectar con el servidor");
     } finally {
         btn.disabled = false;
         btn.innerHTML = textoOriginal;
     }
 }
+
 /* ============================================================
-    LECTOR DE RECETAS REALES DESDE EL EXCEL
+    LECTOR DE RECETAS REALES - VERSION CORREGIDA
    ============================================================ */
 
-// Esta función se ejecuta sola al abrir la página
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('contenedor-cards')) {
         cargarRecetasDesdeExcel();
@@ -1006,55 +1008,53 @@ async function cargarRecetasDesdeExcel() {
     const contenedor = document.getElementById('contenedor-cards');
     if (!contenedor) return;
 
-    // 1. Ponemos un mensaje de carga
-    contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Cargando tus recetas...</p>";
+    contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Cargando tu libro de cocina...</p>";
 
     try {
-        // 2. Llamamos al Apps Script pidiendo la tabla "recetas"
-        const respuesta = await fetch(`${URL_GOOGLE_SCRIPT}?tabla=recetas`);
+        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=recetas");
         const filas = await respuesta.json();
 
-        // 3. Limpiamos el contenedor (borra la ensalada fija)
         contenedor.innerHTML = "";
 
-        if (filas.length === 0) {
-            contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Aún no tienes recetas. ¡Pulsa + para añadir la primera!</p>";
+        if (!filas || filas.length === 0) {
+            contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Tu libro está vacío. ¡Añade tu primera receta!</p>";
             return;
         }
 
-        // 4. Dibujamos cada tarjeta con los datos del Excel
-        // Orden en Excel: A:Fecha, B:Imagen, C:Nombre, D:Categoria, E:Ingredientes, F:Elaboracion
-        filas.forEach((receta, index) => {
-            const nombre = receta[2];
-            const imagen = receta[1] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c'; // Foto por defecto si no hay
-            const categoria = receta[3];
-            const ingredientes = receta[4];
-            const elaboracion = receta[5];
+        filas.forEach((receta) => {
+            const imagen = (receta[1] && receta[1].length > 100) ? receta[1] : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
+            const nombre = receta[2] || "Receta sin nombre";
+            const categoria = receta[3] || "Varios";
+            const ingredientes = receta[4] || "";
+            const elaboracion = receta[5] || "";
 
-            const tarjetaHTML = `
-                <div class="tarjeta-receta">
-                    <img src="${imagen}" alt="${nombre}">
-                    <div class="info-tarjeta">
-                        <span style="font-size:0.7rem; color:var(--verde-corp); font-weight:bold;">${categoria.toUpperCase()}</span>
-                        <h3>${nombre}</h3>
-                        <button class="btn-ver-receta" onclick="abrirDetalleReceta('${nombre}', '${ingredientes.replace(/\n/g, "<br>")}', '${elaboracion.replace(/\n/g, "<br>")}', '${imagen}')">VER RECETA</button>
-                    </div>
+            const div = document.createElement('div');
+            div.className = 'tarjeta-receta';
+            div.innerHTML = `
+                <img src="${imagen}" alt="${nombre}">
+                <div class="info-tarjeta">
+                    <span style="font-size:0.7rem; color:var(--verde-corp); font-weight:bold;">${categoria.toUpperCase()}</span>
+                    <h3>${nombre}</h3>
+                    <button class="btn-ver-receta">VER RECETA</button>
                 </div>
             `;
-            contenedor.innerHTML += tarjetaHTML;
-        });
 
+            div.querySelector('.btn-ver-receta').onclick = () => {
+                abrirDetalleReceta(nombre, ingredientes, elaboracion, imagen);
+            };
+
+            contenedor.appendChild(div);
+        });
     } catch (error) {
-        console.error("Error cargando recetas:", error);
-        contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:red;'>Error al conectar con el libro de recetas</p>";
+        console.error("Error al cargar:", error);
+        contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:red;'>Error al conectar con la base de datos.</p>";
     }
 }
 
-// Función para llenar el Modal con la receta pinchada
 function abrirDetalleReceta(nombre, ing, elab, img) {
     document.getElementById('det-nombre').innerText = nombre;
-    document.getElementById('det-ing').innerHTML = ing;
-    document.getElementById('det-elab').innerHTML = elab;
+    document.getElementById('det-ing').innerHTML = ing.replace(/\n/g, '<br>');
+    document.getElementById('det-elab').innerHTML = elab.replace(/\n/g, '<br>');
     document.getElementById('det-img-full').src = img;
     document.getElementById('modal-detalle-receta').style.display = 'block';
 }
