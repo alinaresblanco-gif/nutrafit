@@ -42,7 +42,7 @@
             color: white;
             text-align: center;
             padding: 15px;
-            margin: -15px -15px 20px -15px; /* Para que pegue a los bordes */
+            margin: -15px -15px 20px -15px;
             font-size: 1.4rem;
             font-weight: bold;
         }
@@ -82,9 +82,7 @@
         #previa-receta-cont { width: 100%; height: 150px; border-radius: 12px; margin-bottom: 15px; display: none; object-fit: cover; }
     </style>
 </head>
-<body>
-
-    <div class="cabecera-barra">
+<body id="vista-libro-recetas"> <div class="cabecera-barra">
         <button onclick="volverInicio()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
         </button>
@@ -94,14 +92,9 @@
 
     <div id="seccion-explorar" class="contenedor-principal">
         <div id="contenedor-cards" class="grid-recetas">
-            <div class="tarjeta-receta">
-                <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c" alt="Receta">
-                <div class="info-tarjeta">
-                    <h3>Ensalada NutraFit</h3>
-                    <button class="btn-ver-receta" onclick="verRecetaDemo()">VER RECETA</button>
-                </div>
-            </div>
+            <p style="grid-column: 1/-1; text-align: center; padding: 20px;">Sincronizando con Excel...</p>
         </div>
+        
         <button class="btn-flotante" onclick="abrirFormulario()">
             <i class="fas fa-plus"></i>
         </button>
@@ -156,9 +149,9 @@
         <div class="contenido-detalle">
             <h2 id="det-nombre">Nombre Receta</h2>
             <p><strong>Ingredientes:</strong></p>
-            <p id="det-ing">...</p>
+            <div id="det-ing" style="margin-bottom: 15px; line-height: 1.5;">...</div>
             <p><strong>Elaboración:</strong></p>
-            <p id="det-elab">...</p>
+            <div id="det-elab" style="line-height: 1.5;">...</div>
         </div>
     </div>
 
@@ -166,12 +159,12 @@
     <script src="../js/app.js"></script>
 
     <script>
+        // Lógica de viñetas automática
         const areaIngredientes = document.getElementById('form-ingredientes');
         
         areaIngredientes.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                // Usamos un icono chulo (punto grueso o flecha)
                 const bullet = "\n• "; 
                 const cursorPosition = this.selectionStart;
                 const textBefore = this.value.substring(0, cursorPosition);
@@ -182,10 +175,16 @@
             }
         });
 
-        // Al enfocar por primera vez si está vacío, poner la primera viñeta
         areaIngredientes.addEventListener('focus', function() {
             if (this.value === "") {
                 this.value = "• ";
+            }
+        });
+
+        // MEJORA PREMIUN: Forzar carga al entrar en este HTML
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof cargarRecetasDesdeExcel === 'function') {
+                cargarRecetasDesdeExcel();
             }
         });
     </script>
