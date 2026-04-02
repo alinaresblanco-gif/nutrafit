@@ -1,13 +1,143 @@
-<div class="contenedor-vista">
-    <header class="cabecera-seccion" style="display: flex; align-items: center; justify-content: center; position: relative; padding: 15px;">
-        <button onclick="volverInicio()" class="boton-volver" style="position: absolute; left: 15px;"><i class="fas fa-chevron-left"></i></button>
-        <div class="titulo-cabecera" style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-book-open" style="font-size: 1.5rem;"></i> 
-            <h1 style="margin: 0; font-size: 1.2rem; white-space: nowrap;">MI DIARIO DE COMIDA</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutraFit - Mis Menús Semanales</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root { --verde-corp: #78a978; --verde-oscuro: #5a8a5a; --gris-fondo: #f4f4f4; --rojo-calendario: #e74c3c; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
+
+        /* CABECERA (ESTILO RECETAS) */
+        .cabecera-barra { 
+            background: var(--verde-corp); padding: 10px 15px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            color: white; position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .boton-nav-circular { 
+            background: rgba(255,255,255,0.2); border:none; color:white; 
+            width:38px; height:38px; border-radius:50%; display:flex; 
+            align-items:center; justify-content:center; cursor: pointer;
+        }
+
+        .contenedor-principal { padding: 15px; }
+
+        /* WIDGET DE CRÉDITOS DISPONIBLES */
+        .widget-creditos {
+            background: white; border-radius: 15px; padding: 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--verde-corp);
+        }
+        .info-puntos h4 { margin: 0; color: #666; font-size: 0.8rem; text-transform: uppercase; }
+        .info-puntos p { margin: 5px 0 0; font-size: 1.5rem; font-weight: bold; color: var(--verde-corp); }
+        .icono-puntos { font-size: 2rem; color: #eee; }
+
+        /* GRID DE MENÚS */
+        .grid-menus { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        /* TARJETA TIPO ALMANAQUE */
+        .tarjeta-menu { 
+            background: white; border-radius: 15px; overflow: hidden; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center; padding-bottom: 10px;
+        }
+        
+        /* El "Icono de Calendario" hecho con CSS */
+        .almanaque {
+            width: 100%; background: #eee; position: relative;
+            text-align: center; padding-bottom: 10px; margin-bottom: 10px;
+        }
+        .almanaque-tapa {
+            background: var(--rojo-calendario); color: white;
+            font-size: 0.7rem; font-weight: bold; padding: 5px 0;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .almanaque-cuerpo {
+            font-size: 2.5rem; font-weight: bold; color: #333;
+            line-height: 1; padding: 15px 0 5px;
+        }
+        .almanaque-mes { font-size: 0.8rem; color: #888; font-weight: bold; }
+
+        .info-menu { padding: 0 10px; text-align: center; width: 100%; box-sizing: border-box; }
+        .info-menu h3 { margin: 0 0 10px; font-size: 0.85rem; color: #444; }
+        
+        .btn-ver-menu { 
+            background: var(--verde-corp); color: white; border: none; 
+            padding: 8px; border-radius: 8px; font-weight: bold; 
+            width: 90%; cursor: pointer; font-size: 0.8rem;
+        }
+
+        /* BOTÓN FLOTANTE MÁS */
+        .btn-flotante { 
+            position: fixed; bottom: 30px; right: 25px; 
+            background: var(--verde-corp); color: white; 
+            width: 60px; height: 60px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 24px; border: none; z-index: 999; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(120, 169, 120, 0.4);
+        }
+
+        /* SECCIONES OCULTAS */
+        #seccion-nuevo-menu { display: none; }
+
+    </style>
+</head>
+<body>
+
+    <div class="cabecera-barra">
+        <button onclick="volverInicio()" class="boton-nav-circular">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <strong><i class="fas fa-calendar-alt"></i> MIS MENÚS SEMANALES</strong>
+        <div style="width:38px;"></div>
+    </div>
+
+    <div id="vista-lista-menus" class="contenedor-principal">
+        
+        <div class="widget-creditos">
+            <div class="info-puntos">
+                <h4>Créditos Semanales</h4>
+                <p id="puntos-disponibles">0.00</p>
+            </div>
+            <div class="icono-puntos">
+                <i class="fas fa-star"></i>
+            </div>
         </div>
-    </header>
-    <main class="contenido-seccion" style="text-align: center; padding-top: 50px; color: #666;">
-        <i class="fas fa-utensils" style="font-size: 3rem; color: #78a978; margin-bottom: 15px;"></i>
-        <p>Registro diario de ingestas en construcción...</p>
-    </main>
-</div>
+
+        <div id="contenedor-menus" class="grid-menus">
+            </div>
+
+        <button class="btn-flotante" onclick="abrirFormularioNuevoMenu()">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <div id="seccion-nuevo-menu" class="contenedor-principal">
+        </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/app.js"></script>
+    <script>
+        // Lógica de carga inicial específica de esta vista
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("Vista Diario de Comida cargada");
+            // Aquí llamaremos a las funciones de app.js que crearemos
+            // cargarUltimosCreditos();
+            // cargarTarjetasMenus();
+        });
+
+        // La famosa función de volver que nos dio guerra
+        function volverInicio() {
+            // Como estamos en /vistas/diario-comida.html, subimos un nivel
+            window.location.href = '../index.html';
+        }
+
+        function abrirFormularioNuevoMenu() {
+            alert("Aquí abriremos el acordeón en la Fase 2");
+        }
+    </script>
+</body>
+</html>
