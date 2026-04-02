@@ -989,7 +989,7 @@ async function guardarRecetaJS() {
         
         cerrarTodo();
         
-        // MEJORA 1: Recarga inmediata después de guardar
+        // Recarga inmediata después de guardar
         cargarRecetasDesdeExcel();
         
     } catch (e) {
@@ -1001,20 +1001,18 @@ async function guardarRecetaJS() {
 }
 
 /* ============================================================
-    LECTOR DE RECETAS REALES - VERSIÓN INTELIGENTE
+    LECTOR DE RECETAS REALES - VERSIÓN DE DIAGNÓSTICO SENIOR
    ============================================================ */
 
-// MEJORA 2: Carga al abrir la vista (DOMContentLoaded y EventListener)
+// Carga al abrir la vista
 document.addEventListener('DOMContentLoaded', () => {
-    // Si entramos directamente a la página
     if (document.getElementById('contenedor-cards')) {
         cargarRecetasDesdeExcel();
     }
 });
 
-// Listener global para detectar cuando el usuario navega a la sección de recetas
+// Listener para el menú
 document.addEventListener('click', (e) => {
-    // Ajusta '#btn-menu-recetas' al ID real de tu botón del menú si es distinto
     if (e.target.closest('#btn-menu-recetas') || e.target.closest('.enlace-recetas')) {
         cargarRecetasDesdeExcel();
     }
@@ -1024,26 +1022,37 @@ async function cargarRecetasDesdeExcel() {
     const contenedor = document.getElementById('contenedor-cards');
     if (!contenedor) return;
 
-    contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Actualizando tu libro de cocina...</p>";
+    // MENSAJE DE CARGA SOLICITADO
+    contenedor.innerHTML = `
+        <div style="grid-column: 1/-1; text-align:center; padding: 40px;">
+            <i class="fas fa-cookie-bite fa-spin" style="color:var(--verde-corp); font-size:2.5rem; margin-bottom:15px;"></i>
+            <p style="font-weight:bold; color:#666;">Cargando Recetas...</p>
+        </div>`;
 
     try {
-        // MEJORA 3: Evitar caché con timestamp para ver cambios al instante
-        const url = URL_GOOGLE_SCRIPT + "?tabla=recetas&v=" + new Date().getTime();
-        const respuesta = await fetch(url);
+        // Evitar caché con timestamp
+        const urlFull = URL_GOOGLE_SCRIPT + "?tabla=recetas&v=" + new Date().getTime();
+        
+        const respuesta = await fetch(urlFull);
+        
+        if (!respuesta.ok) throw new Error("No se pudo obtener respuesta del servidor");
+
         const filas = await respuesta.json();
 
-        contenedor.innerHTML = "";
+        contenedor.innerHTML = ""; // Limpiar mensaje de carga
 
         if (!filas || filas.length === 0) {
             contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Tu libro está vacío. ¡Añade tu primera receta!</p>";
             return;
         }
 
-        // MEJORA 4: .reverse() para mostrar lo más nuevo arriba
+        // Dibujar tarjetas (Invertidas: lo nuevo arriba)
         filas.reverse().forEach((receta) => {
-            // Mapeo: 1:Imagen, 2:Nombre, 3:Cat, 4:Ing, 5:Elab
+            // Ignorar filas sin nombre
+            if (!receta[2] || receta[2].trim() === "") return;
+
             const imagen = (receta[1] && receta[1].length > 100) ? receta[1] : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
-            const nombre = receta[2] || "Receta sin nombre";
+            const nombre = receta[2];
             const categoria = receta[3] || "Varios";
             const ingredientes = receta[4] || "";
             const elaboracion = receta[5] || "";
@@ -1051,30 +1060,40 @@ async function cargarRecetasDesdeExcel() {
             const div = document.createElement('div');
             div.className = 'tarjeta-receta';
             div.innerHTML = `
-                <img src="${imagen}" alt="${nombre}" style="width:100%; height:150px; object-fit:cover; border-radius:10px;">
+                <img src="${imagen}" alt="${nombre}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c'">
                 <div class="info-tarjeta">
-                    <span style="font-size:0.7rem; color:var(--verde-corp); font-weight:bold;">${categoria.toUpperCase()}</span>
+                    <span style="font-size:0.7rem; color:var(--verde-corp); font-weight:bold; letter-spacing:1px;">${categoria.toUpperCase()}</span>
                     <h3>${nombre}</h3>
                     <button class="btn-ver-receta">VER RECETA</button>
                 </div>
             `;
 
-            // Programación segura del botón para evitar fallos con caracteres especiales
             div.querySelector('.btn-ver-receta').onclick = () => {
                 abrirDetalleReceta(nombre, ingredientes, elaboracion, imagen);
             };
 
             contenedor.appendChild(div);
         });
+
     } catch (error) {
         console.error("Error al cargar:", error);
-        contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:red;'>Error al sincronizar con el Excel.</p>";
+        
+        // Mensaje de error con botón de reintento
+        contenedor.innerHTML = `
+            <div style="grid-column: 1/-1; text-align:center; padding: 30px; border: 2px dashed #ffcccc; border-radius: 15px;">
+                <i class="fas fa-exclamation-circle" style="color: #ff5c5c; font-size: 2rem;"></i>
+                <p style="margin: 10px 0; font-weight: bold;">¡Ups! No pudimos cargar las recetas.</p>
+                <small style="color: #888; display: block; margin-bottom: 15px;">Error: ${error.message}</small>
+                <button onclick="cargarRecetasDesdeExcel()" 
+                        style="background: var(--verde-corp); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    REINTENTAR AHORA
+                </button>
+            </div>`;
     }
 }
 
 function abrirDetalleReceta(nombre, ing, elab, img) {
     document.getElementById('det-nombre').innerText = nombre;
-    // Soporte para saltos de línea tanto en ingredientes como elaboración
     document.getElementById('det-ing').innerHTML = String(ing).replace(/\n/g, '<br>');
     document.getElementById('det-elab').innerHTML = String(elab).replace(/\n/g, '<br>');
     document.getElementById('det-img-full').src = img;
