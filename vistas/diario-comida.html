@@ -30,18 +30,31 @@
 
         .contenedor-principal { padding: 15px; }
 
-        /* WIDGET SUPERIOR: RESUMEN DE HOY / PRÓXIMO */
-        .resumen-superior {
-            background: white; border-radius: 15px; padding: 15px;
-            margin-bottom: 20px; display: flex; align-items: center;
-            border-left: 6px solid var(--verde-corp);
+        /* BUSCADOR DE FECHAS */
+        .contenedor-buscador-fecha {
+            background: white; border-radius: 15px; padding: 10px 15px;
+            margin-bottom: 10px; display: flex; align-items: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+        .contenedor-buscador-fecha i { color: var(--verde-corp); margin-right: 10px; }
+        .input-fecha-busqueda {
+            border: none; outline: none; font-family: inherit; font-size: 1rem;
+            color: #555; width: 100%; cursor: pointer;
+        }
+
+        /* ETIQUETA DE INSTRUCCIÓN */
+        .resumen-superior {
+            background: #fdfdfd; border-radius: 12px; padding: 12px;
+            margin-bottom: 20px; display: flex; align-items: center;
+            border-left: 5px solid var(--verde-corp);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
         }
 
         /* GRID DE TARJETAS */
         .grid-menus { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-        /* TARJETA ALMANAQUE MEJORADA */
+        /* TARJETA ALMANAQUE */
         .tarjeta-menu { 
             background: white; border-radius: 20px; overflow: hidden; 
             box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: 0.3s;
@@ -49,46 +62,28 @@
             border: 1px solid #eee;
         }
         
-        .almanaque {
-            width: 100%; background: #fff; text-align: center;
-            padding-bottom: 15px;
-        }
+        .almanaque { width: 100%; background: #fff; text-align: center; padding-bottom: 15px; }
         .almanaque-tapa {
             background: var(--rojo-calendario); color: white;
             font-size: 0.75rem; font-weight: bold; padding: 8px 0;
             text-transform: uppercase; letter-spacing: 2px;
             border-bottom: 2px dashed rgba(255,255,255,0.3);
         }
-        .almanaque-dia {
-            font-size: 2.8rem; font-weight: 800; color: #333;
-            line-height: 1; padding: 15px 0 5px;
-        }
-        .almanaque-mes { 
-            font-size: 0.9rem; color: #666; font-weight: bold; 
-            text-transform: uppercase;
-        }
+        .almanaque-dia { font-size: 2.8rem; font-weight: 800; color: #333; line-height: 1; padding: 15px 0 5px; }
+        .almanaque-mes { font-size: 0.9rem; color: #666; font-weight: bold; text-transform: uppercase; }
 
-        /* SECCIÓN DE CRÉDITOS EN TARJETA */
+        /* SECCIÓN DE CRÉDITOS */
         .stats-menu {
-            background: #f9fdf9; padding: 10px;
-            border-top: 1px solid #f0f0f0;
-            display: flex; align-items: center; justify-content: center;
-            gap: 8px;
+            background: #f9fdf9; padding: 10px; border-top: 1px solid #f0f0f0;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
         }
         .estrella-viva {
-            color: var(--amarillo-estrella);
-            font-size: 1.1rem;
-            filter: drop-shadow(0 0 2px rgba(255, 204, 0, 0.5));
+            color: var(--amarillo-estrella); font-size: 1rem;
             animation: brillo 2s infinite alternate;
         }
-        .puntos-texto {
-            font-weight: bold; color: var(--verde-oscuro); font-size: 1rem;
-        }
+        .creditos-texto { font-weight: bold; color: var(--verde-oscuro); font-size: 0.95rem; }
 
-        @keyframes brillo {
-            from { transform: scale(1); opacity: 0.8; }
-            to { transform: scale(1.2); opacity: 1; }
-        }
+        @keyframes brillo { from { opacity: 0.7; } to { opacity: 1; transform: scale(1.1); } }
 
         .btn-ver-menu { 
             background: var(--verde-corp); color: white; border: none; 
@@ -96,7 +91,6 @@
             font-size: 0.85rem; text-transform: uppercase;
         }
 
-        /* BOTÓN FLOTANTE */
         .btn-flotante { 
             position: fixed; bottom: 30px; right: 25px; 
             background: var(--verde-corp); color: white; 
@@ -107,7 +101,6 @@
         }
 
         #seccion-nuevo-menu { display: none; }
-
     </style>
 </head>
 <body>
@@ -122,10 +115,15 @@
 
     <div id="vista-lista-menus" class="contenedor-principal">
         
+        <div class="contenedor-buscador-fecha">
+            <i class="fas fa-search-location"></i>
+            <input type="date" id="busqueda-fecha-menu" class="input-fecha-busqueda" onchange="filtrarPorFecha()">
+        </div>
+
         <div class="resumen-superior">
-            <i class="fas fa-info-circle" style="color: var(--verde-corp); margin-right: 15px; font-size: 1.2rem;"></i>
-            <p style="margin:0; font-size: 0.9rem; color: #555;">
-                Selecciona una semana para ver tu planificación o pulsa <b>+</b> para crear una nueva.
+            <i class="fas fa-info-circle" style="color: var(--verde-corp); margin-right: 15px; font-size: 1.1rem;"></i>
+            <p style="margin:0; font-size: 0.85rem; color: #666;">
+                Selecciona una semana o pulsa <b>+</b> para crear una nueva planificación.
             </p>
         </div>
 
@@ -138,20 +136,7 @@
                 </div>
                 <div class="stats-menu">
                     <i class="fas fa-star estrella-viva"></i>
-                    <span class="puntos-texto">42.5 pts</span>
-                </div>
-                <button class="btn-ver-menu" onclick="verMenuDetalle('id_ejemplo')">Ver Plan</button>
-            </div>
-
-            <div class="tarjeta-menu">
-                <div class="almanaque">
-                    <div class="almanaque-tapa">Inicia Lunes</div>
-                    <div class="almanaque-dia">30</div>
-                    <div class="almanaque-mes">Marzo</div>
-                </div>
-                <div class="stats-menu">
-                    <i class="fas fa-star estrella-viva"></i>
-                    <span class="puntos-texto">38.0 pts</span>
+                    <span class="creditos-texto">42.5 Créditos</span>
                 </div>
                 <button class="btn-ver-menu">Ver Plan</button>
             </div>
@@ -168,15 +153,17 @@
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        function volverInicio() {
-            window.location.href = '../index.html';
+        function volverInicio() { window.location.href = '../index.html'; }
+
+        function filtrarPorFecha() {
+            const fechaSeleccionada = document.getElementById('busqueda-fecha-menu').value;
+            console.log("Buscando planes para la fecha:", fechaSeleccionada);
+            // Aquí añadiremos la lógica para filtrar las tarjetas que cargue el Excel
         }
 
         function abrirFormularioNuevoMenu() {
-            // Aquí ocultaremos la lista y mostraremos el formulario acordeón
             document.getElementById('vista-lista-menus').style.display = 'none';
             document.getElementById('seccion-nuevo-menu').style.display = 'block';
-            // Llamaríamos a: inicializarAcordeonMenu();
         }
     </script>
 </body>
