@@ -15,7 +15,7 @@
         }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
 
-        /* CABECERA */
+        /* CABECERA ESTILO NUTRAFIT */
         .cabecera-barra { 
             background: var(--verde-corp); padding: 10px 15px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -40,7 +40,7 @@
         .contenedor-buscador-fecha i { color: var(--verde-corp); margin-right: 10px; }
         .input-fecha-busqueda {
             border: none; outline: none; font-family: inherit; font-size: 1rem;
-            color: #555; width: 100%; cursor: pointer;
+            color: #555; width: 100%; cursor: pointer; background: transparent;
         }
 
         /* ETIQUETA DE INSTRUCCIÓN */
@@ -54,7 +54,7 @@
         /* GRID DE TARJETAS */
         .grid-menus { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-        /* TARJETA ALMANAQUE */
+        /* TARJETA ALMANAQUE SENIOR */
         .tarjeta-menu { 
             background: white; border-radius: 20px; overflow: hidden; 
             box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: 0.3s;
@@ -72,7 +72,7 @@
         .almanaque-dia { font-size: 2.8rem; font-weight: 800; color: #333; line-height: 1; padding: 15px 0 5px; }
         .almanaque-mes { font-size: 0.9rem; color: #666; font-weight: bold; text-transform: uppercase; }
 
-        /* SECCIÓN DE CRÉDITOS */
+        /* SECCIÓN DE CRÉDITOS DENTRO DE TARJETA */
         .stats-menu {
             background: #f9fdf9; padding: 10px; border-top: 1px solid #f0f0f0;
             display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -83,14 +83,20 @@
         }
         .creditos-texto { font-weight: bold; color: var(--verde-oscuro); font-size: 0.95rem; }
 
-        @keyframes brillo { from { opacity: 0.7; } to { opacity: 1; transform: scale(1.1); } }
-
-        .btn-ver-menu { 
-            background: var(--verde-corp); color: white; border: none; 
-            padding: 10px; font-weight: bold; width: 100%; cursor: pointer;
-            font-size: 0.85rem; text-transform: uppercase;
+        @keyframes brillo { 
+            from { opacity: 0.7; transform: scale(1); } 
+            to { opacity: 1; transform: scale(1.15); } 
         }
 
+        /* BOTÓN VER MENÚ */
+        .btn-ver-menu { 
+            background: var(--verde-corp); color: white; border: none; 
+            padding: 12px; font-weight: bold; width: 100%; cursor: pointer;
+            font-size: 0.85rem; text-transform: uppercase; transition: 0.2s;
+        }
+        .btn-ver-menu:active { background: var(--verde-oscuro); }
+
+        /* BOTÓN FLOTANTE (+) */
         .btn-flotante { 
             position: fixed; bottom: 30px; right: 25px; 
             background: var(--verde-corp); color: white; 
@@ -100,6 +106,7 @@
             box-shadow: 0 8px 20px rgba(120, 169, 120, 0.4);
         }
 
+        /* CONTENEDOR PARA FORMULARIO (FASE 2) */
         #seccion-nuevo-menu { display: none; }
     </style>
 </head>
@@ -128,6 +135,7 @@
         </div>
 
         <div id="contenedor-menus" class="grid-menus">
+            
             <div class="tarjeta-menu">
                 <div class="almanaque">
                     <div class="almanaque-tapa">Inicia Lunes</div>
@@ -138,8 +146,9 @@
                     <i class="fas fa-star estrella-viva"></i>
                     <span class="creditos-texto">42.5 Créditos</span>
                 </div>
-                <button class="btn-ver-menu">Ver Plan</button>
+                <button class="btn-ver-menu" onclick="abrirDetalleMenu('ID_EJEMPLO')">Ver Menú</button>
             </div>
+
         </div>
 
         <button class="btn-flotante" onclick="abrirFormularioNuevoMenu()">
@@ -147,24 +156,35 @@
         </button>
     </div>
 
-    <div id="seccion-nuevo-menu" class="contenedor-principal">
+    <div id="seccion-nuevo-menu" class="contenedor-principal" style="background:white; min-height:100vh;">
         </div>
 
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        function volverInicio() { window.location.href = '../index.html'; }
-
-        function filtrarPorFecha() {
-            const fechaSeleccionada = document.getElementById('busqueda-fecha-menu').value;
-            console.log("Buscando planes para la fecha:", fechaSeleccionada);
-            // Aquí añadiremos la lógica para filtrar las tarjetas que cargue el Excel
+        // Función para volver al index.html
+        function volverInicio() { 
+            window.location.href = '../index.html'; 
         }
 
+        // Lógica para filtrar tarjetas por fecha
+        function filtrarPorFecha() {
+            const fechaVal = document.getElementById('busqueda-fecha-menu').value;
+            console.log("Filtrando menús por la fecha:", fechaVal);
+            // Esta función se conectará con el motor de búsqueda en app.js
+        }
+
+        // Función para cambiar de vista (de lista a formulario)
         function abrirFormularioNuevoMenu() {
             document.getElementById('vista-lista-menus').style.display = 'none';
             document.getElementById('seccion-nuevo-menu').style.display = 'block';
+            // Aquí dispararemos la inicialización del formulario en la Fase 2
         }
+
+        // Carga inicial al abrir la página
+        document.addEventListener('DOMContentLoaded', () => {
+            // cargarTarjetasDesdeExcel(); <-- Próximo paso en app.js
+        });
     </script>
 </body>
 </html>
