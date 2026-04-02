@@ -894,7 +894,7 @@ function cerrarGpsMini() {
     }
 }
 /* ============================================================
-    ACCIONES PARA MI LIBRO DE RECETAS (VERSION LIMPIA)
+    ACCIONES PARA MI LIBRO DE RECETAS (VERSIÓN PREMIUM)
    ============================================================ */
 
 let imagenRecetaBase64 = null;
@@ -954,7 +954,7 @@ function cerrarTodo() {
     if (vistaPrevia) vistaPrevia.style.display = 'none';
 }
 
-// Guardar Receta
+// Guardar Receta con actualización instantánea
 async function guardarRecetaJS() {
     const nombre = document.getElementById('form-nombre').value;
     if (!nombre) return alert("Por favor, escribe el nombre de la receta");
@@ -979,13 +979,19 @@ async function guardarRecetaJS() {
             mode: 'no-cors',
             body: JSON.stringify(datos)
         });
+        
         alert("¡Receta guardada con éxito!");
+        
+        // Resetear campos
         document.getElementById('form-nombre').value = "";
         document.getElementById('form-ingredientes').value = "";
         document.getElementById('form-elaboracion').value = "";
+        
         cerrarTodo();
-        // Recargar la lista automáticamente tras guardar
+        
+        // MEJORA 1: Recarga inmediata después de guardar
         cargarRecetasDesdeExcel();
+        
     } catch (e) {
         alert("Error al conectar con el servidor");
     } finally {
@@ -995,11 +1001,21 @@ async function guardarRecetaJS() {
 }
 
 /* ============================================================
-    LECTOR DE RECETAS REALES - VERSION CORREGIDA
+    LECTOR DE RECETAS REALES - VERSIÓN INTELIGENTE
    ============================================================ */
 
+// MEJORA 2: Carga al abrir la vista (DOMContentLoaded y EventListener)
 document.addEventListener('DOMContentLoaded', () => {
+    // Si entramos directamente a la página
     if (document.getElementById('contenedor-cards')) {
+        cargarRecetasDesdeExcel();
+    }
+});
+
+// Listener global para detectar cuando el usuario navega a la sección de recetas
+document.addEventListener('click', (e) => {
+    // Ajusta '#btn-menu-recetas' al ID real de tu botón del menú si es distinto
+    if (e.target.closest('#btn-menu-recetas') || e.target.closest('.enlace-recetas')) {
         cargarRecetasDesdeExcel();
     }
 });
@@ -1008,10 +1024,12 @@ async function cargarRecetasDesdeExcel() {
     const contenedor = document.getElementById('contenedor-cards');
     if (!contenedor) return;
 
-    contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Cargando tu libro de cocina...</p>";
+    contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center;'>Actualizando tu libro de cocina...</p>";
 
     try {
-        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=recetas");
+        // MEJORA 3: Evitar caché con timestamp para ver cambios al instante
+        const url = URL_GOOGLE_SCRIPT + "?tabla=recetas&v=" + new Date().getTime();
+        const respuesta = await fetch(url);
         const filas = await respuesta.json();
 
         contenedor.innerHTML = "";
@@ -1021,7 +1039,9 @@ async function cargarRecetasDesdeExcel() {
             return;
         }
 
-        filas.forEach((receta) => {
+        // MEJORA 4: .reverse() para mostrar lo más nuevo arriba
+        filas.reverse().forEach((receta) => {
+            // Mapeo: 1:Imagen, 2:Nombre, 3:Cat, 4:Ing, 5:Elab
             const imagen = (receta[1] && receta[1].length > 100) ? receta[1] : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
             const nombre = receta[2] || "Receta sin nombre";
             const categoria = receta[3] || "Varios";
@@ -1031,7 +1051,7 @@ async function cargarRecetasDesdeExcel() {
             const div = document.createElement('div');
             div.className = 'tarjeta-receta';
             div.innerHTML = `
-                <img src="${imagen}" alt="${nombre}">
+                <img src="${imagen}" alt="${nombre}" style="width:100%; height:150px; object-fit:cover; border-radius:10px;">
                 <div class="info-tarjeta">
                     <span style="font-size:0.7rem; color:var(--verde-corp); font-weight:bold;">${categoria.toUpperCase()}</span>
                     <h3>${nombre}</h3>
@@ -1039,6 +1059,7 @@ async function cargarRecetasDesdeExcel() {
                 </div>
             `;
 
+            // Programación segura del botón para evitar fallos con caracteres especiales
             div.querySelector('.btn-ver-receta').onclick = () => {
                 abrirDetalleReceta(nombre, ingredientes, elaboracion, imagen);
             };
@@ -1047,14 +1068,15 @@ async function cargarRecetasDesdeExcel() {
         });
     } catch (error) {
         console.error("Error al cargar:", error);
-        contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:red;'>Error al conectar con la base de datos.</p>";
+        contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:red;'>Error al sincronizar con el Excel.</p>";
     }
 }
 
 function abrirDetalleReceta(nombre, ing, elab, img) {
     document.getElementById('det-nombre').innerText = nombre;
-    document.getElementById('det-ing').innerHTML = ing.replace(/\n/g, '<br>');
-    document.getElementById('det-elab').innerHTML = elab.replace(/\n/g, '<br>');
+    // Soporte para saltos de línea tanto en ingredientes como elaboración
+    document.getElementById('det-ing').innerHTML = String(ing).replace(/\n/g, '<br>');
+    document.getElementById('det-elab').innerHTML = String(elab).replace(/\n/g, '<br>');
     document.getElementById('det-img-full').src = img;
     document.getElementById('modal-detalle-receta').style.display = 'block';
 }
