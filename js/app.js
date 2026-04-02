@@ -1083,30 +1083,51 @@ function abrirDetalleReceta(nombre, ing, elab, img) {
 }
 
 /**
- * FUNCIÓN PARA COMPARTIR RECETA POR REDES SOCIALES
+ * FUNCIÓN PREMIUM: CONVIERTE LA VISTA EN IMAGEN Y COMPARTE
  */
 async function compartirReceta() {
-    const nombre = document.getElementById('det-nombre').innerText;
-    const ingredientesOriginales = document.getElementById('det-ing').innerText;
+    const modalElemento = document.getElementById('modal-detalle-receta');
+    const nombreReceta = document.getElementById('det-nombre').innerText;
     
-    const ingredientesTexto = ingredientesOriginales.replace(/\n/g, "\n- ");
+    // Mostramos un aviso visual de carga en el botón
+    const btnCompartir = document.querySelector('[onclick="compartirReceta()"]');
+    const iconoOriginal = btnCompartir.innerHTML;
+    btnCompartir.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-    const textoACompartir = `¡Mira esta receta de NutraFit! 🥗\n\n` +
-                          `*${nombre}*\n\n` +
-                          `*Ingredientes:*\n${ingredientesTexto}\n\n` +
-                          `¡Descarga NutraFit para ver más!`;
+    try {
+        // 1. Capturamos el contenido del modal como imagen
+        // Usamos scale: 2 para que se vea nítido en pantallas retina/móviles
+        const canvas = await html2canvas(modalElemento, {
+            useCORS: true, 
+            logging: false,
+            scale: 2,
+            backgroundColor: "#ffffff"
+        });
 
-    if (navigator.share) {
-        try {
+        // 2. Convertimos el canvas a un archivo real (Blob)
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const archivo = new File([blob], `receta-${nombreReceta}.png`, { type: 'image/png' });
+
+        // 3. Compartimos el archivo usando la API nativa si está disponible
+        if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
             await navigator.share({
-                title: `Receta: ${nombre}`,
-                text: textoACompartir,
+                files: [archivo],
+                title: `Receta de ${nombreReceta}`,
+                text: `¡Mira esta receta de NutraFit: ${nombreReceta}! 🥗`
             });
-        } catch (err) {
-            console.log('Error al compartir:', err);
+        } else {
+            // Si el dispositivo no permite compartir archivos directamente (ej: algunos navegadores de PC)
+            const link = document.createElement('a');
+            link.download = `Receta-${nombreReceta}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            alert("Imagen generada. Se ha descargado para que puedas enviarla.");
         }
-    } else {
-        navigator.clipboard.writeText(textoACompartir);
-        alert("La receta se ha copiado al portapapeles para que la pegues donde quieras.");
+    } catch (err) {
+        console.error("Error al compartir:", err);
+        alert("No se pudo generar la imagen para compartir.");
+    } finally {
+        // Restauramos el icono del botón
+        btnCompartir.innerHTML = iconoOriginal;
     }
 }
