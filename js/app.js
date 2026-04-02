@@ -927,6 +927,23 @@ function cerrarTodo() {
     if (vistaPrevia) vistaPrevia.style.display = 'none';
 }
 
+/** * SISTEMA DE BÚSQUEDA INTELIGENTE */
+function filtrarRecetas() {
+    const textoBusqueda = document.getElementById('busqueda-recetas').value.toLowerCase();
+    const tarjetas = document.querySelectorAll('.tarjeta-receta');
+
+    tarjetas.forEach(tarjeta => {
+        const nombre = tarjeta.querySelector('h3').innerText.toLowerCase();
+        const categoria = tarjeta.querySelector('span').innerText.toLowerCase();
+        
+        if (nombre.includes(textoBusqueda) || categoria.includes(textoBusqueda)) {
+            tarjeta.style.display = "block";
+        } else {
+            tarjeta.style.display = "none";
+        }
+    });
+}
+
 /** * GESTIÓN DE IMÁGENES */
 function intentarHacerFoto() {
     const input = document.getElementById('input-captura');
@@ -1088,17 +1105,14 @@ function abrirDetalleReceta(nombre, ing, elab, img) {
 async function compartirReceta() {
     const nombre = document.getElementById('det-nombre').innerText;
     
-    // Obtenemos los ingredientes (limpiando los iconos de FontAwesome)
     const listaIngredientes = document.querySelectorAll('.lista-ingredientes-pro li');
     let ingredientesTexto = "";
     listaIngredientes.forEach(li => {
         ingredientesTexto += `• ${li.innerText}\n`;
     });
 
-    // Obtenemos la elaboración y limpiamos etiquetas <br> si las hubiera
     const elaboracionTexto = document.getElementById('det-elab').innerText;
 
-    // Construimos el mensaje final
     const mensaje = `🥗 *RECETA NUTRAFIT: ${nombre.toUpperCase()}* 🥗\n\n` +
                     `🛒 *INGREDIENTES:*\n${ingredientesTexto}\n` +
                     `👩‍🍳 *ELABORACIÓN:*\n${elaboracionTexto}\n\n` +
@@ -1114,7 +1128,6 @@ async function compartirReceta() {
             console.log('Error al compartir:', err);
         }
     } else {
-        // Opción de reserva: Copiar al portapapeles
         try {
             await navigator.clipboard.writeText(mensaje);
             alert("La receta se ha copiado al portapapeles. ¡Ya puedes pegarla en WhatsApp!");
@@ -1123,3 +1136,13 @@ async function compartirReceta() {
         }
     }
 }
+
+/** * EVENTO PARA LA BÚSQUEDA 
+ * Aseguramos que la búsqueda funcione en tiempo real
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    const inputBusqueda = document.getElementById('busqueda-recetas');
+    if(inputBusqueda) {
+        inputBusqueda.addEventListener('input', filtrarRecetas);
+    }
+});
