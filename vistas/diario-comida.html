@@ -6,15 +6,21 @@
     <title>NutraFit - Mis Menús Semanales</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        :root { --verde-corp: #78a978; --verde-oscuro: #5a8a5a; --gris-fondo: #f4f4f4; --rojo-calendario: #e74c3c; }
+        :root { 
+            --verde-corp: #78a978; 
+            --verde-oscuro: #5a8a5a; 
+            --gris-fondo: #f4f4f4; 
+            --rojo-calendario: #d9534f; 
+            --amarillo-estrella: #ffcc00;
+        }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
 
-        /* CABECERA (ESTILO RECETAS) */
+        /* CABECERA */
         .cabecera-barra { 
             background: var(--verde-corp); padding: 10px 15px; 
             display: flex; justify-content: space-between; align-items: center; 
             color: white; position: sticky; top: 0; z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .boton-nav-circular { 
             background: rgba(255,255,255,0.2); border:none; color:white; 
@@ -24,63 +30,82 @@
 
         .contenedor-principal { padding: 15px; }
 
-        /* WIDGET DE CRÉDITOS DISPONIBLES */
-        .widget-creditos {
+        /* WIDGET SUPERIOR: RESUMEN DE HOY / PRÓXIMO */
+        .resumen-superior {
             background: white; border-radius: 15px; padding: 15px;
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            border-left: 5px solid var(--verde-corp);
+            margin-bottom: 20px; display: flex; align-items: center;
+            border-left: 6px solid var(--verde-corp);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-        .info-puntos h4 { margin: 0; color: #666; font-size: 0.8rem; text-transform: uppercase; }
-        .info-puntos p { margin: 5px 0 0; font-size: 1.5rem; font-weight: bold; color: var(--verde-corp); }
-        .icono-puntos { font-size: 2rem; color: #eee; }
 
-        /* GRID DE MENÚS */
+        /* GRID DE TARJETAS */
         .grid-menus { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-        /* TARJETA TIPO ALMANAQUE */
+        /* TARJETA ALMANAQUE MEJORADA */
         .tarjeta-menu { 
-            background: white; border-radius: 15px; overflow: hidden; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s;
-            display: flex; flex-direction: column; align-items: center; padding-bottom: 10px;
+            background: white; border-radius: 20px; overflow: hidden; 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: 0.3s;
+            display: flex; flex-direction: column; position: relative;
+            border: 1px solid #eee;
         }
         
-        /* El "Icono de Calendario" hecho con CSS */
         .almanaque {
-            width: 100%; background: #eee; position: relative;
-            text-align: center; padding-bottom: 10px; margin-bottom: 10px;
+            width: 100%; background: #fff; text-align: center;
+            padding-bottom: 15px;
         }
         .almanaque-tapa {
             background: var(--rojo-calendario); color: white;
-            font-size: 0.7rem; font-weight: bold; padding: 5px 0;
-            text-transform: uppercase; letter-spacing: 1px;
+            font-size: 0.75rem; font-weight: bold; padding: 8px 0;
+            text-transform: uppercase; letter-spacing: 2px;
+            border-bottom: 2px dashed rgba(255,255,255,0.3);
         }
-        .almanaque-cuerpo {
-            font-size: 2.5rem; font-weight: bold; color: #333;
+        .almanaque-dia {
+            font-size: 2.8rem; font-weight: 800; color: #333;
             line-height: 1; padding: 15px 0 5px;
         }
-        .almanaque-mes { font-size: 0.8rem; color: #888; font-weight: bold; }
-
-        .info-menu { padding: 0 10px; text-align: center; width: 100%; box-sizing: border-box; }
-        .info-menu h3 { margin: 0 0 10px; font-size: 0.85rem; color: #444; }
-        
-        .btn-ver-menu { 
-            background: var(--verde-corp); color: white; border: none; 
-            padding: 8px; border-radius: 8px; font-weight: bold; 
-            width: 90%; cursor: pointer; font-size: 0.8rem;
+        .almanaque-mes { 
+            font-size: 0.9rem; color: #666; font-weight: bold; 
+            text-transform: uppercase;
         }
 
-        /* BOTÓN FLOTANTE MÁS */
+        /* SECCIÓN DE CRÉDITOS EN TARJETA */
+        .stats-menu {
+            background: #f9fdf9; padding: 10px;
+            border-top: 1px solid #f0f0f0;
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px;
+        }
+        .estrella-viva {
+            color: var(--amarillo-estrella);
+            font-size: 1.1rem;
+            filter: drop-shadow(0 0 2px rgba(255, 204, 0, 0.5));
+            animation: brillo 2s infinite alternate;
+        }
+        .puntos-texto {
+            font-weight: bold; color: var(--verde-oscuro); font-size: 1rem;
+        }
+
+        @keyframes brillo {
+            from { transform: scale(1); opacity: 0.8; }
+            to { transform: scale(1.2); opacity: 1; }
+        }
+
+        .btn-ver-menu { 
+            background: var(--verde-corp); color: white; border: none; 
+            padding: 10px; font-weight: bold; width: 100%; cursor: pointer;
+            font-size: 0.85rem; text-transform: uppercase;
+        }
+
+        /* BOTÓN FLOTANTE */
         .btn-flotante { 
             position: fixed; bottom: 30px; right: 25px; 
             background: var(--verde-corp); color: white; 
-            width: 60px; height: 60px; border-radius: 50%; 
+            width: 65px; height: 65px; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 24px; border: none; z-index: 999; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(120, 169, 120, 0.4);
+            font-size: 28px; border: none; z-index: 999; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(120, 169, 120, 0.4);
         }
 
-        /* SECCIONES OCULTAS */
         #seccion-nuevo-menu { display: none; }
 
     </style>
@@ -91,24 +116,46 @@
         <button onclick="volverInicio()" class="boton-nav-circular">
             <i class="fas fa-chevron-left"></i>
         </button>
-        <strong><i class="fas fa-calendar-alt"></i> MIS MENÚS SEMANALES</strong>
+        <strong>MIS MENÚS SEMANALES</strong>
         <div style="width:38px;"></div>
     </div>
 
     <div id="vista-lista-menus" class="contenedor-principal">
         
-        <div class="widget-creditos">
-            <div class="info-puntos">
-                <h4>Créditos Semanales</h4>
-                <p id="puntos-disponibles">0.00</p>
-            </div>
-            <div class="icono-puntos">
-                <i class="fas fa-star"></i>
-            </div>
+        <div class="resumen-superior">
+            <i class="fas fa-info-circle" style="color: var(--verde-corp); margin-right: 15px; font-size: 1.2rem;"></i>
+            <p style="margin:0; font-size: 0.9rem; color: #555;">
+                Selecciona una semana para ver tu planificación o pulsa <b>+</b> para crear una nueva.
+            </p>
         </div>
 
         <div id="contenedor-menus" class="grid-menus">
+            <div class="tarjeta-menu">
+                <div class="almanaque">
+                    <div class="almanaque-tapa">Inicia Lunes</div>
+                    <div class="almanaque-dia">06</div>
+                    <div class="almanaque-mes">Abril</div>
+                </div>
+                <div class="stats-menu">
+                    <i class="fas fa-star estrella-viva"></i>
+                    <span class="puntos-texto">42.5 pts</span>
+                </div>
+                <button class="btn-ver-menu" onclick="verMenuDetalle('id_ejemplo')">Ver Plan</button>
             </div>
+
+            <div class="tarjeta-menu">
+                <div class="almanaque">
+                    <div class="almanaque-tapa">Inicia Lunes</div>
+                    <div class="almanaque-dia">30</div>
+                    <div class="almanaque-mes">Marzo</div>
+                </div>
+                <div class="stats-menu">
+                    <i class="fas fa-star estrella-viva"></i>
+                    <span class="puntos-texto">38.0 pts</span>
+                </div>
+                <button class="btn-ver-menu">Ver Plan</button>
+            </div>
+        </div>
 
         <button class="btn-flotante" onclick="abrirFormularioNuevoMenu()">
             <i class="fas fa-plus"></i>
@@ -121,22 +168,15 @@
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        // Lógica de carga inicial específica de esta vista
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("Vista Diario de Comida cargada");
-            // Aquí llamaremos a las funciones de app.js que crearemos
-            // cargarUltimosCreditos();
-            // cargarTarjetasMenus();
-        });
-
-        // La famosa función de volver que nos dio guerra
         function volverInicio() {
-            // Como estamos en /vistas/diario-comida.html, subimos un nivel
             window.location.href = '../index.html';
         }
 
         function abrirFormularioNuevoMenu() {
-            alert("Aquí abriremos el acordeón en la Fase 2");
+            // Aquí ocultaremos la lista y mostraremos el formulario acordeón
+            document.getElementById('vista-lista-menus').style.display = 'none';
+            document.getElementById('seccion-nuevo-menu').style.display = 'block';
+            // Llamaríamos a: inicializarAcordeonMenu();
         }
     </script>
 </body>
