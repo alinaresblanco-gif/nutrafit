@@ -894,7 +894,7 @@ function cerrarGpsMini() {
     }
 }
 /* ============================================================
-    ACCIONES PARA MI LIBRO DE RECETAS (VERSIÓN PREMIUM)
+   ACCIONES PARA MI LIBRO DE RECETAS (VERSIÓN PREMIUM)
    ============================================================ */
 
 let imagenRecetaBase64 = null;
@@ -1048,12 +1048,10 @@ setInterval(() => {
 
 /** * MODAL DE DETALLE PREMIUM CON ICONOS INTELIGENTES */
 function abrirDetalleReceta(nombre, ing, elab, img) {
-    // 1. Insertar nombre e imagen
     document.getElementById('det-nombre').innerText = nombre;
     document.getElementById('det-img-full').src = img;
     document.getElementById('det-elab').innerHTML = String(elab).replace(/\n/g, '<br>');
 
-    // 2. Lógica de ICONOS INTELIGENTES para ingredientes
     const listaIng = String(ing).split(/\n|<br>/);
     let htmlIngredientes = '<ul class="lista-ingredientes-pro">';
 
@@ -1061,8 +1059,7 @@ function abrirDetalleReceta(nombre, ing, elab, img) {
         let textoLimpio = linea.replace(/[•\-\*]/g, "").trim();
         if (textoLimpio === "") return;
 
-        // Buscador de iconos por palabras clave
-        let icono = "fa-check-circle"; // Icono por defecto
+        let icono = "fa-check-circle";
         const t = textoLimpio.toLowerCase();
 
         if (t.includes("huevo")) icono = "fa-egg";
@@ -1082,6 +1079,34 @@ function abrirDetalleReceta(nombre, ing, elab, img) {
     htmlIngredientes += '</ul>';
     document.getElementById('det-ing').innerHTML = htmlIngredientes;
 
-    // 3. Mostrar el modal
     document.getElementById('modal-detalle-receta').style.display = 'block';
+}
+
+/**
+ * FUNCIÓN PARA COMPARTIR RECETA POR REDES SOCIALES
+ */
+async function compartirReceta() {
+    const nombre = document.getElementById('det-nombre').innerText;
+    const ingredientesOriginales = document.getElementById('det-ing').innerText;
+    
+    const ingredientesTexto = ingredientesOriginales.replace(/\n/g, "\n- ");
+
+    const textoACompartir = `¡Mira esta receta de NutraFit! 🥗\n\n` +
+                          `*${nombre}*\n\n` +
+                          `*Ingredientes:*\n${ingredientesTexto}\n\n` +
+                          `¡Descarga NutraFit para ver más!`;
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: `Receta: ${nombre}`,
+                text: textoACompartir,
+            });
+        } catch (err) {
+            console.log('Error al compartir:', err);
+        }
+    } else {
+        navigator.clipboard.writeText(textoACompartir);
+        alert("La receta se ha copiado al portapapeles para que la pegues donde quieras.");
+    }
 }
