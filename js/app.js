@@ -899,7 +899,6 @@ function cerrarGpsMini() {
 
 let imagenRecetaBase64 = null;
 
-// Función volver corregida
 function volverInicio() {
     if (window.location.pathname.includes('/vistas/')) {
         window.location.href = '../index.html';
@@ -908,7 +907,6 @@ function volverInicio() {
     }
 }
 
-// Funciones para Captura de Imagen
 function intentarHacerFoto() {
     const input = document.getElementById('input-captura');
     if (input) {
@@ -954,7 +952,6 @@ function cerrarTodo() {
     if (vistaPrevia) vistaPrevia.style.display = 'none';
 }
 
-// Guardar Receta con actualización instantánea
 async function guardarRecetaJS() {
     const nombre = document.getElementById('form-nombre').value;
     if (!nombre) return alert("Por favor, escribe el nombre de la receta");
@@ -981,15 +978,11 @@ async function guardarRecetaJS() {
         });
         
         alert("¡Receta guardada con éxito!");
-        
-        // Resetear campos
         document.getElementById('form-nombre').value = "";
         document.getElementById('form-ingredientes').value = "";
         document.getElementById('form-elaboracion').value = "";
         
         cerrarTodo();
-        
-        // Recarga inmediata después de guardar
         cargarRecetasDesdeExcel();
         
     } catch (e) {
@@ -1001,32 +994,19 @@ async function guardarRecetaJS() {
 }
 
 /* ============================================================
-    LECTOR DE RECETAS REALES - CARGA AUTOMÁTICA E ICONO ANIMADO
+    LECTOR DE RECETAS REALES - VERSIÓN DE CARGA RÁPIDA
    ============================================================ */
-
-// 1. Intentar cargar en cuanto el DOM esté listo
-document.addEventListener('DOMContentLoaded', cargarRecetasDesdeExcel);
-
-// 2. Intentar cargar cuando la ventana termine de procesar todo (Seguro para móviles)
-window.addEventListener('load', cargarRecetasDesdeExcel);
-
-// 3. Listener para clics en menús
-document.addEventListener('click', (e) => {
-    if (e.target.closest('#btn-menu-recetas') || e.target.closest('.enlace-recetas')) {
-        cargarRecetasDesdeExcel();
-    }
-});
 
 async function cargarRecetasDesdeExcel() {
     const contenedor = document.getElementById('contenedor-cards');
     if (!contenedor) return;
 
-    // LIMPIEZA Y MENSAJE DE CARGA SOLICITADO (Sustituye a cualquier texto previo)
+    // 1. INYECTAR EL LOADER DE FORMA INMEDIATA (Borra cualquier texto previo)
     contenedor.innerHTML = `
         <div id="loader-recetas" style="grid-column: 1/-1; text-align:center; padding: 60px 20px;">
-            <i class="fas fa-spinner fa-spin" style="color:var(--verde-corp); font-size:3rem; margin-bottom:20px;"></i>
-            <p style="font-weight:bold; color:#444; font-size:1.2rem; letter-spacing:1px;">CARGANDO RECETAS</p>
-            <span style="color:#888; font-size:0.9rem;">Conectando con tu libro de cocina...</span>
+            <i class="fas fa-spinner fa-spin" style="color:#78a978; font-size:3rem; margin-bottom:20px;"></i>
+            <p style="font-weight:bold; color:#444; font-size:1.2rem; letter-spacing:1px; margin:0;">CARGANDO RECETAS</p>
+            <span style="color:#888; font-size:0.9rem;">Accediendo a tu libro de cocina...</span>
         </div>`;
 
     try {
@@ -1038,18 +1018,17 @@ async function cargarRecetasDesdeExcel() {
             redirect: 'follow'
         });
         
-        if (!respuesta.ok) throw new Error("Error de red");
+        if (!respuesta.ok) throw new Error("Error en respuesta");
 
         const filas = await respuesta.json();
-
-        // Solo limpiamos si hay respuesta para evitar parpadeos vacíos
-        contenedor.innerHTML = ""; 
+        contenedor.innerHTML = ""; // Limpiar el loader
 
         if (!filas || filas.length === 0) {
-            contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align:center; padding:40px;'>Tu libro está vacío. ¡Añade tu primera receta!</p>";
+            contenedor.innerHTML = "<p style='text-align:center; grid-column: 1/-1; padding:20px;'>Aún no tienes recetas. ¡Pulsa el botón + para añadir la primera!</p>";
             return;
         }
 
+        // 2. DIBUJAR TARJETAS
         filas.reverse().forEach((receta) => {
             if (!receta || receta.length < 3 || !receta[2]) return;
 
@@ -1064,7 +1043,7 @@ async function cargarRecetasDesdeExcel() {
             div.innerHTML = `
                 <img src="${imagen}" alt="${nombre}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c'">
                 <div class="info-tarjeta">
-                    <span style="font-size:0.7rem; color:var(--verde-corp); font-weight:bold; letter-spacing:1px;">${categoria.toUpperCase()}</span>
+                    <span style="font-size:0.7rem; color:#78a978; font-weight:bold; letter-spacing:1px;">${categoria.toUpperCase()}</span>
                     <h3>${nombre}</h3>
                     <button class="btn-ver-receta">VER RECETA</button>
                 </div>
@@ -1078,12 +1057,11 @@ async function cargarRecetasDesdeExcel() {
         });
 
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error crítico:", error);
         contenedor.innerHTML = `
             <div style="grid-column: 1/-1; text-align:center; padding: 40px;">
-                <i class="fas fa-exclamation-triangle" style="color: #ff5c5c; font-size: 2rem; margin-bottom:10px;"></i>
-                <p style="font-weight: bold;">No pudimos conectar con las recetas.</p>
-                <button onclick="cargarRecetasDesdeExcel()" style="margin-top:15px; background:var(--verde-corp); color:white; border:none; padding:10px 20px; border-radius:20px; cursor:pointer;">REINTENTAR</button>
+                <p style="color:red; font-weight:bold;">Error de conexión</p>
+                <button onclick="cargarRecetasDesdeExcel()" style="padding:10px 20px; background:#78a978; color:white; border:none; border-radius:10px;">Reintentar</button>
             </div>`;
     }
 }
@@ -1096,5 +1074,5 @@ function abrirDetalleReceta(nombre, ing, elab, img) {
     document.getElementById('modal-detalle-receta').style.display = 'block';
 }
 
-// Ejecución inmediata de seguridad al cargar el script
+// Ejecución automática al cargar script
 cargarRecetasDesdeExcel();
