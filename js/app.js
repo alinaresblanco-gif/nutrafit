@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyuQajvExYowntikh6ezWOi7eKSnmP5_oW68uP6GHF1Fw829YLwVlG80vC7VuJuQ3_T/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwNHFnakcv4UigZ-qv5Ru6fmAH-mefgz5aplKzXc9qy3tTZUv9YOi6CS-tFOMGi2VcN/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1145,112 +1145,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if(inputBusqueda) {
         inputBusqueda.addEventListener('input', filtrarRecetas);
     }
-});
-// ==========================================
-//   LÓGICA NUTRAFIT: MENÚS Y CRÉDITOS
-// ==========================================
-
-async function cargarTarjetasMenus() {
-    const contenedor = document.getElementById('contenedor-menus');
-    if(!contenedor) return; 
-    contenedor.innerHTML = '<p style="text-align:center; width:100%;">Cargando...</p>';
-
-    try {
-        const respuesta = await fetch(`${URL_APP_SCRIPT}?accion=leerHoja&hoja=menus_semanales`);
-        const menus = await respuesta.json();
-        contenedor.innerHTML = ''; 
-
-        if (!menus || menus.length === 0) {
-            contenedor.innerHTML = '<p style="text-align:center;">No hay menús.</p>';
-            return;
-        }
-
-        menus.sort((a, b) => new Date(b.Fecha_Inicio) - new Date(a.Fecha_Inicio));
-
-        menus.forEach(menu => {
-            const fecha = new Date(menu.Fecha_Inicio + "T00:00:00");
-            const dia = fecha.getDate().toString().padStart(2, '0');
-            const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            
-            const tarjetaHTML = `
-                <div class="tarjeta-menu">
-                    <div class="almanaque">
-                        <div class="almanaque-tapa">Inicia Lunes</div>
-                        <div class="almanaque-dia">${dia}</div>
-                        <div class="almanaque-mes">${meses[fecha.getMonth()]}</div>
-                    </div>
-                    <div class="stats-menu">
-                        <i class="fas fa-star estrella-viva"></i>
-                        <span class="creditos-texto">${menu['creditos-semanales'] || 0} Créditos</span>
-                    </div>
-                    <button class="btn-ver-menu" onclick="abrirAcordeonMenu('${menu.ID_Menu}')">Ver Menú</button>
-                </div>`;
-            contenedor.innerHTML += tarjetaHTML;
-        });
-    } catch (e) { contenedor.innerHTML = '<p>Error al cargar.</p>'; }
-}
-
-async function prepararNuevoMenu() {
-    const spanPuntos = document.getElementById('puntos-captados');
-    if(!spanPuntos) return;
-    spanPuntos.innerText = "Buscando créditos...";
-
-    try {
-        // Importante: hoja=Creditos con C mayúscula
-        const respuesta = await fetch(`${URL_APP_SCRIPT}?accion=leerHoja&hoja=Creditos`);
-        const datos = await respuesta.json();
-        
-        if (datos && datos.length > 0) {
-            const ultimo = datos[datos.length - 1];
-            // Buscamos 'total' porque es la columna que usas en el Script para los créditos
-            const pts = ultimo.total || ultimo.creditos || 0;
-            spanPuntos.innerText = `${pts} Créditos Disponibles`;
-            spanPuntos.dataset.valor = pts; 
-        } else {
-            spanPuntos.innerText = "0 Créditos Disponibles";
-            spanPuntos.dataset.valor = 0;
-        }
-    } catch (e) { spanPuntos.innerText = "Error al cargar créditos"; }
-}
-
-async function confirmarYCrearMenu() {
-    const fecha = document.getElementById('input-nueva-fecha').value;
-    const creditos = document.getElementById('puntos-captados').dataset.valor || 0;
-
-    if (!fecha) { alert("Selecciona una fecha."); return; }
-
-    const datosJSON = {
-        accion: "guardarFila",
-        datos: {
-            ID_Menu: "MENU_" + Date.now(),
-            Fecha_Inicio: fecha,
-            "creditos-semanales": creditos
-        }
-    };
-
-    try {
-        const resp = await fetch(URL_APP_SCRIPT, {
-            method: 'POST',
-            body: JSON.stringify(datosJSON)
-        });
-        const res = await resp.json();
-        if(res.result === "success") {
-            alert("¡Menú creado!");
-            navegarA('vista-lista-menus');
-            cargarTarjetasMenus();
-        }
-    } catch (e) { alert("Error al guardar."); }
-}
-
-function actualizarPrevisualizacionFecha(fecha) {
-    if(!fecha) return;
-    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    // El "T00:00:00" es vital para que no te cambie de día por la zona horaria
-    const d = new Date(fecha + "T00:00:00"); 
-    document.getElementById('previsualizacion-mes').innerText = meses[d.getMonth()];
-}
-
-// Inicialización
-document.addEventListener('DOMContentLoaded', () => {
-    cargarTarjetasMenus();
 });
