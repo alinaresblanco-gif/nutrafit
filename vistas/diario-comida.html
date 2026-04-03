@@ -15,7 +15,6 @@
         }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
 
-        /* CABECERA */
         .cabecera-barra { 
             background: var(--verde-corp); padding: 10px 15px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -30,7 +29,6 @@
 
         .contenedor-principal { padding: 15px; }
 
-        /* BUSCADOR DE FECHAS */
         .contenedor-buscador-fecha {
             background: white; border-radius: 15px; padding: 10px 15px;
             margin-bottom: 10px; display: flex; align-items: center;
@@ -43,7 +41,6 @@
             color: #555; width: 100%; cursor: pointer; background: transparent;
         }
 
-        /* ETIQUETA DE INSTRUCCIÓN */
         .resumen-superior {
             background: #fdfdfd; border-radius: 12px; padding: 12px;
             margin-bottom: 20px; display: flex; align-items: center;
@@ -51,10 +48,8 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.03);
         }
 
-        /* GRID DE TARJETAS */
         .grid-menus { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-        /* TARJETA ALMANAQUE */
         .tarjeta-menu { 
             background: white; border-radius: 20px; overflow: hidden; 
             box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: 0.3s;
@@ -72,7 +67,6 @@
         .almanaque-dia { font-size: 2.8rem; font-weight: 800; color: #333; line-height: 1; padding: 15px 0 5px; }
         .almanaque-mes { font-size: 0.9rem; color: #666; font-weight: bold; text-transform: uppercase; }
 
-        /* SECCIÓN DE CRÉDITOS */
         .stats-menu {
             background: #f9fdf9; padding: 10px; border-top: 1px solid #f0f0f0;
             display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -94,7 +88,6 @@
             font-size: 0.85rem; text-transform: uppercase; transition: 0.2s;
         }
 
-        /* BOTÓN FLOTANTE */
         .btn-flotante { 
             position: fixed; bottom: 30px; right: 25px; 
             background: var(--verde-corp); color: white; 
@@ -128,8 +121,7 @@
             </p>
         </div>
 
-        <div id="contenedor-menus" class="grid-menus">
-            </div>
+        <div id="contenedor-menus" class="grid-menus"></div>
 
         <button class="btn-flotante" onclick="abrirFormularioNuevoMenu()">
             <i class="fas fa-plus"></i>
@@ -167,9 +159,7 @@
             <strong id="titulo-menu-semana">MENÚ SEMANAL</strong>
             <button onclick="imprimirPDF()" class="boton-nav-circular"><i class="fas fa-file-pdf"></i></button>
         </div>
-        
-        <div id="contenedor-acordeon">
-            </div>
+        <div id="contenedor-acordeon"></div>
     </div>
 
     <script src="../js/config.js"></script>
@@ -180,6 +170,9 @@
         function cerrarFormulario() {
             document.getElementById('seccion-nuevo-menu').style.display = 'none';
             document.getElementById('vista-lista-menus').style.display = 'block';
+            // Limpiar inputs al cerrar
+            document.getElementById('input-nueva-fecha').value = '';
+            document.getElementById('previsualizacion-mes').innerText = '...';
         }
 
         function cerrarAcordeon() {
@@ -195,7 +188,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Al cargar la vista, pintamos las tarjetas existentes si la función existe en app.js
             if(typeof cargarTarjetasMenus === "function") {
                 cargarTarjetasMenus();
             }

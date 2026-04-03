@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzoXil2mjSg00i0l_LtXuulTuSVdiLbYUnsEvIV3OMvsUsnwDjmsKf1ywr-eh83wYKJ/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw1bpk_bceUYUkAC1GYKqSf9k0mvdekE9xg1hiVDzJB53IY2WJs86utnDUTcS2aCdsv/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1150,24 +1150,23 @@ document.addEventListener('DOMContentLoaded', () => {
 //   LÓGICA ESPECÍFICA: DIARIO DE COMIDA
 // ==========================================
 
-// 1. Cargar las tarjetas existentes desde la hoja menus_semanales
+// 1. Cargar las tarjetas existentes
 async function cargarTarjetasMenus() {
     const contenedor = document.getElementById('contenedor-menus');
-    if(!contenedor) return; // Seguridad por si no estamos en la vista correcta
+    if(!contenedor) return;
     
     contenedor.innerHTML = '<p style="text-align:center; width:100%;">Cargando menús...</p>';
 
     try {
-        const respuesta = await fetch(`${URL_APP_SCRIPT}?accion=leerHoja&hoja=menus_semanales`);
+        const respuesta = await fetch(`${URL_APP_SCRIPT}?tabla=menus_semanales`);
         const menus = await respuesta.json();
         contenedor.innerHTML = ''; 
 
-        if (menus.length === 0) {
+        if (!menus || menus.length === 0) {
             contenedor.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">No hay menús creados aún.</p>';
             return;
         }
 
-        // Ordenamos por fecha para que la más reciente salga primero
         menus.sort((a, b) => new Date(b.Fecha_Inicio) - new Date(a.Fecha_Inicio));
 
         menus.forEach(menu => {
@@ -1198,7 +1197,7 @@ async function cargarTarjetasMenus() {
     }
 }
 
-// 2. Abrir formulario y captar el último valor de créditos de la hoja "creditos"
+// 2. Abrir formulario y captar el último valor de créditos
 async function abrirFormularioNuevoMenu() {
     document.getElementById('vista-lista-menus').style.display = 'none';
     document.getElementById('seccion-nuevo-menu').style.display = 'block';
@@ -1207,15 +1206,13 @@ async function abrirFormularioNuevoMenu() {
     spanPuntos.innerText = "Buscando créditos...";
 
     try {
-        // Leemos la hoja de historial de créditos
-        const respuesta = await fetch(`${URL_APP_SCRIPT}?accion=leerHoja&hoja=creditos`);
+        const respuesta = await fetch(`${URL_APP_SCRIPT}?tabla=creditos`);
         const datosCreditos = await respuesta.json();
         
-        if (datosCreditos.length > 0) {
-            // Buscamos el último registro real (el final del array)
+        if (datosCreditos && datosCreditos.length > 0) {
+            // El último registro está al final. Capturamos la columna 'total' de tu Excel
             const ultimoRegistro = datosCreditos[datosCreditos.length - 1];
-            // IMPORTANTE: Asegúrate de que en tu Excel la columna se llame "creditos"
-            const puntos = ultimoRegistro.creditos || 0; 
+            const puntos = ultimoRegistro.total || 0; 
             spanPuntos.innerText = `${puntos} Créditos Disponibles`;
             spanPuntos.dataset.valor = puntos; 
         } else {
@@ -1223,12 +1220,12 @@ async function abrirFormularioNuevoMenu() {
             spanPuntos.dataset.valor = 0;
         }
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error cargando créditos:", error);
         spanPuntos.innerText = "Error al cargar créditos";
     }
 }
 
-// 3. Guardar el nuevo menú en la hoja menus_semanales
+// 3. Guardar el nuevo menú
 async function confirmarYCrearMenu() {
     const fecha = document.getElementById('input-nueva-fecha').value;
     const creditos = document.getElementById('puntos-captados').dataset.valor;
@@ -1245,32 +1242,27 @@ async function confirmarYCrearMenu() {
     };
 
     try {
-        // Usamos la función de guardar que ya deberías tener en tu app.js o Google Script
         const respuesta = await fetch(URL_APP_SCRIPT, {
             method: 'POST',
             body: JSON.stringify({
-                accion: 'guardarFila',
-                hoja: 'menus_semanales',
+                accion: 'guardar_menu_semanal',
                 datos: nuevoMenu
             })
         });
         
-        // Si usas no-cors, no podrás leer la respuesta, pero si todo va bien:
+        // Google Apps Script suele devolver texto plano "Éxito..."
         alert("¡Semana creada con éxito!");
-        cerrarFormulario(); // Esta función está en el HTML
-        cargarTarjetasMenus(); // Recargamos la lista para ver la nueva tarjeta
+        cerrarFormulario();
+        cargarTarjetasMenus();
     } catch (e) {
+        console.error("Error guardando:", e);
         alert("Error al guardar en el Excel.");
     }
 }
 
-// 4. Función para abrir el detalle (Acordeón)
 function abrirAcordeonMenu(idMenu) {
     document.getElementById('vista-lista-menus').style.display = 'none';
     document.getElementById('seccion-acordeon-menu').style.display = 'block';
-    
-    console.log("Cargando detalles para el menú ID:", idMenu);
-    
-    // Aquí es donde inyectaremos la estructura Lunes-Domingo en el siguiente paso
-    generarEstructuraAcordeon(idMenu);
+    console.log("Cargando menú:", idMenu);
+    // generarEstructuraAcordeon(idMenu); // Implementar en fase siguiente
 }
