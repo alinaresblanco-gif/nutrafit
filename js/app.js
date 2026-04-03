@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyN93UrL41ZYQBBuyCq0D05t5NMaGUHcOj5U4LCXMaioJBedpueM4oTyhKGNo6NZ-eY/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyuQajvExYowntikh6ezWOi7eKSnmP5_oW68uP6GHF1Fw829YLwVlG80vC7VuJuQ3_T/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1147,15 +1147,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 // ==========================================
-//   LÓGICA ESPECÍFICA: DIARIO DE COMIDA
+//   LÓGICA NUTRAFIT: MENÚS Y CRÉDITOS
 // ==========================================
 
-// 1. Cargar las tarjetas existentes
 async function cargarTarjetasMenus() {
     const contenedor = document.getElementById('contenedor-menus');
     if(!contenedor) return; 
-    
-    contenedor.innerHTML = '<p style="text-align:center; width:100%;">Cargando menús...</p>';
+    contenedor.innerHTML = '<p style="text-align:center; width:100%;">Cargando...</p>';
 
     try {
         const respuesta = await fetch(`${URL_APP_SCRIPT}?accion=leerHoja&hoja=menus_semanales`);
@@ -1163,136 +1161,96 @@ async function cargarTarjetasMenus() {
         contenedor.innerHTML = ''; 
 
         if (!menus || menus.length === 0) {
-            contenedor.innerHTML = '<p style="text-align:center; grid-column: 1 / -1;">No hay menús creados aún.</p>';
+            contenedor.innerHTML = '<p style="text-align:center;">No hay menús.</p>';
             return;
         }
 
         menus.sort((a, b) => new Date(b.Fecha_Inicio) - new Date(a.Fecha_Inicio));
 
         menus.forEach(menu => {
-            const fecha = new Date(menu.Fecha_Inicio);
+            const fecha = new Date(menu.Fecha_Inicio + "T00:00:00");
             const dia = fecha.getDate().toString().padStart(2, '0');
             const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            const mesStr = meses[fecha.getMonth()];
-
+            
             const tarjetaHTML = `
                 <div class="tarjeta-menu">
                     <div class="almanaque">
                         <div class="almanaque-tapa">Inicia Lunes</div>
                         <div class="almanaque-dia">${dia}</div>
-                        <div class="almanaque-mes">${mesStr}</div>
+                        <div class="almanaque-mes">${meses[fecha.getMonth()]}</div>
                     </div>
                     <div class="stats-menu">
                         <i class="fas fa-star estrella-viva"></i>
-                        <span class="creditos-texto">${menu['creditos-semanales']} Créditos</span>
+                        <span class="creditos-texto">${menu['creditos-semanales'] || 0} Créditos</span>
                     </div>
                     <button class="btn-ver-menu" onclick="abrirAcordeonMenu('${menu.ID_Menu}')">Ver Menú</button>
                 </div>`;
             contenedor.innerHTML += tarjetaHTML;
         });
-    } catch (error) {
-        console.error("Error al cargar menús:", error);
-        contenedor.innerHTML = '<p>Error al conectar con la base de datos.</p>';
-    }
+    } catch (e) { contenedor.innerHTML = '<p>Error al cargar.</p>'; }
 }
 
-// 2. Abrir formulario
-async function abrirFormularioNuevoMenu() {
-    document.getElementById('vista-lista-menus').style.display = 'none';
-    document.getElementById('seccion-nuevo-menu').style.display = 'block';
-    
+async function prepararNuevoMenu() {
     const spanPuntos = document.getElementById('puntos-captados');
+    if(!spanPuntos) return;
     spanPuntos.innerText = "Buscando créditos...";
 
     try {
-        const respuesta = await fetch(`${URL_APP_SCRIPT}?accion=leerHoja&hoja=creditos`);
-        const datosCreditos = await respuesta.json();
+        // Importante: hoja=Creditos con C mayúscula
+        const respuesta = await fetch(`${URL_APP_SCRIPT}?accion=leerHoja&hoja=Creditos`);
+        const datos = await respuesta.json();
         
-        if (datosCreditos && datosCreditos.length > 0) {
-            const ultimoRegistro = datosCreditos[datosCreditos.length - 1];
-            const puntos = ultimoRegistro.creditos || ultimoRegistro.total || 0; 
-            spanPuntos.innerText = `${puntos} Créditos Disponibles`;
-            spanPuntos.dataset.valor = puntos; 
+        if (datos && datos.length > 0) {
+            const ultimo = datos[datos.length - 1];
+            // Buscamos 'total' porque es la columna que usas en el Script para los créditos
+            const pts = ultimo.total || ultimo.creditos || 0;
+            spanPuntos.innerText = `${pts} Créditos Disponibles`;
+            spanPuntos.dataset.valor = pts; 
         } else {
-            spanPuntos.innerText = "0 Créditos (Sin historial)";
+            spanPuntos.innerText = "0 Créditos Disponibles";
             spanPuntos.dataset.valor = 0;
         }
-    } catch (error) {
-        spanPuntos.innerText = "Error al cargar créditos";
-    }
+    } catch (e) { spanPuntos.innerText = "Error al cargar créditos"; }
 }
 
-// 3. FUNCIÓN DE CIERRE (Reparada)
-function cerrarFormulario() {
-    const form = document.getElementById('seccion-nuevo-menu');
-    const lista = document.getElementById('vista-lista-menus');
-    
-    if (form) form.style.display = 'none';
-    if (lista) lista.style.display = 'block';
-
-    // Limpiar inputs para que al volver esté vacío
-    const inputFecha = document.getElementById('input-nueva-fecha');
-    if (inputFecha) inputFecha.value = '';
-    const preMes = document.getElementById('previsualizacion-mes');
-    if (preMes) preMes.innerText = '...';
-}
-
-function cerrarAcordeon() {
-    document.getElementById('seccion-acordeon-menu').style.display = 'none';
-    document.getElementById('vista-lista-menus').style.display = 'block';
-}
-
-// 4. Guardar menú
 async function confirmarYCrearMenu() {
     const fecha = document.getElementById('input-nueva-fecha').value;
-    const creditos = document.getElementById('puntos-captados').dataset.valor;
+    const creditos = document.getElementById('puntos-captados').dataset.valor || 0;
 
-    if (!fecha) {
-        alert("Por favor, selecciona una fecha de inicio.");
-        return;
-    }
+    if (!fecha) { alert("Selecciona una fecha."); return; }
 
-    const nuevoMenu = {
-        ID_Menu: "MENU_" + Date.now(),
-        Fecha_Inicio: fecha,
-        "creditos-semanales": creditos
+    const datosJSON = {
+        accion: "guardarFila",
+        datos: {
+            ID_Menu: "MENU_" + Date.now(),
+            Fecha_Inicio: fecha,
+            "creditos-semanales": creditos
+        }
     };
 
     try {
-        await fetch(URL_APP_SCRIPT, {
+        const resp = await fetch(URL_APP_SCRIPT, {
             method: 'POST',
-            body: JSON.stringify({
-                accion: 'guardarFila',
-                hoja: 'menus_semanales',
-                datos: nuevoMenu
-            })
+            body: JSON.stringify(datosJSON)
         });
-        
-        alert("¡Semana creada con éxito!");
-        cerrarFormulario(); 
-        cargarTarjetasMenus(); 
-    } catch (e) {
-        alert("Error al guardar.");
-    }
+        const res = await resp.json();
+        if(res.result === "success") {
+            alert("¡Menú creado!");
+            navegarA('vista-lista-menus');
+            cargarTarjetasMenus();
+        }
+    } catch (e) { alert("Error al guardar."); }
 }
 
-// Auxiliares
 function actualizarPrevisualizacionFecha(fecha) {
     if(!fecha) return;
     const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    const d = new Date(fecha);
+    // El "T00:00:00" es vital para que no te cambie de día por la zona horaria
+    const d = new Date(fecha + "T00:00:00"); 
     document.getElementById('previsualizacion-mes').innerText = meses[d.getMonth()];
 }
-
-function volverInicio() { window.location.href = '../index.html'; }
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     cargarTarjetasMenus();
-    
-    // Forzamos el vínculo del botón de aspa por ID por si el onclick fallara
-    const btnX = document.getElementById('btn-cerrar-x');
-    if(btnX) {
-        btnX.addEventListener('click', cerrarFormulario);
-    }
 });
