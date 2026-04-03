@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw1bpk_bceUYUkAC1GYKqSf9k0mvdekE9xg1hiVDzJB53IY2WJs86utnDUTcS2aCdsv/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyN93UrL41ZYQBBuyCq0D05t5NMaGUHcOj5U4LCXMaioJBedpueM4oTyhKGNo6NZ-eY/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1150,15 +1150,15 @@ document.addEventListener('DOMContentLoaded', () => {
 //   LÓGICA ESPECÍFICA: DIARIO DE COMIDA
 // ==========================================
 
-// 1. Cargar las tarjetas existentes
+// 1. Cargar las tarjetas existentes desde la hoja menus_semanales
 async function cargarTarjetasMenus() {
     const contenedor = document.getElementById('contenedor-menus');
-    if(!contenedor) return;
+    if(!contenedor) return; 
     
     contenedor.innerHTML = '<p style="text-align:center; width:100%;">Cargando menús...</p>';
 
     try {
-        const respuesta = await fetch(`${URL_APP_SCRIPT}?tabla=menus_semanales`);
+        const respuesta = await fetch(`${URL_APP_SCRIPT}?accion=leerHoja&hoja=menus_semanales`);
         const menus = await respuesta.json();
         contenedor.innerHTML = ''; 
 
@@ -1197,8 +1197,9 @@ async function cargarTarjetasMenus() {
     }
 }
 
-// 2. Abrir formulario y captar el último valor de créditos
+// 2. Abrir formulario y cambiar vistas
 async function abrirFormularioNuevoMenu() {
+    // CAMBIO DE VISTA: Ocultar lista, mostrar formulario
     document.getElementById('vista-lista-menus').style.display = 'none';
     document.getElementById('seccion-nuevo-menu').style.display = 'block';
     
@@ -1206,13 +1207,13 @@ async function abrirFormularioNuevoMenu() {
     spanPuntos.innerText = "Buscando créditos...";
 
     try {
-        const respuesta = await fetch(`${URL_APP_SCRIPT}?tabla=creditos`);
+        const respuesta = await fetch(`${URL_APP_SCRIPT}?accion=leerHoja&hoja=creditos`);
         const datosCreditos = await respuesta.json();
         
         if (datosCreditos && datosCreditos.length > 0) {
-            // El último registro está al final. Capturamos la columna 'total' de tu Excel
             const ultimoRegistro = datosCreditos[datosCreditos.length - 1];
-            const puntos = ultimoRegistro.total || 0; 
+            // Importante: Verifica si en tu Excel la columna es 'creditos' o 'total'
+            const puntos = ultimoRegistro.creditos || ultimoRegistro.total || 0; 
             spanPuntos.innerText = `${puntos} Créditos Disponibles`;
             spanPuntos.dataset.valor = puntos; 
         } else {
@@ -1220,7 +1221,7 @@ async function abrirFormularioNuevoMenu() {
             spanPuntos.dataset.valor = 0;
         }
     } catch (error) {
-        console.error("Error cargando créditos:", error);
+        console.error("Error:", error);
         spanPuntos.innerText = "Error al cargar créditos";
     }
 }
@@ -1245,24 +1246,24 @@ async function confirmarYCrearMenu() {
         const respuesta = await fetch(URL_APP_SCRIPT, {
             method: 'POST',
             body: JSON.stringify({
-                accion: 'guardar_menu_semanal',
+                accion: 'guardarFila',
+                hoja: 'menus_semanales',
                 datos: nuevoMenu
             })
         });
         
-        // Google Apps Script suele devolver texto plano "Éxito..."
         alert("¡Semana creada con éxito!");
-        cerrarFormulario();
-        cargarTarjetasMenus();
+        // Volvemos a la vista anterior usando la función del aspa
+        cerrarFormulario(); 
+        cargarTarjetasMenus(); 
     } catch (e) {
-        console.error("Error guardando:", e);
         alert("Error al guardar en el Excel.");
     }
 }
 
+// 4. Detalle
 function abrirAcordeonMenu(idMenu) {
     document.getElementById('vista-lista-menus').style.display = 'none';
     document.getElementById('seccion-acordeon-menu').style.display = 'block';
-    console.log("Cargando menú:", idMenu);
-    // generarEstructuraAcordeon(idMenu); // Implementar en fase siguiente
+    console.log("Cargando detalles para el menú ID:", idMenu);
 }

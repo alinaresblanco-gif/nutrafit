@@ -15,6 +15,7 @@
         }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
 
+        /* CABECERA */
         .cabecera-barra { 
             background: var(--verde-corp); padding: 10px 15px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -29,6 +30,7 @@
 
         .contenedor-principal { padding: 15px; }
 
+        /* BUSCADOR DE FECHAS */
         .contenedor-buscador-fecha {
             background: white; border-radius: 15px; padding: 10px 15px;
             margin-bottom: 10px; display: flex; align-items: center;
@@ -41,6 +43,7 @@
             color: #555; width: 100%; cursor: pointer; background: transparent;
         }
 
+        /* RESUMEN / INSTRUCCIONES */
         .resumen-superior {
             background: #fdfdfd; border-radius: 12px; padding: 12px;
             margin-bottom: 20px; display: flex; align-items: center;
@@ -48,6 +51,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.03);
         }
 
+        /* GRID DE TARJETAS */
         .grid-menus { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
         .tarjeta-menu { 
@@ -111,7 +115,7 @@
         
         <div class="contenedor-buscador-fecha">
             <i class="fas fa-search-location"></i>
-            <input type="date" id="busqueda-fecha-menu" class="input-fecha-busqueda" onchange="filtrarPorFecha()">
+            <input type="date" id="busqueda-fecha-menu" class="input-fecha-busqueda">
         </div>
 
         <div class="resumen-superior">
@@ -121,7 +125,8 @@
             </p>
         </div>
 
-        <div id="contenedor-menus" class="grid-menus"></div>
+        <div id="contenedor-menus" class="grid-menus">
+            </div>
 
         <button class="btn-flotante" onclick="abrirFormularioNuevoMenu()">
             <i class="fas fa-plus"></i>
@@ -167,12 +172,12 @@
     <script>
         function volverInicio() { window.location.href = '../index.html'; }
         
+        // FUNCIÓN CLAVE PARA EL BOTÓN DE ASPA
         function cerrarFormulario() {
+            // Ocultamos la ventana de nuevo menú
             document.getElementById('seccion-nuevo-menu').style.display = 'none';
+            // Mostramos la lista principal
             document.getElementById('vista-lista-menus').style.display = 'block';
-            // Limpiar inputs al cerrar
-            document.getElementById('input-nueva-fecha').value = '';
-            document.getElementById('previsualizacion-mes').innerText = '...';
         }
 
         function cerrarAcordeon() {
