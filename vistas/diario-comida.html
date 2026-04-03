@@ -15,7 +15,6 @@
         }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
 
-        /* CABECERA */
         .cabecera-barra { 
             background: var(--verde-corp); padding: 10px 15px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -30,7 +29,6 @@
 
         .contenedor-principal { padding: 15px; }
 
-        /* BUSCADOR DE FECHAS */
         .contenedor-buscador-fecha {
             background: white; border-radius: 15px; padding: 10px 15px;
             margin-bottom: 10px; display: flex; align-items: center;
@@ -43,7 +41,6 @@
             color: #555; width: 100%; cursor: pointer; background: transparent;
         }
 
-        /* RESUMEN / INSTRUCCIONES */
         .resumen-superior {
             background: #fdfdfd; border-radius: 12px; padding: 12px;
             margin-bottom: 20px; display: flex; align-items: center;
@@ -51,7 +48,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.03);
         }
 
-        /* GRID DE TARJETAS */
         .grid-menus { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
         .tarjeta-menu { 
@@ -125,8 +121,7 @@
             </p>
         </div>
 
-        <div id="contenedor-menus" class="grid-menus">
-            </div>
+        <div id="contenedor-menus" class="grid-menus"></div>
 
         <button class="btn-flotante" onclick="abrirFormularioNuevoMenu()">
             <i class="fas fa-plus"></i>
@@ -135,7 +130,7 @@
 
     <div id="seccion-nuevo-menu" class="contenedor-principal" style="display:none; background:white; min-height:100vh;">
         <div style="display:flex; align-items:center; margin-bottom:20px;">
-            <button onclick="cerrarFormulario()" class="boton-nav-circular" style="background:var(--verde-corp); margin-right:15px;">
+            <button id="btn-cerrar-x" onclick="cerrarFormulario()" class="boton-nav-circular" style="background:var(--verde-corp); margin-right:15px;">
                 <i class="fas fa-times"></i>
             </button>
             <h2 style="margin:0; color:var(--verde-oscuro); font-size:1.2rem;">Nueva Planificación</h2>
@@ -155,7 +150,7 @@
             </div>
             <button class="btn-ver-menu" onclick="confirmarYCrearMenu()">GUARDAR E INICIAR MENÚ</button>
         </div>
-        <p style="font-size:0.8rem; color:#888; text-align:center;">* Los créditos se obtienen automáticamente del último registro de tu historial de créditos.</p>
+        <p style="font-size:0.8rem; color:#888; text-align:center;">* Los créditos se obtienen del último registro.</p>
     </div>
 
     <div id="seccion-acordeon-menu" class="contenedor-principal" style="display:none; background:var(--gris-fondo); min-height:100vh;">
@@ -169,34 +164,5 @@
 
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
-    <script>
-        function volverInicio() { window.location.href = '../index.html'; }
-        
-        // FUNCIÓN CLAVE PARA EL BOTÓN DE ASPA
-        function cerrarFormulario() {
-            // Ocultamos la ventana de nuevo menú
-            document.getElementById('seccion-nuevo-menu').style.display = 'none';
-            // Mostramos la lista principal
-            document.getElementById('vista-lista-menus').style.display = 'block';
-        }
-
-        function cerrarAcordeon() {
-            document.getElementById('seccion-acordeon-menu').style.display = 'none';
-            document.getElementById('vista-lista-menus').style.display = 'block';
-        }
-
-        function actualizarPrevisualizacionFecha(fecha) {
-            if(!fecha) return;
-            const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-            const d = new Date(fecha);
-            document.getElementById('previsualizacion-mes').innerText = meses[d.getMonth()];
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            if(typeof cargarTarjetasMenus === "function") {
-                cargarTarjetasMenus();
-            }
-        });
-    </script>
 </body>
 </html>

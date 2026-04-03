@@ -1150,7 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 //   LÓGICA ESPECÍFICA: DIARIO DE COMIDA
 // ==========================================
 
-// 1. Cargar las tarjetas existentes desde la hoja menus_semanales
+// 1. Cargar las tarjetas existentes
 async function cargarTarjetasMenus() {
     const contenedor = document.getElementById('contenedor-menus');
     if(!contenedor) return; 
@@ -1187,8 +1187,7 @@ async function cargarTarjetasMenus() {
                         <span class="creditos-texto">${menu['creditos-semanales']} Créditos</span>
                     </div>
                     <button class="btn-ver-menu" onclick="abrirAcordeonMenu('${menu.ID_Menu}')">Ver Menú</button>
-                </div>
-            `;
+                </div>`;
             contenedor.innerHTML += tarjetaHTML;
         });
     } catch (error) {
@@ -1197,9 +1196,8 @@ async function cargarTarjetasMenus() {
     }
 }
 
-// 2. Abrir formulario y cambiar vistas
+// 2. Abrir formulario
 async function abrirFormularioNuevoMenu() {
-    // CAMBIO DE VISTA: Ocultar lista, mostrar formulario
     document.getElementById('vista-lista-menus').style.display = 'none';
     document.getElementById('seccion-nuevo-menu').style.display = 'block';
     
@@ -1212,7 +1210,6 @@ async function abrirFormularioNuevoMenu() {
         
         if (datosCreditos && datosCreditos.length > 0) {
             const ultimoRegistro = datosCreditos[datosCreditos.length - 1];
-            // Importante: Verifica si en tu Excel la columna es 'creditos' o 'total'
             const puntos = ultimoRegistro.creditos || ultimoRegistro.total || 0; 
             spanPuntos.innerText = `${puntos} Créditos Disponibles`;
             spanPuntos.dataset.valor = puntos; 
@@ -1221,12 +1218,31 @@ async function abrirFormularioNuevoMenu() {
             spanPuntos.dataset.valor = 0;
         }
     } catch (error) {
-        console.error("Error:", error);
         spanPuntos.innerText = "Error al cargar créditos";
     }
 }
 
-// 3. Guardar el nuevo menú
+// 3. FUNCIÓN DE CIERRE (Reparada)
+function cerrarFormulario() {
+    const form = document.getElementById('seccion-nuevo-menu');
+    const lista = document.getElementById('vista-lista-menus');
+    
+    if (form) form.style.display = 'none';
+    if (lista) lista.style.display = 'block';
+
+    // Limpiar inputs para que al volver esté vacío
+    const inputFecha = document.getElementById('input-nueva-fecha');
+    if (inputFecha) inputFecha.value = '';
+    const preMes = document.getElementById('previsualizacion-mes');
+    if (preMes) preMes.innerText = '...';
+}
+
+function cerrarAcordeon() {
+    document.getElementById('seccion-acordeon-menu').style.display = 'none';
+    document.getElementById('vista-lista-menus').style.display = 'block';
+}
+
+// 4. Guardar menú
 async function confirmarYCrearMenu() {
     const fecha = document.getElementById('input-nueva-fecha').value;
     const creditos = document.getElementById('puntos-captados').dataset.valor;
@@ -1243,7 +1259,7 @@ async function confirmarYCrearMenu() {
     };
 
     try {
-        const respuesta = await fetch(URL_APP_SCRIPT, {
+        await fetch(URL_APP_SCRIPT, {
             method: 'POST',
             body: JSON.stringify({
                 accion: 'guardarFila',
@@ -1253,17 +1269,30 @@ async function confirmarYCrearMenu() {
         });
         
         alert("¡Semana creada con éxito!");
-        // Volvemos a la vista anterior usando la función del aspa
         cerrarFormulario(); 
         cargarTarjetasMenus(); 
     } catch (e) {
-        alert("Error al guardar en el Excel.");
+        alert("Error al guardar.");
     }
 }
 
-// 4. Detalle
-function abrirAcordeonMenu(idMenu) {
-    document.getElementById('vista-lista-menus').style.display = 'none';
-    document.getElementById('seccion-acordeon-menu').style.display = 'block';
-    console.log("Cargando detalles para el menú ID:", idMenu);
+// Auxiliares
+function actualizarPrevisualizacionFecha(fecha) {
+    if(!fecha) return;
+    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const d = new Date(fecha);
+    document.getElementById('previsualizacion-mes').innerText = meses[d.getMonth()];
 }
+
+function volverInicio() { window.location.href = '../index.html'; }
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', () => {
+    cargarTarjetasMenus();
+    
+    // Forzamos el vínculo del botón de aspa por ID por si el onclick fallara
+    const btnX = document.getElementById('btn-cerrar-x');
+    if(btnX) {
+        btnX.addEventListener('click', cerrarFormulario);
+    }
+});
