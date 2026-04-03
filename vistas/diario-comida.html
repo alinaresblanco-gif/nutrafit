@@ -15,7 +15,7 @@
         }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
 
-        /* CABECERA ESTILO NUTRAFIT */
+        /* CABECERA */
         .cabecera-barra { 
             background: var(--verde-corp); padding: 10px 15px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -54,7 +54,7 @@
         /* GRID DE TARJETAS */
         .grid-menus { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-        /* TARJETA ALMANAQUE SENIOR */
+        /* TARJETA ALMANAQUE */
         .tarjeta-menu { 
             background: white; border-radius: 20px; overflow: hidden; 
             box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: 0.3s;
@@ -72,7 +72,7 @@
         .almanaque-dia { font-size: 2.8rem; font-weight: 800; color: #333; line-height: 1; padding: 15px 0 5px; }
         .almanaque-mes { font-size: 0.9rem; color: #666; font-weight: bold; text-transform: uppercase; }
 
-        /* SECCIÓN DE CRÉDITOS DENTRO DE TARJETA */
+        /* SECCIÓN DE CRÉDITOS */
         .stats-menu {
             background: #f9fdf9; padding: 10px; border-top: 1px solid #f0f0f0;
             display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -88,15 +88,13 @@
             to { opacity: 1; transform: scale(1.15); } 
         }
 
-        /* BOTÓN VER MENÚ */
         .btn-ver-menu { 
             background: var(--verde-corp); color: white; border: none; 
             padding: 12px; font-weight: bold; width: 100%; cursor: pointer;
             font-size: 0.85rem; text-transform: uppercase; transition: 0.2s;
         }
-        .btn-ver-menu:active { background: var(--verde-oscuro); }
 
-        /* BOTÓN FLOTANTE (+) */
+        /* BOTÓN FLOTANTE */
         .btn-flotante { 
             position: fixed; bottom: 30px; right: 25px; 
             background: var(--verde-corp); color: white; 
@@ -105,22 +103,18 @@
             font-size: 28px; border: none; z-index: 999; cursor: pointer;
             box-shadow: 0 8px 20px rgba(120, 169, 120, 0.4);
         }
-
-        /* CONTENEDOR PARA FORMULARIO (FASE 2) */
-        #seccion-nuevo-menu { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="cabecera-barra">
-        <button onclick="volverInicio()" class="boton-nav-circular">
-            <i class="fas fa-chevron-left"></i>
-        </button>
-        <strong>MIS MENÚS SEMANALES</strong>
-        <div style="width:38px;"></div>
-    </div>
-
     <div id="vista-lista-menus" class="contenedor-principal">
+        <div class="cabecera-barra" style="margin: -15px -15px 15px -15px;">
+            <button onclick="volverInicio()" class="boton-nav-circular">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <strong>MIS MENÚS SEMANALES</strong>
+            <div style="width:38px;"></div>
+        </div>
         
         <div class="contenedor-buscador-fecha">
             <i class="fas fa-search-location"></i>
@@ -135,55 +129,76 @@
         </div>
 
         <div id="contenedor-menus" class="grid-menus">
-            
-            <div class="tarjeta-menu">
-                <div class="almanaque">
-                    <div class="almanaque-tapa">Inicia Lunes</div>
-                    <div class="almanaque-dia">06</div>
-                    <div class="almanaque-mes">Abril</div>
-                </div>
-                <div class="stats-menu">
-                    <i class="fas fa-star estrella-viva"></i>
-                    <span class="creditos-texto">42.5 Créditos</span>
-                </div>
-                <button class="btn-ver-menu" onclick="abrirDetalleMenu('ID_EJEMPLO')">Ver Menú</button>
             </div>
-
-        </div>
 
         <button class="btn-flotante" onclick="abrirFormularioNuevoMenu()">
             <i class="fas fa-plus"></i>
         </button>
     </div>
 
-    <div id="seccion-nuevo-menu" class="contenedor-principal" style="background:white; min-height:100vh;">
+    <div id="seccion-nuevo-menu" class="contenedor-principal" style="display:none; background:white; min-height:100vh;">
+        <div style="display:flex; align-items:center; margin-bottom:20px;">
+            <button onclick="cerrarFormulario()" class="boton-nav-circular" style="background:var(--verde-corp); margin-right:15px;">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 style="margin:0; color:var(--verde-oscuro); font-size:1.2rem;">Nueva Planificación</h2>
         </div>
+
+        <div class="tarjeta-menu" style="width:100%; margin-bottom:20px;">
+            <div class="almanaque">
+                <div class="almanaque-tapa">Seleccionar Inicio</div>
+                <input type="date" id="input-nueva-fecha" class="input-fecha-busqueda" 
+                       style="text-align:center; font-size:1.5rem; font-weight:bold; padding:20px 0; width:100%;"
+                       onchange="actualizarPrevisualizacionFecha(this.value)">
+                <div id="previsualizacion-mes" class="almanaque-mes">...</div>
+            </div>
+            <div class="stats-menu">
+                <i class="fas fa-star estrella-viva"></i>
+                <span id="puntos-captados" class="creditos-texto">Cargando créditos...</span>
+            </div>
+            <button class="btn-ver-menu" onclick="confirmarYCrearMenu()">GUARDAR E INICIAR MENÚ</button>
+        </div>
+        <p style="font-size:0.8rem; color:#888; text-align:center;">* Los créditos se obtienen automáticamente del último registro de tu historial de créditos.</p>
+    </div>
+
+    <div id="seccion-acordeon-menu" class="contenedor-principal" style="display:none; background:var(--gris-fondo); min-height:100vh;">
+        <div class="cabecera-barra" style="position:relative; margin:-15px -15px 20px -15px;">
+            <button onclick="cerrarAcordeon()" class="boton-nav-circular"><i class="fas fa-chevron-left"></i></button>
+            <strong id="titulo-menu-semana">MENÚ SEMANAL</strong>
+            <button onclick="imprimirPDF()" class="boton-nav-circular"><i class="fas fa-file-pdf"></i></button>
+        </div>
+        
+        <div id="contenedor-acordeon">
+            </div>
+    </div>
 
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        // Función para volver al index.html
-        function volverInicio() { 
-            window.location.href = '../index.html'; 
+        function volverInicio() { window.location.href = '../index.html'; }
+        
+        function cerrarFormulario() {
+            document.getElementById('seccion-nuevo-menu').style.display = 'none';
+            document.getElementById('vista-lista-menus').style.display = 'block';
         }
 
-        // Lógica para filtrar tarjetas por fecha
-        function filtrarPorFecha() {
-            const fechaVal = document.getElementById('busqueda-fecha-menu').value;
-            console.log("Filtrando menús por la fecha:", fechaVal);
-            // Esta función se conectará con el motor de búsqueda en app.js
+        function cerrarAcordeon() {
+            document.getElementById('seccion-acordeon-menu').style.display = 'none';
+            document.getElementById('vista-lista-menus').style.display = 'block';
         }
 
-        // Función para cambiar de vista (de lista a formulario)
-        function abrirFormularioNuevoMenu() {
-            document.getElementById('vista-lista-menus').style.display = 'none';
-            document.getElementById('seccion-nuevo-menu').style.display = 'block';
-            // Aquí dispararemos la inicialización del formulario en la Fase 2
+        function actualizarPrevisualizacionFecha(fecha) {
+            if(!fecha) return;
+            const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            const d = new Date(fecha);
+            document.getElementById('previsualizacion-mes').innerText = meses[d.getMonth()];
         }
 
-        // Carga inicial al abrir la página
         document.addEventListener('DOMContentLoaded', () => {
-            // cargarTarjetasDesdeExcel(); <-- Próximo paso en app.js
+            // Al cargar la vista, pintamos las tarjetas existentes si la función existe en app.js
+            if(typeof cargarTarjetasMenus === "function") {
+                cargarTarjetasMenus();
+            }
         });
     </script>
 </body>
