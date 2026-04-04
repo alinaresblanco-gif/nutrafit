@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwNHFnakcv4UigZ-qv5Ru6fmAH-mefgz5aplKzXc9qy3tTZUv9YOi6CS-tFOMGi2VcN/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxJcpwZZGxvQjGpbPjwdUhKUMluw18gpOlJTYOboDIYU-KP4cJGqOihNeONFD922HAc/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1147,8 +1147,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 // ==========================================
-//   LÓGICA SENIOR: MENÚS SEMANALES (UNIFICADO)
+//   LÓGICA SENIOR: MENÚS + DESPENSA CLOUD
 // ==========================================
+
+// VARIABLES GLOBALES PARA LA DESPENSA
+let contextoInsercion = null; // Referencia al momento (comida, cena, etc.) que pidió el ingrediente
+let inventarioCompleto = []; // Cache de los datos que vienen del Excel (hoja "alimentos")
+let itemTemporal = null;     // El ingrediente seleccionado actualmente en la lista
 
 /**
  * 1. NAVEGACIÓN BLINDADA
@@ -1232,56 +1237,127 @@ function crearNuevaFila(contenedor) {
 }
 
 /**
- * 5. FUNCIONES DE INTERACCIÓN Y CÁLCULOS
+ * 5. LÓGICA DE LA DESPENSA (NUEVA IMPLEMENTACIÓN)
  */
-function abrirDespensa(dia, momento) {
-    console.log(`Solicitando alimentos para: ${dia} - Momento: ${momento}`);
-    alert(`Añadir alimento a: ${dia} (${momento})`);
+function abrirDespensa(dia, momento, boton) {
+    // IMPORTANTE: Capturamos la lista exacta de ingredientes donde se pulsó el botón
+    contextoInsercion = boton.closest('.momento-seccion').querySelector('.lista-ingredientes');
+    
+    document.getElementById('modal-despensa').style.display = 'block';
+    console.log(`Abriendo despensa para: ${dia} - ${momento}`);
+
+    // Si la lista está vacía, la pedimos a Google Apps Script
+    if (inventarioCompleto.length === 0) {
+        cargarDatosDesdeExcel();
+    }
+}
+
+function cerrarDespensa() {
+    document.getElementById('modal-despensa').style.display = 'none';
+    itemTemporal = null;
+}
+
+// Conecta con la función 'obtenerAlimentosExcel' en tu Código.gs
+function cargarDatosDesdeExcel() {
+    const contenedor = document.getElementById('lista-despensa');
+    contenedor.innerHTML = '<div style="text-align: center; padding: 20px;">Conectando con la despensa...</div>';
+
+    google.script.run.withSuccessHandler(function(datos) {
+        inventarioCompleto = datos; 
+        renderizarLista(inventarioCompleto);
+    }).obtenerAlimentosExcel(); 
+}
+
+function renderizarLista(lista) {
+    const contenedor = document.getElementById('lista-despensa');
+    contenedor.innerHTML = '';
+    
+    if (lista.length === 0) {
+        contenedor.innerHTML = '<div style="text-align: center; padding: 20px;">No hay ingredientes.</div>';
+        return;
+    }
+
+    lista.forEach((item) => {
+        const div = document.createElement('div');
+        div.className = 'item-despensa';
+        div.onclick = () => seleccionarItem(div, item);
+        div.innerHTML = `
+            <span class="item-nombre">${item.Nombre}</span>
+            <span class="item-netos">${item.Netos} pts</span>
+        `;
+        contenedor.appendChild(div);
+    });
+}
+
+function seleccionarItem(elemento, datos) {
+    document.querySelectorAll('.item-despensa').forEach(i => i.classList.remove('seleccionado'));
+    elemento.classList.add('seleccionado');
+    itemTemporal = datos;
+}
+
+function incluirSeleccionado() {
+    if (!itemTemporal || !contextoInsercion) {
+        alert("Por favor, selecciona primero un ingrediente.");
+        return;
+    }
+
+    const filas = contextoInsercion.querySelectorAll('.fila-ingrediente');
+    const ultimaFila = filas[filas.length - 1];
+    
+    const inputNombre = ultimaFila.querySelector('.input-ingrediente');
+    const inputPuntos = ultimaFila.querySelector('.input-puntos-ing');
+    
+    // Inyectamos los datos del Excel
+    inputNombre.value = itemTemporal.Nombre;
+    inputPuntos.value = itemTemporal.Netos;
+
+    // Actualizamos los puntos totales del día y generamos fila nueva
+    actualizarPuntosDia(inputPuntos);
+    verificarFilaNueva(inputNombre);
+
+    cerrarDespensa();
+}
+
+function filtrarDespensa() {
+    const busqueda = document.getElementById('input-busqueda-despensa').value.toLowerCase();
+    const filtrados = inventarioCompleto.filter(i => 
+        i.Nombre.toString().toLowerCase().includes(busqueda)
+    );
+    renderizarLista(filtrados);
 }
 
 /**
- * IMPLEMENTACIÓN DEFINITIVA: 
- * Tú pones el TOTAL a mano, el sistema suma ingredientes y calcula el RESTAN.
+ * 6. CÁLCULOS DE PUNTOS (MANTENIDO)
  */
 function actualizarPuntosDia(el) {
-    // 1. Buscamos la ficha del día actual (el contenedor padre)
     const ficha = el.closest('.dia-ficha');
     if (!ficha) return;
     
-    // 2. Capturamos los elementos clave de la cabecera y el cuerpo
-    const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); // El TOTAL que tú escribes
-    const displayRestante = ficha.querySelector('.input-restantes-dia');    // El RESTAN calculado
-    const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing'); // Todos los números de los ingredientes
+    const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia');
+    const displayRestante = ficha.querySelector('.input-restantes-dia');
+    const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
     
-    // 3. Sumamos todos los puntos de los ingredientes de los 5 momentos del día
     let sumaConsumida = 0;
     todosLosIngredientes.forEach(ing => {
         sumaConsumida += parseFloat(ing.value) || 0;
     });
 
-    // 4. Obtenemos el valor que tú has puesto manualmente en el cuadro TOTAL
     const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
-
-    // 5. CALCULAMOS EL BALANCE: Tu presupuesto manual - la suma de lo que vas anotando
     const resultadoResta = presupuestoManual - sumaConsumida;
     
-    // 6. Reflejamos el resultado en el cuadro RESTAN automáticamente
     if (displayRestante) {
         displayRestante.value = resultadoResta;
 
-        // 7. Feedback visual: Si te pasas del presupuesto (negativo), se pone en rojo
         if (resultadoResta < 0) {
             displayRestante.style.color = "white";
-            displayRestante.style.backgroundColor = "#e74c3c"; // Fondo rojo alerta
+            displayRestante.style.backgroundColor = "#e74c3c";
             displayRestante.style.fontWeight = "bold";
         } else {
-            displayRestante.style.color = "#d35400"; // Naranja estándar
-            displayRestante.style.backgroundColor = "white"; // Fondo limpio
+            displayRestante.style.color = "#d35400";
+            displayRestante.style.backgroundColor = "white";
             displayRestante.style.fontWeight = "normal";
         }
     }
-
-    console.log(`Día: ${ficha.id} | Presupuesto: ${presupuestoManual} | Consumido: ${sumaConsumida} | Restan: ${resultadoResta}`);
 }
 
 function guardarNuevoMenu() {
@@ -1290,26 +1366,16 @@ function guardarNuevoMenu() {
         alert("⚠️ Por favor, selecciona una fecha de inicio.");
         return;
     }
-    console.log("Iniciando guardado para fecha:", fecha);
     alert("Planificación guardada correctamente.");
     cerrarNuevoMenu();
 }
 
 /**
- * 6. CARGA INICIAL Y EVENTOS
+ * 7. CARGA INICIAL
  */
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Sistema de Menús NutraFit: Activo y Blindado.");
     
-    const inputBusqueda = document.getElementById('busqueda-creditos');
-    if (inputBusqueda) {
-        inputBusqueda.addEventListener('input', () => {
-            console.log("Filtrando tarjetas por créditos:", inputBusqueda.value);
-            // Aquí puedes añadir lógica de filtrado de tarjetas si lo deseas
-        });
-    }
-
-    // Inicializamos todos los cálculos por si hay datos cargados previamente
     document.querySelectorAll('.input-puntos-dia').forEach(inputTotal => {
         actualizarPuntosDia(inputTotal);
     });

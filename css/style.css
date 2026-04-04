@@ -488,3 +488,19 @@ table td {
     font-size: 12px;
     color: #666;
 }
+/* Estilos para los items de la despensa */
+.item-despensa {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.item-despensa:hover { background: #f0f7f0; }
+.item-despensa.seleccionado {
+    background: #e8f4e8;
+    border-left: 4px solid var(--verde-corp);
+}
+.item-nombre { font-weight: 500; color: #333; }
+.item-netos { color: var(--verde-corp); font-weight: bold; }
