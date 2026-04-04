@@ -504,3 +504,37 @@ table td {
 }
 .item-nombre { font-weight: 500; color: #333; }
 .item-netos { color: var(--verde-corp); font-weight: bold; }
+.item-despensa {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    transition: background 0.2s;
+}
+
+.item-despensa:hover {
+    background-color: #f8f9fa;
+}
+
+.item-despensa.seleccionado {
+    background-color: #e1f5fe;
+    border-left: 4px solid #03a9f4;
+}
+
+.item-nombre {
+    font-weight: bold;
+    color: #333;
+}
+
+.item-netos {
+    color: #d35400;
+}
+
+#lista-despensa {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
