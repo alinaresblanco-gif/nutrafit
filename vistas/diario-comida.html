@@ -20,7 +20,7 @@
             overflow-x: hidden;
         }
 
-        /* --- CABECERA PRINCIPAL (VISTA LISTADO) --- */
+        /* --- CABECERA PRINCIPAL --- */
         .cabecera-fija { 
             background: var(--verde-corp); padding: 15px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -34,7 +34,6 @@
             display: flex; align-items: center; justify-content: center; 
             cursor: pointer; transition: 0.3s;
         }
-        .btn-nav:hover { background: rgba(255,255,255,0.4); }
 
         /* --- BUSCADOR Y BANNER --- */
         .contenedor-buscador {
@@ -42,7 +41,6 @@
             padding: 12px 15px; border-radius: 15px;
             display: flex; align-items: center; box-shadow: var(--sombra);
         }
-        .contenedor-buscador i { color: var(--verde-corp); margin-right: 12px; }
         .input-busqueda { border: none; outline: none; width: 100%; font-size: 1rem; }
 
         .banner-info {
@@ -51,23 +49,8 @@
             border-left: 5px solid var(--verde-corp);
             display: flex; align-items: center; gap: 12px;
         }
-        .banner-info p { margin: 0; font-size: 0.85rem; color: #555; }
 
-        .grid-contenido {
-            padding: 0 15px 100px 15px;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-        }
-
-        .btn-mas {
-            position: fixed; bottom: 30px; right: 25px;
-            background: var(--verde-corp); color: white;
-            width: 60px; height: 60px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px; border: none; box-shadow: 0 5px 15px rgba(120, 169, 120, 0.4);
-            cursor: pointer; z-index: 900;
-        }
-
-        /* --- VENTANA EMERGENTE (MODAL) REDISEÑADA --- */
+        /* --- VENTANA EMERGENTE (MODAL) --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
@@ -91,139 +74,60 @@
             to { transform: translateY(0); }
         }
 
-        /* Cabecera Estilo Imagen 3 */
         .cabecera-modal-nueva {
-            background: var(--verde-corp);
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            color: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: var(--verde-corp); padding: 15px 20px;
+            display: flex; align-items: center; color: white;
+            position: sticky; top: 0; z-index: 100;
         }
 
-        .cabecera-modal-nueva .titulo {
-            flex-grow: 1;
-            text-align: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            letter-spacing: 1px;
-        }
+        .cabecera-modal-nueva .titulo { flex-grow: 1; text-align: center; font-weight: bold; letter-spacing: 1px; }
 
-        .formulario-scroll {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #fdfdfd;
-        }
+        .formulario-scroll { flex-grow: 1; overflow-y: auto; padding: 20px; background: #fdfdfd; }
 
-        /* --- SECCIÓN FECHA --- */
         .seccion-fecha {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        .seccion-fecha label {
-            color: var(--verde-corp);
-            font-weight: bold;
-            font-size: 1rem;
-        }
-        .input-fecha-transparent {
-            border: none;
-            background: transparent;
-            font-size: 1.1rem;
-            color: #444;
-            text-align: right;
-            outline: none;
+            display: flex; align-items: center; justify-content: space-between;
+            padding-bottom: 15px; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0;
         }
 
-        /* --- ACORDEÓN DE DÍAS --- */
-        .dia-ficha {
-            margin-bottom: 12px;
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
-            overflow: hidden;
-            transition: 0.3s;
-        }
+        .input-fecha-transparent { border: none; background: transparent; font-size: 1.1rem; color: #444; outline: none; text-align: right; }
+
+        /* --- ESTILOS ACORDEÓN --- */
+        .dia-ficha { margin-bottom: 12px; border-radius: 12px; border: 1px solid #e0e0e0; overflow: hidden; }
 
         .dia-header {
-            background: var(--verde-corp);
-            color: white;
-            padding: 12px 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
+            background: var(--verde-corp); color: white; padding: 12px 15px;
+            display: flex; align-items: center; justify-content: space-between; cursor: pointer;
         }
 
-        .dia-header .btn-add-dia {
-            background: rgba(255,255,255,0.25);
-            border: none; color: white;
-            width: 30px; height: 30px; border-radius: 8px;
+        .btn-add-dia {
+            background: rgba(255,255,255,0.25); border: none; color: white;
+            width: 32px; height: 32px; border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
         }
 
-        .dia-header strong { letter-spacing: 2px; flex-grow: 1; text-align: center; }
+        .input-puntos-dia { width: 35px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: var(--verde-oscuro); outline: none; }
 
-        .input-puntos-dia {
-            width: 35px; border-radius: 5px; border: none;
-            text-align: center; font-weight: bold; color: var(--verde-oscuro);
-            padding: 4px; outline: none;
-        }
+        .dia-cuerpo { padding: 15px; background: white; display: none; }
 
-        /* Cuerpo del día (Acordeón) */
-        .dia-cuerpo {
-            padding: 15px;
-            background: white;
-            display: none; /* Oculto por defecto */
-        }
-
-        /* Clase para el día activo */
+        /* Estado Activo */
         .dia-ficha.activo .dia-cuerpo { display: block; }
-        .dia-ficha.activo { box-shadow: var(--sombra); border-color: var(--verde-corp); }
+        .dia-ficha.activo { border-color: var(--verde-corp); box-shadow: var(--sombra); }
 
-        /* MOMENTOS */
-        .momento-seccion { margin-bottom: 20px; }
+        /* Momentos e Ingredientes */
+        .momento-seccion { margin-bottom: 15px; }
         .momento-titulo {
-            color: var(--verde-corp);
-            font-weight: bold;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--verde-corp);
-            padding-left: 8px;
+            color: var(--verde-corp); font-weight: bold; font-size: 0.8rem;
+            text-transform: uppercase; display: block; margin-bottom: 5px;
+            border-left: 3px solid var(--verde-corp); padding-left: 8px;
         }
 
         .fila-ingrediente {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-            border-bottom: 1px solid #f2f2f2;
-            padding-bottom: 5px;
+            display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid #f2f2f2; padding: 5px 0;
         }
 
-        .input-ingrediente {
-            flex-grow: 1;
-            border: none;
-            outline: none;
-            font-size: 1rem;
-            color: #555;
-            padding: 5px 0;
-        }
-
-        .input-puntos-ing {
-            width: 35px;
-            border: none;
-            background: #f7f7f7;
-            text-align: center;
-            font-weight: bold;
-            color: var(--verde-oscuro);
-            border-radius: 4px;
-        }
+        .input-ingrediente { flex-grow: 1; border: none; outline: none; font-size: 0.95rem; color: #555; background: transparent; }
+        .input-puntos-ing { width: 35px; border: none; background: #f7f7f7; text-align: center; font-weight: bold; color: var(--verde-oscuro); border-radius: 4px; }
 
     </style>
 </head>
@@ -231,139 +135,104 @@
 
     <div id="vista-principal">
         <header class="cabecera-fija">
-            <button onclick="volverInicio()" class="btn-nav">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <span style="font-weight: bold; letter-spacing: 1px;">MIS MENÚS SEMANALES</span>
+            <button onclick="volverInicio()" class="btn-nav"><i class="fas fa-chevron-left"></i></button>
+            <span style="font-weight: bold;">MIS MENÚS SEMANALES</span>
             <div style="width: 40px;"></div>
         </header>
-
         <div class="contenedor-buscador">
-            <i class="fas fa-star"></i>
-            <input type="number" id="busqueda-creditos" class="input-busqueda" placeholder="INTRODUCIR CREDITOS PARA BUSCAR...">
+            <i class="fas fa-star" style="color: var(--verde-corp); margin-right: 10px;"></i>
+            <input type="number" id="busqueda-creditos" class="input-busqueda" placeholder="BUSCAR POR CRÉDITOS...">
         </div>
-
         <div class="banner-info">
-            <i class="fas fa-info-circle" style="color: var(--verde-corp); font-size: 1.2rem;"></i>
-            <p>Selecciona una semana o pulsa <b>+</b> para crear una nueva planificación.</p>
+            <i class="fas fa-info-circle" style="color: var(--verde-corp);"></i>
+            <p style="margin:0; font-size:0.85rem;">Pulsa <b>+</b> para crear una nueva planificación semanal.</p>
         </div>
-
-        <div id="contenedor-menus" class="grid-contenido">
-            </div>
-
-        <button class="btn-mas" onclick="abrirNuevoMenu()">
-            <i class="fas fa-plus"></i>
-        </button>
+        <div id="contenedor-menus" class="grid-contenido"></div>
+        <button class="btn-mas" onclick="abrirNuevoMenu()"><i class="fas fa-plus"></i></button>
     </div>
 
     <div id="modal-nuevo" class="modal-overlay">
         <div class="modal-contenido">
             
             <div class="cabecera-modal-nueva">
-                <button class="btn-nav" onclick="cerrarNuevoMenu()">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
+                <button class="btn-nav" onclick="cerrarNuevoMenu()"><i class="fas fa-arrow-left"></i></button>
                 <div class="titulo">MI MENÚ SEMANAL</div>
                 <div style="display: flex; gap: 8px;">
-                    <button class="btn-nav" onclick="guardarNuevoMenu()" title="Guardar">
-                        <i class="fas fa-save"></i>
-                    </button>
-                    <button class="btn-nav" onclick="cerrarNuevoMenu()" title="Cancelar">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <button class="btn-nav" onclick="guardarNuevoMenu()"><i class="fas fa-save"></i></button>
+                    <button class="btn-nav" onclick="cerrarNuevoMenu()"><i class="fas fa-times"></i></button>
                 </div>
             </div>
 
             <div class="formulario-scroll">
-                
                 <div class="seccion-fecha">
-                    <label><i class="far fa-calendar-alt"></i> Fecha</label>
+                    <label><i class="far fa-calendar-alt"></i> Fecha De Inicio De La Semana</label>
                     <input type="date" id="input-fecha-nueva" class="input-fecha-transparent">
                 </div>
 
                 <div id="acordeon-semanal">
-                    
-                    <div class="dia-ficha activo" id="ficha-lunes">
-                        <div class="dia-header" onclick="toggleDia('ficha-lunes')">
-                            <button class="btn-add-dia" onclick="event.stopPropagation(); abrirDespensa('Lunes')">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <strong>LUNES</strong>
-                            <input type="number" class="input-puntos-dia" value="01" onclick="event.stopPropagation()">
-                        </div>
-                        <div class="dia-cuerpo">
-                            <div class="momento-seccion">
-                                <span class="momento-titulo">Desayuno</span>
-                                <div class="fila-ingrediente">
-                                    <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente...">
-                                    <input type="number" class="input-puntos-ing" value="00">
-                                </div>
-                            </div>
-                            <div class="momento-seccion">
-                                <span class="momento-titulo">Almuerzo</span>
-                                <div class="fila-ingrediente">
-                                    <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente...">
-                                    <input type="number" class="input-puntos-ing" value="00">
-                                </div>
-                            </div>
-                            <div class="momento-seccion">
-                                <span class="momento-titulo">Comida</span>
-                                <div class="fila-ingrediente">
-                                    <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente...">
-                                    <input type="number" class="input-puntos-ing" value="00">
-                                </div>
-                            </div>
-                            <div class="momento-seccion">
-                                <span class="momento-titulo">Merienda</span>
-                                <div class="fila-ingrediente">
-                                    <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente...">
-                                    <input type="number" class="input-puntos-ing" value="00">
-                                </div>
-                            </div>
-                            <div class="momento-seccion">
-                                <span class="momento-titulo">Cena</span>
-                                <div class="fila-ingrediente">
-                                    <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente...">
-                                    <input type="number" class="input-puntos-ing" value="00">
-                                </div>
-                            </div>
-                        </div>
                     </div>
-
-                    <div class="dia-ficha" id="ficha-martes">
-                        <div class="dia-header" onclick="toggleDia('ficha-martes')">
-                            <button class="btn-add-dia" onclick="event.stopPropagation(); abrirDespensa('Martes')">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <strong>MARTES</strong>
-                            <input type="number" class="input-puntos-dia" value="02" onclick="event.stopPropagation()">
-                        </div>
-                        <div class="dia-cuerpo">
-                            </div>
-                    </div>
-
-                    <div style="text-align: center; color: #ccc; padding: 10px;">
-                        <i class="fas fa-ellipsis-h"></i>
-                        <p style="font-size: 0.7rem;">Misma estructura para Miércoles a Domingo</p>
-                    </div>
-
-                </div>
             </div>
         </div>
     </div>
 
-    <script src="../js/config.js"></script>
-    <script src="../js/app.js"></script>
     <script>
-        // Función simple para el diseño del acordeón
-        function toggleDia(idFicha) {
-            // Cerramos todas las fichas
-            document.querySelectorAll('.dia-ficha').forEach(ficha => {
-                ficha.classList.remove('activo');
+        const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+        const momentos = ["Desayuno", "Almuerzo", "Comida", "Merienda", "Cena"];
+
+        // Función para generar el diseño de todos los días
+        function generarDisenoAcordeon() {
+            const contenedor = document.getElementById('acordeon-semanal');
+            contenedor.innerHTML = '';
+
+            diasSemana.forEach((dia, index) => {
+                const activo = index === 0 ? 'activo' : ''; // Lunes abierto por defecto
+                
+                let htmlDia = `
+                <div class="dia-ficha ${activo}" id="ficha-${dia}">
+                    <div class="dia-header" onclick="toggleDia('ficha-${dia}')">
+                        <button class="btn-add-dia" onclick="event.stopPropagation(); abrirDespensa('${dia}')">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <strong style="text-transform: uppercase;">${dia}</strong>
+                        <input type="number" class="input-puntos-dia" value="00" onclick="event.stopPropagation()">
+                    </div>
+                    <div class="dia-cuerpo">`;
+
+                momentos.forEach(momento => {
+                    htmlDia += `
+                        <div class="momento-seccion">
+                            <span class="momento-titulo">${momento}</span>
+                            <div class="fila-ingrediente">
+                                <input type="text" class="input-ingrediente" placeholder="Escribir ingrediente...">
+                                <input type="number" class="input-puntos-ing" value="0">
+                            </div>
+                        </div>`;
+                });
+
+                htmlDia += `</div></div>`;
+                contenedor.innerHTML += htmlDia;
             });
-            // Abrimos la seleccionada
+        }
+
+        // Lógica para abrir/cerrar fichas
+        function toggleDia(idFicha) {
+            const fichas = document.querySelectorAll('.dia-ficha');
+            fichas.forEach(f => f.classList.remove('activo'));
             document.getElementById(idFicha).classList.add('activo');
         }
+
+        // Simulación de apertura de modal para ver el diseño
+        function abrirNuevoMenu() {
+            document.getElementById('modal-nuevo').style.display = 'block';
+            generarDisenoAcordeon();
+        }
+
+        function cerrarNuevoMenu() {
+            document.getElementById('modal-nuevo').style.display = 'none';
+        }
+
+        // Inicializar diseño al cargar
+        window.onload = generarDisenoAcordeon;
     </script>
 </body>
 </html>
