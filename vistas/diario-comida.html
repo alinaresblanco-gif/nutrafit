@@ -3,164 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NutraFit - Mis Menús Semanales</title>
+    <title>NutraFit - Planificador Semanal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root { 
             --verde-corp: #78a978; 
             --verde-oscuro: #5a8a5a; 
-            --gris-fondo: #f4f4f4; 
-            --rojo-calendario: #d9534f; 
-            --amarillo-estrella: #ffcc00;
-        }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
-
-        .cabecera-barra { 
-            background: var(--verde-corp); padding: 10px 15px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            color: white; position: sticky; top: 0; z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        .boton-nav-circular { 
-            background: rgba(255,255,255,0.2); border:none; color:white; 
-            width:38px; height:38px; border-radius:50%; display:flex; 
-            align-items:center; justify-content:center; cursor: pointer;
+            --gris-fondo: #f8f9fa; 
+            --blanco: #ffffff;
         }
 
-        .contenedor-principal { padding: 15px; }
-
-        .contenedor-buscador-fecha {
-            background: white; border-radius: 15px; padding: 10px 15px;
-            margin-bottom: 10px; display: flex; align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            border: 1px solid #eee;
-        }
-        .contenedor-buscador-fecha i { color: var(--verde-corp); margin-right: 10px; }
-        .input-fecha-busqueda {
-            border: none; outline: none; font-family: inherit; font-size: 1rem;
-            color: #555; width: 100%; cursor: pointer; background: transparent;
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background-color: var(--gris-fondo); 
+            color: #333; 
+            overflow-x: hidden;
         }
 
-        .resumen-superior {
-            background: #fdfdfd; border-radius: 12px; padding: 12px;
-            margin-bottom: 20px; display: flex; align-items: center;
+        /* --- CABECERA PRINCIPAL --- */
+        .cabecera-fija { 
+            background: var(--verde-corp); 
+            padding: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            color: white; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-nav { 
+            background: rgba(255,255,255,0.2); 
+            border: none; 
+            color: white; 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        /* --- CONTENEDOR BUSCADOR --- */
+        .contenedor-buscador {
+            background: var(--blanco);
+            margin: 15px;
+            padding: 12px 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .contenedor-buscador i { color: var(--verde-corp); margin-right: 12px; }
+
+        .input-busqueda {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 1rem;
+            color: #444;
+        }
+
+        /* --- MENSAJE INFORMATIVO --- */
+        .banner-info {
+            background: #eef5ee;
+            margin: 0 15px 20px 15px;
+            padding: 15px;
+            border-radius: 12px;
             border-left: 5px solid var(--verde-corp);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .grid-menus { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .banner-info p { margin: 0; font-size: 0.85rem; color: #555; line-height: 1.4; }
 
-        .tarjeta-menu { 
-            background: white; border-radius: 20px; overflow: hidden; 
-            box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: 0.3s;
-            display: flex; flex-direction: column; position: relative;
-            border: 1px solid #eee;
-        }
-        
-        .almanaque { width: 100%; background: #fff; text-align: center; padding-bottom: 15px; }
-        .almanaque-tapa {
-            background: var(--rojo-calendario); color: white;
-            font-size: 0.75rem; font-weight: bold; padding: 8px 0;
-            text-transform: uppercase; letter-spacing: 2px;
-            border-bottom: 2px dashed rgba(255,255,255,0.3);
-        }
-        .almanaque-dia { font-size: 2.8rem; font-weight: 800; color: #333; line-height: 1; padding: 15px 0 5px; }
-        .almanaque-mes { font-size: 0.9rem; color: #666; font-weight: bold; text-transform: uppercase; }
-
-        .stats-menu {
-            background: #f9fdf9; padding: 10px; border-top: 1px solid #f0f0f0;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-        }
-        .estrella-viva {
-            color: var(--amarillo-estrella); font-size: 1rem;
-            animation: brillo 2s infinite alternate;
-        }
-        .creditos-texto { font-weight: bold; color: var(--verde-oscuro); font-size: 0.95rem; }
-
-        @keyframes brillo { 
-            from { opacity: 0.7; transform: scale(1); } 
-            to { opacity: 1; transform: scale(1.15); } 
+        /* --- VISTA DE TARJETAS --- */
+        .grid-contenido {
+            padding: 0 15px 100px 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
-        .btn-ver-menu { 
-            background: var(--verde-corp); color: white; border: none; 
-            padding: 12px; font-weight: bold; width: 100%; cursor: pointer;
-            font-size: 0.85rem; text-transform: uppercase; transition: 0.2s;
+        /* --- BOTÓN FLOTANTE --- */
+        .btn-mas {
+            position: fixed;
+            bottom: 30px;
+            right: 25px;
+            background: var(--verde-corp);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(120, 169, 120, 0.4);
+            cursor: pointer;
+            z-index: 900;
         }
 
-        .btn-flotante { 
-            position: fixed; bottom: 30px; right: 25px; 
-            background: var(--verde-corp); color: white; 
-            width: 65px; height: 65px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 28px; border: none; z-index: 999; cursor: pointer;
-            box-shadow: 0 8px 20px rgba(120, 169, 120, 0.4);
+        /* --- VENTANA EMERGENTE (MODAL) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none; /* Se activa con JS */
+            z-index: 2000;
         }
+
+        .modal-contenido {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: var(--blanco);
+            border-radius: 25px 25px 0 0;
+            padding-bottom: 40px;
+            animation: deslizarSubir 0.4s ease-out;
+        }
+
+        @keyframes deslizarSubir {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .cabecera-modal {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .btn-texto {
+            background: none;
+            border: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        .btn-cancelar { color: #888; }
+        .btn-guardar { color: var(--verde-corp); }
+
+        .formulario-cuerpo { padding: 25px 20px; }
+
+        .etiqueta-verde {
+            display: block;
+            color: var(--verde-oscuro);
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .input-grande {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .input-grande:focus { border-color: var(--verde-corp); }
+
     </style>
 </head>
 <body>
 
-    <div id="vista-lista-menus" class="contenedor-principal">
-        <div class="cabecera-barra" style="margin: -15px -15px 15px -15px;">
-            <button onclick="volverInicio()" class="boton-nav-circular">
-                <i class="fas fa-chevron-left"></i>
+    <div id="vista-listado">
+        <header class="cabecera-fija">
+            <button onclick="location.href='../index.html'" class="btn-nav">
+                <i class="fas fa-arrow-left"></i>
             </button>
-            <strong>MIS MENÚS SEMANALES</strong>
-            <div style="width:38px;"></div>
-        </div>
-        
-        <div class="contenedor-buscador-fecha">
-            <i class="fas fa-search-location"></i>
-            <input type="date" id="busqueda-fecha-menu" class="input-fecha-busqueda">
-        </div>
+            <span style="font-weight: bold; letter-spacing: 1px;">MIS MENÚS SEMANALES</span>
+            <div style="width: 40px;"></div> </header>
 
-        <div class="resumen-superior">
-            <i class="fas fa-info-circle" style="color: var(--verde-corp); margin-right: 15px; font-size: 1.1rem;"></i>
-            <p style="margin:0; font-size: 0.85rem; color: #666;">
-                Selecciona una semana o pulsa <b>+</b> para crear una nueva planificación.
-            </p>
+        <div class="contenedor-buscador">
+            <i class="fas fa-star"></i>
+            <input type="number" id="busqueda-creditos" class="input-busqueda" placeholder="INTRODUCIR CREDITOS PARA BUSCAR...">
         </div>
 
-        <div id="contenedor-menus" class="grid-menus"></div>
+        <div class="banner-info">
+            <i class="fas fa-info-circle" style="color: var(--verde-corp); font-size: 1.2rem;"></i>
+            <p>Selecciona una semana de la lista inferior o pulsa el botón <b>+</b> para iniciar una nueva planificación semanal.</p>
+        </div>
 
-        <button class="btn-flotante" onclick="abrirFormularioNuevoMenu()">
+        <div id="contenedor-menus" class="grid-contenido">
+            </div>
+
+        <button class="btn-mas" onclick="abrirModalNuevo()">
             <i class="fas fa-plus"></i>
         </button>
     </div>
 
-    <div id="seccion-nuevo-menu" class="contenedor-principal" style="display:none; background:white; min-height:100vh;">
-        <div style="display:flex; align-items:center; margin-bottom:20px;">
-            <button id="btn-cerrar-x" onclick="cerrarFormulario()" class="boton-nav-circular" style="background:var(--verde-corp); margin-right:15px;">
-                <i class="fas fa-times"></i>
-            </button>
-            <h2 style="margin:0; color:var(--verde-oscuro); font-size:1.2rem;">Nueva Planificación</h2>
-        </div>
+    <div id="modal-nuevo-menu" class="modal-overlay">
+        <div class="modal-contenido">
+            <div class="cabecera-modal">
+                <button class="btn-nav" style="background: var(--verde-corp);" onclick="cerrarModalNuevo()">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <span style="font-weight: bold; color: var(--verde-oscuro);">MI MENÚ SEMANAL</span>
+                <div>
+                    <button class="btn-texto btn-cancelar" onclick="cerrarModalNuevo()">CANCELAR</button>
+                    <button class="btn-texto btn-guardar" onclick="procesarGuardado()">GUARDAR</button>
+                </div>
+            </div>
 
-        <div class="tarjeta-menu" style="width:100%; margin-bottom:20px;">
-            <div class="almanaque">
-                <div class="almanaque-tapa">Seleccionar Inicio</div>
-                <input type="date" id="input-nueva-fecha" class="input-fecha-busqueda" 
-                       style="text-align:center; font-size:1.5rem; font-weight:bold; padding:20px 0; width:100%;"
-                       onchange="actualizarPrevisualizacionFecha(this.value)">
-                <div id="previsualizacion-mes" class="almanaque-mes">...</div>
-            </div>
-            <div class="stats-menu">
-                <i class="fas fa-star estrella-viva"></i>
-                <span id="puntos-captados" class="creditos-texto">Cargando créditos...</span>
-            </div>
-            <button class="btn-ver-menu" onclick="confirmarYCrearMenu()">GUARDAR E INICIAR MENÚ</button>
+            <div class="formulario-cuerpo">
+                <label class="etiqueta-verde">Fecha de Inicio</label>
+                <input type="date" id="fecha-inicio-plan" class="input-grande">
+                
+                </div>
         </div>
-        <p style="font-size:0.8rem; color:#888; text-align:center;">* Los créditos se obtienen del último registro.</p>
     </div>
 
-    <div id="seccion-acordeon-menu" class="contenedor-principal" style="display:none; background:var(--gris-fondo); min-height:100vh;">
-        <div class="cabecera-barra" style="position:relative; margin:-15px -15px 20px -15px;">
-            <button onclick="cerrarAcordeon()" class="boton-nav-circular"><i class="fas fa-chevron-left"></i></button>
-            <strong id="titulo-menu-semana">MENÚ SEMANAL</strong>
-            <button onclick="imprimirPDF()" class="boton-nav-circular"><i class="fas fa-file-pdf"></i></button>
-        </div>
-        <div id="contenedor-acordeon"></div>
-    </div>
+    <script>
+        // Funciones de navegación de la interfaz
+        function abrirModalNuevo() {
+            document.getElementById('modal-nuevo-menu').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Evita scroll de fondo
+        }
+
+        function cerrarModalNuevo() {
+            document.getElementById('modal-nuevo-menu').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function procesarGuardado() {
+            // Lógica que programaremos mañana
+            alert("Guardando planificación...");
+            cerrarModalNuevo();
+        }
+    </script>
 
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
