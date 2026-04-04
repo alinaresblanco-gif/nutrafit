@@ -1152,7 +1152,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * 1. NAVEGACIÓN BLINDADA
- * Evita el error 404 detectando la ruta actual.
  */
 function volverInicio() {
     if (window.location.pathname.includes('/vistas/')) {
@@ -1169,7 +1168,7 @@ function abrirNuevoMenu() {
     const modal = document.getElementById('modal-nuevo');
     if (modal) {
         modal.style.display = 'block';
-        document.body.style.overflow = 'hidden'; // Bloquea scroll fondo
+        document.body.style.overflow = 'hidden'; 
     }
 }
 
@@ -1177,35 +1176,28 @@ function cerrarNuevoMenu() {
     const modal = document.getElementById('modal-nuevo');
     if (modal) {
         modal.style.display = 'none';
-        document.body.style.overflow = 'auto'; // Libera scroll fondo
+        document.body.style.overflow = 'auto'; 
     }
 }
 
 /**
  * 3. LÓGICA DEL ACORDEÓN SEMANAL
- * Gestiona la apertura exclusiva de fichas diarias.
  */
 function toggleDia(idFicha) {
-    // 1. Buscamos la ficha que se quiere abrir
     const fichaSeleccionada = document.getElementById(idFicha);
-    
     if (!fichaSeleccionada) return;
 
-    // 2. Si la ficha ya está activa, no hacemos nada
     if (fichaSeleccionada.classList.contains('activo')) {
         return; 
     }
 
-    // 3. Buscamos cualquier otra ficha que esté abierta actualmente y la cerramos
     const fichaAbiertaAnterior = document.querySelector('.dia-ficha.activo');
     if (fichaAbiertaAnterior) {
         fichaAbiertaAnterior.classList.remove('activo');
     }
 
-    // 4. Activamos la nueva ficha
     fichaSeleccionada.classList.add('activo');
 
-    // 5. Scroll Suave: Posiciona el día abierto en la parte superior
     setTimeout(() => {
         fichaSeleccionada.scrollIntoView({ 
             behavior: 'smooth', 
@@ -1215,36 +1207,67 @@ function toggleDia(idFicha) {
 }
 
 /**
- * 4. FUNCIONES DE INTERACCIÓN (DESPENSA Y GUARDADO)
+ * 4. GESTIÓN DE FILAS DINÁMICAS (INGREDIENTES)
+ * Crea una nueva fila automáticamente cuando se escribe en la última de cualquier sección.
+ */
+function verificarFilaNueva(input) {
+    // El input está dentro de un div .fila-ingrediente
+    const filaActual = input.parentElement;
+    // El contenedor padre que tiene todas las filas del momento del día (ej: .lista-ingredientes)
+    const contenedor = filaActual.parentElement;
+    // Obtenemos todas las filas de este bloque específico
+    const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
+    
+    // Si la fila donde escribimos es la última del bloque y tiene contenido
+    if (filaActual === todasLasFilas[todasLasFilas.length - 1] && input.value.trim() !== "") {
+        crearNuevaFila(contenedor);
+    }
+}
+
+function crearNuevaFila(contenedor) {
+    const nuevaFila = document.createElement('div');
+    nuevaFila.className = 'fila-ingrediente';
+    
+    // Inyectamos el HTML de la fila manteniendo los eventos oninput
+    nuevaFila.innerHTML = `
+        <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..." oninput="verificarFilaNueva(this)">
+        <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
+    `;
+    
+    contenedor.appendChild(nuevaFila);
+}
+
+/**
+ * 5. FUNCIONES DE INTERACCIÓN Y CÁLCULOS
  */
 function abrirDespensa(dia, momento) {
-    // Se activa al pulsar el botón "+" verde en cada momento (Desayuno, Almuerzo, etc.)
     console.log(`Solicitando alimentos para: ${dia} - Momento: ${momento}`);
-    // Futura integración con base de datos de alimentos
     alert(`Añadir alimento a: ${dia} (${momento})`);
+}
+
+function actualizarPuntosDia(input) {
+    // Esta función se activará cada vez que cambie un número de créditos
+    console.log("Créditos detectados:", input.value);
+    // Próximo paso: Sumatoria total por día
 }
 
 function guardarNuevoMenu() {
     const fecha = document.getElementById('input-fecha-nueva').value;
-    
     if (!fecha) {
         alert("⚠️ Por favor, selecciona una fecha de inicio.");
         return;
     }
-
     console.log("Iniciando guardado para fecha:", fecha);
-    // Nota: Aquí se implementará la conexión con Google Sheets próximamente
     alert("Planificación guardada correctamente.");
     cerrarNuevoMenu();
 }
 
 /**
- * 5. CARGA INICIAL Y EVENTOS
+ * 6. CARGA INICIAL Y EVENTOS
  */
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Sistema de Menús NutraFit: Activo y Blindado.");
     
-    // Listener para búsqueda por créditos
     const inputBusqueda = document.getElementById('busqueda-creditos');
     if (inputBusqueda) {
         inputBusqueda.addEventListener('input', () => {
