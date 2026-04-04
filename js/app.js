@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwVcoynaCdsOeaXU32t2wRsQ7_2MPG90sqR735LAkfd-UH-2c-acujxmSkfpRu3xqUL/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxmD1JiS9WZyu5XNipK8o4b-cVkNh4IX1A2OZrSCzH1-t4NmyvDF6ILeOl0i2gblsTm/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1237,18 +1237,20 @@ function crearNuevaFila(contenedor) {
 }
 
 /**
- * 5. LÓGICA DE LA DESPENSA (NUEVA IMPLEMENTACIÓN)
+ * 5. LÓGICA DE LA DESPENSA (IMPLEMENTACIÓN SINCRONIZADA)
  */
 function abrirDespensa(dia, momento, boton) {
-    // IMPORTANTE: Capturamos la lista exacta de ingredientes donde se pulsó el botón
+    // Capturamos la lista exacta de ingredientes donde se pulsó el botón
     contextoInsercion = boton.closest('.momento-seccion').querySelector('.lista-ingredientes');
     
     document.getElementById('modal-despensa').style.display = 'block';
     console.log(`Abriendo despensa para: ${dia} - ${momento}`);
 
-    // Si la lista está vacía, la pedimos a Google Apps Script
+    // Si la lista está vacía, la pedimos a Google Apps Script usando la función optimizada
     if (inventarioCompleto.length === 0) {
         cargarDatosDesdeExcel();
+    } else {
+        renderizarLista(inventarioCompleto);
     }
 }
 
@@ -1257,23 +1259,29 @@ function cerrarDespensa() {
     itemTemporal = null;
 }
 
-// Conecta con la función 'obtenerAlimentosExcel' en tu Código.gs
+// Conecta con la función 'obtenerAlimentosDespensa' en tu Código.gs (Claves: Nombre, Netos)
 function cargarDatosDesdeExcel() {
     const contenedor = document.getElementById('lista-despensa');
     contenedor.innerHTML = '<div style="text-align: center; padding: 20px;">Conectando con la despensa...</div>';
 
-    google.script.run.withSuccessHandler(function(datos) {
-        inventarioCompleto = datos; 
-        renderizarLista(inventarioCompleto);
-    }).obtenerAlimentosExcel(); 
+    google.script.run
+        .withSuccessHandler(function(datos) {
+            inventarioCompleto = datos; 
+            renderizarLista(inventarioCompleto);
+        })
+        .withFailureHandler(function(err) {
+            contenedor.innerHTML = '<div style="text-align: center; color:red; padding: 20px;">Error al conectar con la base de datos.</div>';
+            console.error(err);
+        })
+        .obtenerAlimentosDespensa(); 
 }
 
 function renderizarLista(lista) {
     const contenedor = document.getElementById('lista-despensa');
     contenedor.innerHTML = '';
     
-    if (lista.length === 0) {
-        contenedor.innerHTML = '<div style="text-align: center; padding: 20px;">No hay ingredientes.</div>';
+    if (!lista || lista.length === 0) {
+        contenedor.innerHTML = '<div style="text-align: center; padding: 20px;">No hay ingredientes disponibles en la hoja "alimentos".</div>';
         return;
     }
 
@@ -1281,6 +1289,8 @@ function renderizarLista(lista) {
         const div = document.createElement('div');
         div.className = 'item-despensa';
         div.onclick = () => seleccionarItem(div, item);
+        
+        // Coincidencia exacta con las claves del servidor: item.Nombre e item.Netos
         div.innerHTML = `
             <span class="item-nombre">${item.Nombre}</span>
             <span class="item-netos">${item.Netos} pts</span>
@@ -1302,16 +1312,27 @@ function incluirSeleccionado() {
     }
 
     const filas = contextoInsercion.querySelectorAll('.fila-ingrediente');
-    const ultimaFila = filas[filas.length - 1];
     
-    const inputNombre = ultimaFila.querySelector('.input-ingrediente');
-    const inputPuntos = ultimaFila.querySelector('.input-puntos-ing');
+    // Buscamos si ya existe una fila vacía para rellenarla en lugar de usar siempre la última
+    let filaDestino = null;
+    for (let f of filas) {
+        if (f.querySelector('.input-ingrediente').value.trim() === "") {
+            filaDestino = f;
+            break;
+        }
+    }
+
+    // Si no hay filas vacías, usamos la última disponible
+    if (!filaDestino) filaDestino = filas[filas.length - 1];
     
-    // Inyectamos los datos del Excel
+    const inputNombre = filaDestino.querySelector('.input-ingrediente');
+    const inputPuntos = filaDestino.querySelector('.input-puntos-ing');
+    
+    // Inyectamos los datos respetando las mayúsculas del objeto recibido
     inputNombre.value = itemTemporal.Nombre;
     inputPuntos.value = itemTemporal.Netos;
 
-    // Actualizamos los puntos totales del día y generamos fila nueva
+    // Actualizamos los puntos totales del día y generamos fila nueva si es necesario
     actualizarPuntosDia(inputPuntos);
     verificarFilaNueva(inputNombre);
 
