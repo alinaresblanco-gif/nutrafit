@@ -91,7 +91,6 @@
             to { transform: translateY(0); }
         }
 
-        /* Cabecera Modal (Estilo Imagen 3) */
         .cabecera-modal-nueva {
             background: var(--verde-corp); padding: 15px 20px;
             display: flex; align-items: center; color: white;
@@ -120,11 +119,7 @@
             background: var(--verde-corp); color: white; padding: 12px 15px;
             display: flex; align-items: center; justify-content: space-between; cursor: pointer;
         }
-        .btn-add-dia {
-            background: rgba(255,255,255,0.25); border: none; color: white;
-            width: 32px; height: 32px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-        }
+        
         .input-puntos-dia { width: 35px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: var(--verde-oscuro); outline: none; }
 
         .dia-cuerpo { padding: 15px; background: white; display: none; }
@@ -133,11 +128,24 @@
 
         /* Momentos e Ingredientes */
         .momento-seccion { margin-bottom: 18px; }
-        .momento-titulo {
-            color: var(--verde-corp); font-weight: bold; font-size: 0.8rem;
-            text-transform: uppercase; display: block; margin-bottom: 8px;
-            border-left: 3px solid var(--verde-corp); padding-left: 8px;
+        .momento-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
+        .momento-titulo {
+            color: var(--verde-corp); font-weight: bold; font-size: 0.85rem;
+            text-transform: uppercase; border-left: 3px solid var(--verde-corp); padding-left: 8px;
+        }
+        .btn-add-momento {
+            background: white; border: 1.5px solid var(--verde-corp); color: var(--verde-corp);
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-add-momento:active { transform: scale(0.9); background: var(--verde-corp); color: white; }
+
         .fila-ingrediente {
             display: flex; align-items: center; gap: 10px;
             border-bottom: 1px solid #f2f2f2; padding-bottom: 5px; margin-bottom: 5px;
@@ -168,8 +176,7 @@
             <p>Selecciona una semana o pulsa <b>+</b> para crear una nueva planificación.</p>
         </div>
 
-        <div id="contenedor-menus" class="grid-contenido">
-            </div>
+        <div id="contenedor-menus" class="grid-contenido"></div>
 
         <button class="btn-mas" onclick="abrirNuevoMenu()">
             <i class="fas fa-plus"></i>
@@ -195,7 +202,6 @@
             </div>
 
             <div class="formulario-scroll">
-                
                 <div class="seccion-fecha">
                     <label><i class="far fa-calendar-alt"></i> FECHA DE INICIO DE LA SEMANA</label>
                     <input type="date" id="input-fecha-nueva" class="input-fecha-transparent">
@@ -205,150 +211,228 @@
                     
                     <div class="dia-ficha activo" id="ficha-lunes">
                         <div class="dia-header" onclick="toggleDia('ficha-lunes')">
-                            <button class="btn-add-dia" onclick="event.stopPropagation(); abrirDespensa('Lunes')">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <strong>LUNES</strong>
+                            <div style="width: 32px;"></div> <strong>LUNES</strong>
                             <input type="number" class="input-puntos-dia" value="00" onclick="event.stopPropagation()">
                         </div>
                         <div class="dia-cuerpo">
                             <div class="momento-seccion">
-                                <span class="momento-titulo">Desayuno</span>
+                                <div class="momento-header">
+                                    <span class="momento-titulo">Desayuno</span>
+                                    <button class="btn-add-momento" onclick="abrirDespensa('Lunes', 'Desayuno')"><i class="fas fa-plus"></i></button>
+                                </div>
                                 <div class="fila-ingrediente">
                                     <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente...">
                                     <input type="number" class="input-puntos-ing" value="0">
                                 </div>
                             </div>
                             <div class="momento-seccion">
-                                <span class="momento-titulo">Almuerzo</span>
-                                <div class="fila-ingrediente">
-                                    <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente...">
-                                    <input type="number" class="input-puntos-ing" value="0">
+                                <div class="momento-header">
+                                    <span class="momento-titulo">Almuerzo</span>
+                                    <button class="btn-add-momento" onclick="abrirDespensa('Lunes', 'Almuerzo')"><i class="fas fa-plus"></i></button>
                                 </div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
                             </div>
                             <div class="momento-seccion">
-                                <span class="momento-titulo">Comida</span>
-                                <div class="fila-ingrediente">
-                                    <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente...">
-                                    <input type="number" class="input-puntos-ing" value="0">
+                                <div class="momento-header">
+                                    <span class="momento-titulo">Comida</span>
+                                    <button class="btn-add-momento" onclick="abrirDespensa('Lunes', 'Comida')"><i class="fas fa-plus"></i></button>
                                 </div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
                             </div>
                             <div class="momento-seccion">
-                                <span class="momento-titulo">Merienda</span>
-                                <div class="fila-ingrediente">
-                                    <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente...">
-                                    <input type="number" class="input-puntos-ing" value="0">
+                                <div class="momento-header">
+                                    <span class="momento-titulo">Merienda</span>
+                                    <button class="btn-add-momento" onclick="abrirDespensa('Lunes', 'Merienda')"><i class="fas fa-plus"></i></button>
                                 </div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
                             </div>
                             <div class="momento-seccion">
-                                <span class="momento-titulo">Cena</span>
-                                <div class="fila-ingrediente">
-                                    <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente...">
-                                    <input type="number" class="input-puntos-ing" value="0">
+                                <div class="momento-header">
+                                    <span class="momento-titulo">Cena</span>
+                                    <button class="btn-add-momento" onclick="abrirDespensa('Lunes', 'Cena')"><i class="fas fa-plus"></i></button>
                                 </div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="dia-ficha" id="ficha-martes">
                         <div class="dia-header" onclick="toggleDia('ficha-martes')">
-                            <button class="btn-add-dia" onclick="event.stopPropagation(); abrirDespensa('Martes')">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                            <div style="width: 32px;"></div>
                             <strong>MARTES</strong>
                             <input type="number" class="input-puntos-dia" value="00" onclick="event.stopPropagation()">
                         </div>
                         <div class="dia-cuerpo">
-                            <div class="momento-seccion"><span class="momento-titulo">Desayuno</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Almuerzo</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Comida</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Merienda</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Cena</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa('Martes', 'Desayuno')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa('Martes', 'Almuerzo')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa('Martes', 'Comida')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa('Martes', 'Merienda')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa('Martes', 'Cena')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="dia-ficha" id="ficha-miercoles">
                         <div class="dia-header" onclick="toggleDia('ficha-miercoles')">
-                            <button class="btn-add-dia" onclick="event.stopPropagation(); abrirDespensa('Miércoles')">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                            <div style="width: 32px;"></div>
                             <strong>MIÉRCOLES</strong>
                             <input type="number" class="input-puntos-dia" value="00" onclick="event.stopPropagation()">
                         </div>
                         <div class="dia-cuerpo">
-                            <div class="momento-seccion"><span class="momento-titulo">Desayuno</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Almuerzo</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Comida</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Merienda</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Cena</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa('Miércoles', 'Desayuno')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa('Miércoles', 'Almuerzo')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa('Miércoles', 'Comida')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa('Miércoles', 'Merienda')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa('Miércoles', 'Cena')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="dia-ficha" id="ficha-jueves">
                         <div class="dia-header" onclick="toggleDia('ficha-jueves')">
-                            <button class="btn-add-dia" onclick="event.stopPropagation(); abrirDespensa('Jueves')">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                            <div style="width: 32px;"></div>
                             <strong>JUEVES</strong>
                             <input type="number" class="input-puntos-dia" value="00" onclick="event.stopPropagation()">
                         </div>
                         <div class="dia-cuerpo">
-                            <div class="momento-seccion"><span class="momento-titulo">Desayuno</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Almuerzo</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Comida</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Merienda</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Cena</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa('Jueves', 'Desayuno')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa('Jueves', 'Almuerzo')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa('Jueves', 'Comida')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa('Jueves', 'Merienda')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa('Jueves', 'Cena')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="dia-ficha" id="ficha-viernes">
                         <div class="dia-header" onclick="toggleDia('ficha-viernes')">
-                            <button class="btn-add-dia" onclick="event.stopPropagation(); abrirDespensa('Viernes')">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                            <div style="width: 32px;"></div>
                             <strong>VIERNES</strong>
                             <input type="number" class="input-puntos-dia" value="00" onclick="event.stopPropagation()">
                         </div>
                         <div class="dia-cuerpo">
-                            <div class="momento-seccion"><span class="momento-titulo">Desayuno</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Almuerzo</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Comida</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Merienda</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Cena</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa('Viernes', 'Desayuno')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa('Viernes', 'Almuerzo')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa('Viernes', 'Comida')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa('Viernes', 'Merienda')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa('Viernes', 'Cena')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="dia-ficha" id="ficha-sabado">
                         <div class="dia-header" onclick="toggleDia('ficha-sabado')">
-                            <button class="btn-add-dia" onclick="event.stopPropagation(); abrirDespensa('Sábado')">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                            <div style="width: 32px;"></div>
                             <strong>SÁBADO</strong>
                             <input type="number" class="input-puntos-dia" value="00" onclick="event.stopPropagation()">
                         </div>
                         <div class="dia-cuerpo">
-                            <div class="momento-seccion"><span class="momento-titulo">Desayuno</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Almuerzo</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Comida</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Merienda</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Cena</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa('Sábado', 'Desayuno')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa('Sábado', 'Almuerzo')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa('Sábado', 'Comida')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa('Sábado', 'Merienda')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa('Sábado', 'Cena')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="dia-ficha" id="ficha-domingo">
                         <div class="dia-header" onclick="toggleDia('ficha-domingo')">
-                            <button class="btn-add-dia" onclick="event.stopPropagation(); abrirDespensa('Domingo')">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                            <div style="width: 32px;"></div>
                             <strong>DOMINGO</strong>
                             <input type="number" class="input-puntos-dia" value="00" onclick="event.stopPropagation()">
                         </div>
                         <div class="dia-cuerpo">
-                            <div class="momento-seccion"><span class="momento-titulo">Desayuno</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Almuerzo</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Comida</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Merienda</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
-                            <div class="momento-seccion"><span class="momento-titulo">Cena</span><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..."><input type="number" class="input-puntos-ing" value="0"></div></div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa('Domingo', 'Desayuno')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa('Domingo', 'Almuerzo')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa('Domingo', 'Comida')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa('Domingo', 'Merienda')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
+                            <div class="momento-seccion">
+                                <div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa('Domingo', 'Cena')"><i class="fas fa-plus"></i></button></div>
+                                <div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..."><input type="number" class="input-puntos-ing" value="0"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -360,10 +444,9 @@
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
     <script>
-        // Funciones de control de UI
         function abrirNuevoMenu() {
             document.getElementById('modal-nuevo').style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Evita scroll en fondo
+            document.body.style.overflow = 'hidden'; 
         }
 
         function cerrarNuevoMenu() {
@@ -372,15 +455,16 @@
         }
 
         function toggleDia(idFicha) {
-            // Cerramos todas
             document.querySelectorAll('.dia-ficha').forEach(ficha => {
                 ficha.classList.remove('activo');
             });
-            // Abrimos la pulsada
             document.getElementById(idFicha).classList.add('activo');
-            
-            // Opcional: scroll suave hacia la ficha abierta
             document.getElementById(idFicha).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function abrirDespensa(dia, momento) {
+            alert("Abriendo despensa para: " + dia + " - " + momento);
+            // Aquí irá la lógica para conectar con tu base de datos de alimentos
         }
 
         function guardarNuevoMenu() {
