@@ -1211,14 +1211,10 @@ function toggleDia(idFicha) {
  * Crea una nueva fila automáticamente cuando se escribe en la última de cualquier sección.
  */
 function verificarFilaNueva(input) {
-    // El input está dentro de un div .fila-ingrediente
     const filaActual = input.parentElement;
-    // El contenedor padre que tiene todas las filas del momento del día (ej: .lista-ingredientes)
     const contenedor = filaActual.parentElement;
-    // Obtenemos todas las filas de este bloque específico
     const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
     
-    // Si la fila donde escribimos es la última del bloque y tiene contenido
     if (filaActual === todasLasFilas[todasLasFilas.length - 1] && input.value.trim() !== "") {
         crearNuevaFila(contenedor);
     }
@@ -1228,7 +1224,6 @@ function crearNuevaFila(contenedor) {
     const nuevaFila = document.createElement('div');
     nuevaFila.className = 'fila-ingrediente';
     
-    // Inyectamos el HTML de la fila manteniendo los eventos oninput
     nuevaFila.innerHTML = `
         <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..." oninput="verificarFilaNueva(this)">
         <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
@@ -1245,10 +1240,55 @@ function abrirDespensa(dia, momento) {
     alert(`Añadir alimento a: ${dia} (${momento})`);
 }
 
+/**
+ * IMPLEMENTACIÓN: Cálculo de Puntos y Balance (Restantes)
+ */
 function actualizarPuntosDia(input) {
-    // Esta función se activará cada vez que cambie un número de créditos
-    console.log("Créditos detectados:", input.value);
-    // Próximo paso: Sumatoria total por día
+    const ficha = input.closest('.dia-ficha');
+    const todosLosPuntos = ficha.querySelectorAll('.input-puntos-ing');
+    const cuadroRestantes = ficha.querySelector('.input-restantes-dia');
+    const cuadroTotal = ficha.querySelector('.input-puntos-dia');
+
+    let consumido = 0;
+    todosLosPuntos.forEach(p => { 
+        consumido += parseFloat(p.value) || 0; 
+    });
+
+    // 1. Actualizamos el total consumido en el cuadro correspondiente
+    if (cuadroTotal) {
+        cuadroTotal.value = consumido;
+    }
+
+    // 2. Calculamos lo que resta
+    if (cuadroRestantes) {
+        // El "objetivo" son los créditos totales del día. 
+        // Si no se ha guardado el objetivo inicial en el dataset, lo guardamos ahora.
+        // Esto permite que el cálculo sea: Objetivo Fijo - Consumo Actual.
+        if (!cuadroRestantes.dataset.objetivo || consumido === 0) {
+            // Si el valor es 0 o vacío, intentamos capturar lo que el usuario puso como límite inicial
+            let valorInicial = parseFloat(cuadroRestantes.value) || 0;
+            // Solo guardamos como objetivo si el consumo es 0 (estado inicial)
+            if (consumido === 0 || !cuadroRestantes.dataset.objetivo) {
+                 cuadroRestantes.dataset.objetivo = valorInicial + consumido;
+            }
+        }
+
+        let objetivofijo = parseFloat(cuadroRestantes.dataset.objetivo) || 0;
+        let balance = objetivofijo - consumido;
+        
+        cuadroRestantes.value = balance;
+
+        // 3. Feedback visual: si el balance es negativo (exceso), fondo rojo.
+        if (balance < 0) {
+            cuadroRestantes.style.color = "white";
+            cuadroRestantes.style.backgroundColor = "#e74c3c"; // Rojo alerta
+        } else {
+            cuadroRestantes.style.color = "#d35400"; // Naranja estándar
+            cuadroRestantes.style.backgroundColor = "white";
+        }
+    }
+    
+    console.log(`Día: ${ficha.id} | Consumido: ${consumido}`);
 }
 
 function guardarNuevoMenu() {
@@ -1274,4 +1314,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Filtrando tarjetas por créditos:", inputBusqueda.value);
         });
     }
+
+    // Inicializar los datasets de objetivos al cargar por si ya hay valores
+    document.querySelectorAll('.input-restantes-dia').forEach(input => {
+        if(input.value && input.value !== "0") {
+            input.dataset.objetivo = input.value;
+        }
+    });
 });
