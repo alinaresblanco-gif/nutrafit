@@ -1208,7 +1208,6 @@ function toggleDia(idFicha) {
 
 /**
  * 4. GESTIÓN DE FILAS DINÁMICAS (INGREDIENTES)
- * Crea una nueva fila automáticamente cuando se escribe en la última de cualquier sección.
  */
 function verificarFilaNueva(input) {
     const filaActual = input.parentElement;
@@ -1241,54 +1240,48 @@ function abrirDespensa(dia, momento) {
 }
 
 /**
- * IMPLEMENTACIÓN: Cálculo de Puntos y Balance (Restantes)
+ * IMPLEMENTACIÓN DEFINITIVA: 
+ * Tú pones el TOTAL a mano, el sistema suma ingredientes y calcula el RESTAN.
  */
-function actualizarPuntosDia(input) {
-    const ficha = input.closest('.dia-ficha');
-    const todosLosPuntos = ficha.querySelectorAll('.input-puntos-ing');
-    const cuadroRestantes = ficha.querySelector('.input-restantes-dia');
-    const cuadroTotal = ficha.querySelector('.input-puntos-dia');
-
-    let consumido = 0;
-    todosLosPuntos.forEach(p => { 
-        consumido += parseFloat(p.value) || 0; 
+function actualizarPuntosDia(el) {
+    // 1. Buscamos la ficha del día actual (el contenedor padre)
+    const ficha = el.closest('.dia-ficha');
+    if (!ficha) return;
+    
+    // 2. Capturamos los elementos clave de la cabecera y el cuerpo
+    const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); // El TOTAL que tú escribes
+    const displayRestante = ficha.querySelector('.input-restantes-dia');    // El RESTAN calculado
+    const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing'); // Todos los números de los ingredientes
+    
+    // 3. Sumamos todos los puntos de los ingredientes de los 5 momentos del día
+    let sumaConsumida = 0;
+    todosLosIngredientes.forEach(ing => {
+        sumaConsumida += parseFloat(ing.value) || 0;
     });
 
-    // 1. Actualizamos el total consumido en el cuadro correspondiente
-    if (cuadroTotal) {
-        cuadroTotal.value = consumido;
-    }
+    // 4. Obtenemos el valor que tú has puesto manualmente en el cuadro TOTAL
+    const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
 
-    // 2. Calculamos lo que resta
-    if (cuadroRestantes) {
-        // El "objetivo" son los créditos totales del día. 
-        // Si no se ha guardado el objetivo inicial en el dataset, lo guardamos ahora.
-        // Esto permite que el cálculo sea: Objetivo Fijo - Consumo Actual.
-        if (!cuadroRestantes.dataset.objetivo || consumido === 0) {
-            // Si el valor es 0 o vacío, intentamos capturar lo que el usuario puso como límite inicial
-            let valorInicial = parseFloat(cuadroRestantes.value) || 0;
-            // Solo guardamos como objetivo si el consumo es 0 (estado inicial)
-            if (consumido === 0 || !cuadroRestantes.dataset.objetivo) {
-                 cuadroRestantes.dataset.objetivo = valorInicial + consumido;
-            }
-        }
-
-        let objetivofijo = parseFloat(cuadroRestantes.dataset.objetivo) || 0;
-        let balance = objetivofijo - consumido;
-        
-        cuadroRestantes.value = balance;
-
-        // 3. Feedback visual: si el balance es negativo (exceso), fondo rojo.
-        if (balance < 0) {
-            cuadroRestantes.style.color = "white";
-            cuadroRestantes.style.backgroundColor = "#e74c3c"; // Rojo alerta
-        } else {
-            cuadroRestantes.style.color = "#d35400"; // Naranja estándar
-            cuadroRestantes.style.backgroundColor = "white";
-        }
-    }
+    // 5. CALCULAMOS EL BALANCE: Tu presupuesto manual - la suma de lo que vas anotando
+    const resultadoResta = presupuestoManual - sumaConsumida;
     
-    console.log(`Día: ${ficha.id} | Consumido: ${consumido}`);
+    // 6. Reflejamos el resultado en el cuadro RESTAN automáticamente
+    if (displayRestante) {
+        displayRestante.value = resultadoResta;
+
+        // 7. Feedback visual: Si te pasas del presupuesto (negativo), se pone en rojo
+        if (resultadoResta < 0) {
+            displayRestante.style.color = "white";
+            displayRestante.style.backgroundColor = "#e74c3c"; // Fondo rojo alerta
+            displayRestante.style.fontWeight = "bold";
+        } else {
+            displayRestante.style.color = "#d35400"; // Naranja estándar
+            displayRestante.style.backgroundColor = "white"; // Fondo limpio
+            displayRestante.style.fontWeight = "normal";
+        }
+    }
+
+    console.log(`Día: ${ficha.id} | Presupuesto: ${presupuestoManual} | Consumido: ${sumaConsumida} | Restan: ${resultadoResta}`);
 }
 
 function guardarNuevoMenu() {
@@ -1312,13 +1305,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inputBusqueda) {
         inputBusqueda.addEventListener('input', () => {
             console.log("Filtrando tarjetas por créditos:", inputBusqueda.value);
+            // Aquí puedes añadir lógica de filtrado de tarjetas si lo deseas
         });
     }
 
-    // Inicializar los datasets de objetivos al cargar por si ya hay valores
-    document.querySelectorAll('.input-restantes-dia').forEach(input => {
-        if(input.value && input.value !== "0") {
-            input.dataset.objetivo = input.value;
-        }
+    // Inicializamos todos los cálculos por si hay datos cargados previamente
+    document.querySelectorAll('.input-puntos-dia').forEach(inputTotal => {
+        actualizarPuntosDia(inputTotal);
     });
 });

@@ -109,8 +109,10 @@
             background: var(--verde-corp); color: white; padding: 12px 15px;
             display: flex; align-items: center; justify-content: space-between; cursor: pointer;
         }
+        /* TOTAL: Ahora es editable (blanco) */
         .input-puntos-dia { width: 45px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: var(--verde-oscuro); outline: none; background: white; }
-        .input-restantes-dia { width: 45px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: #d35400; background: #fff; outline: none; }
+        /* RESTAN: Ahora es calculado (automático) */
+        .input-restantes-dia { width: 45px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: #d35400; background: #fff; outline: none; pointer-events: none; }
 
         .dia-cuerpo { padding: 15px; background: white; display: none; }
         .dia-ficha.activo .dia-cuerpo { display: block; }
@@ -168,12 +170,13 @@
                 </div>
 
                 <div id="acordeon-semanal">
+                    
                     <div class="dia-ficha activo" id="ficha-lunes">
                         <div class="dia-header" onclick="toggleDia('ficha-lunes')">
                             <div style="width: 32px;"></div> <strong>LUNES</strong>
                             <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" readonly></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" onclick="event.stopPropagation()" oninput="definirPresupuesto(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
                             </div>
                         </div>
                         <div class="dia-cuerpo">
@@ -204,8 +207,8 @@
                         <div class="dia-header" onclick="toggleDia('ficha-martes')">
                             <div style="width: 32px;"></div> <strong>MARTES</strong>
                             <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" readonly></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" onclick="event.stopPropagation()" oninput="definirPresupuesto(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
                             </div>
                         </div>
                         <div class="dia-cuerpo">
@@ -221,8 +224,8 @@
                         <div class="dia-header" onclick="toggleDia('ficha-miercoles')">
                             <div style="width: 32px;"></div> <strong>MIÉRCOLES</strong>
                             <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" readonly></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" onclick="event.stopPropagation()" oninput="definirPresupuesto(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
                             </div>
                         </div>
                         <div class="dia-cuerpo">
@@ -237,8 +240,8 @@
                         <div class="dia-header" onclick="toggleDia('ficha-jueves')">
                             <div style="width: 32px;"></div> <strong>JUEVES</strong>
                             <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" readonly></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" onclick="event.stopPropagation()" oninput="definirPresupuesto(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
                             </div>
                         </div>
                         <div class="dia-cuerpo">
@@ -254,8 +257,8 @@
                         <div class="dia-header" onclick="toggleDia('ficha-viernes')">
                             <div style="width: 32px;"></div> <strong>VIERNES</strong>
                             <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" readonly></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" onclick="event.stopPropagation()" oninput="definirPresupuesto(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
                             </div>
                         </div>
                         <div class="dia-cuerpo">
@@ -271,8 +274,8 @@
                         <div class="dia-header" onclick="toggleDia('ficha-sabado')">
                             <div style="width: 32px;"></div> <strong>SÁBADO</strong>
                             <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" readonly></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" onclick="event.stopPropagation()" oninput="definirPresupuesto(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
                             </div>
                         </div>
                         <div class="dia-cuerpo">
@@ -288,8 +291,8 @@
                         <div class="dia-header" onclick="toggleDia('ficha-domingo')">
                             <div style="width: 32px;"></div> <strong>DOMINGO</strong>
                             <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" readonly></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" onclick="event.stopPropagation()" oninput="definirPresupuesto(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
+                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
                             </div>
                         </div>
                         <div class="dia-cuerpo">
@@ -301,10 +304,7 @@
                         </div>
                     </div>
 
-                </div> </div> </div>
-    </div>
-
-    <script>
+                </div> </div> </div> </div> <script>
         // --- NAVEGACIÓN Y MODAL ---
         function volverInicio() { location.reload(); }
         function abrirNuevoMenu() { document.getElementById('modal-nuevo').style.display = 'block'; document.body.style.overflow = 'hidden'; }
@@ -335,33 +335,45 @@
             }
         }
 
-        // --- LÓGICA DE CÁLCULO (TOTAL Y RESTAN) ---
-        function definirPresupuesto(input) {
-            // Guardamos el presupuesto original en un atributo personalizado
-            input.dataset.presupuesto = input.value;
-            actualizarPuntosDia(input);
-        }
-
+        /**
+         * LÓGICA DE CÁLCULO UNIFICADA:
+         * Tú escribes en TOTAL.
+         * El sistema resta los ingredientes.
+         * Aparece en RESTAN.
+         */
         function actualizarPuntosDia(el) {
             const ficha = el.closest('.dia-ficha');
-            const inputsPuntos = ficha.querySelectorAll('.input-puntos-ing');
-            const displayTotal = ficha.querySelector('.input-puntos-dia');
-            const displayRestan = ficha.querySelector('.input-restantes-dia');
+            if (!ficha) return;
 
-            let sumaIngredientes = 0;
-            inputsPuntos.forEach(input => {
-                sumaIngredientes += parseFloat(input.value) || 0;
+            const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); 
+            const displayRestante = ficha.querySelector('.input-restantes-dia');
+            const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
+
+            // 1. Sumamos todos los ingredientes del día
+            let sumaConsumida = 0;
+            todosLosIngredientes.forEach(ing => {
+                sumaConsumida += parseFloat(ing.value) || 0;
             });
 
-            // Actualizar el total consumido
-            displayTotal.value = sumaIngredientes;
+            // 2. Obtenemos lo que TÚ pusiste como TOTAL manual
+            const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
 
-            // Calcular cuánto queda basado en el presupuesto guardado
-            const presupuesto = parseFloat(displayRestan.dataset.presupuesto) || 0;
-            const queda = presupuesto - sumaIngredientes;
+            // 3. Calculamos la RESTA
+            const resultadoResta = presupuestoManual - sumaConsumida;
             
-            displayRestan.value = queda;
-            displayRestan.style.color = (queda < 0) ? "#e74c3c" : "#d35400";
+            // 4. Mostramos en RESTAN
+            if (displayRestante) {
+                displayRestante.value = resultadoResta;
+
+                // 5. Estética de alerta
+                if (resultadoResta < 0) {
+                    displayRestante.style.color = "white";
+                    displayRestante.style.backgroundColor = "#e74c3c"; // Rojo
+                } else {
+                    displayRestante.style.color = "#d35400"; // Naranja
+                    displayRestante.style.backgroundColor = "white";
+                }
+            }
         }
 
         function abrirDespensa(dia, momento) { alert("Accediendo a despensa: " + dia + " - " + momento); }
