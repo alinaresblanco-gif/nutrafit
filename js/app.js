@@ -1146,3 +1146,50 @@ document.addEventListener('DOMContentLoaded', () => {
         inputBusqueda.addEventListener('input', filtrarRecetas);
     }
 });
+// ==========================================
+//   LÓGICA SENIOR: MENÚS SEMANALES
+// ==========================================
+
+// 1. NAVEGACIÓN BLINDADA (Como en recetas-favoritas)
+function irA(url) {
+    // Forzamos la salida limpia para evitar 404
+    window.location.replace(url);
+}
+
+// 2. CONTROL DEL MODAL (VENTANA EMERGENTE)
+function abrirNuevoMenu() {
+    const modal = document.getElementById('modal-nuevo');
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Bloquea scroll fondo
+    }
+}
+
+function cerrarNuevoMenu() {
+    const modal = document.getElementById('modal-nuevo');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Libera scroll fondo
+    }
+}
+
+// 3. LÓGICA DE GUARDADO (MAQUETA)
+function guardarNuevoMenu() {
+    const fecha = document.getElementById('input-fecha-nueva').value;
+    
+    if (!fecha) {
+        alert("⚠️ Por favor, selecciona una fecha de inicio.");
+        return;
+    }
+
+    console.log("Iniciando guardado para fecha:", fecha);
+    // Aquí conectaremos con el Excel mañana
+    alert("Planificación guardada correctamente.");
+    cerrarNuevoMenu();
+}
+
+// 4. CARGA INICIAL
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("Aplicación de Menús lista.");
+    // Aquí llamaríamos a cargarTarjetasMenus() cuando tengamos los datos
+});

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NutraFit - Planificador Semanal</title>
+    <title>NutraFit - Mis Menús Semanales</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root { 
@@ -11,125 +11,82 @@
             --verde-oscuro: #5a8a5a; 
             --gris-fondo: #f8f9fa; 
             --blanco: #ffffff;
+            --sombra: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         body { 
-            margin: 0; 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            background-color: var(--gris-fondo); 
-            color: #333; 
+            margin: 0; font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--gris-fondo); color: #333; 
             overflow-x: hidden;
         }
 
         /* --- CABECERA PRINCIPAL --- */
         .cabecera-fija { 
-            background: var(--verde-corp); 
-            padding: 15px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            color: white; 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000;
+            background: var(--verde-corp); padding: 15px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            color: white; position: sticky; top: 0; z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .btn-nav { 
-            background: rgba(255,255,255,0.2); 
-            border: none; 
-            color: white; 
-            width: 40px; 
-            height: 40px; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            cursor: pointer;
-            transition: 0.3s;
+            background: rgba(255,255,255,0.2); border: none; color: white; 
+            width: 40px; height: 40px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; transition: 0.3s;
         }
 
-        /* --- CONTENEDOR BUSCADOR --- */
+        /* --- BUSCADOR CREDITOS --- */
         .contenedor-buscador {
-            background: var(--blanco);
-            margin: 15px;
-            padding: 12px 15px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            background: var(--blanco); margin: 15px;
+            padding: 12px 15px; border-radius: 15px;
+            display: flex; align-items: center; box-shadow: var(--sombra);
         }
-
         .contenedor-buscador i { color: var(--verde-corp); margin-right: 12px; }
-
         .input-busqueda {
-            border: none;
-            outline: none;
-            width: 100%;
-            font-size: 1rem;
-            color: #444;
+            border: none; outline: none; width: 100%;
+            font-size: 1rem; color: #444;
         }
 
-        /* --- MENSAJE INFORMATIVO --- */
+        /* --- BANNER INFO --- */
         .banner-info {
-            background: #eef5ee;
-            margin: 0 15px 20px 15px;
-            padding: 15px;
-            border-radius: 12px;
+            background: #eef5ee; margin: 0 15px 20px 15px;
+            padding: 15px; border-radius: 12px;
             border-left: 5px solid var(--verde-corp);
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            display: flex; align-items: center; gap: 12px;
         }
-
         .banner-info p { margin: 0; font-size: 0.85rem; color: #555; line-height: 1.4; }
 
-        /* --- VISTA DE TARJETAS --- */
+        /* --- GRID TARJETAS --- */
         .grid-contenido {
             padding: 0 15px 100px 15px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
         }
 
         /* --- BOTÓN FLOTANTE --- */
         .btn-mas {
-            position: fixed;
-            bottom: 30px;
-            right: 25px;
-            background: var(--verde-corp);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            border: none;
-            box-shadow: 0 5px 15px rgba(120, 169, 120, 0.4);
-            cursor: pointer;
-            z-index: 900;
+            position: fixed; bottom: 30px; right: 25px;
+            background: var(--verde-corp); color: white;
+            width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; border: none; box-shadow: 0 5px 15px rgba(120, 169, 120, 0.4);
+            cursor: pointer; z-index: 900;
         }
 
         /* --- VENTANA EMERGENTE (MODAL) --- */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0;
+            position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none; /* Se activa con JS */
-            z-index: 2000;
+            background: rgba(0,0,0,0.6);
+            display: none; z-index: 2000;
+            backdrop-filter: blur(3px);
         }
 
         .modal-contenido {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            background: var(--blanco);
+            position: absolute; bottom: 0;
+            width: 100%; background: var(--blanco);
             border-radius: 25px 25px 0 0;
-            padding-bottom: 40px;
-            animation: deslizarSubir 0.4s ease-out;
+            animation: deslizarSubir 0.3s ease-out;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
         }
 
         @keyframes deslizarSubir {
@@ -138,60 +95,49 @@
         }
 
         .cabecera-modal {
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 15px 20px; display: flex;
+            justify-content: space-between; align-items: center;
             border-bottom: 1px solid #eee;
         }
 
-        .btn-texto {
-            background: none;
-            border: none;
-            font-weight: bold;
-            font-size: 0.9rem;
-            cursor: pointer;
-            padding: 10px;
-        }
+        .titulo-modal { font-weight: bold; color: var(--verde-oscuro); font-size: 1.1rem; }
 
-        .btn-cancelar { color: #888; }
+        .btn-texto {
+            background: none; border: none; font-weight: bold;
+            font-size: 0.9rem; cursor: pointer; padding: 10px;
+        }
+        .btn-cancelar { color: #d9534f; }
         .btn-guardar { color: var(--verde-corp); }
 
-        .formulario-cuerpo { padding: 25px 20px; }
+        .formulario-cuerpo { padding: 30px 20px 50px 20px; }
 
         .etiqueta-verde {
-            display: block;
-            color: var(--verde-oscuro);
-            font-weight: bold;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            text-transform: uppercase;
+            display: block; color: var(--verde-oscuro);
+            font-weight: bold; margin-bottom: 12px;
+            font-size: 0.9rem; text-transform: uppercase;
         }
 
         .input-grande {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #eee;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            box-sizing: border-box;
-            outline: none;
-            transition: 0.3s;
+            width: 100%; padding: 15px;
+            border: 2px solid #eee; border-radius: 12px;
+            font-size: 1.1rem; box-sizing: border-box;
+            outline: none; transition: 0.3s;
+            background: #fafafa;
         }
-
-        .input-grande:focus { border-color: var(--verde-corp); }
+        .input-grande:focus { border-color: var(--verde-corp); background: #fff; }
 
     </style>
 </head>
 <body>
 
-    <div id="vista-listado">
+    <div id="vista-principal">
         <header class="cabecera-fija">
-            <button onclick="location.href='../index.html'" class="btn-nav">
-                <i class="fas fa-arrow-left"></i>
+            <button onclick="irA('../index.html')" class="btn-nav">
+                <i class="fas fa-chevron-left"></i>
             </button>
             <span style="font-weight: bold; letter-spacing: 1px;">MIS MENÚS SEMANALES</span>
-            <div style="width: 40px;"></div> </header>
+            <div style="width: 40px;"></div>
+        </header>
 
         <div class="contenedor-buscador">
             <i class="fas fa-star"></i>
@@ -200,56 +146,36 @@
 
         <div class="banner-info">
             <i class="fas fa-info-circle" style="color: var(--verde-corp); font-size: 1.2rem;"></i>
-            <p>Selecciona una semana de la lista inferior o pulsa el botón <b>+</b> para iniciar una nueva planificación semanal.</p>
+            <p>Selecciona una semana o pulsa <b>+</b> para crear una nueva planificación.</p>
         </div>
 
         <div id="contenedor-menus" class="grid-contenido">
             </div>
 
-        <button class="btn-mas" onclick="abrirModalNuevo()">
+        <button class="btn-mas" onclick="abrirNuevoMenu()">
             <i class="fas fa-plus"></i>
         </button>
     </div>
 
-    <div id="modal-nuevo-menu" class="modal-overlay">
+    <div id="modal-nuevo" class="modal-overlay">
         <div class="modal-contenido">
             <div class="cabecera-modal">
-                <button class="btn-nav" style="background: var(--verde-corp);" onclick="cerrarModalNuevo()">
+                <button class="btn-nav" style="background: var(--verde-corp);" onclick="cerrarNuevoMenu()">
                     <i class="fas fa-chevron-down"></i>
                 </button>
-                <span style="font-weight: bold; color: var(--verde-oscuro);">MI MENÚ SEMANAL</span>
+                <span class="titulo-modal">MI MENÚ SEMANAL</span>
                 <div>
-                    <button class="btn-texto btn-cancelar" onclick="cerrarModalNuevo()">CANCELAR</button>
-                    <button class="btn-texto btn-guardar" onclick="procesarGuardado()">GUARDAR</button>
+                    <button class="btn-texto btn-cancelar" onclick="cerrarNuevoMenu()">CANCELAR</button>
+                    <button class="btn-texto btn-guardar" onclick="guardarNuevoMenu()">GUARDAR</button>
                 </div>
             </div>
 
             <div class="formulario-cuerpo">
                 <label class="etiqueta-verde">Fecha de Inicio</label>
-                <input type="date" id="fecha-inicio-plan" class="input-grande">
-                
-                </div>
+                <input type="date" id="input-fecha-nueva" class="input-grande">
+            </div>
         </div>
     </div>
-
-    <script>
-        // Funciones de navegación de la interfaz
-        function abrirModalNuevo() {
-            document.getElementById('modal-nuevo-menu').style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Evita scroll de fondo
-        }
-
-        function cerrarModalNuevo() {
-            document.getElementById('modal-nuevo-menu').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        function procesarGuardado() {
-            // Lógica que programaremos mañana
-            alert("Guardando planificación...");
-            cerrarModalNuevo();
-        }
-    </script>
 
     <script src="../js/config.js"></script>
     <script src="../js/app.js"></script>
