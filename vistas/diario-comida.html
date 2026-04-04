@@ -62,7 +62,7 @@
             display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
         }
 
-        /* --- BOTÓN FLOTANTE --- */
+        /* --- BOTÓN FLOTANTE PRINCIPAL --- */
         .btn-mas {
             position: fixed; bottom: 30px; right: 25px;
             background: var(--verde-corp); color: white;
@@ -94,37 +94,30 @@
             to { transform: translateY(0); }
         }
 
-        .cabecera-modal {
-            padding: 15px 20px; display: flex;
-            justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #eee;
-        }
-
         .titulo-modal { font-weight: bold; color: var(--verde-oscuro); font-size: 1.1rem; }
 
-        .btn-texto {
-            background: none; border: none; font-weight: bold;
-            font-size: 0.9rem; cursor: pointer; padding: 10px;
-        }
-        .btn-cancelar { color: #d9534f; }
-        .btn-guardar { color: var(--verde-corp); }
-
-        .formulario-cuerpo { padding: 30px 20px 50px 20px; }
+        .formulario-cuerpo { padding: 20px 20px 50px 20px; }
 
         .etiqueta-verde {
             display: block; color: var(--verde-oscuro);
-            font-weight: bold; margin-bottom: 12px;
+            font-weight: bold; margin-bottom: 5px;
             font-size: 0.9rem; text-transform: uppercase;
         }
 
         .input-grande {
-            width: 100%; padding: 15px;
-            border: 2px solid #eee; border-radius: 12px;
+            width: 100%; padding: 12px;
+            border-radius: 12px;
             font-size: 1.1rem; box-sizing: border-box;
-            outline: none; transition: 0.3s;
-            background: #fafafa;
+            outline: none;
         }
-        .input-grande:focus { border-color: var(--verde-corp); background: #fff; }
+
+        /* Estilos específicos para los inputs de créditos (2 dígitos) */
+        .input-creditos {
+            width: 35px; background: white; border: none; 
+            border-radius: 5px; text-align: center; 
+            font-weight: bold; color: var(--verde-oscuro);
+            outline: none;
+        }
 
     </style>
 </head>
@@ -158,21 +151,72 @@
     </div>
 
     <div id="modal-nuevo" class="modal-overlay">
-        <div class="modal-contenido">
-            <div class="cabecera-modal">
-                <button class="btn-nav" style="background: var(--verde-corp);" onclick="cerrarNuevoMenu()">
-                    <i class="fas fa-chevron-down"></i>
+        <div class="modal-contenido" style="height: 95vh; overflow-y: auto;">
+            
+            <div class="cabecera-modal" style="background: var(--verde-corp); color: white; position: sticky; top: 0; z-index: 10;">
+                <button class="btn-nav" onclick="cerrarNuevoMenu()">
+                    <i class="fas fa-arrow-left"></i>
                 </button>
-                <span class="titulo-modal">MI MENÚ SEMANAL</span>
-                <div>
-                    <button class="btn-texto btn-cancelar" onclick="cerrarNuevoMenu()">CANCELAR</button>
-                    <button class="btn-texto btn-guardar" onclick="guardarNuevoMenu()">GUARDAR</button>
+                <span class="titulo-modal" style="color: white; flex-grow: 1; text-align: center;">MI MENÚ SEMANAL</span>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-nav" onclick="guardarNuevoMenu()" title="Guardar">
+                        <i class="fas fa-save"></i>
+                    </button>
+                    <button class="btn-nav" onclick="cerrarNuevoMenu()" title="Cancelar">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             </div>
 
             <div class="formulario-cuerpo">
-                <label class="etiqueta-verde">Fecha de Inicio</label>
-                <input type="date" id="input-fecha-nueva" class="input-grande">
+                <div style="margin-bottom: 25px;">
+                    <label class="etiqueta-verde" style="font-size: 1.1rem; border-bottom: 2px solid #eee; padding-bottom: 8px;">
+                        <i class="far fa-calendar-alt"></i> Fecha de Inicio de la Semana
+                    </label>
+                    <input type="date" id="input-fecha-nueva" class="input-grande" style="margin-top: 10px; border: none; background: #f0f0f0;">
+                </div>
+
+                <div id="acordeon-semanal">
+                    
+                    <div class="dia-contenedor" style="margin-bottom: 15px; border: 1px solid #ddd; border-radius: 12px; overflow: hidden; box-shadow: var(--sombra);">
+                        
+                        <div class="dia-header" style="background: var(--verde-corp); color: white; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between;">
+                            <button class="btn-nav" style="background: rgba(255,255,255,0.3); width: 32px; height: 32px;" onclick="abrirDespensa('Lunes')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <strong style="text-transform: uppercase; letter-spacing: 2px; font-size: 1.1rem;">Lunes</strong>
+                            <input type="number" class="input-creditos" value="00" maxlength="2">
+                        </div>
+
+                        <div class="dia-detalle" style="padding: 15px; background: white;">
+                            
+                            <div class="momento-bloque" style="margin-bottom: 18px;">
+                                <span style="color: var(--verde-corp); font-weight: bold; font-size: 0.85rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Desayuno</span>
+                                <div class="fila-ingrediente" style="display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                                    <input type="text" placeholder="Añadir o escribir ingrediente..." style="flex-grow: 1; border: none; outline: none; font-size: 1rem; color: #555;">
+                                    <input type="number" class="input-creditos" style="background: #f9f9f9; color: var(--verde-oscuro);" value="00">
+                                    <i class="fas fa-shopping-cart" style="color: var(--verde-corp); cursor: pointer; font-size: 1.1rem;"></i>
+                                </div>
+                            </div>
+
+                            <div class="momento-bloque">
+                                <span style="color: var(--verde-corp); font-weight: bold; font-size: 0.85rem; text-transform: uppercase; display: block; margin-bottom: 5px;">Comida</span>
+                                <div class="fila-ingrediente" style="display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                                    <input type="text" placeholder="Añadir o escribir ingrediente..." style="flex-grow: 1; border: none; outline: none; font-size: 1rem; color: #555;">
+                                    <input type="number" class="input-creditos" style="background: #f9f9f9; color: var(--verde-oscuro);" value="00">
+                                    <i class="fas fa-shopping-cart" style="color: var(--verde-corp); cursor: pointer; font-size: 1.1rem;"></i>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; color: #ccc; padding: 20px;">
+                        <i class="fas fa-ellipsis-h" style="font-size: 1.5rem;"></i>
+                        <p style="font-size: 0.8rem; margin-top: 5px;">Resto de días (Martes a Domingo)</p>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
