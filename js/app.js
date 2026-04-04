@@ -1147,11 +1147,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 // ==========================================
-//   LÓGICA SENIOR: MENÚS SEMANALES (CORREGIDO)
+//   LÓGICA SENIOR: MENÚS SEMANALES (UNIFICADO)
 // ==========================================
 
 /**
- * 1. NAVEGACIÓN BLINDADA (Lógica de Recetas Favoritas)
+ * 1. NAVEGACIÓN BLINDADA
  * Evita el error 404 detectando la ruta actual.
  */
 function volverInicio() {
@@ -1164,7 +1164,6 @@ function volverInicio() {
 
 /**
  * 2. CONTROL DEL MODAL (VENTANA EMERGENTE)
- * Gestiona la apertura y cierre del formulario nuevo.
  */
 function abrirNuevoMenu() {
     const modal = document.getElementById('modal-nuevo');
@@ -1183,9 +1182,48 @@ function cerrarNuevoMenu() {
 }
 
 /**
- * 3. LÓGICA DE GUARDADO
- * Validación y envío de datos (Maqueta actual).
+ * 3. LÓGICA DEL ACORDEÓN SEMANAL
+ * Gestiona la apertura exclusiva de fichas diarias.
  */
+function toggleDia(idFicha) {
+    // 1. Buscamos la ficha que se quiere abrir
+    const fichaSeleccionada = document.getElementById(idFicha);
+    
+    if (!fichaSeleccionada) return;
+
+    // 2. Si la ficha ya está activa, no hacemos nada
+    if (fichaSeleccionada.classList.contains('activo')) {
+        return; 
+    }
+
+    // 3. Buscamos cualquier otra ficha que esté abierta actualmente y la cerramos
+    const fichaAbiertaAnterior = document.querySelector('.dia-ficha.activo');
+    if (fichaAbiertaAnterior) {
+        fichaAbiertaAnterior.classList.remove('activo');
+    }
+
+    // 4. Activamos la nueva ficha
+    fichaSeleccionada.classList.add('activo');
+
+    // 5. Scroll Suave: Posiciona el día abierto en la parte superior
+    setTimeout(() => {
+        fichaSeleccionada.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+    }, 100);
+}
+
+/**
+ * 4. FUNCIONES DE INTERACCIÓN (DESPENSA Y GUARDADO)
+ */
+function abrirDespensa(dia, momento) {
+    // Se activa al pulsar el botón "+" verde en cada momento (Desayuno, Almuerzo, etc.)
+    console.log(`Solicitando alimentos para: ${dia} - Momento: ${momento}`);
+    // Futura integración con base de datos de alimentos
+    alert(`Añadir alimento a: ${dia} (${momento})`);
+}
+
 function guardarNuevoMenu() {
     const fecha = document.getElementById('input-fecha-nueva').value;
     
@@ -1201,17 +1239,16 @@ function guardarNuevoMenu() {
 }
 
 /**
- * 4. CARGA INICIAL Y EVENTOS
+ * 5. CARGA INICIAL Y EVENTOS
  */
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Aplicación de Menús lista y blindada.");
+    console.log("Sistema de Menús NutraFit: Activo y Blindado.");
     
-    // Aseguramos que el botón de búsqueda también responda si se desea filtrar en tiempo real
+    // Listener para búsqueda por créditos
     const inputBusqueda = document.getElementById('busqueda-creditos');
     if (inputBusqueda) {
         inputBusqueda.addEventListener('input', () => {
-            console.log("Filtrando por créditos:", inputBusqueda.value);
-            // Aquí irá la lógica de filtrado de tarjetas
+            console.log("Filtrando tarjetas por créditos:", inputBusqueda.value);
         });
     }
 });
