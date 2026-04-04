@@ -1147,16 +1147,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 // ==========================================
-//   LÓGICA SENIOR: MENÚS SEMANALES
+//   LÓGICA SENIOR: MENÚS SEMANALES (CORREGIDO)
 // ==========================================
 
-// 1. NAVEGACIÓN BLINDADA (Como en recetas-favoritas)
-function irA(url) {
-    // Forzamos la salida limpia para evitar 404
-    window.location.replace(url);
+/**
+ * 1. NAVEGACIÓN BLINDADA (Lógica de Recetas Favoritas)
+ * Evita el error 404 detectando la ruta actual.
+ */
+function volverInicio() {
+    if (window.location.pathname.includes('/vistas/')) {
+        window.location.href = '../index.html';
+    } else {
+        window.location.href = 'index.html';
+    }
 }
 
-// 2. CONTROL DEL MODAL (VENTANA EMERGENTE)
+/**
+ * 2. CONTROL DEL MODAL (VENTANA EMERGENTE)
+ * Gestiona la apertura y cierre del formulario nuevo.
+ */
 function abrirNuevoMenu() {
     const modal = document.getElementById('modal-nuevo');
     if (modal) {
@@ -1173,7 +1182,10 @@ function cerrarNuevoMenu() {
     }
 }
 
-// 3. LÓGICA DE GUARDADO (MAQUETA)
+/**
+ * 3. LÓGICA DE GUARDADO
+ * Validación y envío de datos (Maqueta actual).
+ */
 function guardarNuevoMenu() {
     const fecha = document.getElementById('input-fecha-nueva').value;
     
@@ -1183,13 +1195,23 @@ function guardarNuevoMenu() {
     }
 
     console.log("Iniciando guardado para fecha:", fecha);
-    // Aquí conectaremos con el Excel mañana
+    // Nota: Aquí se implementará la conexión con Google Sheets próximamente
     alert("Planificación guardada correctamente.");
     cerrarNuevoMenu();
 }
 
-// 4. CARGA INICIAL
+/**
+ * 4. CARGA INICIAL Y EVENTOS
+ */
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Aplicación de Menús lista.");
-    // Aquí llamaríamos a cargarTarjetasMenus() cuando tengamos los datos
+    console.log("Aplicación de Menús lista y blindada.");
+    
+    // Aseguramos que el botón de búsqueda también responda si se desea filtrar en tiempo real
+    const inputBusqueda = document.getElementById('busqueda-creditos');
+    if (inputBusqueda) {
+        inputBusqueda.addEventListener('input', () => {
+            console.log("Filtrando por créditos:", inputBusqueda.value);
+            // Aquí irá la lógica de filtrado de tarjetas
+        });
+    }
 });
