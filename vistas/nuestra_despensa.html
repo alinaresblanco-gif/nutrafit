@@ -146,26 +146,39 @@
 <script>
     let despensaCompleta = [];
 
-    // Al cargar, pedir datos a Google Sheets
+    // --- CARGA INICIAL CON MANEJO DE ERRORES ---
     document.addEventListener('DOMContentLoaded', function() {
+        console.log("Iniciando carga de despensa...");
         if (typeof google !== 'undefined') {
-            google.script.run.withSuccessHandler(function(datos) {
-                despensaCompleta = datos;
-                renderizarDespensa(datos);
-            }).obtenerAlimentosDespensa();
+            google.script.run
+                .withSuccessHandler(function(datos) {
+                    console.log("Datos recibidos correctamente:", datos);
+                    despensaCompleta = datos;
+                    renderizarDespensa(datos);
+                })
+                .withFailureHandler(function(err) {
+                    console.error("Error en google.script.run:", err);
+                    document.getElementById('lista-alimentos-agrupados').innerHTML = 
+                        '<p style="color:red; text-align:center; padding:20px;">' +
+                        '<strong>Error al cargar:</strong><br>' + err.message + '</p>';
+                })
+                .obtenerAlimentosDespensa();
+        } else {
+            document.getElementById('lista-alimentos-agrupados').innerHTML = 
+                '<p style="text-align:center; padding:20px;">Entorno local detectado: No se pueden cargar datos de Google Sheets.</p>';
         }
     });
 
+    // --- RENDERIZADO DE LA TABLA ---
     function renderizarDespensa(datos) {
         const lista = document.getElementById('lista-alimentos-agrupados');
         lista.innerHTML = '';
 
         if (!datos || datos.length === 0) {
-            lista.innerHTML = '<p style="text-align:center; padding:20px;">No hay alimentos disponibles.</p>';
+            lista.innerHTML = '<p style="text-align:center; padding:20px;">No hay alimentos disponibles en la hoja.</p>';
             return;
         }
 
-        // Agrupación por Categoría
         const categorias = {};
         datos.forEach(item => {
             const cat = item.Categoria || "OTROS";
@@ -178,12 +191,15 @@
             html += `<table class="tabla-despensa">`;
             
             categorias[cat].forEach(alimento => {
-                // El evento onclick es el que "habla" con el diario de comidas
+                // Se limpian comillas simples para evitar errores de sintaxis en el onclick
+                const nombreLimpio = alimento.Nombre ? alimento.Nombre.replace(/'/g, "\\'") : "Sin nombre";
+                const puntos = alimento.Netos || 0;
+
                 html += `
-                    <tr class="fila-alimento" onclick="enviarAlimento('${alimento.Nombre.replace(/'/g, "\\'")}', ${alimento.Netos})">
+                    <tr class="fila-alimento" onclick="enviarAlimento('${nombreLimpio}', ${puntos})">
                         <td>${alimento.Nombre}</td>
                         <td style="text-align: right;">
-                            <span class="credito-badge">${alimento.Netos} pts</span>
+                            <span class="credito-badge">${puntos} pts</span>
                         </td>
                     </tr>`;
             });
@@ -193,27 +209,28 @@
         }
     }
 
+    // --- COMUNICACIÓN CON EL DIARIO (PADRE) ---
     function enviarAlimento(nombre, puntos) {
-        // Esta es la conexión: envía el dato al "padre" (diario-comida.html)
         const mensaje = {
             tipo: "ALIMENTO_SELECCIONADO",
             Nombre: nombre,
             Netos: puntos
         };
-        
-        // window.parent es el archivo que contiene el iframe
+        // Enviar datos al padre (diario-comida.html)
         window.parent.postMessage(mensaje, "*");
     }
 
+    // --- BUSCADOR ---
     function filtrarDespensa() {
         const termino = document.getElementById('buscador-despensa').value.toLowerCase();
         const filtrados = despensaCompleta.filter(a => 
-            a.Nombre.toLowerCase().includes(termino) || 
+            (a.Nombre && a.Nombre.toLowerCase().includes(termino)) || 
             (a.Categoria && a.Categoria.toLowerCase().includes(termino))
         );
         renderizarDespensa(filtrados);
     }
 
+    // --- NAVEGACIÓN ---
     function volverInicio() { google.script.run.abrirVista('inicio'); }
     function abrirVista(v) { google.script.run.abrirVista(v); }
 </script>
