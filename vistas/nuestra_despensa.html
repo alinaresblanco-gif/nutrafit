@@ -25,7 +25,7 @@
     <div id="lista-alimentos-agrupados">
         <div class="cargando-container">
             <div class="spinner-verde"></div>
-            <p>Consultando almacén de alimentos...</p>
+            <p id="mensaje-carga">Consultando almacén de alimentos...</p>
         </div>
     </div>
 </div>
@@ -146,28 +146,40 @@
 <script>
     let despensaCompleta = [];
 
-    // --- CARGA INICIAL CON MANEJO DE ERRORES ---
+    // --- CARGA INICIAL CON REINTENTOS PARA MÓVIL ---
     document.addEventListener('DOMContentLoaded', function() {
-        console.log("Iniciando carga de despensa...");
-        if (typeof google !== 'undefined') {
+        console.log("Iniciando secuencia de conexión...");
+        cargarDatosConReintento();
+    });
+
+    function cargarDatosConReintento() {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            console.log("Conexión con Google Apps Script establecida.");
             google.script.run
                 .withSuccessHandler(function(datos) {
-                    console.log("Datos recibidos correctamente:", datos);
+                    console.log("Datos recibidos:", datos);
                     despensaCompleta = datos;
                     renderizarDespensa(datos);
                 })
                 .withFailureHandler(function(err) {
-                    console.error("Error en google.script.run:", err);
+                    console.error("Error de servidor:", err);
                     document.getElementById('lista-alimentos-agrupados').innerHTML = 
                         '<p style="color:red; text-align:center; padding:20px;">' +
-                        '<strong>Error al cargar:</strong><br>' + err.message + '</p>';
+                        '<strong>Error de conexión:</strong><br>' + err.message + '</p>';
                 })
                 .obtenerAlimentosDespensa();
         } else {
-            document.getElementById('lista-alimentos-agrupados').innerHTML = 
-                '<p style="text-align:center; padding:20px;">Entorno local detectado: No se pueden cargar datos de Google Sheets.</p>';
+            console.log("Esperando librería de Google...");
+            // Si pasan más de 5 segundos, mostramos un aviso por si acaso
+            setTimeout(function() {
+                const msg = document.getElementById('mensaje-carga');
+                if (msg) msg.innerText = "Sincronizando con Google (esto puede tardar en el móvil)...";
+            }, 3000);
+            
+            // Reintenta cada 500ms
+            setTimeout(cargarDatosConReintento, 500);
         }
-    });
+    }
 
     // --- RENDERIZADO DE LA TABLA ---
     function renderizarDespensa(datos) {
@@ -175,7 +187,7 @@
         lista.innerHTML = '';
 
         if (!datos || datos.length === 0) {
-            lista.innerHTML = '<p style="text-align:center; padding:20px;">No hay alimentos disponibles en la hoja.</p>';
+            lista.innerHTML = '<p style="text-align:center; padding:20px;">No hay alimentos registrados en la base de datos.</p>';
             return;
         }
 
@@ -191,7 +203,6 @@
             html += `<table class="tabla-despensa">`;
             
             categorias[cat].forEach(alimento => {
-                // Se limpian comillas simples para evitar errores de sintaxis en el onclick
                 const nombreLimpio = alimento.Nombre ? alimento.Nombre.replace(/'/g, "\\'") : "Sin nombre";
                 const puntos = alimento.Netos || 0;
 
@@ -216,7 +227,6 @@
             Nombre: nombre,
             Netos: puntos
         };
-        // Enviar datos al padre (diario-comida.html)
         window.parent.postMessage(mensaje, "*");
     }
 
