@@ -1325,6 +1325,11 @@ function actualizarPuntosDia(el) {
         }
     }
 }
+function cerrarDespensa() {
+    document.getElementById('modal-despensa').style.display = 'none';
+    document.body.style.overflow = 'auto'; // Devuelve el scroll a la página
+    seccionDestino = null; 
+}
 
 function guardarNuevoMenu() {
     const fecha = document.getElementById('input-fecha-nueva').value;
