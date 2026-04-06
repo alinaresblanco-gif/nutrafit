@@ -16,7 +16,7 @@
     <div class="contenedor-buscador-corporativo">
         <div class="caja-busqueda-v2">
             <i class="fas fa-search"></i>
-            <input type="text" id="buscador-despensa" placeholder="Buscar alimento por nombre..." onkeyup="filtrarDespensa()">
+            <input type="text" id="buscador-despensa" placeholder="Buscar alimento..." onkeyup="filtrarDespensa()">
         </div>
     </div>
 </div>
@@ -25,235 +25,129 @@
     <div id="lista-alimentos-agrupados">
         <div class="cargando-container">
             <div class="spinner-verde"></div>
-            <p id="mensaje-carga">Consultando almacén de alimentos...</p>
+            <p>Conectando con el almacén...</p>
         </div>
     </div>
 </div>
 
 <style>
-    /* Estilos de la Cabecera */
     .vista-cabecera-fija { background: #78a978; }
     .cabecera-barra {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 10px 15px;
-        background: #78a978;
         color: white;
     }
-
     .boton-nav-circular {
         background: rgba(255, 255, 255, 0.2);
-        border: none;
-        color: white;
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
+        border: none; color: white; width: 38px; height: 38px;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
         cursor: pointer;
-        transition: all 0.3s ease;
     }
-
-    .boton-nav-circular:active {
-        background: white;
-        color: #78a978;
-        transform: scale(0.9);
-    }
-
-    .titulo-vista {
-        font-weight: bold;
-        font-size: 16px;
-        letter-spacing: 1px;
-    }
-
-    .contenedor-buscador-corporativo {
-        padding: 0 15px 15px 15px;
-        background: #78a978;
-    }
-
+    .titulo-vista { font-weight: bold; font-size: 16px; }
+    .contenedor-buscador-corporativo { padding: 0 15px 15px 15px; background: #78a978; }
     .caja-busqueda-v2 {
-        background: white;
-        border-radius: 25px;
-        display: flex;
-        align-items: center;
-        padding: 8px 15px;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        background: white; border-radius: 25px; display: flex;
+        align-items: center; padding: 8px 15px;
     }
-
     .caja-busqueda-v2 i { color: #78a978; margin-right: 10px; }
-    .caja-busqueda-v2 input { border: none; outline: none; width: 100%; font-size: 16px; color: #333; }
+    .caja-busqueda-v2 input { border: none; outline: none; width: 100%; font-size: 16px; }
 
-    /* Estilo de Grupos y Alimentos */
+    /* Estilo de la lista */
     .cabecera-grupo-despensa {
-        background: #f1f8f1;
-        color: #4a6d4a;
-        padding: 10px 15px;
-        font-weight: bold;
-        border-left: 5px solid #78a978;
-        margin: 15px 0 5px 0;
-        text-transform: uppercase;
-        font-size: 0.9em;
-        border-radius: 0 8px 8px 0;
+        background: #f1f8f1; color: #4a6d4a; padding: 10px 15px;
+        font-weight: bold; border-left: 5px solid #78a978; margin: 15px 0 5px 0;
     }
-
-    .tabla-despensa {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 10px;
-        overflow: hidden;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-
-    .fila-alimento {
-        border-bottom: 1px solid #f5f5f5;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-    
-    .fila-alimento:active { background: #eef7ee; }
-
-    .fila-alimento td { padding: 12px 15px; font-size: 15px; }
-
+    .tabla-despensa { width: 100%; border-collapse: collapse; background: white; margin-bottom: 10px; }
+    .fila-alimento { border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+    .fila-alimento td { padding: 12px 15px; }
     .credito-badge {
-        background: #78a978;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 15px;
-        font-weight: bold;
-        font-size: 0.85em;
-        display: inline-block;
+        background: #78a978; color: white; padding: 4px 12px;
+        border-radius: 15px; font-weight: bold; font-size: 0.85em;
     }
 
-    /* Animación de carga */
+    /* Spinner */
     .cargando-container { text-align: center; padding: 50px 20px; color: #78a978; }
     .spinner-verde {
-        width: 40px;
-        height: 40px;
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #78a978;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 15px;
+        width: 30px; height: 30px; border: 4px solid #f3f3f3;
+        border-top: 4px solid #78a978; border-radius: 50%;
+        animation: spin 1s linear infinite; margin: 0 auto 10px;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 
 <script>
-    let despensaCompleta = [];
+    let datosLocales = []; // Aquí guardaremos los alimentos una vez descargados
 
-    // --- CARGA INICIAL ---
+    // Se ejecuta al abrir la página
     document.addEventListener('DOMContentLoaded', function() {
-        console.log("Iniciando carga de despensa...");
-        cargarDatosConReintento();
+        ejecutarCarga();
     });
 
-    // --- NUEVA FUNCIÓN DE CARGA POR API (MÁS ROBUSTA PARA MÓVIL) ---
-    function cargarDatosConReintento() {
-        console.log("Iniciando carga de datos por API...");
-        
-        // Obtenemos la URL de la propia app (quitando parámetros si los hay)
-        const urlApp = window.location.href.split('?')[0]; 
-        const urlFinal = urlApp + "?tabla=alimentos";
-
-        fetch(urlFinal)
-            .then(response => response.json())
-            .then(datos => {
-                console.log("Datos recibidos por Fetch:", datos);
-                despensaCompleta = datos;
-                renderizarDespensa(datos);
+    function ejecutarCarga() {
+        // Llamada limpia al servidor sin inyecciones raras
+        google.script.run
+            .withSuccessHandler(function(datos) {
+                datosLocales = datos;
+                renderizar(datos);
             })
-            .catch(err => {
-                console.error("Error en Fetch:", err);
-                // Si falla el Fetch, intentamos el método tradicional por si acaso (Fallback)
-                if (typeof google !== 'undefined' && google.script && google.script.run) {
-                    google.script.run
-                        .withSuccessHandler(function(datosFallback) {
-                            despensaCompleta = datosFallback;
-                            renderizarDespensa(datosFallback);
-                        })
-                        .withFailureHandler(function(errorScript) {
-                             document.getElementById('lista-alimentos-agrupados').innerHTML = 
-                                '<p style="text-align:center; color:red; padding:20px;">Error de conexión con la base de datos.</p>';
-                        })
-                        .obtenerAlimentosDespensa();
-                } else {
-                    document.getElementById('lista-alimentos-agrupados').innerHTML = 
-                        '<p style="text-align:center; color:red; padding:20px;">Error de conexión con la base de datos (Entorno no detectado).</p>';
-                }
-            });
+            .withFailureHandler(function(err) {
+                document.getElementById('lista-alimentos-agrupados').innerHTML = "Error al cargar datos.";
+            })
+            .obtenerAlimentosDespensa();
     }
 
-    // --- RENDERIZADO DE LA TABLA ---
-    function renderizarDespensa(datos) {
-        const lista = document.getElementById('lista-alimentos-agrupados');
-        lista.innerHTML = '';
-
+    function renderizar(datos) {
+        const contenedor = document.getElementById('lista-alimentos-agrupados');
         if (!datos || datos.length === 0) {
-            lista.innerHTML = '<p style="text-align:center; padding:20px;">No hay alimentos registrados en la base de datos.</p>';
+            contenedor.innerHTML = "No hay alimentos en el Excel.";
             return;
         }
 
-        const categorias = {};
-        datos.forEach(item => {
-            const cat = item.Categoria || "OTROS";
-            if (!categorias[cat]) categorias[cat] = [];
-            categorias[cat].push(item);
+        let html = "";
+        // Agrupar por Categoría/Grupo
+        const grupos = {};
+        datos.forEach(a => {
+            const g = a.Categoria || "GENERAL";
+            if (!grupos[g]) grupos[g] = [];
+            grupos[g].push(a);
         });
 
-        for (const cat in categorias) {
-            let html = `<div class="cabecera-grupo-despensa">${cat}</div>`;
+        for (let g in grupos) {
+            html += `<div class="cabecera-grupo-despensa">${g}</div>`;
             html += `<table class="tabla-despensa">`;
-            
-            categorias[cat].forEach(alimento => {
-                const nombreLimpio = alimento.Nombre ? alimento.Nombre.replace(/'/g, "\\'") : "Sin nombre";
-                const puntos = alimento.Netos || 0;
-
+            grupos[g].forEach(a => {
+                // Escapamos el nombre por si tiene comillas
+                const nombreSeguro = a.Nombre.replace(/'/g, "\\'");
                 html += `
-                    <tr class="fila-alimento" onclick="enviarAlimento('${nombreLimpio}', ${puntos})">
-                        <td>${alimento.Nombre}</td>
-                        <td style="text-align: right;">
-                            <span class="credito-badge">${puntos} pts</span>
-                        </td>
+                    <tr class="fila-alimento" onclick="enviarAlimento('${nombreSeguro}', ${a.Netos})">
+                        <td>${a.Nombre}</td>
+                        <td style="text-align:right"><span class="credito-badge">${a.Netos} pts</span></td>
                     </tr>`;
             });
-            
             html += `</table>`;
-            lista.innerHTML += html;
         }
+        contenedor.innerHTML = html;
     }
 
-    // --- COMUNICACIÓN CON EL DIARIO (PADRE) ---
-    function enviarAlimento(nombre, puntos) {
-        const mensaje = {
+    function filtrarDespensa() {
+        const buscar = document.getElementById('buscador-despensa').value.toLowerCase();
+        const filtrados = datosLocales.filter(a => 
+            a.Nombre.toLowerCase().includes(buscar) || 
+            (a.Categoria && a.Categoria.toLowerCase().includes(buscar))
+        );
+        renderizar(filtrados);
+    }
+
+    function enviarAlimento(nombre, pts) {
+        window.parent.postMessage({
             tipo: "ALIMENTO_SELECCIONADO",
             Nombre: nombre,
-            Netos: puntos
-        };
-        // Enviar datos al padre (diario-comida.html)
-        window.parent.postMessage(mensaje, "*");
+            Netos: pts
+        }, "*");
     }
 
-    // --- BUSCADOR ---
-    function filtrarDespensa() {
-        const termino = document.getElementById('buscador-despensa').value.toLowerCase();
-        const filtrados = despensaCompleta.filter(a => 
-            (a.Nombre && a.Nombre.toLowerCase().includes(termino)) || 
-            (a.Categoria && a.Categoria.toLowerCase().includes(termino))
-        );
-        renderizarDespensa(filtrados);
-    }
-
-    // --- NAVEGACIÓN ---
-    function volverInicio() { 
-        if (typeof google !== 'undefined') google.script.run.abrirVista('inicio'); 
-    }
-    
-    function abrirVista(v) { 
-        if (typeof google !== 'undefined') google.script.run.abrirVista(v); 
-    }
+    function abrirVista(v) { google.script.run.withSuccessHandler(url => window.location.href = url).abrirVista(v); }
+    function volverInicio() { google.script.run.withSuccessHandler(url => window.location.href = url).abrirVista('inicio'); }
 </script>
