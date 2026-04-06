@@ -254,7 +254,12 @@
                             <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
                         </div>
                     </div>
-                </div> </div> </div> </div> <div id="capa-despensa-interna">
+                </div> 
+            </div> 
+        </div> 
+    </div> 
+
+    <div id="capa-despensa-interna">
         <div style="background: var(--verde-corp); color: white; padding: 15px; display: flex; align-items: center; gap: 15px;">
             <button onclick="cerrarDespensa()" style="background:none; border:none; color:white; font-size: 20px;"><i class="fas fa-arrow-left"></i></button>
             <div style="flex-grow: 1; background: white; border-radius: 20px; display: flex; align-items: center; padding: 5px 15px;">
@@ -262,8 +267,7 @@
                 <input type="text" id="buscar-alimento-capa" placeholder="Buscar alimento..." onkeyup="filtrarCapaDespensa()" style="border:none; outline:none; width:100%; font-size: 16px;">
             </div>
         </div>
-        <div id="lista-alimentos-capa" style="flex-grow: 1; overflow-y: auto;">
-            </div>
+        <div id="lista-alimentos-capa" style="flex-grow: 1; overflow-y: auto;"></div>
     </div>
 
     <script>
@@ -282,20 +286,25 @@
             setTimeout(() => { ficha.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
         }
 
-        // LÓGICA DE CAPA DESPENSA
+        // LÓGICA DE CAPA DESPENSA (CORREGIDA)
         function abrirDespensa(btn) {
-            // Guardamos la lista de ingredientes del momento actual
             elementoOrigen = btn.closest('.momento-seccion').querySelector('.lista-ingredientes');
             document.getElementById('capa-despensa-interna').style.display = 'flex';
             
             if (datosDespensaGlobal.length === 0) {
                 document.getElementById('lista-alimentos-capa').innerHTML = "<p style='text-align:center; padding:20px;'>Cargando despensa...</p>";
-                google.script.run
-                    .withSuccessHandler(function(datos) {
+                
+                // Fetch directo al doGet del script
+                fetch('<?= ScriptApp.getService().getUrl() ?>?tabla=despensa_capa')
+                    .then(response => response.json())
+                    .then(datos => {
                         datosDespensaGlobal = datos;
                         renderizarCapaDespensa(datos);
                     })
-                    .obtenerAlimentosDespensa(); // Llama a la función de tu Código.gs
+                    .catch(err => {
+                        console.error(err);
+                        document.getElementById('lista-alimentos-capa').innerHTML = "<p style='text-align:center; color:red; padding:20px;'>Error al conectar con la base de datos</p>";
+                    });
             }
         }
 
@@ -305,15 +314,17 @@
             const contenedor = document.getElementById('lista-alimentos-capa');
             let html = "";
             const grupos = {};
+            
             datos.forEach(a => {
                 if (!grupos[a.Categoria]) grupos[a.Categoria] = [];
                 grupos[a.Categoria].push(a);
             });
+            
             for (let g in grupos) {
-                html += `<div class="categoria-label">${g}</div>`;
+                html += `<div class="categoria-label" style="background:#f4f4f4; padding:8px 15px; font-weight:bold; font-size:0.8rem; color:#666; border-bottom:1px solid #ddd;">${g.toUpperCase()}</div>`;
                 grupos[g].forEach(a => {
                     html += `
-                    <div class="item-despensa" onclick="seleccionarDeCapa('${a.Nombre}', ${a.Netos})">
+                    <div class="item-despensa" onclick="seleccionarDeCapa('${a.Nombre}', ${a.Netos})" style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
                         <span>${a.Nombre}</span>
                         <span style="font-weight:bold; color:var(--verde-corp)">${a.Netos} pts</span>
                     </div>`;
@@ -342,7 +353,6 @@
             cerrarDespensa();
         }
 
-        // --- FUNCIONES DE CÁLCULO ORIGINALES ---
         function verificarFilaNueva(input) {
             const lista = input.closest('.lista-ingredientes');
             const filas = lista.querySelectorAll('.fila-ingrediente');
