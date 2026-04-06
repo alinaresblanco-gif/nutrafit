@@ -146,39 +146,46 @@
 <script>
     let despensaCompleta = [];
 
-    // --- CARGA INICIAL CON REINTENTOS PARA MÓVIL ---
+    // --- CARGA INICIAL ---
     document.addEventListener('DOMContentLoaded', function() {
-        console.log("Iniciando secuencia de conexión...");
+        console.log("Iniciando carga de despensa...");
         cargarDatosConReintento();
     });
 
+    // --- NUEVA FUNCIÓN DE CARGA POR API (MÁS ROBUSTA PARA MÓVIL) ---
     function cargarDatosConReintento() {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-            console.log("Conexión con Google Apps Script establecida.");
-            google.script.run
-                .withSuccessHandler(function(datos) {
-                    console.log("Datos recibidos:", datos);
-                    despensaCompleta = datos;
-                    renderizarDespensa(datos);
-                })
-                .withFailureHandler(function(err) {
-                    console.error("Error de servidor:", err);
+        console.log("Iniciando carga de datos por API...");
+        
+        // Obtenemos la URL de la propia app (quitando parámetros si los hay)
+        const urlApp = window.location.href.split('?')[0]; 
+        const urlFinal = urlApp + "?tabla=alimentos";
+
+        fetch(urlFinal)
+            .then(response => response.json())
+            .then(datos => {
+                console.log("Datos recibidos por Fetch:", datos);
+                despensaCompleta = datos;
+                renderizarDespensa(datos);
+            })
+            .catch(err => {
+                console.error("Error en Fetch:", err);
+                // Si falla el Fetch, intentamos el método tradicional por si acaso (Fallback)
+                if (typeof google !== 'undefined' && google.script && google.script.run) {
+                    google.script.run
+                        .withSuccessHandler(function(datosFallback) {
+                            despensaCompleta = datosFallback;
+                            renderizarDespensa(datosFallback);
+                        })
+                        .withFailureHandler(function(errorScript) {
+                             document.getElementById('lista-alimentos-agrupados').innerHTML = 
+                                '<p style="text-align:center; color:red; padding:20px;">Error de conexión con la base de datos.</p>';
+                        })
+                        .obtenerAlimentosDespensa();
+                } else {
                     document.getElementById('lista-alimentos-agrupados').innerHTML = 
-                        '<p style="color:red; text-align:center; padding:20px;">' +
-                        '<strong>Error de conexión:</strong><br>' + err.message + '</p>';
-                })
-                .obtenerAlimentosDespensa();
-        } else {
-            console.log("Esperando librería de Google...");
-            // Si pasan más de 5 segundos, mostramos un aviso por si acaso
-            setTimeout(function() {
-                const msg = document.getElementById('mensaje-carga');
-                if (msg) msg.innerText = "Sincronizando con Google (esto puede tardar en el móvil)...";
-            }, 3000);
-            
-            // Reintenta cada 500ms
-            setTimeout(cargarDatosConReintento, 500);
-        }
+                        '<p style="text-align:center; color:red; padding:20px;">Error de conexión con la base de datos (Entorno no detectado).</p>';
+                }
+            });
     }
 
     // --- RENDERIZADO DE LA TABLA ---
@@ -227,6 +234,7 @@
             Nombre: nombre,
             Netos: puntos
         };
+        // Enviar datos al padre (diario-comida.html)
         window.parent.postMessage(mensaje, "*");
     }
 
@@ -241,6 +249,11 @@
     }
 
     // --- NAVEGACIÓN ---
-    function volverInicio() { google.script.run.abrirVista('inicio'); }
-    function abrirVista(v) { google.script.run.abrirVista(v); }
+    function volverInicio() { 
+        if (typeof google !== 'undefined') google.script.run.abrirVista('inicio'); 
+    }
+    
+    function abrirVista(v) { 
+        if (typeof google !== 'undefined') google.script.run.abrirVista(v); 
+    }
 </script>

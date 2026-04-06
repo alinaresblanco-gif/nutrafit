@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzgAwsA58ONN9YgH96XbLaqLu5VpPGNRhiuugnZ6RMtyenanOZ47ue9D_ZrecCsq1Ei/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbznmWS2kVDYV144uUZMDZbWU_FlJMhjkrhPStuIN_eXmi5Bgy5gwfBNsg4XxWpxYXpJ/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1151,7 +1151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 
 // VARIABLES GLOBALES
-let seccionDestino = null; // Referencia al momento (comida, cena, etc.) que pidió el ingrediente
+let seccionDestino = null; 
 
 /**
  * 1. NAVEGACIÓN BLINDADA
@@ -1183,7 +1183,6 @@ function cerrarNuevoMenu() {
     }
 }
 
-// Lógica de cierre para el modal de la despensa (iframe)
 function cerrarDespensa() {
     const modal = document.getElementById('modal-despensa');
     if (modal) {
@@ -1240,36 +1239,40 @@ function crearNuevaFila(contenedor) {
 }
 
 /**
- * 5. CONEXIÓN CON IFRAME (NUEVA LÓGICA DE MENSAJERÍA)
+ * 5. CONEXIÓN CON IFRAME (RECEPTOR DE DATOS)
  */
 function abrirDespensa(boton) {
-    // Identificamos la lista exacta de ingredientes donde se pulsó el botón (+)
+    // Identificamos la lista exacta de ingredientes
     seccionDestino = boton.closest('.momento-seccion').querySelector('.lista-ingredientes');
     
     const modal = document.getElementById('modal-despensa');
     if (modal) {
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
+        
+        // Recargar el iframe por si acaso hubo cambios en el Excel
+        const iframe = document.getElementById('iframe-despensa');
+        if (iframe) {
+            const currentSrc = iframe.src;
+            iframe.src = currentSrc;
+        }
     }
 }
 
-// EL RECEPTOR: Escucha el mensaje que envía "nuestra_despensa.html"
+// ESCUCHADOR DE MENSAJES: Recibe los datos de "nuestra_despensa.html"
 window.addEventListener("message", function(event) {
     const comida = event.data;
 
-    // Verificamos que el mensaje traiga el formato correcto
     if (comida && comida.tipo === "ALIMENTO_SELECCIONADO") {
-        
         if (!seccionDestino) return;
 
         const filas = seccionDestino.querySelectorAll('.fila-ingrediente');
         
-        // Buscamos si hay una fila vacía para rellenar
+        // Buscar fila vacía o usar la última
         let filaParaRellenar = Array.from(filas).find(f => 
             f.querySelector('.input-ingrediente').value.trim() === ""
         );
 
-        // Si no hay filas vacías, usamos la última
         if (!filaParaRellenar) {
             filaParaRellenar = filas[filas.length - 1];
         }
@@ -1278,16 +1281,15 @@ window.addEventListener("message", function(event) {
             const inputNombre = filaParaRellenar.querySelector('.input-ingrediente');
             const inputPuntos = filaParaRellenar.querySelector('.input-puntos-ing');
 
-            // Insertamos los valores recibidos del iframe
+            // Insertar valores
             inputNombre.value = comida.Nombre;
             inputPuntos.value = comida.Netos;
 
-            // Disparamos las funciones de cálculo y expansión
+            // Forzar actualización de cálculos y expansión de filas
             verificarFilaNueva(inputNombre);
             actualizarPuntosDia(inputPuntos);
         }
 
-        // Cerramos el modal automáticamente tras seleccionar
         cerrarDespensa();
     }
 });
@@ -1312,7 +1314,7 @@ function actualizarPuntosDia(el) {
     const resultadoResta = presupuestoManual - sumaConsumida;
     
     if (displayRestante) {
-        displayRestante.value = resultadoResta;
+        displayRestante.value = resultadoResta.toFixed(1); // Un decimal para precisión
 
         if (resultadoResta < 0) {
             displayRestante.style.color = "white";
@@ -1325,11 +1327,6 @@ function actualizarPuntosDia(el) {
         }
     }
 }
-function cerrarDespensa() {
-    document.getElementById('modal-despensa').style.display = 'none';
-    document.body.style.overflow = 'auto'; // Devuelve el scroll a la página
-    seccionDestino = null; 
-}
 
 function guardarNuevoMenu() {
     const fecha = document.getElementById('input-fecha-nueva').value;
@@ -1337,6 +1334,7 @@ function guardarNuevoMenu() {
         alert("⚠️ Por favor, selecciona una fecha de inicio.");
         return;
     }
+    // Aquí podrías añadir la lógica google.script.run para guardar en el Excel
     alert("Planificación guardada correctamente.");
     cerrarNuevoMenu();
 }
@@ -1345,8 +1343,9 @@ function guardarNuevoMenu() {
  * 7. CARGA INICIAL
  */
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Sistema de Menús NutraFit: Receptor de Iframe Activo.");
+    console.log("Sistema de Menús NutraFit: Activo.");
     
+    // Inicializar cálculos en todas las fichas
     document.querySelectorAll('.input-puntos-dia').forEach(inputTotal => {
         actualizarPuntosDia(inputTotal);
     });
