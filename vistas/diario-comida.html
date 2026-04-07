@@ -84,6 +84,7 @@
         }
 
         @keyframes deslizarSubir { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes slideIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
         .cabecera-modal-nueva {
             background: var(--verde-corp); padding: 15px 20px;
@@ -121,6 +122,13 @@
         .input-ingrediente { flex-grow: 1; border: none; outline: none; font-size: 0.95rem; color: #555; background: transparent; }
         .input-puntos-ing { width: 40px; border: none; background: #f7f7f7; text-align: center; font-weight: bold; color: var(--verde-oscuro); border-radius: 4px; padding: 4px 0; }
         .btn-add-momento { background: none; border: none; color: var(--verde-corp); cursor: pointer; font-size: 0.9rem; }
+
+        /* Estilos adicionales para la despensa premium */
+        .item-despensa { 
+            padding: 15px; border-bottom: 1px solid #eee; display: flex; 
+            justify-content: space-between; cursor: pointer; transition: 0.2s;
+        }
+        .item-despensa:active { background: #f0f0f0; }
     </style>
 </head>
 <body>
@@ -230,6 +238,7 @@
                             <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
                         </div>
                     </div>
+
                     <div class="dia-ficha" id="ficha-jueves">
                         <div class="dia-header" onclick="toggleDia('ficha-jueves')">
                             <div style="width: 32px;"></div> <strong>JUEVES</strong>
@@ -246,7 +255,6 @@
                             <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
                         </div>
                     </div>
-
                     <div class="dia-ficha" id="ficha-viernes">
                         <div class="dia-header" onclick="toggleDia('ficha-viernes')">
                             <div style="width: 32px;"></div> <strong>VIERNES</strong>
@@ -294,145 +302,138 @@
                             <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
                             <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
                             <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
+                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespento(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
                         </div>
                     </div>
-                </div> </div> </div> </div> <div id="modal-despensa" class="modal-overlay" style="z-index: 3000;">
-        <div class="modal-contenido" style="height: 85vh; margin-top: 5vh; border-radius: 20px 20px 0 0; overflow: hidden; display: flex; flex-direction: column;">
-            <div class="cabecera-modal-nueva" style="flex-shrink: 0;">
-                <div class="titulo">MI DESPENSA REAL</div>
+                </div> </div>
+        </div>
+    </div>
+
+    <div id="modal-despensa" class="modal-overlay" style="z-index: 5000;">
+        <div class="modal-contenido" style="height: 90vh; animation: slideIn 0.3s ease;">
+            <div class="cabecera-modal-nueva">
+                <div class="titulo"><i class="fas fa-search"></i> SELECCIONAR ALIMENTO</div>
                 <button class="btn-nav" onclick="cerrarDespensa()"><i class="fas fa-times"></i></button>
             </div>
-            <iframe src="vistas/nuestra_despensa.html" id="iframe-despensa" style="flex-grow: 1; width: 100%; border: none;"></iframe>
+            
+            <div style="padding: 10px 20px; background: #f0f0f0;">
+                <div class="contenedor-buscador" style="margin: 0; padding: 8px 12px;">
+                    <i class="fas fa-filter"></i>
+                    <input type="text" id="filtro-despensa" class="input-busqueda" placeholder="Filtrar por nombre..." oninput="filtrarDespensa()">
+                </div>
+            </div>
+
+            <div id="lista-alimentos-capa" style="flex-grow: 1; overflow-y: auto; background: white;">
+                <div style="padding: 40px; text-align: center; color: #999;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Cargando despensa...
+                </div>
+            </div>
         </div>
     </div>
-<div id="modal-despensa" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 5000; backdrop-filter: blur(4px);">
-    <div class="modal-contenido" style="position: absolute; bottom: 0; width: 100%; height: 90vh; background: white; border-radius: 25px 25px 0 0; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 -5px 20px rgba(0,0,0,0.2);">
+
+    <script>
+        /* ============================================================
+           CONFIGURACIÓN Y CARGA SILENCIOSA (DEVELOPER PREMIUM)
+           ============================================================ */
         
-        <div style="background: #78a978; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white;">
-            <span style="font-weight: bold; letter-spacing: 1px;"><i class="fas fa-search"></i> SELECCIONAR ALIMENTO</span>
-            <button onclick="cerrarDespensa()" style="background: rgba(255,255,255,0.3); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
+        let baseDatosAlimentos = [];
+        let elementoOrigen = null; 
 
-        <iframe src="<?= ScriptApp.getService().getUrl() ?>?v=nuestra_despensa" id="iframe-despensa" style="flex-grow: 1; width: 100%; border: none;"></iframe>
-    </div>
-</div>
-  <script>
-    /* ============================================================
-       CONFIGURACIÓN Y CARGA SILENCIOSA (DEVELOPER PREMIUM)
-       ============================================================ */
-    
-    // 1. Variables Globales (Caché de datos)
-    let baseDatosAlimentos = [];
-    let elementoOrigen = null; 
-
-    // 2. Disparador Automático al cargar la página
-    window.onload = function() {
-        cargarDespensaSilenciosa();
-    };
-
-    // 3. Función de Carga de Datos (Comunicación con Código.gs)
-    function cargarDespensaSilenciosa() {
-        console.log("Iniciando carga de despensa...");
-        google.script.run
-            .withSuccessHandler(function(datos) {
-                baseDatosAlimentos = datos;
-                console.log("✅ Despensa cargada: " + datos.length + " alimentos listos.");
-                // Si tienes un contenedor visual para la lista, lo renderizamos de una vez
-                if(document.getElementById('lista-alimentos-capa')) {
-                    renderizarCapaDespensa(datos);
-                }
-            })
-            .withFailureHandler(function(err) {
-                console.error("❌ Error al conectar con la base de datos:", err);
-            })
-            .obtenerAlimentosMenu();
-    }
-
-    /* ============================================================
-       FUNCIONES DE NAVEGACIÓN Y DISEÑO
-       ============================================================ */
-
-    function volverInicio() { location.reload(); }
-    
-    function abrirNuevoMenu() { 
-        document.getElementById('modal-nuevo').style.display = 'block'; 
-        document.body.style.overflow = 'hidden'; 
-    }
-    
-    function cerrarNuevoMenu() { 
-        document.getElementById('modal-nuevo').style.display = 'none'; 
-        document.body.style.overflow = 'auto'; 
-    }
-
-    function toggleDia(idFicha) {
-        const ficha = document.getElementById(idFicha);
-        if(ficha.classList.contains('activo')) return;
-        document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
-        ficha.classList.add('activo');
-        setTimeout(() => { ficha.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
-    }
-
-    /* ============================================================
-       LÓGICA DE LA DESPENSA (USANDO CACHÉ SILENCIOSA)
-       ============================================================ */
-
-    function abrirDespensa(btn) {
-        // Guardamos la sección donde queremos añadir el alimento
-        elementoOrigen = btn.closest('.momento-seccion').querySelector('.lista-ingredientes');
-        
-        // Mostramos la capa de la despensa (Capa interna mejor que modal externo)
-        const capa = document.getElementById('capa-despensa-interna');
-        if (capa) {
-            capa.style.display = 'flex';
-        } else {
-            // Si prefieres mantener el modal-despensa original:
-            document.getElementById('modal-despensa').style.display = 'block';
-        }
-        
-        document.body.style.overflow = 'hidden';
-        
-        // Si por alguna razón la base de datos está vacía al abrir, intentamos cargarla de nuevo
-        if (baseDatosAlimentos.length === 0) {
+        window.onload = function() {
             cargarDespensaSilenciosa();
-        } else {
-            renderizarCapaDespensa(baseDatosAlimentos);
+        };
+
+        function cargarDespensaSilenciosa() {
+            console.log("Iniciando carga silenciosa...");
+            google.script.run
+                .withSuccessHandler(function(datos) {
+                    baseDatosAlimentos = datos;
+                    renderizarCapaDespensa(datos);
+                    console.log("✅ Datos listos en caché.");
+                })
+                .withFailureHandler(function(err) {
+                    console.error("❌ Error de red:", err);
+                })
+                .obtenerAlimentosMenu();
         }
-    }
 
-    function cerrarDespensa() { 
-        // Cerramos tanto la capa como el posible modal
-        if(document.getElementById('capa-despensa-interna')) document.getElementById('capa-despensa-interna').style.display = 'none';
-        if(document.getElementById('modal-despensa')) document.getElementById('modal-despensa').style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
+        /* ============================================================
+           NAVEGACIÓN
+           ============================================================ */
 
-    function renderizarCapaDespensa(datos) {
-        const contenedor = document.getElementById('lista-alimentos-capa');
-        if (!contenedor) return;
-        
-        let html = "";
-        datos.forEach(a => {
-            html += `
-            <div class="item-despensa" onclick="seleccionarDeCapa('${a.nombre}', ${a.puntos})" 
-                 style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; cursor:pointer;">
-                <span>${a.nombre}</span>
-                <span style="font-weight:bold; color:#27ae60;">${a.puntos} pts</span>
-            </div>`;
-        });
-        contenedor.innerHTML = html;
-    }
+        function volverInicio() { location.reload(); }
+        function abrirNuevoMenu() { 
+            document.getElementById('modal-nuevo').style.display = 'block'; 
+            document.body.style.overflow = 'hidden'; 
+        }
+        function cerrarNuevoMenu() { 
+            document.getElementById('modal-nuevo').style.display = 'none'; 
+            document.body.style.overflow = 'auto'; 
+        }
 
-    function seleccionarDeCapa(nombre, puntos) {
-        if (!elementoOrigen) return;
+        function toggleDia(idFicha) {
+            const ficha = document.getElementById(idFicha);
+            if(ficha.classList.contains('activo')) return;
+            document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
+            ficha.classList.add('activo');
+            setTimeout(() => { ficha.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
+        }
 
-        const filas = elementoOrigen.querySelectorAll('.fila-ingrediente');
-        let filaDestino = Array.from(filas).find(f => f.querySelector('.input-ingrediente').value.trim() === "") 
-                        || filas[filas.length - 1];
+        /* ============================================================
+           LÓGICA DE LA DESPENSA PREMIUM
+           ============================================================ */
 
-        if (filaDestino) {
+        function abrirDespensa(btn) {
+            elementoOrigen = btn.closest('.momento-seccion').querySelector('.lista-ingredientes');
+            document.getElementById('modal-despensa').style.display = 'block';
+            document.getElementById('filtro-despensa').value = ""; // Limpiar filtro
+            renderizarCapaDespensa(baseDatosAlimentos); // Resetear vista
+        }
+
+        function cerrarDespensa() { 
+            document.getElementById('modal-despensa').style.display = 'none';
+        }
+
+        function renderizarCapaDespensa(datos) {
+            const contenedor = document.getElementById('lista-alimentos-capa');
+            if (!contenedor) return;
+            
+            if (!datos || datos.length === 0) {
+                contenedor.innerHTML = '<div style="padding:20px; text-align:center;">No se encontraron alimentos.</div>';
+                return;
+            }
+
+            let html = "";
+            datos.forEach(a => {
+                html += `
+                <div class="item-despensa" onclick="seleccionarDeCapa('${a.nombre}', ${a.puntos})">
+                    <span style="font-size:0.95rem; color:#444;">${a.nombre}</span>
+                    <span style="font-weight:bold; color:var(--verde-oscuro);">${a.puntos} <small>pts</small></span>
+                </div>`;
+            });
+            contenedor.innerHTML = html;
+        }
+
+        function filtrarDespensa() {
+            const busqueda = document.getElementById('filtro-despensa').value.toLowerCase();
+            const filtrados = baseDatosAlimentos.filter(a => a.nombre.toLowerCase().includes(busqueda));
+            renderizarCapaDespensa(filtrados);
+        }
+
+        function seleccionarDeCapa(nombre, puntos) {
+            if (!elementoOrigen) return;
+
+            const filas = elementoOrigen.querySelectorAll('.fila-ingrediente');
+            // Buscamos la última fila o una vacía
+            let filaDestino = Array.from(filas).find(f => f.querySelector('.input-ingrediente').value.trim() === "");
+            
+            if (!filaDestino) {
+                // Si no hay vacía, creamos una nueva manualmente antes de insertar
+                verificarFilaNueva(filas[filas.length-1].querySelector('.input-ingrediente'));
+                const nuevasFilas = elementoOrigen.querySelectorAll('.fila-ingrediente');
+                filaDestino = nuevasFilas[nuevasFilas.length - 2]; 
+            }
+
             const inputNombre = filaDestino.querySelector('.input-ingrediente');
             const inputPuntos = filaDestino.querySelector('.input-puntos-ing');
             
@@ -441,41 +442,41 @@
 
             verificarFilaNueva(inputNombre);
             actualizarPuntosDia(inputPuntos);
+            cerrarDespensa();
         }
-        cerrarDespensa();
-    }
 
-    /* ============================================================
-       CÁLCULOS Y DINÁMICA DE FILAS
-       ============================================================ */
+        /* ============================================================
+           CÁLCULOS DINÁMICOS
+           ============================================================ */
 
-    function verificarFilaNueva(input) {
-        const lista = input.closest('.lista-ingredientes');
-        const filas = lista.querySelectorAll('.fila-ingrediente');
-        const ultimaFila = filas[filas.length - 1];
-        if (input.parentElement === ultimaFila && input.value.trim() !== "") {
-            const nuevaFila = document.createElement('div');
-            nuevaFila.className = 'fila-ingrediente';
-            nuevaFila.innerHTML = `
-                <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
-                <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
-            `;
-            lista.appendChild(nuevaFila);
+        function verificarFilaNueva(input) {
+            const lista = input.closest('.lista-ingredientes');
+            const filas = lista.querySelectorAll('.fila-ingrediente');
+            const ultimaFila = filas[filas.length - 1];
+            if (input.parentElement === ultimaFila && input.value.trim() !== "") {
+                const nuevaFila = document.createElement('div');
+                nuevaFila.className = 'fila-ingrediente';
+                nuevaFila.innerHTML = `
+                    <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
+                    <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
+                `;
+                lista.appendChild(nuevaFila);
+            }
         }
-    }
 
-    function actualizarPuntosDia(el) {
-        const ficha = el.closest('.dia-ficha');
-        if (!ficha) return;
-        const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); 
-        const displayRestante = ficha.querySelector('.input-restantes-dia');
-        const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
-        let sumaConsumida = 0;
-        todosLosIngredientes.forEach(ing => { sumaConsumida += parseFloat(ing.value) || 0; });
-        const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
-        const resultadoResta = presupuestoManual - sumaConsumida;
-        
-        if (displayRestante) {
+        function actualizarPuntosDia(el) {
+            const ficha = el.closest('.dia-ficha');
+            if (!ficha) return;
+            const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); 
+            const displayRestante = ficha.querySelector('.input-restantes-dia');
+            const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
+            
+            let sumaConsumida = 0;
+            todosLosIngredientes.forEach(ing => { sumaConsumida += parseFloat(ing.value) || 0; });
+            
+            const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
+            const resultadoResta = presupuestoManual - sumaConsumida;
+            
             displayRestante.value = resultadoResta;
             if (resultadoResta < 0) {
                 displayRestante.style.color = "white";
@@ -485,15 +486,8 @@
                 displayRestante.style.backgroundColor = "white";
             }
         }
-    }
 
-    // --- MANTENEMOS EL PUENTE POR SI USAS IFRAMES EN OTRAS PARTES ---
-    window.addEventListener("message", (event) => {
-        const datos = event.data;
-        if (datos && datos.tipo === "ALIMENTO_SELECCIONADO") {
-            seleccionarDeCapa(datos.Nombre, datos.Netos);
-        }
-    });
-
-    function guardarNuevoMenu() { alert("Planificación guardada con éxito."); cerrarNuevoMenu(); }
-</script>
+        function guardarNuevoMenu() { alert("Planificación guardada con éxito."); cerrarNuevoMenu(); }
+    </script>
+</body>
+</html>
