@@ -7,6 +7,13 @@
 
 <style>
 
+/* ======== ESTILO GENERAL ======== */
+body {
+  margin: 0;
+  background-color: #f0f0f0;
+  font-family: Arial, sans-serif;
+}
+
 /* ======== CABECERA ======== */
 .header {
   background-color: #2e7d32;
@@ -14,22 +21,23 @@
   padding: 15px;
   display: flex;
   align-items: center;
-  gap: 15px;
-  font-size: 20px;
-  font-weight: bold;
+  justify-content: center;
+  position: relative;
 }
 
-.header img {
-  width: 28px;
-  height: 28px;
+.header .back-btn {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 26px;
   cursor: pointer;
 }
 
-/* ======== CONTENEDOR GENERAL ======== */
+/* ======== CONTENEDOR PRINCIPAL ======== */
 .menu-semanal {
   width: 95%;
   margin: 15px auto;
-  font-family: Arial, sans-serif;
 }
 
 /* ======== FICHAS DE DÍAS ======== */
@@ -52,7 +60,7 @@
 }
 
 .dia-content {
-  background: #f5f5f5;
+  background: #ffffff;
   padding: 12px;
   display: none;
 }
@@ -110,23 +118,20 @@
 
 <!-- ======== CABECERA ======== -->
 <div class="header">
-  <img src="../iconos/back.png" onclick="history.back()">
+  <span class="back-btn" onclick="history.back()">←</span>
   <span>MI MENÚ SEMANAL</span>
 </div>
 
 <!-- ======== CONTENEDOR PRINCIPAL ======== -->
 <div class="menu-semanal">
 
-  <!-- ======== DÍAS DE LA SEMANA ======== -->
-  <!-- Repetimos este bloque para cada día -->
-
-  <!-- LUNES -->
+  <!-- ======== LUNES ======== -->
   <div class="dia">
     <button class="dia-header">LUNES</button>
     <div class="dia-content">
 
       <div class="creditos">
-        <label>Créditos disponibles:</label>
+        <label>Créditos:</label>
         <input type="number" class="input-creditos">
 
         <label>Restantes:</label>
@@ -164,8 +169,7 @@
     </div>
   </div>
 
-  <!-- COPIA ESTE BLOQUE Y CAMBIA EL NOMBRE DEL DÍA PARA: 
-       MARTES, MIÉRCOLES, JUEVES, VIERNES, SÁBADO, DOMINGO -->
+  <!-- Aquí luego añadiremos MARTES, MIÉRCOLES, etc. -->
 
 </div>
 
