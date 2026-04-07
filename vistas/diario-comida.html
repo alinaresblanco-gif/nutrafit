@@ -8,7 +8,7 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background: #f0f0f0;
 }
 
@@ -27,13 +27,6 @@ body {
   flex: 1;
   text-align: center;
   margin: 0;
-}
-
-.btn-back {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 20px;
 }
 
 .contenedor {
@@ -62,12 +55,7 @@ body {
 }
 
 .comida h4 {
-  margin: 5px 0;
   color: #2e7d32;
-}
-
-.comida input {
-  width: 65%;
 }
 </style>
 </head>
@@ -75,58 +63,48 @@ body {
 <body>
 
 <header class="header">
-  <button onclick="volver()" class="btn-back">←</button>
+  <button onclick="volver()">←</button>
   <h1>MI MENÚ SEMANAL</h1>
 </header>
 
-<div class="contenedor" id="contenedor"></div>
+<div class="contenedor">
+
+<!-- LUNES -->
+<div class="dia-card">
+  <div class="dia-header">
+    <span>LUNES</span>
+    <input type="number" placeholder="Créditos">
+  </div>
+
+  <div class="comida"><h4>DESAYUNO</h4><input></div>
+  <div class="comida"><h4>ALMUERZO</h4><input></div>
+  <div class="comida"><h4>COMIDA</h4><input></div>
+  <div class="comida"><h4>MERIENDA</h4><input></div>
+  <div class="comida"><h4>CENA</h4><input></div>
+</div>
+
+<!-- MARTES -->
+<div class="dia-card">
+  <div class="dia-header">
+    <span>MARTES</span>
+    <input type="number" placeholder="Créditos">
+  </div>
+
+  <div class="comida"><h4>DESAYUNO</h4><input></div>
+  <div class="comida"><h4>ALMUERZO</h4><input></div>
+  <div class="comida"><h4>COMIDA</h4><input></div>
+  <div class="comida"><h4>MERIENDA</h4><input></div>
+  <div class="comida"><h4>CENA</h4><input></div>
+</div>
+
+<!-- (puedes copiar esto para miércoles a domingo) -->
+
+</div>
 
 <script>
-const dias = ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"];
-const comidas = ["desayuno","almuerzo","comida","merienda","cena"];
-
-function crearSemana() {
-  const contenedor = document.getElementById("contenedor");
-
-  if (!contenedor) {
-    console.error("No existe el contenedor");
-    return;
-  }
-
-  dias.forEach(dia => {
-    let card = document.createElement("div");
-    card.className = "dia-card";
-
-    let contenido = "";
-
-    contenido += `
-      <div class="dia-header">
-        <span>${dia.toUpperCase()}</span>
-        <input type="number" placeholder="Créditos">
-      </div>
-    `;
-
-    comidas.forEach(c => {
-      contenido += `
-        <div class="comida">
-          <h4>${c.toUpperCase()}</h4>
-          <input type="text" placeholder="Añadir comida...">
-        </div>
-      `;
-    });
-
-    card.innerHTML = contenido;
-    contenedor.appendChild(card);
-  });
-}
-
 function volver() {
   window.location.href = "../index.html";
 }
-
-window.addEventListener("load", function() {
-  crearSemana();
-});
 </script>
 
 </body>
