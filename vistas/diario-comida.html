@@ -125,7 +125,6 @@
         .input-puntos-ing { width: 40px; border: none; background: #f7f7f7; text-align: center; font-weight: bold; color: var(--verde-oscuro); border-radius: 4px; padding: 4px 0; }
         .btn-add-momento { background: none; border: none; color: var(--verde-corp); cursor: pointer; font-size: 0.9rem; }
 
-        /* Estilos Despensa Items */
         .item-despensa {
             padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; cursor: pointer;
         }
@@ -176,7 +175,6 @@
                 </div>
 
                 <div id="acordeon-semanal">
-                    
                     <div class="dia-ficha activo" id="ficha-lunes">
                         <div class="dia-header" onclick="toggleDia('ficha-lunes')">
                             <div style="width: 32px;"></div> <strong>LUNES</strong>
@@ -276,6 +274,7 @@
                             <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa('Viernes', 'Cena', this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
                         </div>
                     </div>
+
                     <div class="dia-ficha" id="ficha-sabado">
                         <div class="dia-header" onclick="toggleDia('ficha-sabado')">
                             <div style="width: 32px;"></div> <strong>SÁBADO</strong>
@@ -338,7 +337,7 @@
     </div>
 
     <script>
-        let elementoOrigen = null; // Para saber qué sección pulsó el "+"
+        let elementoOrigen = null; 
         let despensaLocal = [];
         let itemSeleccionado = null;
 
@@ -391,18 +390,10 @@
             }
         }
 
-        // --- LÓGICA DE DESPENSA CONECTADA ---
+        // --- ESTA ES LA FUNCIÓN QUE HE MODIFICADO PARA TI ---
         function abrirDespensa(dia, momento, btn) {
-            elementoOrigen = btn.closest('.momento-seccion').querySelector('.lista-ingredientes');
-            document.getElementById('modal-despensa').style.display = 'block';
-            if (despensaLocal.length === 0) {
-                google.script.run.withSuccessHandler(datos => {
-                    despensaLocal = datos;
-                    renderizarDespensa(datos);
-                }).obtenerAlimentosDespensa();
-            } else {
-                renderizarDespensa(despensaLocal);
-            }
+            // En lugar de abrir el modal, redirigimos a la vista deseada
+            window.location.href = "vistas/nuestra_despensa.html";
         }
 
         function cerrarDespensa() { document.getElementById('modal-despensa').style.display = 'none'; itemSeleccionado = null; }
