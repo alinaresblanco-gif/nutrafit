@@ -8,7 +8,7 @@
     
     <style>
         :root {
-            --verde-corp: #78a978; /* Tu verde corporativo */
+            --verde-corp: #78a978;
             --verde-oscuro: #5a8a5a;
             --blanco: #ffffff;
             --gris-fondo: #f4f7f4;
@@ -16,10 +16,9 @@
 
         body {
             margin: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--gris-fondo);
-            /* Añadimos padding arriba para que el contenido no se esconda bajo la cabecera fija */
-            padding-top: 70px; 
+            padding-top: 80px; /* Espacio para que la cabecera no tape la ficha */
         }
 
         /* --- CABECERA FIJA --- */
@@ -29,7 +28,7 @@
             display: flex;
             align-items: center;
             padding: 0 15px;
-            position: fixed; /* Fijamos la cabecera arriba */
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -37,9 +36,8 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* Botón de retroceso transparente */
         .btn-retroceso {
-            background-color: rgba(255, 255, 255, 0.2); /* Verde transparente sobre fondo verde */
+            background-color: rgba(255, 255, 255, 0.2);
             color: var(--blanco);
             width: 40px;
             height: 40px;
@@ -48,104 +46,85 @@
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            font-size: 1.2rem;
-            transition: background 0.3s ease;
         }
 
-        .btn-retroceso:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Título centrado */
         .titulo-cabecera {
             color: var(--blanco);
             font-weight: bold;
-            font-size: 1rem;
             flex-grow: 1;
             text-align: center;
-            margin-right: 40px; /* Para compensar el ancho del botón y que quede centrado real */
-            letter-spacing: 0.5px;
+            margin-right: 40px;
             text-transform: uppercase;
         }
-        /* --- CONTENEDOR PRINCIPAL DE FICHAS --- */
-.contenedor-semana {
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px; /* Espacio entre cada ficha */
-}
 
-.dia-ficha {
-    background: var(--blanco);
-    border-radius: 12px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-    border: 1px solid #e0e0e0;
-    overflow: hidden;
-}
+        /* --- CONTENEDOR DE FICHAS --- */
+        .contenedor-semana {
+            padding: 15px;
+        }
 
-.dia-header {
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-}
+        .dia-ficha {
+            background: var(--blanco);
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+            margin-bottom: 15px;
+        }
 
-.dia-nombre {
-    font-weight: 800;
-    color: var(--verde-oscuro);
-    font-size: 1rem;
-}
+        .dia-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-/* --- BLOQUE DE PUNTOS (DERECHA) --- */
-.puntos-header {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
+        .dia-nombre {
+            font-weight: 800;
+            color: var(--verde-oscuro);
+        }
 
-.punto-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+        .puntos-header {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
 
-.label-mini {
-    font-size: 0.6rem;
-    color: #999;
-    font-weight: bold;
-    margin-bottom: 2px;
-}
+        .punto-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-.input-puntos {
-    width: 45px;
-    height: 30px;
-    border: 2px solid var(--verde-corp);
-    border-radius: 6px;
-    text-align: center;
-    font-weight: bold;
-    outline: none;
-    color: #333;
-}
+        .label-mini {
+            font-size: 0.6rem;
+            color: #999;
+            font-weight: bold;
+        }
 
-.caja-restante {
-    min-width: 45px;
-    height: 30px;
-    background: #f0f0f0;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 0.9rem;
-    color: #555;
-}
+        .input-puntos {
+            width: 45px;
+            height: 30px;
+            border: 2px solid var(--verde-corp);
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
 
-.flecha-icon {
-    color: #ccc;
-    margin-left: 5px;
-    font-size: 0.9rem;
-}
+        .caja-restante {
+            min-width: 45px;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .dia-contenido {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            background-color: #fafafa;
+        }
     </style>
 </head>
 <body>
@@ -156,31 +135,31 @@
         </a>
         <div class="titulo-cabecera">FORMULARIO MENÚ SEMANAL</div>
     </header>
-<div class="contenedor-semana">
 
-    <div class="dia-ficha" id="ficha-0">
-        <div class="dia-header">
-            <div class="dia-nombre">LUNES</div>
+    <div class="contenedor-semana">
+        <div class="dia-ficha">
+            <div class="dia-header">
+                <div class="dia-nombre">LUNES</div>
+                <div class="puntos-header">
+                    <div class="punto-item">
+                        <span class="label-mini">BASE</span>
+                        <input type="number" class="input-puntos" value="0">
+                    </div>
+                    <div class="punto-item">
+                        <span class="label-mini">RESTAN</span>
+                        <div class="caja-restante">0</div>
+                    </div>
+                    <i class="fas fa-chevron-down" style="color:#ccc"></i>
+                </div>
+            </div>
             
-            <div class="puntos-header">
-                <div class="punto-item">
-                    <span class="label-mini">BASE</span>
-                    <input type="number" class="input-puntos" id="base-0" placeholder="0">
-                </div>
-                
-                <div class="punto-item">
-                    <span class="label-mini">RESTAN</span>
-                    <div class="caja-restante" id="restante-0">0</div>
-                </div>
-
-                <i class="fas fa-chevron-down flecha-icon"></i>
+            <div class="dia-contenido">
+                <p style="color: #666; font-size: 0.9rem; margin: 0;">
+                    El contenido aparecerá aquí (Desayuno, Comida, etc.)
+                </p>
             </div>
         </div>
-        
-        <div class="dia-contenido" style="display:none;">
-            </div>
     </div>
 
-</div>
-    </body>
+</body>
 </html>
