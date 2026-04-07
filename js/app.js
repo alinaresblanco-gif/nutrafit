@@ -1146,3 +1146,10 @@ document.addEventListener('DOMContentLoaded', () => {
         inputBusqueda.addEventListener('input', filtrarRecetas);
     }
 });
+/** * codigo js diario-comida */
+document.querySelectorAll(".dia-header").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const content = btn.nextElementSibling;
+    content.style.display = content.style.display === "block" ? "none" : "block";
+  });
+});

@@ -1,296 +1,51 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NutraFit - Diario de Comida</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        :root {
-            --verde-corp: #78a978;
-            --verde-oscuro: #5a8a5a;
-            --gris-fondo: #f4f7f4;
-            --sombra: 0 4px 10px rgba(0,0,0,0.08);
-        }
+<div class="menu-semanal">
 
-        body { 
-            margin: 0; font-family: 'Segoe UI', sans-serif; 
-            background-color: var(--gris-fondo); padding-bottom: 100px;
-        }
+  <!-- Día -->
+  <div class="dia">
+    <button class="dia-header">LUNES</button>
 
-        .cabecera {
-            background-color: var(--verde-corp);
-            padding: 15px; display: flex; align-items: center;
-            position: sticky; top: 0; z-index: 1000;
-        }
+    <div class="dia-content">
 
-        .btn-retroceso { color: white; font-size: 1.4rem; text-decoration: none; padding-right: 15px; }
-        .titulo-cabecera { color: white; font-weight: bold; flex-grow: 1; text-align: center; margin-right: 35px; }
+      <!-- Créditos -->
+      <div class="creditos">
+        <label>Créditos disponibles:</label>
+        <input type="number" maxlength="2" class="input-creditos">
 
-        .contenedor-diario { padding: 15px; }
+        <label>Créditos restantes:</label>
+        <input type="number" maxlength="2" class="input-restantes" disabled>
+      </div>
 
-        .dia-ficha {
-            background: white; border-radius: 12px; margin-bottom: 12px;
-            overflow: hidden; box-shadow: var(--sombra); border: 1px solid #e0e0e0;
-        }
+      <!-- Momentos del día -->
+      <div class="momentos">
 
-        .dia-header {
-            padding: 18px 15px; display: flex; justify-content: space-between;
-            align-items: center; cursor: pointer;
-        }
-
-        .dia-titulo { font-weight: 800; color: var(--verde-oscuro); font-size: 1rem; }
-
-        .creditos-info { display: flex; gap: 10px; align-items: center; }
-        .caja-creditos { display: flex; flex-direction: column; align-items: center; }
-        .label-mini { font-size: 0.6rem; color: #999; font-weight: bold; margin-bottom: 2px; }
-
-        .input-puntos {
-            width: 45px; height: 30px; border: 2px solid var(--verde-corp);
-            border-radius: 6px; text-align: center; font-weight: bold; outline: none;
-        }
-
-        .restante-badge {
-            min-width: 45px; height: 30px; background: #f0f0f0;
-            border-radius: 6px; display: flex; align-items: center;
-            justify-content: center; font-weight: bold;
-        }
-
-        /* --- CONTENIDO EXPANDIBLE --- */
-        .dia-contenido { display: none; padding: 0 15px 15px 15px; background: #fff; }
-        .dia-ficha.activo .dia-contenido { display: block; }
-
-        .momento-bloque {
-            background: #fdfdfd; margin-top: 10px;
-            padding: 12px; border-radius: 8px; border: 1px solid #f0f0f0;
-        }
-
-        .momento-header { display: flex; justify-content: space-between; align-items: center; }
-        .momento-nombre { font-weight: bold; color: var(--verde-corp); font-size: 0.85rem; text-transform: uppercase; }
-
-        .lista-ingredientes {
-            min-height: 20px; font-size: 0.85rem; color: #888;
-            margin-top: 8px; border-top: 1px dashed #eee; padding-top: 8px;
-        }
-
-        .btn-anadir {
-            background: var(--verde-corp); color: white; border: none;
-            width: 32px; height: 32px; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center; font-size: 1.2rem;
-            cursor: pointer;
-        }
-
-        .btn-flotante-guardar {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: var(--verde-corp); color: white; padding: 15px 40px;
-            border-radius: 30px; font-weight: bold; text-decoration: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1001;
-        }
-    </style>
-</head>
-<body>
-
-    <header class="cabecera">
-        <a href="index.html" class="btn-retroceso"><i class="fas fa-arrow-left"></i></a>
-        <div class="titulo-cabecera">MI MENÚ SEMANAL</div>
-    </header>
-
-    <div class="contenedor-diario">
-        
-        <div class="dia-ficha" id="ficha-0">
-            <div class="dia-header" onclick="toggleDia(0)">
-                <div class="dia-titulo">LUNES</div>
-                <div class="creditos-info">
-                    <div class="caja-creditos">
-                        <span class="label-mini">BASE</span>
-                        <input type="number" class="input-puntos" id="base-0" placeholder="00" onclick="event.stopPropagation()" oninput="calcular(0)">
-                    </div>
-                    <div class="caja-creditos">
-                        <span class="label-mini">RESTAN</span>
-                        <div class="restante-badge" id="restante-0">0</div>
-                    </div>
-                    <i class="fas fa-chevron-down" style="color:#ccc"></i>
-                </div>
-            </div>
-            <div class="dia-contenido">
-                <div class="momento-bloque">
-                    <div class="momento-header"><span class="momento-nombre">Desayuno</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(0,'Desayuno')">+</button></div>
-                    <div class="lista-ingredientes">Pulsa + para añadir ingredientes...</div>
-                </div>
-                <div class="momento-bloque">
-                    <div class="momento-header"><span class="momento-nombre">Almuerzo</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(0,'Almuerzo')">+</button></div>
-                    <div class="lista-ingredientes">Sin ingredientes</div>
-                </div>
-                <div class="momento-bloque">
-                    <div class="momento-header"><span class="momento-nombre">Comida</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(0,'Comida')">+</button></div>
-                    <div class="lista-ingredientes">Sin ingredientes</div>
-                </div>
-                <div class="momento-bloque">
-                    <div class="momento-header"><span class="momento-nombre">Merienda</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(0,'Merienda')">+</button></div>
-                    <div class="lista-ingredientes">Sin ingredientes</div>
-                </div>
-                <div class="momento-bloque">
-                    <div class="momento-header"><span class="momento-nombre">Cena</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(0,'Cena')">+</button></div>
-                    <div class="lista-ingredientes">Sin ingredientes</div>
-                </div>
-            </div>
+        <div class="momento">
+          <h3>Desayuno</h3>
+          <textarea placeholder="Añadir ingredientes..."></textarea>
         </div>
 
-        <div class="dia-ficha" id="ficha-1">
-            <div class="dia-header" onclick="toggleDia(1)">
-                <div class="dia-titulo">MARTES</div>
-                <div class="creditos-info">
-                    <div class="caja-creditos">
-                        <span class="label-mini">BASE</span>
-                        <input type="number" class="input-puntos" id="base-1" placeholder="00" onclick="event.stopPropagation()" oninput="calcular(1)">
-                    </div>
-                    <div class="caja-creditos">
-                        <span class="label-mini">RESTAN</span>
-                        <div class="restante-badge" id="restante-1">0</div>
-                    </div>
-                    <i class="fas fa-chevron-down" style="color:#ccc"></i>
-                </div>
-            </div>
-            <div class="dia-contenido">
-                <div class="momento-bloque">
-                    <div class="momento-header"><span class="momento-nombre">Desayuno</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(1,'Desayuno')">+</button></div>
-                    <div class="lista-ingredientes">Sin ingredientes</div>
-                </div>
-                <div class="momento-bloque">
-                    <div class="momento-header"><span class="momento-nombre">Almuerzo</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(1,'Almuerzo')">+</button></div>
-                    <div class="lista-ingredientes">Sin ingredientes</div>
-                </div>
-                <div class="momento-bloque">
-                    <div class="momento-header"><span class="momento-nombre">Comida</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(1,'Comida')">+</button></div>
-                    <div class="lista-ingredientes">Sin ingredientes</div>
-                </div>
-                <div class="momento-bloque">
-                    <div class="momento-header"><span class="momento-nombre">Merienda</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(1,'Merienda')">+</button></div>
-                    <div class="lista-ingredientes">Sin ingredientes</div>
-                </div>
-                <div class="momento-bloque">
-                    <div class="momento-header"><span class="momento-nombre">Cena</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(1,'Cena')">+</button></div>
-                    <div class="lista-ingredientes">Sin ingredientes</div>
-                </div>
-            </div>
+        <div class="momento">
+          <h3>Almuerzo</h3>
+          <textarea placeholder="Añadir ingredientes..."></textarea>
         </div>
 
-        <div class="dia-ficha" id="ficha-2">
-            <div class="dia-header" onclick="toggleDia(2)">
-                <div class="dia-titulo">MIÉRCOLES</div>
-                <div class="creditos-info">
-                    <div class="caja-creditos"><span class="label-mini">BASE</span><input type="number" class="input-puntos" id="base-2" placeholder="00" onclick="event.stopPropagation()" oninput="calcular(2)"></div>
-                    <div class="caja-creditos"><span class="label-mini">RESTAN</span><div class="restante-badge" id="restante-2">0</div></div>
-                    <i class="fas fa-chevron-down" style="color:#ccc"></i>
-                </div>
-            </div>
-            <div class="dia-contenido">
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Desayuno</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(2,'Desayuno')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Almuerzo</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(2,'Almuerzo')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Comida</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(2,'Comida')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Merienda</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(2,'Merienda')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Cena</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(2,'Cena')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-            </div>
+        <div class="momento">
+          <h3>Comida</h3>
+          <textarea placeholder="Añadir ingredientes..."></textarea>
         </div>
 
-        <div class="dia-ficha" id="ficha-3">
-            <div class="dia-header" onclick="toggleDia(3)">
-                <div class="dia-titulo">JUEVES</div>
-                <div class="creditos-info">
-                    <div class="caja-creditos"><span class="label-mini">BASE</span><input type="number" class="input-puntos" id="base-3" placeholder="00" onclick="event.stopPropagation()" oninput="calcular(3)"></div>
-                    <div class="caja-creditos"><span class="label-mini">RESTAN</span><div class="restante-badge" id="restante-3">0</div></div>
-                    <i class="fas fa-chevron-down" style="color:#ccc"></i>
-                </div>
-            </div>
-            <div class="dia-contenido">
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Desayuno</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(3,'Desayuno')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Almuerzo</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(3,'Almuerzo')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Comida</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(3,'Comida')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Merienda</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(3,'Merienda')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Cena</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(3,'Cena')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-            </div>
+        <div class="momento">
+          <h3>Merienda</h3>
+          <textarea placeholder="Añadir ingredientes..."></textarea>
         </div>
 
-        <div class="dia-ficha" id="ficha-4">
-            <div class="dia-header" onclick="toggleDia(4)">
-                <div class="dia-titulo">VIERNES</div>
-                <div class="creditos-info">
-                    <div class="caja-creditos"><span class="label-mini">BASE</span><input type="number" class="input-puntos" id="base-4" placeholder="00" onclick="event.stopPropagation()" oninput="calcular(4)"></div>
-                    <div class="caja-creditos"><span class="label-mini">RESTAN</span><div class="restante-badge" id="restante-4">0</div></div>
-                    <i class="fas fa-chevron-down" style="color:#ccc"></i>
-                </div>
-            </div>
-            <div class="dia-contenido">
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Desayuno</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(4,'Desayuno')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Almuerzo</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(4,'Almuerzo')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Comida</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(4,'Comida')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Merienda</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(4,'Merienda')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Cena</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(4,'Cena')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-            </div>
+        <div class="momento">
+          <h3>Cena</h3>
+          <textarea placeholder="Añadir ingredientes..."></textarea>
         </div>
 
-        <div class="dia-ficha" id="ficha-5">
-            <div class="dia-header" onclick="toggleDia(5)">
-                <div class="dia-titulo">SÁBADO</div>
-                <div class="creditos-info">
-                    <div class="caja-creditos"><span class="label-mini">BASE</span><input type="number" class="input-puntos" id="base-5" placeholder="00" onclick="event.stopPropagation()" oninput="calcular(5)"></div>
-                    <div class="caja-creditos"><span class="label-mini">RESTAN</span><div class="restante-badge" id="restante-5">0</div></div>
-                    <i class="fas fa-chevron-down" style="color:#ccc"></i>
-                </div>
-            </div>
-            <div class="dia-contenido">
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Desayuno</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(5,'Desayuno')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Almuerzo</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(5,'Almuerzo')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Comida</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(5,'Comida')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Merienda</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(5,'Merienda')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Cena</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(5,'Cena')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-            </div>
-        </div>
-
-        <div class="dia-ficha" id="ficha-6">
-            <div class="dia-header" onclick="toggleDia(6)">
-                <div class="dia-titulo">DOMINGO</div>
-                <div class="creditos-info">
-                    <div class="caja-creditos"><span class="label-mini">BASE</span><input type="number" class="input-puntos" id="base-6" placeholder="00" onclick="event.stopPropagation()" oninput="calcular(6)"></div>
-                    <div class="caja-creditos"><span class="label-mini">RESTAN</span><div class="restante-badge" id="restante-6">0</div></div>
-                    <i class="fas fa-chevron-down" style="color:#ccc"></i>
-                </div>
-            </div>
-            <div class="dia-contenido">
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Desayuno</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(6,'Desayuno')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Almuerzo</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(6,'Almuerzo')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Comida</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(6,'Comida')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Merienda</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(6,'Merienda')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-                <div class="momento-bloque"><div class="momento-header"><span class="momento-nombre">Cena</span><button class="btn-anadir" onclick="event.stopPropagation(); abrirDespensa(6,'Cena')">+</button></div><div class="lista-ingredientes">Sin ingredientes</div></div>
-            </div>
-        </div>
-
+      </div>
     </div>
+  </div>
 
-    <a href="#" class="btn-flotante-guardar" onclick="alert('Guardando menú...')">GUARDAR SEMANA</a>
-
-    <script>
-        function toggleDia(idx) {
-            const ficha = document.getElementById('ficha-' + idx);
-            const estaAbierta = ficha.classList.contains('activo');
-            
-            // Cerramos todas
-            document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
-            
-            // Si estaba cerrada, la abrimos
-            if (!estaAbierta) {
-                ficha.classList.add('activo');
-            }
-        }
-
-        function calcular(idx) {
-            const val = document.getElementById('base-' + idx).value;
-            document.getElementById('restante-' + idx).innerText = val || 0;
-        }
-
-        function abrirDespensa(dia, momento) {
-            alert("Añadiendo ingrediente a: " + momento);
-        }
-    </script>
-</body>
-</html>
+  <!-- Repetir este bloque para MARTES, MIÉRCOLES, etc. -->
+</div>
