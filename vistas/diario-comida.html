@@ -319,94 +319,181 @@
         <iframe src="<?= ScriptApp.getService().getUrl() ?>?v=nuestra_despensa" id="iframe-despensa" style="flex-grow: 1; width: 100%; border: none;"></iframe>
     </div>
 </div>
-    <script>
-        let elementoOrigen = null; 
+  <script>
+    /* ============================================================
+       CONFIGURACIÓN Y CARGA SILENCIOSA (DEVELOPER PREMIUM)
+       ============================================================ */
+    
+    // 1. Variables Globales (Caché de datos)
+    let baseDatosAlimentos = [];
+    let elementoOrigen = null; 
 
-        function volverInicio() { location.reload(); }
-        function abrirNuevoMenu() { document.getElementById('modal-nuevo').style.display = 'block'; document.body.style.overflow = 'hidden'; }
-        function cerrarNuevoMenu() { document.getElementById('modal-nuevo').style.display = 'none'; document.body.style.overflow = 'auto'; }
+    // 2. Disparador Automático al cargar la página
+    window.onload = function() {
+        cargarDespensaSilenciosa();
+    };
 
-        function toggleDia(idFicha) {
-            const ficha = document.getElementById(idFicha);
-            if(ficha.classList.contains('activo')) return;
-            document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
-            ficha.classList.add('activo');
-            setTimeout(() => { ficha.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
-        }
-
-        function verificarFilaNueva(input) {
-            const lista = input.closest('.lista-ingredientes');
-            const filas = lista.querySelectorAll('.fila-ingrediente');
-            const ultimaFila = filas[filas.length - 1];
-            if (input.parentElement === ultimaFila && input.value.trim() !== "") {
-                const nuevaFila = document.createElement('div');
-                nuevaFila.className = 'fila-ingrediente';
-                nuevaFila.innerHTML = `
-                    <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
-                    <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
-                `;
-                lista.appendChild(nuevaFila);
-            }
-        }
-
-        function actualizarPuntosDia(el) {
-            const ficha = el.closest('.dia-ficha');
-            if (!ficha) return;
-            const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); 
-            const displayRestante = ficha.querySelector('.input-restantes-dia');
-            const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
-            let sumaConsumida = 0;
-            todosLosIngredientes.forEach(ing => { sumaConsumida += parseFloat(ing.value) || 0; });
-            const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
-            const resultadoResta = presupuestoManual - sumaConsumida;
-            if (displayRestante) {
-                displayRestante.value = resultadoResta;
-                if (resultadoResta < 0) {
-                    displayRestante.style.color = "white";
-                    displayRestante.style.backgroundColor = "#e74c3c";
-                } else {
-                    displayRestante.style.color = "#d35400";
-                    displayRestante.style.backgroundColor = "white";
+    // 3. Función de Carga de Datos (Comunicación con Código.gs)
+    function cargarDespensaSilenciosa() {
+        console.log("Iniciando carga de despensa...");
+        google.script.run
+            .withSuccessHandler(function(datos) {
+                baseDatosAlimentos = datos;
+                console.log("✅ Despensa cargada: " + datos.length + " alimentos listos.");
+                // Si tienes un contenedor visual para la lista, lo renderizamos de una vez
+                if(document.getElementById('lista-alimentos-capa')) {
+                    renderizarCapaDespensa(datos);
                 }
-            }
-        }
+            })
+            .withFailureHandler(function(err) {
+                console.error("❌ Error al conectar con la base de datos:", err);
+            })
+            .obtenerAlimentosMenu();
+    }
 
-        function abrirDespensa(btn) {
-            elementoOrigen = btn.closest('.momento-seccion').querySelector('.lista-ingredientes');
+    /* ============================================================
+       FUNCIONES DE NAVEGACIÓN Y DISEÑO
+       ============================================================ */
+
+    function volverInicio() { location.reload(); }
+    
+    function abrirNuevoMenu() { 
+        document.getElementById('modal-nuevo').style.display = 'block'; 
+        document.body.style.overflow = 'hidden'; 
+    }
+    
+    function cerrarNuevoMenu() { 
+        document.getElementById('modal-nuevo').style.display = 'none'; 
+        document.body.style.overflow = 'auto'; 
+    }
+
+    function toggleDia(idFicha) {
+        const ficha = document.getElementById(idFicha);
+        if(ficha.classList.contains('activo')) return;
+        document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
+        ficha.classList.add('activo');
+        setTimeout(() => { ficha.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
+    }
+
+    /* ============================================================
+       LÓGICA DE LA DESPENSA (USANDO CACHÉ SILENCIOSA)
+       ============================================================ */
+
+    function abrirDespensa(btn) {
+        // Guardamos la sección donde queremos añadir el alimento
+        elementoOrigen = btn.closest('.momento-seccion').querySelector('.lista-ingredientes');
+        
+        // Mostramos la capa de la despensa (Capa interna mejor que modal externo)
+        const capa = document.getElementById('capa-despensa-interna');
+        if (capa) {
+            capa.style.display = 'flex';
+        } else {
+            // Si prefieres mantener el modal-despensa original:
             document.getElementById('modal-despensa').style.display = 'block';
-            document.body.style.overflow = 'hidden';
         }
-
-        function cerrarDespensa() { 
-            document.getElementById('modal-despensa').style.display = 'none'; 
-            document.body.style.overflow = 'auto';
+        
+        document.body.style.overflow = 'hidden';
+        
+        // Si por alguna razón la base de datos está vacía al abrir, intentamos cargarla de nuevo
+        if (baseDatosAlimentos.length === 0) {
+            cargarDespensaSilenciosa();
+        } else {
+            renderizarCapaDespensa(baseDatosAlimentos);
         }
+    }
 
-        // --- PUENTE DE COMUNICACIÓN CON EL IFRAME ---
-        window.addEventListener("message", (event) => {
-            const datos = event.data;
-            if (datos && datos.tipo === "ALIMENTO_SELECCIONADO") {
-                if (!elementoOrigen) return;
+    function cerrarDespensa() { 
+        // Cerramos tanto la capa como el posible modal
+        if(document.getElementById('capa-despensa-interna')) document.getElementById('capa-despensa-interna').style.display = 'none';
+        if(document.getElementById('modal-despensa')) document.getElementById('modal-despensa').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
 
-                const filas = elementoOrigen.querySelectorAll('.fila-ingrediente');
-                let filaDestino = Array.from(filas).find(f => f.querySelector('.input-ingrediente').value.trim() === "") 
-                                  || filas[filas.length - 1];
-
-                if (filaDestino) {
-                    const inputNombre = filaDestino.querySelector('.input-ingrediente');
-                    const inputPuntos = filaDestino.querySelector('.input-puntos-ing');
-                    
-                    inputNombre.value = datos.Nombre; 
-                    inputPuntos.value = datos.Netos; 
-
-                    verificarFilaNueva(inputNombre);
-                    actualizarPuntosDia(inputPuntos);
-                }
-                cerrarDespensa();
-            }
+    function renderizarCapaDespensa(datos) {
+        const contenedor = document.getElementById('lista-alimentos-capa');
+        if (!contenedor) return;
+        
+        let html = "";
+        datos.forEach(a => {
+            html += `
+            <div class="item-despensa" onclick="seleccionarDeCapa('${a.nombre}', ${a.puntos})" 
+                 style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; cursor:pointer;">
+                <span>${a.nombre}</span>
+                <span style="font-weight:bold; color:#27ae60;">${a.puntos} pts</span>
+            </div>`;
         });
+        contenedor.innerHTML = html;
+    }
 
-        function guardarNuevoMenu() { alert("Planificación guardada con éxito."); cerrarNuevoMenu(); }
-    </script>
-</body>
-</html>
+    function seleccionarDeCapa(nombre, puntos) {
+        if (!elementoOrigen) return;
+
+        const filas = elementoOrigen.querySelectorAll('.fila-ingrediente');
+        let filaDestino = Array.from(filas).find(f => f.querySelector('.input-ingrediente').value.trim() === "") 
+                        || filas[filas.length - 1];
+
+        if (filaDestino) {
+            const inputNombre = filaDestino.querySelector('.input-ingrediente');
+            const inputPuntos = filaDestino.querySelector('.input-puntos-ing');
+            
+            inputNombre.value = nombre; 
+            inputPuntos.value = puntos; 
+
+            verificarFilaNueva(inputNombre);
+            actualizarPuntosDia(inputPuntos);
+        }
+        cerrarDespensa();
+    }
+
+    /* ============================================================
+       CÁLCULOS Y DINÁMICA DE FILAS
+       ============================================================ */
+
+    function verificarFilaNueva(input) {
+        const lista = input.closest('.lista-ingredientes');
+        const filas = lista.querySelectorAll('.fila-ingrediente');
+        const ultimaFila = filas[filas.length - 1];
+        if (input.parentElement === ultimaFila && input.value.trim() !== "") {
+            const nuevaFila = document.createElement('div');
+            nuevaFila.className = 'fila-ingrediente';
+            nuevaFila.innerHTML = `
+                <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
+                <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
+            `;
+            lista.appendChild(nuevaFila);
+        }
+    }
+
+    function actualizarPuntosDia(el) {
+        const ficha = el.closest('.dia-ficha');
+        if (!ficha) return;
+        const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); 
+        const displayRestante = ficha.querySelector('.input-restantes-dia');
+        const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
+        let sumaConsumida = 0;
+        todosLosIngredientes.forEach(ing => { sumaConsumida += parseFloat(ing.value) || 0; });
+        const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
+        const resultadoResta = presupuestoManual - sumaConsumida;
+        
+        if (displayRestante) {
+            displayRestante.value = resultadoResta;
+            if (resultadoResta < 0) {
+                displayRestante.style.color = "white";
+                displayRestante.style.backgroundColor = "#e74c3c";
+            } else {
+                displayRestante.style.color = "#d35400";
+                displayRestante.style.backgroundColor = "white";
+            }
+        }
+    }
+
+    // --- MANTENEMOS EL PUENTE POR SI USAS IFRAMES EN OTRAS PARTES ---
+    window.addEventListener("message", (event) => {
+        const datos = event.data;
+        if (datos && datos.tipo === "ALIMENTO_SELECCIONADO") {
+            seleccionarDeCapa(datos.Nombre, datos.Netos);
+        }
+    });
+
+    function guardarNuevoMenu() { alert("Planificación guardada con éxito."); cerrarNuevoMenu(); }
+</script>
