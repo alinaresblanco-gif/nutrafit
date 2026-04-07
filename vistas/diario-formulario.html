@@ -125,6 +125,50 @@
             border-top: 1px solid #eee;
             background-color: #fafafa;
         }
+        .momento-bloque {
+    background: white;
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+.momento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.momento-nombre {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--verde-corp);
+    text-transform: uppercase;
+}
+
+.btn-anadir {
+    background-color: var(--verde-corp);
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.lista-ingredientes-vacia {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #bbb;
+    font-style: italic;
+    border-top: 1px dashed #eee;
+    padding-top: 8px;
+}
     </style>
 </head>
 <body>
@@ -154,10 +198,46 @@
             </div>
             
             <div class="dia-contenido">
-                <p style="color: #666; font-size: 0.9rem; margin: 0;">
-                    El contenido aparecerá aquí (Desayuno, Comida, etc.)
-                </p>
-            </div>
+    <div class="momento-bloque">
+        <div class="momento-header">
+            <span class="momento-nombre">Desayuno</span>
+            <button class="btn-anadir" onclick="alert('Abrir despensa...')">+</button>
+        </div>
+        <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+    </div>
+
+    <div class="momento-bloque">
+        <div class="momento-header">
+            <span class="momento-nombre">Almuerzo</span>
+            <button class="btn-anadir" onclick="alert('Abrir despensa...')">+</button>
+        </div>
+        <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+    </div>
+
+    <div class="momento-bloque">
+        <div class="momento-header">
+            <span class="momento-nombre">Comida</span>
+            <button class="btn-anadir" onclick="alert('Abrir despensa...')">+</button>
+        </div>
+        <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+    </div>
+
+    <div class="momento-bloque">
+        <div class="momento-header">
+            <span class="momento-nombre">Merienda</span>
+            <button class="btn-anadir" onclick="alert('Abrir despensa...')">+</button>
+        </div>
+        <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+    </div>
+
+    <div class="momento-bloque">
+        <div class="momento-header">
+            <span class="momento-nombre">Cena</span>
+            <button class="btn-anadir" onclick="alert('Abrir despensa...')">+</button>
+        </div>
+        <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+    </div>
+</div>
         </div>
     </div>
 
