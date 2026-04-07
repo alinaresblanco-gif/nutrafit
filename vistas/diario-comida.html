@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Menú Semanal</title>
 
-<link rel="stylesheet" href="../css/style.css">
-
 <style>
 body {
   margin: 0;
@@ -14,7 +12,6 @@ body {
   background: #f0f0f0;
 }
 
-/* HEADER */
 .header {
   position: fixed;
   top: 0;
@@ -24,13 +21,11 @@ body {
   display: flex;
   align-items: center;
   padding: 10px;
-  z-index: 1000;
 }
 
 .header h1 {
   flex: 1;
   text-align: center;
-  font-size: 18px;
   margin: 0;
 }
 
@@ -41,19 +36,16 @@ body {
   font-size: 20px;
 }
 
-/* CONTENIDO */
 .contenedor {
-  margin-top: 60px;
+  margin-top: 70px;
   padding: 10px;
 }
 
-/* TARJETAS */
 .dia-card {
   background: white;
   border-radius: 10px;
   margin-bottom: 15px;
   padding: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .dia-header {
@@ -63,18 +55,8 @@ body {
   border-radius: 8px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
 }
 
-.dia-header input {
-  width: 60px;
-  border: none;
-  border-radius: 5px;
-  padding: 3px;
-  text-align: center;
-}
-
-/* COMIDAS */
 .comida {
   margin-top: 10px;
 }
@@ -86,23 +68,12 @@ body {
 
 .comida input {
   width: 65%;
-  padding: 5px;
-}
-
-.comida button {
-  background: #2e7d32;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  margin-left: 5px;
-  border-radius: 5px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- CABECERA -->
 <header class="header">
   <button onclick="volver()" class="btn-back">←</button>
   <h1>MI MENÚ SEMANAL</h1>
@@ -117,65 +88,45 @@ const comidas = ["desayuno","almuerzo","comida","merienda","cena"];
 function crearSemana() {
   const contenedor = document.getElementById("contenedor");
 
+  if (!contenedor) {
+    console.error("No existe el contenedor");
+    return;
+  }
+
   dias.forEach(dia => {
     let card = document.createElement("div");
     card.className = "dia-card";
 
-    let html = `
+    let contenido = "";
+
+    contenido += `
       <div class="dia-header">
         <span>${dia.toUpperCase()}</span>
-        <input type="number" placeholder="Créditos" data-key="${dia}_creditos">
+        <input type="number" placeholder="Créditos">
       </div>
     `;
 
     comidas.forEach(c => {
-      html += `
+      contenido += `
         <div class="comida">
           <h4>${c.toUpperCase()}</h4>
-          <input type="text" data-key="${dia}_${c}" placeholder="Añadir comida...">
-          <button onclick="abrirDespensa('${dia}','${c}')">+</button>
+          <input type="text" placeholder="Añadir comida...">
         </div>
       `;
     });
 
-    card.innerHTML = html;
+    card.innerHTML = contenido;
     contenedor.appendChild(card);
   });
-}
-
-function guardarDatos() {
-  const inputs = document.querySelectorAll("input[data-key]");
-  inputs.forEach(input => {
-    input.addEventListener("input", () => {
-      localStorage.setItem(input.dataset.key, input.value);
-    });
-  });
-}
-
-function cargarDatos() {
-  const inputs = document.querySelectorAll("input[data-key]");
-  inputs.forEach(input => {
-    let valor = localStorage.getItem(input.dataset.key);
-    if (valor) input.value = valor;
-  });
-}
-
-function abrirDespensa(dia, momento) {
-  localStorage.setItem("diaSeleccionado", dia);
-  localStorage.setItem("momentoSeleccionado", momento);
-
-  window.location.href = "nuestra_despensa.html";
 }
 
 function volver() {
   window.location.href = "../index.html";
 }
 
-window.onload = () => {
+window.addEventListener("load", function() {
   crearSemana();
-  guardarDatos();
-  cargarDatos();
-};
+});
 </script>
 
 </body>
