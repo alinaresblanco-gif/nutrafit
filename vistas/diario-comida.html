@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root {
-            --verde-corp: #78a978; /* Tu color verde */
+            --verde-corp: #78a978;
             --verde-oscuro: #5a8a5a;
             --blanco: #ffffff;
             --gris-fondo: #f4f7f4;
@@ -16,309 +16,173 @@
         }
 
         body {
-            margin: 0;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--gris-fondo);
-            color: #333;
-            -webkit-tap-highlight-color: transparent;
+            margin: 0; font-family: 'Segoe UI', sans-serif;
+            background-color: var(--gris-fondo); color: #333;
         }
 
         /* --- CABECERA --- */
         .cabecera {
             background-color: var(--verde-corp);
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 15px; display: flex; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
         }
 
         .btn-retroceso {
-            background: transparent;
-            border: none;
-            color: var(--blanco);
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
+            background: transparent; border: none; color: white;
+            font-size: 1.4rem; padding-right: 15px; text-decoration: none;
         }
 
         .titulo-cabecera {
-            color: var(--blanco);
-            flex-grow: 1;
-            text-align: center;
-            font-weight: bold;
-            letter-spacing: 1px;
-            margin-right: 40px; /* Equilibra el espacio del botón de retroceso */
+            color: white; font-weight: bold; flex-grow: 1; text-align: center; margin-right: 30px;
         }
 
-        /* --- CONTENEDOR PRINCIPAL --- */
-        .contenedor-diario {
-            padding: 15px;
-            padding-bottom: 100px;
-        }
+        .contenedor-diario { padding: 15px; padding-bottom: 100px; }
 
-        /* --- FICHA DÍA (ACORDEÓN) --- */
+        /* --- FICHA DÍA --- */
         .dia-ficha {
-            background: var(--blanco);
-            border-radius: 15px;
-            margin-bottom: 12px;
-            overflow: hidden;
-            box-shadow: var(--sombra);
-            border: 1px solid #e0e6e0;
+            background: white; border-radius: 12px; margin-bottom: 10px;
+            overflow: hidden; box-shadow: var(--sombra); border: 1px solid #e0e0e0;
         }
 
         .dia-header {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: background 0.3s;
+            padding: 15px; display: flex; justify-content: space-between;
+            align-items: center; cursor: pointer;
         }
 
-        .dia-header:active { background-color: #f0f0f0; }
+        .dia-titulo { font-weight: bold; color: var(--verde-oscuro); font-size: 1.1rem; }
 
-        .dia-titulo {
-            font-weight: bold;
-            color: var(--verde-oscuro);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .creditos-info { display: flex; gap: 8px; align-items: center; }
 
-        /* --- SISTEMA DE CRÉDITOS --- */
-        .creditos-info {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .caja-creditos {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .label-mini { font-size: 0.6rem; color: #888; text-transform: uppercase; }
+        .caja-creditos { display: flex; flex-direction: column; align-items: center; }
+        .label-mini { font-size: 0.6rem; color: #888; margin-bottom: 2px; }
 
         .input-puntos {
-            width: 45px;
-            height: 30px;
-            border: 2px solid var(--verde-corp);
-            border-radius: 8px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 1rem;
-            outline: none;
+            width: 40px; height: 28px; border: 1.5px solid var(--verde-corp);
+            border-radius: 6px; text-align: center; font-weight: bold; outline: none;
         }
 
         .restante-badge {
-            min-width: 45px;
-            height: 30px;
-            background: #eee;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1rem;
+            min-width: 40px; height: 28px; background: #eee;
+            border-radius: 6px; display: flex; align-items: center;
+            justify-content: center; font-weight: bold; font-size: 0.9rem;
         }
 
-        /* --- CUERPO DEL DÍA --- */
-        .dia-contenido {
-            display: none;
-            padding: 10px 15px 20px 15px;
-            border-top: 1px solid #eee;
-        }
-
+        /* --- CUERPO --- */
+        .dia-contenido { display: none; padding: 10px 15px; border-top: 1px solid #f0f0f0; }
         .dia-ficha.abierto .dia-contenido { display: block; }
 
-        /* --- MOMENTOS DEL DÍA --- */
         .momento-bloque {
-            margin-top: 15px;
-            background: #f9fbf9;
-            border-radius: 10px;
-            padding: 10px;
+            background: #fafafa; margin-bottom: 10px;
+            padding: 10px; border-radius: 8px;
         }
 
         .momento-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .momento-nombre {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--verde-corp);
-        }
+        .momento-nombre { font-weight: bold; color: var(--verde-corp); font-size: 0.9rem; }
 
         .btn-anadir {
-            background: var(--verde-corp);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .lista-items {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .item-fila {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            padding: 5px 0;
-            border-bottom: 1px dashed #ddd;
+            background: var(--verde-corp); color: white; border: none;
+            width: 28px; height: 28px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
         }
 
         /* --- BOTÓN GUARDAR --- */
         .btn-flotante-guardar {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--verde-corp);
-            color: white;
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-weight: bold;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 1001;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--verde-corp); color: white; padding: 12px 30px;
+            border-radius: 25px; font-weight: bold; text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1001;
         }
     </style>
 </head>
 <body>
 
     <header class="cabecera">
-        <a href="../index.html" class="btn-retroceso">
-            <i class="fas fa-chevron-left"></i>
-        </a>
+        <a href="../index.html" class="btn-retroceso"><i class="fas fa-arrow-left"></i></a>
         <div class="titulo-cabecera">MI MENÚ SEMANAL</div>
     </header>
 
-    <div class="contenedor-diario">
-        
-        <script>
-            const dias = ["LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "DOMINGO"];
-            const momentos = ["Desayuno", "Almuerzo", "Comida", "Merienda", "Cena"];
-
-            dias.forEach((dia, index) => {
-                document.write(`
-                    <div class="dia-ficha" id="ficha-${index}">
-                        <div class="dia-header" onclick="toggleDia(${index})">
-                            <div class="dia-titulo">
-                                <i class="far fa-calendar-check"></i>
-                                ${dia}
-                            </div>
-                            <div class="creditos-info">
-                                <div class="caja-creditos">
-                                    <span class="label-mini">Base</span>
-                                    <input type="number" class="input-puntos" placeholder="00" 
-                                           onclick="event.stopPropagation()" 
-                                           oninput="calcularDia(${index})" 
-                                           id="base-${index}" maxlength="2">
-                                </div>
-                                <div class="caja-creditos">
-                                    <span class="label-mini">Restan</span>
-                                    <div class="restante-badge" id="restante-${index}">0</div>
-                                </div>
-                                <i class="fas fa-chevron-down" style="color: #ccc; margin-left:5px;"></i>
-                            </div>
-                        </div>
-                        <div class="dia-contenido">
-                            ${momentos.map(m => `
-                                <div class="momento-bloque">
-                                    <div class="momento-header">
-                                        <span class="momento-nombre">${m}</span>
-                                        <button class="btn-anadir" onclick="abrirDespensa('${dia}', '${m}')">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                    </div>
-                                    <div class="lista-items" id="items-${index}-${m}">
-                                        </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `);
-            });
-        </script>
-
-    </div>
+    <div class="contenedor-diario" id="lista-dias">
+        </div>
 
     <a href="#" class="btn-flotante-guardar" onclick="guardarEnExcel()">
-        <i class="fas fa-cloud-upload-alt"></i> GUARDAR SEMANA
+        <i class="fas fa-save"></i> GUARDAR SEMANA
     </a>
 
     <script>
-        // Función para abrir/cerrar acordeón
+        const dias = ["LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "DOMINGO"];
+        const momentos = ["Desayuno", "Almuerzo", "Comida", "Merienda", "Cena"];
+
+        function renderizarDias() {
+            const contenedor = document.getElementById('lista-dias');
+            let html = '';
+
+            dias.forEach((dia, index) => {
+                html += `
+                <div class="dia-ficha" id="ficha-${index}">
+                    <div class="dia-header" onclick="toggleDia(${index})">
+                        <div class="dia-titulo">${dia}</div>
+                        <div class="creditos-info">
+                            <div class="caja-creditos">
+                                <span class="label-mini">BASE</span>
+                                <input type="number" class="input-puntos" id="base-${index}" 
+                                       onclick="event.stopPropagation()" 
+                                       oninput="calcularDia(${index})" placeholder="00">
+                            </div>
+                            <div class="caja-creditos">
+                                <span class="label-mini">RESTAN</span>
+                                <div class="restante-badge" id="restante-${index}">0</div>
+                            </div>
+                            <i class="fas fa-chevron-down" style="color:#ccc; margin-left:5px"></i>
+                        </div>
+                    </div>
+                    <div class="dia-contenido">
+                        ${momentos.map(m => `
+                            <div class="momento-bloque">
+                                <div class="momento-header">
+                                    <span class="momento-nombre">${m}</span>
+                                    <button class="btn-anadir" onclick="abrirDespensa('${dia}', '${m}')">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div id="items-${index}-${m}" style="margin-top:5px; font-size:0.8rem; color:#666">
+                                    Sin ingredientes...
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            });
+            contenedor.innerHTML = html;
+        }
+
         function toggleDia(index) {
             const ficha = document.getElementById(`ficha-${index}`);
             const estaAbierto = ficha.classList.contains('abierto');
-            
-            // Opcional: Cerrar otros antes de abrir este
             document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('abierto'));
-            
-            if (!estaAbierto) {
-                ficha.classList.add('abierto');
-            }
+            if (!estaAbierto) ficha.classList.add('abierto');
         }
 
-        // Lógica de cálculo de créditos
         function calcularDia(index) {
             const base = parseInt(document.getElementById(`base-${index}`).value) || 0;
-            let gasto = 0;
-            
-            // Buscamos todos los créditos de los ingredientes añadidos en este día
-            const puntosIngredientes = document.querySelectorAll(`#ficha-${index} .punto-valor`);
-            puntosIngredientes.forEach(p => {
-                gasto += parseInt(p.innerText) || 0;
-            });
-
-            const total = base - gasto;
             const badge = document.getElementById(`restante-${index}`);
-            badge.innerText = total;
-
-            // Feedback visual
-            if (total < 0) {
-                badge.style.backgroundColor = 'var(--rojo-alerta)';
-                badge.style.color = 'white';
-            } else {
-                badge.style.backgroundColor = '#eee';
-                badge.style.color = '#333';
-            }
+            // Por ahora solo resta de la base (luego sumaremos los ingredientes)
+            badge.innerText = base;
+            badge.style.color = base < 0 ? 'red' : '#333';
         }
 
-        // Esta función llamará a tu vista de despensa
         function abrirDespensa(dia, momento) {
-            console.log(`Abriendo despensa para ${dia} en el momento ${momento}`);
-            // Aquí irá la lógica para abrir tu modal con "nuestra_despensa.html"
-            alert("Aquí abriremos tu vista de despensa para seleccionar ingredientes.");
+            alert("Abriendo despensa para: " + dia + " - " + momento);
         }
 
         function guardarEnExcel() {
-            alert("Conectando con Google Sheets para guardar tu menú...");
+            alert("Guardando datos...");
         }
+
+        // Ejecutar al cargar la página
+        window.onload = renderizarDias;
     </script>
 </body>
 </html>
