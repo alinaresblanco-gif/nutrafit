@@ -33,7 +33,6 @@
             display: flex; align-items: center; justify-content: center; 
             cursor: pointer; transition: 0.3s;
         }
-        .btn-nav:hover { background: rgba(255,255,255,0.4); }
 
         .contenedor-buscador {
             background: var(--blanco); margin: 15px;
@@ -50,11 +49,6 @@
             display: flex; align-items: center; gap: 12px;
         }
         .banner-info p { margin: 0; font-size: 0.85rem; color: #555; }
-
-        .grid-contenido {
-            padding: 0 15px 100px 15px;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-        }
 
         .btn-mas {
             position: fixed; bottom: 30px; right: 25px;
@@ -79,12 +73,8 @@
             background: var(--blanco);
             border-radius: 25px 25px 0 0;
             display: flex; flex-direction: column;
-            animation: deslizarSubir 0.3s ease-out;
             overflow: hidden;
         }
-
-        @keyframes deslizarSubir { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        @keyframes slideIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
         .cabecera-modal-nueva {
             background: var(--verde-corp); padding: 15px 20px;
@@ -95,24 +85,16 @@
 
         .formulario-scroll { flex-grow: 1; overflow-y: auto; padding: 20px; background: #fdfdfd; }
 
-        .seccion-fecha {
-            display: flex; align-items: center; justify-content: space-between;
-            padding-bottom: 15px; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0;
-        }
-        .seccion-fecha label { color: var(--verde-corp); font-weight: bold; font-size: 0.8rem; }
-        .input-fecha-transparent { border: none; background: transparent; font-size: 1rem; color: #444; text-align: right; outline: none; }
-
-        .dia-ficha { margin-bottom: 12px; border-radius: 12px; border: 1px solid #e0e0e0; overflow: hidden; transition: 0.3s; }
+        .dia-ficha { margin-bottom: 12px; border-radius: 12px; border: 1px solid #e0e0e0; overflow: hidden; }
         .dia-header {
             background: var(--verde-corp); color: white; padding: 12px 15px;
             display: flex; align-items: center; justify-content: space-between; cursor: pointer;
         }
         .input-puntos-dia { width: 45px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: var(--verde-oscuro); outline: none; background: white; }
-        .input-restantes-dia { width: 45px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: #d35400; background: #fff; outline: none; pointer-events: none; }
+        .input-restantes-dia { width: 45px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: #d35400; background: #fff; outline: none; }
 
         .dia-cuerpo { padding: 15px; background: white; display: none; }
         .dia-ficha.activo .dia-cuerpo { display: block; }
-        .dia-ficha.activo { border-color: var(--verde-corp); box-shadow: var(--sombra); }
 
         .momento-seccion { margin-bottom: 18px; }
         .momento-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -120,14 +102,10 @@
         
         .fila-ingrediente { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f2f2f2; padding-bottom: 5px; margin-bottom: 5px; }
         .input-ingrediente { flex-grow: 1; border: none; outline: none; font-size: 0.95rem; color: #555; background: transparent; }
-        .input-puntos-ing { width: 40px; border: none; background: #f7f7f7; text-align: center; font-weight: bold; color: var(--verde-oscuro); border-radius: 4px; padding: 4px 0; }
-        .btn-add-momento { background: none; border: none; color: var(--verde-corp); cursor: pointer; font-size: 0.9rem; }
+        .input-puntos-ing { width: 40px; border: none; background: #f7f7f7; text-align: center; font-weight: bold; color: var(--verde-oscuro); border-radius: 4px; }
+        .btn-add-momento { background: none; border: none; color: var(--verde-corp); cursor: pointer; font-size: 1.1rem; padding: 5px; }
 
-        /* Estilos adicionales para la despensa premium */
-        .item-despensa { 
-            padding: 15px; border-bottom: 1px solid #eee; display: flex; 
-            justify-content: space-between; cursor: pointer; transition: 0.2s;
-        }
+        .item-despensa { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; cursor: pointer; }
         .item-despensa:active { background: #f0f0f0; }
     </style>
 </head>
@@ -151,7 +129,6 @@
         </div>
 
         <div id="contenedor-menus" class="grid-contenido"></div>
-
         <button class="btn-mas" onclick="abrirNuevoMenu()"><i class="fas fa-plus"></i></button>
     </div>
 
@@ -160,372 +137,141 @@
             <div class="cabecera-modal-nueva">
                 <button class="btn-nav" onclick="cerrarNuevoMenu()"><i class="fas fa-arrow-left"></i></button>
                 <div class="titulo">MI MENÚ SEMANAL</div>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn-nav" onclick="guardarNuevoMenu()"><i class="fas fa-save"></i></button>
-                    <button class="btn-nav" onclick="cerrarNuevoMenu()"><i class="fas fa-times"></i></button>
-                </div>
+                <button class="btn-nav" onclick="guardarNuevoMenu()"><i class="fas fa-save"></i></button>
             </div>
 
             <div class="formulario-scroll">
-                <div class="seccion-fecha">
-                    <label><i class="far fa-calendar-alt"></i> FECHA DE INICIO</label>
-                    <input type="date" id="input-fecha-nueva" class="input-fecha-transparent">
-                </div>
-
                 <div id="acordeon-semanal">
                     <div class="dia-ficha activo" id="ficha-lunes">
                         <div class="dia-header" onclick="toggleDia('ficha-lunes')">
-                            <div style="width: 32px;"></div> <strong>LUNES</strong>
-                            <div style="display: flex; gap: 10px;">
+                            <strong>LUNES</strong>
+                            <div style="display: flex; gap: 8px;">
                                 <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
                                 <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
                             </div>
                         </div>
                         <div class="dia-cuerpo">
                             <div class="momento-seccion">
-                                <div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div>
+                                <div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus-circle"></i></button></div>
                                 <div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div>
                             </div>
                             <div class="momento-seccion">
-                                <div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div>
+                                <div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus-circle"></i></button></div>
                                 <div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div>
                             </div>
                             <div class="momento-seccion">
-                                <div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div>
-                                <div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div>
-                            </div>
-                            <div class="momento-seccion">
-                                <div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div>
-                                <div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div>
-                            </div>
-                            <div class="momento-seccion">
-                                <div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div>
+                                <div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus-circle"></i></button></div>
                                 <div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="dia-ficha" id="ficha-martes">
-                        <div class="dia-header" onclick="toggleDia('ficha-martes')">
-                            <div style="width: 32px;"></div> <strong>MARTES</strong>
-                            <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
-                            </div>
-                        </div>
-                        <div class="dia-cuerpo">
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                        </div>
                     </div>
-
-                    <div class="dia-ficha" id="ficha-miercoles">
-                        <div class="dia-header" onclick="toggleDia('ficha-miercoles')">
-                            <div style="width: 32px;"></div> <strong>MIÉRCOLES</strong>
-                            <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
-                            </div>
-                        </div>
-                        <div class="dia-cuerpo">
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                        </div>
-                    </div>
-
-                    <div class="dia-ficha" id="ficha-jueves">
-                        <div class="dia-header" onclick="toggleDia('ficha-jueves')">
-                            <div style="width: 32px;"></div> <strong>JUEVES</strong>
-                            <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
-                            </div>
-                        </div>
-                        <div class="dia-cuerpo">
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                        </div>
-                    </div>
-                    <div class="dia-ficha" id="ficha-viernes">
-                        <div class="dia-header" onclick="toggleDia('ficha-viernes')">
-                            <div style="width: 32px;"></div> <strong>VIERNES</strong>
-                            <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
-                            </div>
-                        </div>
-                        <div class="dia-cuerpo">
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                        </div>
-                    </div>
-
-                    <div class="dia-ficha" id="ficha-sabado">
-                        <div class="dia-header" onclick="toggleDia('ficha-sabado')">
-                            <div style="width: 32px;"></div> <strong>SÁBADO</strong>
-                            <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
-                            </div>
-                        </div>
-                        <div class="dia-cuerpo">
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                        </div>
-                    </div>
-
-                    <div class="dia-ficha" id="ficha-domingo">
-                        <div class="dia-header" onclick="toggleDia('ficha-domingo')">
-                            <div style="width: 32px;"></div> <strong>DOMINGO</strong>
-                            <div style="display: flex; gap: 10px;">
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
-                                <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
-                            </div>
-                        </div>
-                        <div class="dia-cuerpo">
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                            <div class="momento-seccion"><div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespento(this)"><i class="fas fa-plus"></i></button></div><div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div></div>
-                        </div>
-                    </div>
-                </div> </div>
+            </div>
         </div>
     </div>
 
     <div id="modal-despensa" class="modal-overlay" style="z-index: 5000;">
-        <div class="modal-contenido" style="height: 90vh; animation: slideIn 0.3s ease;">
+        <div class="modal-contenido" style="height: 90vh;">
             <div class="cabecera-modal-nueva">
-                <div class="titulo"><i class="fas fa-search"></i> SELECCIONAR ALIMENTO</div>
+                <div class="titulo">BUSCAR ALIMENTO</div>
                 <button class="btn-nav" onclick="cerrarDespensa()"><i class="fas fa-times"></i></button>
             </div>
-            
-            <div style="padding: 10px 20px; background: #f0f0f0;">
-                <div class="contenedor-buscador" style="margin: 0; padding: 8px 12px;">
-                    <i class="fas fa-filter"></i>
-                    <input type="text" id="filtro-despensa" class="input-busqueda" placeholder="Filtrar por nombre..." oninput="filtrarDespensa()">
-                </div>
+            <div style="padding: 10px; background: #eee;">
+                <input type="text" id="filtro-despensa" class="input-busqueda" placeholder="Escribe para filtrar..." oninput="filtrarDespensa()" style="background: white; padding: 10px; border-radius: 8px;">
             </div>
-
-            <div id="lista-alimentos-capa" style="flex-grow: 1; overflow-y: auto; background: white;">
-                <div style="padding: 40px; text-align: center; color: #999;">
-                    <i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Cargando despensa...
-                </div>
-            </div>
+            <div id="lista-alimentos-capa" style="flex-grow: 1; overflow-y: auto; background: white;"></div>
         </div>
     </div>
 
 <script>
-    /* ============================================================
-       CONFIGURACIÓN Y CARGA SILENCIOSA (DEVELOPER PREMIUM)
-       ============================================================ */
-    
     let baseDatosAlimentos = [];
     let elementoOrigen = null; 
 
-    // Carga inicial al abrir la web
-    window.onload = function() {
-        console.log("Iniciando sistema NutraFit...");
-        cargarDespensaSilenciosa();
-    };
+    window.onload = function() { cargarDespensaSilenciosa(); };
 
     function cargarDespensaSilenciosa() {
-        if (typeof google !== 'undefined' && google.script) {
+        if (typeof google !== 'undefined') {
             google.script.run
-                .withSuccessHandler(function(datos) {
-                    baseDatosAlimentos = datos;
-                    renderizarCapaDespensa(datos);
-                    console.log("✅ Caché de despensa cargada: " + datos.length + " ítems.");
-                })
-                .withFailureHandler(function(err) {
-                    console.error("❌ Error en carga silenciosa:", err);
+                .withSuccessHandler(datos => { 
+                    baseDatosAlimentos = datos; 
+                    renderizarCapaDespensa(datos); 
                 })
                 .obtenerAlimentosMenu();
-        } else {
-            console.warn("Entorno local: No se detectó google.script");
         }
     }
-
-    /* ============================================================
-       FUNCIONES DE NAVEGACIÓN
-       ============================================================ */
-
-    function volverInicio() { location.reload(); }
-    
-    function abrirNuevoMenu() { 
-        document.getElementById('modal-nuevo').style.display = 'block'; 
-        document.body.style.overflow = 'hidden'; 
-    }
-    
-    function cerrarNuevoMenu() { 
-        document.getElementById('modal-nuevo').style.display = 'none'; 
-        document.body.style.overflow = 'auto'; 
-    }
-
-    function toggleDia(idFicha) {
-        const ficha = document.getElementById(idFicha);
-        // Si ya está activo, no hacemos nada para evitar saltos
-        if(ficha.classList.contains('activo')) return;
-        
-        document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
-        ficha.classList.add('activo');
-        
-        // Scroll suave al día abierto
-        setTimeout(() => { 
-            ficha.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
-        }, 300);
-    }
-
-    /* ============================================================
-       LÓGICA DE LA DESPENSA (EL BOTÓN +)
-       ============================================================ */
 
     function abrirDespensa(btn) {
-        // Detener propagación para que no se cierre el acordeón al hacer clic en el botón
-        if(event) event.stopPropagation();
-
-        console.log("Abriendo despensa...");
-        // Localizamos la lista de ingredientes de ese momento específico
-        const seccion = btn.closest('.momento-seccion');
-        elementoOrigen = seccion.querySelector('.lista-ingredientes');
-        
-        // Mostrar el modal
-        const modal = document.getElementById('modal-despensa');
-        modal.style.display = 'block';
-        document.getElementById('filtro-despensa').value = "";
-        
-        // Si la base de datos está vacía (error de carga o local), reintentar
-        if(baseDatosAlimentos.length === 0) {
-            renderizarCapaDespensa([{nombre: "Cargando o sin datos...", puntos: 0}]);
-            cargarDespensaSilenciosa();
-        } else {
-            renderizarCapaDespensa(baseDatosAlimentos);
-        }
+        event.stopPropagation();
+        elementoOrigen = btn.closest('.momento-seccion').querySelector('.lista-ingredientes');
+        document.getElementById('modal-despensa').style.display = 'block';
     }
 
-    function cerrarDespensa() { 
-        document.getElementById('modal-despensa').style.display = 'none';
-    }
+    function cerrarDespensa() { document.getElementById('modal-despensa').style.display = 'none'; }
 
     function renderizarCapaDespensa(datos) {
-        const contenedor = document.getElementById('lista-alimentos-capa');
-        if (!contenedor) return;
-        
-        let html = "";
-        datos.forEach(a => {
-            html += `
-            <div class="item-despensa" onclick="seleccionarDeCapa('${a.nombre.replace(/'/g, "\\'")}', ${a.puntos})" 
-                 style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; cursor:pointer;">
-                <span style="color:#333;">${a.nombre}</span>
-                <span style="font-weight:bold; color:#27ae60;">${a.puntos} pts</span>
-            </div>`;
-        });
-        contenedor.innerHTML = html;
+        const cont = document.getElementById('lista-alimentos-capa');
+        cont.innerHTML = datos.map(a => `
+            <div class="item-despensa" onclick="seleccionarDeCapa('${a.nombre.replace(/'/g, "\\'")}', ${a.puntos})">
+                <span>${a.nombre}</span><b>${a.puntos} pts</b>
+            </div>
+        `).join('');
     }
 
     function filtrarDespensa() {
-        const busqueda = document.getElementById('filtro-despensa').value.toLowerCase();
-        const filtrados = baseDatosAlimentos.filter(a => a.nombre.toLowerCase().includes(busqueda));
-        renderizarCapaDespensa(filtrados);
+        const bus = document.getElementById('filtro-despensa').value.toLowerCase();
+        renderizarCapaDespensa(baseDatosAlimentos.filter(a => a.nombre.toLowerCase().includes(bus)));
     }
 
     function seleccionarDeCapa(nombre, puntos) {
-        if (!elementoOrigen) return;
-
-        // Buscamos todas las filas actuales en ese momento del día
-        const filas = elementoOrigen.querySelectorAll('.fila-ingrediente');
-        
-        // Intentamos encontrar una fila que esté vacía
+        let filas = elementoOrigen.querySelectorAll('.fila-ingrediente');
         let filaDestino = Array.from(filas).find(f => f.querySelector('.input-ingrediente').value.trim() === "");
-
-        // Si todas están llenas, usamos la última y el sistema de "verificarFilaNueva" creará la siguiente
-        if (!filaDestino) {
-            filaDestino = filas[filas.length - 1];
-        }
-
-        const inputNombre = filaDestino.querySelector('.input-ingrediente');
-        const inputPuntos = filaDestino.querySelector('.input-puntos-ing');
         
-        inputNombre.value = nombre; 
-        inputPuntos.value = puntos; 
+        if (!filaDestino) filaDestino = filas[filas.length - 1];
 
-        // Disparamos manualmente los eventos para que se cree la fila nueva y se sumen los puntos
-        verificarFilaNueva(inputNombre);
-        actualizarPuntosDia(inputPuntos);
+        const inNombre = filaDestino.querySelector('.input-ingrediente');
+        const inPuntos = filaDestino.querySelector('.input-puntos-ing');
         
+        inNombre.value = nombre; 
+        inPuntos.value = puntos; 
+
+        verificarFilaNueva(inNombre);
+        actualizarPuntosDia(inPuntos);
         cerrarDespensa();
     }
 
-    /* ============================================================
-       CÁLCULOS Y DINÁMICA DE FILAS
-       ============================================================ */
-
     function verificarFilaNueva(input) {
-        const lista = input.closest('.lista-ingredients') || input.parentElement.parentElement;
+        const lista = input.closest('.lista-ingredientes');
         const filas = lista.querySelectorAll('.fila-ingrediente');
-        const ultimaFila = filas[filas.length - 1];
-        
-        // Si escribimos en la última fila y no está vacía, añadimos otra
-        if (input.parentElement === ultimaFila && input.value.trim() !== "") {
-            const nuevaFila = document.createElement('div');
-            nuevaFila.className = 'fila-ingrediente';
-            nuevaFila.innerHTML = `
-                <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
-                <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
-            `;
-            lista.appendChild(nuevaFila);
+        if (input.parentElement === filas[filas.length - 1] && input.value.trim() !== "") {
+            const nueva = document.createElement('div');
+            nueva.className = 'fila-ingrediente';
+            nueva.innerHTML = `<input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">`;
+            lista.appendChild(nueva);
         }
     }
 
     function actualizarPuntosDia(el) {
         const ficha = el.closest('.dia-ficha');
-        if (!ficha) return;
-
-        const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); 
-        const displayRestante = ficha.querySelector('.input-restantes-dia');
-        const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
+        const total = parseFloat(ficha.querySelector('.input-puntos-dia').value) || 0;
+        let suma = 0;
+        ficha.querySelectorAll('.input-puntos-ing').forEach(i => suma += parseFloat(i.value) || 0);
         
-        let sumaConsumida = 0;
-        todosLosIngredientes.forEach(ing => { 
-            sumaConsumida += parseFloat(ing.value) || 0; 
-        });
-
-        const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
-        const resultadoResta = presupuestoManual - sumaConsumida;
-        
-        if (displayRestante) {
-            displayRestante.value = resultadoResta;
-            // Alerta visual si se pasa de puntos
-            if (resultadoResta < 0) {
-                displayRestante.style.color = "white";
-                displayRestante.style.backgroundColor = "#e74c3c";
-            } else {
-                displayRestante.style.color = "#d35400";
-                displayRestante.style.backgroundColor = "white";
-            }
-        }
+        const res = ficha.querySelector('.input-restantes-dia');
+        res.value = total - suma;
+        res.style.backgroundColor = (total - suma < 0) ? "#e74c3c" : "white";
+        res.style.color = (total - suma < 0) ? "white" : "#d35400";
     }
 
-    function guardarNuevoMenu() { 
-        alert("Planificación guardada con éxito en la base de datos."); 
-        cerrarNuevoMenu(); 
+    function toggleDia(id) {
+        const f = document.getElementById(id);
+        if(f.classList.contains('activo')) return;
+        document.querySelectorAll('.dia-ficha').forEach(x => x.classList.remove('activo'));
+        f.classList.add('activo');
     }
+
+    function abrirNuevoMenu() { document.getElementById('modal-nuevo').style.display = 'block'; }
+    function cerrarNuevoMenu() { document.getElementById('modal-nuevo').style.display = 'none'; }
+    function volverInicio() { location.reload(); }
 </script>
 </body>
 </html>
