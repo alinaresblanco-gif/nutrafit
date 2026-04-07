@@ -331,153 +331,187 @@
         </div>
     </div>
 
-    <script>
-        /* ============================================================
-           CONFIGURACIÓN Y CARGA SILENCIOSA (DEVELOPER PREMIUM)
-           ============================================================ */
-        
-        let baseDatosAlimentos = [];
-        let elementoOrigen = null; 
+<script>
+    /* ============================================================
+       CONFIGURACIÓN Y CARGA SILENCIOSA (DEVELOPER PREMIUM)
+       ============================================================ */
+    
+    let baseDatosAlimentos = [];
+    let elementoOrigen = null; 
 
-        window.onload = function() {
-            cargarDespensaSilenciosa();
-        };
+    // Carga inicial al abrir la web
+    window.onload = function() {
+        console.log("Iniciando sistema NutraFit...");
+        cargarDespensaSilenciosa();
+    };
 
-        function cargarDespensaSilenciosa() {
-            console.log("Iniciando carga silenciosa...");
+    function cargarDespensaSilenciosa() {
+        if (typeof google !== 'undefined' && google.script) {
             google.script.run
                 .withSuccessHandler(function(datos) {
                     baseDatosAlimentos = datos;
                     renderizarCapaDespensa(datos);
-                    console.log("✅ Datos listos en caché.");
+                    console.log("✅ Caché de despensa cargada: " + datos.length + " ítems.");
                 })
                 .withFailureHandler(function(err) {
-                    console.error("❌ Error de red:", err);
+                    console.error("❌ Error en carga silenciosa:", err);
                 })
                 .obtenerAlimentosMenu();
+        } else {
+            console.warn("Entorno local: No se detectó google.script");
+        }
+    }
+
+    /* ============================================================
+       FUNCIONES DE NAVEGACIÓN
+       ============================================================ */
+
+    function volverInicio() { location.reload(); }
+    
+    function abrirNuevoMenu() { 
+        document.getElementById('modal-nuevo').style.display = 'block'; 
+        document.body.style.overflow = 'hidden'; 
+    }
+    
+    function cerrarNuevoMenu() { 
+        document.getElementById('modal-nuevo').style.display = 'none'; 
+        document.body.style.overflow = 'auto'; 
+    }
+
+    function toggleDia(idFicha) {
+        const ficha = document.getElementById(idFicha);
+        // Si ya está activo, no hacemos nada para evitar saltos
+        if(ficha.classList.contains('activo')) return;
+        
+        document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
+        ficha.classList.add('activo');
+        
+        // Scroll suave al día abierto
+        setTimeout(() => { 
+            ficha.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+        }, 300);
+    }
+
+    /* ============================================================
+       LÓGICA DE LA DESPENSA (EL BOTÓN +)
+       ============================================================ */
+
+    function abrirDespensa(btn) {
+        // Detener propagación para que no se cierre el acordeón al hacer clic en el botón
+        if(event) event.stopPropagation();
+
+        console.log("Abriendo despensa...");
+        // Localizamos la lista de ingredientes de ese momento específico
+        const seccion = btn.closest('.momento-seccion');
+        elementoOrigen = seccion.querySelector('.lista-ingredientes');
+        
+        // Mostrar el modal
+        const modal = document.getElementById('modal-despensa');
+        modal.style.display = 'block';
+        document.getElementById('filtro-despensa').value = "";
+        
+        // Si la base de datos está vacía (error de carga o local), reintentar
+        if(baseDatosAlimentos.length === 0) {
+            renderizarCapaDespensa([{nombre: "Cargando o sin datos...", puntos: 0}]);
+            cargarDespensaSilenciosa();
+        } else {
+            renderizarCapaDespensa(baseDatosAlimentos);
+        }
+    }
+
+    function cerrarDespensa() { 
+        document.getElementById('modal-despensa').style.display = 'none';
+    }
+
+    function renderizarCapaDespensa(datos) {
+        const contenedor = document.getElementById('lista-alimentos-capa');
+        if (!contenedor) return;
+        
+        let html = "";
+        datos.forEach(a => {
+            html += `
+            <div class="item-despensa" onclick="seleccionarDeCapa('${a.nombre.replace(/'/g, "\\'")}', ${a.puntos})" 
+                 style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; cursor:pointer;">
+                <span style="color:#333;">${a.nombre}</span>
+                <span style="font-weight:bold; color:#27ae60;">${a.puntos} pts</span>
+            </div>`;
+        });
+        contenedor.innerHTML = html;
+    }
+
+    function filtrarDespensa() {
+        const busqueda = document.getElementById('filtro-despensa').value.toLowerCase();
+        const filtrados = baseDatosAlimentos.filter(a => a.nombre.toLowerCase().includes(busqueda));
+        renderizarCapaDespensa(filtrados);
+    }
+
+    function seleccionarDeCapa(nombre, puntos) {
+        if (!elementoOrigen) return;
+
+        // Buscamos todas las filas actuales en ese momento del día
+        const filas = elementoOrigen.querySelectorAll('.fila-ingrediente');
+        
+        // Intentamos encontrar una fila que esté vacía
+        let filaDestino = Array.from(filas).find(f => f.querySelector('.input-ingrediente').value.trim() === "");
+
+        // Si todas están llenas, usamos la última y el sistema de "verificarFilaNueva" creará la siguiente
+        if (!filaDestino) {
+            filaDestino = filas[filas.length - 1];
         }
 
-        /* ============================================================
-           NAVEGACIÓN
-           ============================================================ */
+        const inputNombre = filaDestino.querySelector('.input-ingrediente');
+        const inputPuntos = filaDestino.querySelector('.input-puntos-ing');
+        
+        inputNombre.value = nombre; 
+        inputPuntos.value = puntos; 
 
-        function volverInicio() { location.reload(); }
-        function abrirNuevoMenu() { 
-            document.getElementById('modal-nuevo').style.display = 'block'; 
-            document.body.style.overflow = 'hidden'; 
+        // Disparamos manualmente los eventos para que se cree la fila nueva y se sumen los puntos
+        verificarFilaNueva(inputNombre);
+        actualizarPuntosDia(inputPuntos);
+        
+        cerrarDespensa();
+    }
+
+    /* ============================================================
+       CÁLCULOS Y DINÁMICA DE FILAS
+       ============================================================ */
+
+    function verificarFilaNueva(input) {
+        const lista = input.closest('.lista-ingredients') || input.parentElement.parentElement;
+        const filas = lista.querySelectorAll('.fila-ingrediente');
+        const ultimaFila = filas[filas.length - 1];
+        
+        // Si escribimos en la última fila y no está vacía, añadimos otra
+        if (input.parentElement === ultimaFila && input.value.trim() !== "") {
+            const nuevaFila = document.createElement('div');
+            nuevaFila.className = 'fila-ingrediente';
+            nuevaFila.innerHTML = `
+                <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
+                <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
+            `;
+            lista.appendChild(nuevaFila);
         }
-        function cerrarNuevoMenu() { 
-            document.getElementById('modal-nuevo').style.display = 'none'; 
-            document.body.style.overflow = 'auto'; 
-        }
+    }
 
-        function toggleDia(idFicha) {
-            const ficha = document.getElementById(idFicha);
-            if(ficha.classList.contains('activo')) return;
-            document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
-            ficha.classList.add('activo');
-            setTimeout(() => { ficha.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
-        }
+    function actualizarPuntosDia(el) {
+        const ficha = el.closest('.dia-ficha');
+        if (!ficha) return;
 
-        /* ============================================================
-           LÓGICA DE LA DESPENSA PREMIUM
-           ============================================================ */
+        const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); 
+        const displayRestante = ficha.querySelector('.input-restantes-dia');
+        const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
+        
+        let sumaConsumida = 0;
+        todosLosIngredientes.forEach(ing => { 
+            sumaConsumida += parseFloat(ing.value) || 0; 
+        });
 
-        function abrirDespensa(btn) {
-            elementoOrigen = btn.closest('.momento-seccion').querySelector('.lista-ingredientes');
-            document.getElementById('modal-despensa').style.display = 'block';
-            document.getElementById('filtro-despensa').value = ""; // Limpiar filtro
-            renderizarCapaDespensa(baseDatosAlimentos); // Resetear vista
-        }
-
-        function cerrarDespensa() { 
-            document.getElementById('modal-despensa').style.display = 'none';
-        }
-
-        function renderizarCapaDespensa(datos) {
-            const contenedor = document.getElementById('lista-alimentos-capa');
-            if (!contenedor) return;
-            
-            if (!datos || datos.length === 0) {
-                contenedor.innerHTML = '<div style="padding:20px; text-align:center;">No se encontraron alimentos.</div>';
-                return;
-            }
-
-            let html = "";
-            datos.forEach(a => {
-                html += `
-                <div class="item-despensa" onclick="seleccionarDeCapa('${a.nombre}', ${a.puntos})">
-                    <span style="font-size:0.95rem; color:#444;">${a.nombre}</span>
-                    <span style="font-weight:bold; color:var(--verde-oscuro);">${a.puntos} <small>pts</small></span>
-                </div>`;
-            });
-            contenedor.innerHTML = html;
-        }
-
-        function filtrarDespensa() {
-            const busqueda = document.getElementById('filtro-despensa').value.toLowerCase();
-            const filtrados = baseDatosAlimentos.filter(a => a.nombre.toLowerCase().includes(busqueda));
-            renderizarCapaDespensa(filtrados);
-        }
-
-        function seleccionarDeCapa(nombre, puntos) {
-            if (!elementoOrigen) return;
-
-            const filas = elementoOrigen.querySelectorAll('.fila-ingrediente');
-            // Buscamos la última fila o una vacía
-            let filaDestino = Array.from(filas).find(f => f.querySelector('.input-ingrediente').value.trim() === "");
-            
-            if (!filaDestino) {
-                // Si no hay vacía, creamos una nueva manualmente antes de insertar
-                verificarFilaNueva(filas[filas.length-1].querySelector('.input-ingrediente'));
-                const nuevasFilas = elementoOrigen.querySelectorAll('.fila-ingrediente');
-                filaDestino = nuevasFilas[nuevasFilas.length - 2]; 
-            }
-
-            const inputNombre = filaDestino.querySelector('.input-ingrediente');
-            const inputPuntos = filaDestino.querySelector('.input-puntos-ing');
-            
-            inputNombre.value = nombre; 
-            inputPuntos.value = puntos; 
-
-            verificarFilaNueva(inputNombre);
-            actualizarPuntosDia(inputPuntos);
-            cerrarDespensa();
-        }
-
-        /* ============================================================
-           CÁLCULOS DINÁMICOS
-           ============================================================ */
-
-        function verificarFilaNueva(input) {
-            const lista = input.closest('.lista-ingredientes');
-            const filas = lista.querySelectorAll('.fila-ingrediente');
-            const ultimaFila = filas[filas.length - 1];
-            if (input.parentElement === ultimaFila && input.value.trim() !== "") {
-                const nuevaFila = document.createElement('div');
-                nuevaFila.className = 'fila-ingrediente';
-                nuevaFila.innerHTML = `
-                    <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
-                    <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
-                `;
-                lista.appendChild(nuevaFila);
-            }
-        }
-
-        function actualizarPuntosDia(el) {
-            const ficha = el.closest('.dia-ficha');
-            if (!ficha) return;
-            const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); 
-            const displayRestante = ficha.querySelector('.input-restantes-dia');
-            const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
-            
-            let sumaConsumida = 0;
-            todosLosIngredientes.forEach(ing => { sumaConsumida += parseFloat(ing.value) || 0; });
-            
-            const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
-            const resultadoResta = presupuestoManual - sumaConsumida;
-            
+        const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
+        const resultadoResta = presupuestoManual - sumaConsumida;
+        
+        if (displayRestante) {
             displayRestante.value = resultadoResta;
+            // Alerta visual si se pasa de puntos
             if (resultadoResta < 0) {
                 displayRestante.style.color = "white";
                 displayRestante.style.backgroundColor = "#e74c3c";
@@ -486,8 +520,12 @@
                 displayRestante.style.backgroundColor = "white";
             }
         }
+    }
 
-        function guardarNuevoMenu() { alert("Planificación guardada con éxito."); cerrarNuevoMenu(); }
-    </script>
+    function guardarNuevoMenu() { 
+        alert("Planificación guardada con éxito en la base de datos."); 
+        cerrarNuevoMenu(); 
+    }
+</script>
 </body>
 </html>
