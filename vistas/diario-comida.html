@@ -3,384 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NutraFit - Mis Menús Semanales</title>
+    <title>NutraFit - Menús</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        :root { 
-            --verde-corp: #78a978; 
-            --verde-oscuro: #5a8a5a; 
-            --gris-fondo: #f8f9fa; 
-            --blanco: #ffffff;
-            --sombra: 0 4px 12px rgba(0,0,0,0.08);
-        }
-
-        body { 
-            margin: 0; font-family: 'Segoe UI', sans-serif; 
-            background-color: var(--gris-fondo); color: #333; 
-            overflow-x: hidden;
-        }
-
-        /* --- ESTILOS DESPENSA MINI (NUEVO) --- */
-        #despensa-mini-container {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 80vh;
-            background: white; z-index: 5000; box-shadow: 0 5px 25px rgba(0,0,0,0.3);
-            border-radius: 0 0 25px 25px; overflow: hidden; animation: slideDown 0.3s ease;
-        }
-        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        :root { --verde: #78a978; --verde-osc: #5a8a5a; --fondo: #f8f9fa; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--fondo); }
         
-        .fila-seleccionable:active { background-color: #f1f8f1; }
-        .lista-alimentos-scroll { height: calc(80vh - 120px); overflow-y: auto; padding: 10px; }
+        /* CABECERA Y BUSCADOR PRINCIPAL */
+        .cabecera-fija { background: var(--verde); padding: 15px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 1000; }
+        .btn-nav { background: rgba(255,255,255,0.2); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        
+        /* DESPENSA MINI (SISTEMA NUEVO) */
+        #despensa-mini-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 80vh; background: white; z-index: 5000; box-shadow: 0 5px 20px rgba(0,0,0,0.3); border-radius: 0 0 20px 20px; overflow: hidden; }
+        .lista-mini-scroll { height: calc(80vh - 110px); overflow-y: auto; padding: 10px; }
+        .cabecera-grupo { background: #edf5ed; color: #446644; padding: 8px; font-weight: bold; font-size: 0.8rem; margin-top: 10px; border-radius: 5px; }
+        .fila-alimento { border-bottom: 1px solid #eee; cursor: pointer; }
+        .fila-alimento:active { background: #f0f7f0; }
+        .credito-badge { background: var(--verde); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
 
-        /* --- RESTO DE ESTILOS EXISTENTES --- */
-        .cabecera-fija { 
-            background: var(--verde-corp); padding: 15px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            color: white; position: sticky; top: 0; z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .btn-nav { 
-            background: rgba(255,255,255,0.2); border: none; color: white; 
-            width: 40px; height: 40px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; transition: 0.3s;
-        }
-
-        .contenedor-buscador {
-            background: var(--blanco); margin: 15px;
-            padding: 12px 15px; border-radius: 15px;
-            display: flex; align-items: center; box-shadow: var(--sombra);
-        }
-        .contenedor-buscador i { color: var(--verde-corp); margin-right: 12px; }
-        .input-busqueda { border: none; outline: none; width: 100%; font-size: 1rem; background: transparent; }
-
-        .banner-info {
-            background: #eef5ee; margin: 0 15px 20px 15px;
-            padding: 15px; border-radius: 12px;
-            border-left: 5px solid var(--verde-corp);
-            display: flex; align-items: center; gap: 12px;
-        }
-        .banner-info p { margin: 0; font-size: 0.85rem; color: #555; }
-
-        .grid-contenido { padding: 0 15px 100px 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
-        .btn-mas {
-            position: fixed; bottom: 30px; right: 25px;
-            background: var(--verde-corp); color: white;
-            width: 60px; height: 60px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px; border: none; box-shadow: 0 5px 15px rgba(120, 169, 120, 0.4);
-            cursor: pointer; z-index: 900;
-        }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            display: none; z-index: 2000;
-            backdrop-filter: blur(3px);
-        }
-
-        .modal-contenido {
-            position: absolute; bottom: 0;
-            width: 100%; height: 95vh;
-            background: var(--blanco);
-            border-radius: 25px 25px 0 0;
-            display: flex; flex-direction: column;
-            animation: deslizarSubir 0.3s ease-out;
-            overflow: hidden;
-        }
-
-        @keyframes deslizarSubir { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-        .cabecera-modal-nueva {
-            background: var(--verde-corp); padding: 15px 20px;
-            display: flex; align-items: center; color: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .cabecera-modal-nueva .titulo { flex-grow: 1; text-align: center; font-weight: bold; font-size: 1.1rem; }
-        .formulario-scroll { flex-grow: 1; overflow-y: auto; padding: 20px; background: #fdfdfd; }
-
-        .seccion-fecha {
-            display: flex; align-items: center; justify-content: space-between;
-            padding-bottom: 15px; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0;
-        }
-        .seccion-fecha label { color: var(--verde-corp); font-weight: bold; font-size: 0.8rem; }
-        .input-fecha-transparent { border: none; background: transparent; font-size: 1rem; color: #444; text-align: right; outline: none; }
-
-        .dia-ficha { margin-bottom: 12px; border-radius: 12px; border: 1px solid #e0e0e0; overflow: hidden; transition: 0.3s; }
-        .dia-header {
-            background: var(--verde-corp); color: white; padding: 12px 15px;
-            display: flex; align-items: center; justify-content: space-between; cursor: pointer;
-        }
-        .input-puntos-dia { width: 45px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: var(--verde-oscuro); outline: none; background: white; }
-        .input-restantes-dia { width: 45px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: #d35400; background: #fff; outline: none; pointer-events: none; }
-
-        .dia-cuerpo { padding: 15px; background: white; display: none; }
+        /* FICHAS DEL ACORDEÓN */
+        .dia-ficha { margin: 10px; border-radius: 12px; border: 1px solid #ddd; background: white; overflow: hidden; }
+        .dia-header { background: var(--verde); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .dia-cuerpo { padding: 15px; display: none; }
         .dia-ficha.activo .dia-cuerpo { display: block; }
-        .dia-ficha.activo { border-color: var(--verde-corp); box-shadow: var(--sombra); }
-
-        .momento-seccion { margin-bottom: 18px; }
-        .momento-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .momento-titulo { color: var(--verde-corp); font-weight: bold; font-size: 0.85rem; text-transform: uppercase; border-left: 3px solid var(--verde-corp); padding-left: 8px; }
         
-        .fila-ingrediente { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f2f2f2; padding-bottom: 5px; margin-bottom: 5px; }
-        .input-ingrediente { flex-grow: 1; border: none; outline: none; font-size: 0.95rem; color: #555; background: transparent; }
-        .input-puntos-ing { width: 40px; border: none; background: #f7f7f7; text-align: center; font-weight: bold; color: var(--verde-oscuro); border-radius: 4px; padding: 4px 0; }
-        .btn-add-momento { background: none; border: none; color: var(--verde-corp); cursor: pointer; font-size: 0.9rem; }
+        /* INPUTS */
+        .input-puntos-dia, .input-restantes-dia { width: 45px; border: none; text-align: center; font-weight: bold; border-radius: 5px; }
+        .input-puntos-dia { color: var(--verde-osc); }
+        .momento-titulo { color: var(--verde); font-weight: bold; font-size: 0.8rem; text-transform: uppercase; border-left: 3px solid var(--verde); padding-left: 8px; margin: 15px 0 8px; }
+        .fila-ingrediente { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #f5f5f5; }
+        .input-ingrediente { flex-grow: 1; border: none; outline: none; font-size: 0.9rem; color: #333; }
+        .input-puntos-ing { width: 35px; border: none; background: #f0f0f0; text-align: center; font-weight: bold; border-radius: 4px; }
 
-        /* Estilos de la tabla de despensa mini */
-        .cabecera-grupo-despensa { background: #f1f8f1; color: #4a6d4a; padding: 8px; font-weight: bold; font-size: 0.8rem; margin-top: 10px; }
-        .tabla-despensa { width: 100%; border-collapse: collapse; }
-        .credito-badge { background: #78a978; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
+        /* MODAL */
+        .modal-nuevo { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 2000; }
+        .modal-contenido { position: absolute; bottom: 0; width: 100%; height: 92vh; background: white; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; }
     </style>
 </head>
 <body>
 
     <div id="despensa-mini-container">
-        <div style="background: var(--verde-corp); padding: 15px; display: flex; justify-content: space-between; align-items: center; color: white;">
-            <span style="font-weight: bold;"><i class="fas fa-search"></i> BUSCAR EN DESPENSA</span>
+        <div style="background: var(--verde); padding: 15px; display: flex; justify-content: space-between; align-items: center; color: white;">
+            <span><i class="fas fa-search"></i> DESPENSA</span>
             <button onclick="cerrarDespensaMini()" class="btn-nav"><i class="fas fa-times"></i></button>
         </div>
-        <div style="padding: 10px; background: var(--verde-corp);">
-            <div class="contenedor-buscador" style="margin: 0; border-radius: 20px;">
-                <i class="fas fa-search"></i>
-                <input type="text" id="bus-mini" class="input-busqueda" placeholder="Nombre del alimento..." onkeyup="filtrarMini()">
-            </div>
+        <div style="padding: 10px; background: var(--verde);">
+            <input type="text" id="bus-mini" style="width: 100%; padding: 10px; border-radius: 20px; border: none;" placeholder="Buscar alimento..." onkeyup="filtrarMini()">
         </div>
-        <div id="lista-mini-contenido" class="lista-alimentos-scroll">
-            <p style="text-align: center; padding: 20px;">Cargando despensa...</p>
-        </div>
+        <div id="lista-mini-contenido" class="lista-mini-scroll"></div>
     </div>
 
-    <div id="vista-principal">
-        <header class="cabecera-fija">
-            <button onclick="volverInicio()" class="btn-nav"><i class="fas fa-chevron-left"></i></button>
-            <span style="font-weight: bold; letter-spacing: 1px;">MIS MENÚS SEMANALES</span>
-            <div style="width: 40px;"></div>
-        </header>
+    <header class="cabecera-fija">
+        <button onclick="location.reload()" class="btn-nav"><i class="fas fa-sync"></i></button>
+        <span style="font-weight: bold;">MIS MENÚS</span>
+        <button onclick="abrirNuevoMenu()" class="btn-nav" style="background: white; color: var(--verde);"><i class="fas fa-plus"></i></button>
+    </header>
 
-        <div class="contenedor-buscador">
-            <i class="fas fa-star"></i>
-            <input type="number" id="busqueda-creditos" class="input-busqueda" placeholder="INTRODUCIR CREDITOS PARA BUSCAR...">
-        </div>
-
-        <div class="banner-info">
-            <i class="fas fa-info-circle"></i>
-            <p>Selecciona una semana o pulsa <b>+</b> para crear una nueva planificación.</p>
-        </div>
-
-        <div id="contenedor-menus" class="grid-contenido"></div>
-        <button class="btn-mas" onclick="abrirNuevoMenu()"><i class="fas fa-plus"></i></button>
-    </div>
-
-    <div id="modal-nuevo" class="modal-overlay">
+    <div id="modal-nuevo" class="modal-nuevo">
         <div class="modal-contenido">
-            <div class="cabecera-modal-nueva">
-                <button class="btn-nav" onclick="cerrarNuevoMenu()"><i class="fas fa-arrow-left"></i></button>
-                <div class="titulo">MI MENÚ SEMANAL</div>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn-nav" onclick="guardarNuevoMenu()"><i class="fas fa-save"></i></button>
-                    <button class="btn-nav" onclick="cerrarNuevoMenu()"><i class="fas fa-times"></i></button>
-                </div>
+            <div style="background: var(--verde); padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn-nav" onclick="cerrarNuevoMenu()"><i class="fas fa-chevron-down"></i></button>
+                <strong>PLANIFICACIÓN</strong>
+                <button class="btn-nav" onclick="alert('Guardado')"><i class="fas fa-save"></i></button>
             </div>
+            
+            <div style="flex-grow: 1; overflow-y: auto; padding-bottom: 40px;">
+                <div id="contenedor-fichas-manual">
+                    </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    // --- VARIABLES GLOBALES ---
+    let inventarioCompleto = [];
+    let inputDestinoNombre = null;
+    let inputDestinoPuntos = null;
 
-            <div class="formulario-scroll">
-                <div class="seccion-fecha">
-                    <label><i class="far fa-calendar-alt"></i> FECHA DE INICIO</label>
-                    <input type="date" id="input-fecha-nueva" class="input-fecha-transparent">
+    // --- 1. GENERACIÓN SEGURA DE LAS FICHAS (LUNES A DOMINGO) ---
+    function renderizarFichasSemanales() {
+        const contenedor = document.getElementById('contenedor-fichas-manual');
+        const dias = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"];
+        const momentos = ["Desayuno", "Almuerzo", "Comida", "Merienda", "Cena"];
+        
+        let htmlSemanas = "";
+
+        dias.forEach((dia, index) => {
+            const esActivo = index === 0 ? "activo" : ""; // Solo el lunes abierto por defecto
+            htmlSemanas += `
+            <div class="dia-ficha ${esActivo}" id="ficha-${dia.toLowerCase()}">
+                <div class="dia-header" onclick="toggleDia('ficha-${dia.toLowerCase()}')">
+                    <strong>${dia}</strong>
+                    <div style="display: flex; gap: 8px;">
+                        <div style="text-align:center"><span style="font-size:10px;display:block">TOTAL</span>
+                            <input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)">
+                        </div>
+                        <div style="text-align:center"><span style="font-size:10px;display:block">RESTA</span>
+                            <input type="number" class="input-restantes-dia" value="0" readonly>
+                        </div>
+                    </div>
                 </div>
-
-                <div id="acordeon-semanal">
-                    <script>
-                        const dias = ["LUNES", "MARTES", "MIERCOLES", "JUEVES"];
-                        dias.forEach(dia => {
-                            document.write(`
-                            <div class="dia-ficha ${dia==='LUNES'?'activo':''}" id="ficha-${dia.toLowerCase()}">
-                                <div class="dia-header" onclick="toggleDia('ficha-${dia.toLowerCase()}')">
-                                    <div style="width: 32px;"></div> <strong>${dia}</strong>
-                                    <div style="display: flex; gap: 10px;">
-                                        <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
-                                        <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
-                                    </div>
+                <div class="dia-cuerpo">
+                    ${momentos.map(m => `
+                        <div class="momento-seccion">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:5px;">
+                                <span class="momento-titulo">${m}</span>
+                                <button class="btn-nav" style="background:var(--verde); width:28px; height:28px;" onclick="abrirDespensaMini(this)">
+                                    <i class="fas fa-plus" style="font-size: 12px;"></i>
+                                </button>
+                            </div>
+                            <div class="lista-ingredientes">
+                                <div class="fila-ingrediente">
+                                    <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
+                                    <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
                                 </div>
-                                <div class="dia-cuerpo">
-                                    ${["Desayuno", "Almuerzo", "Comida", "Merienda", "Cena"].map(momento => `
-                                        <div class="momento-seccion">
-                                            <div class="momento-header">
-                                                <span class="momento-titulo">${momento}</span>
-                                                <button class="btn-add-momento" onclick="abrirDespensaMini(this)"><i class="fas fa-plus"></i></button>
-                                            </div>
-                                            <div class="lista-ingredientes">
-                                                <div class="fila-ingrediente">
-                                                    <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
-                                                    <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>`);
-                        });
-                    </script>
-                    <script>
-                        const diasRestantes = ["VIERNES", "SABADO", "DOMINGO"];
-                        diasRestantes.forEach(dia => {
-                            document.write(`
-                            <div class="dia-ficha" id="ficha-${dia.toLowerCase()}">
-                                <div class="dia-header" onclick="toggleDia('ficha-${dia.toLowerCase()}')">
-                                    <div style="width: 32px;"></div> <strong>${dia}</strong>
-                                    <div style="display: flex; gap: 10px;">
-                                        <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
-                                        <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
-                                    </div>
-                                </div>
-                                <div class="dia-cuerpo">
-                                    ${["Desayuno", "Almuerzo", "Comida", "Merienda", "Cena"].map(momento => `
-                                        <div class="momento-seccion">
-                                            <div class="momento-header">
-                                                <span class="momento-titulo">${momento}</span>
-                                                <button class="btn-add-momento" onclick="abrirDespensaMini(this)"><i class="fas fa-plus"></i></button>
-                                            </div>
-                                            <div class="lista-ingredientes">
-                                                <div class="fila-ingrediente">
-                                                    <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
-                                                    <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>`);
-                        });
-                    </script>
-                </div> </div> </div> </div> <script>
-        // --- VARIABLES GLOBALES ---
-        let inputDestinoNombre = null;
-        let inputDestinoPuntos = null;
-        const URL_DESPENSA = "https://script.google.com/macros/s/AKfycbx60rS86Lz8q7XfGf_6X6W6r6A_6A/exec"; // Reemplaza con tu URL real
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        });
+        contenedor.innerHTML = htmlSemanas;
+    }
 
-        // --- LÓGICA DE NAVEGACIÓN ---
-        function volverInicio() { location.reload(); }
-        function abrirNuevoMenu() { document.getElementById('modal-nuevo').style.display = 'block'; document.body.style.overflow = 'hidden'; }
-        function cerrarNuevoMenu() { document.getElementById('modal-nuevo').style.display = 'none'; document.body.style.overflow = 'auto'; }
+    // --- 2. FUNCIONES DE NAVEGACIÓN ---
+    function abrirNuevoMenu() { 
+        document.getElementById('modal-nuevo').style.display = 'block'; 
+        renderizarFichasSemanales(); // Dibujamos las fichas al abrir
+    }
+    function cerrarNuevoMenu() { document.getElementById('modal-nuevo').style.display = 'none'; }
+    
+    function toggleDia(id) {
+        document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
+        document.getElementById(id).classList.add('activo');
+    }
 
-        function toggleDia(idFicha) {
-            const ficha = document.getElementById(idFicha);
-            if(ficha.classList.contains('activo')) return;
-            document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
-            ficha.classList.add('activo');
-            setTimeout(() => { ficha.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
+    // --- 3. LÓGICA DE LA DESPENSA MINI ---
+    function abrirDespensaMini(btn) {
+        const seccion = btn.closest('.momento-seccion');
+        const filas = seccion.querySelectorAll('.fila-ingrediente');
+        // Buscamos la última fila o una vacía
+        let filaDestino = Array.from(filas).find(f => f.querySelector('.input-ingrediente').value.trim() === "") || filas[filas.length - 1];
+        
+        inputDestinoNombre = filaDestino.querySelector('.input-ingrediente');
+        inputDestinoPuntos = filaDestino.querySelector('.input-puntos-ing');
+
+        document.getElementById('despensa-mini-container').style.display = 'block';
+        
+        if (inventarioCompleto.length === 0) {
+            cargarDatosExcel();
+        } else {
+            renderizarListaMini(inventarioCompleto);
         }
+    }
 
-        // --- SISTEMA DE DESPENSA MINI (EL "GPS") ---
-        async function abrirDespensaMini(btn) {
-            // Identificar dónde vamos a escribir el resultado
-            const seccion = btn.closest('.momento-seccion');
-            const filas = seccion.querySelectorAll('.fila-ingrediente');
-            const ultimaFila = filas[filas.length - 1];
-            
-            inputDestinoNombre = ultimaFila.querySelector('.input-ingrediente');
-            inputDestinoPuntos = ultimaFila.querySelector('.input-puntos-ing');
+    function cargarDatosExcel() {
+        const listaContenedor = document.getElementById('lista-mini-contenido');
+        listaContenedor.innerHTML = '<p style="text-align:center; padding:20px;">Cargando despensa real...</p>';
+        
+        google.script.run
+            .withSuccessHandler(datos => {
+                inventarioCompleto = datos; 
+                renderizarListaMini(datos);
+            })
+            .obtenerAlimentosDespensa(); 
+    }
 
-            document.getElementById('despensa-mini-container').style.display = 'block';
-            cargarDatosDespensa();
-        }
+    function renderizarListaMini(lista) {
+        const contenedor = document.getElementById('lista-mini-contenido');
+        contenedor.innerHTML = '';
+        
+        // Agrupar por categoría
+        const grupos = {};
+        lista.forEach(item => {
+            const cat = item.Categoria || "Otros";
+            if(!grupos[cat]) grupos[cat] = [];
+            grupos[cat].push(item);
+        });
 
-        async function cargarDatosDespensa() {
-            const lista = document.getElementById('lista-mini-contenido');
-            try {
-                const res = await fetch(URL_DESPENSA + "?tabla=alimentos");
-                const datos = await res.json();
-                
-                let html = "";
-                const grupos = {};
-                datos.forEach(fila => {
-                    if(!grupos[fila[1]]) grupos[fila[1]] = [];
-                    grupos[fila[1]].push(fila);
-                });
-
-                for (const grupo in grupos) {
-                    html += `<div class="cabecera-grupo-despensa">${grupo}</div>`;
-                    html += `<table class="tabla-despensa">`;
-                    grupos[grupo].forEach(alimento => {
-                        const nombre = alimento[0].replace(/'/g, "&apos;");
-                        const puntos = Math.round(parseFloat(alimento[8]) || 0);
-                        html += `
-                            <tr class="fila-alimento fila-seleccionable" onclick="seleccionarAlimento('${nombre}', ${puntos})">
-                                <td style="padding:10px; font-size:14px;">${alimento[0]}</td>
-                                <td style="text-align:right; padding:10px;"><span class="credito-badge">${puntos} pts</span></td>
-                            </tr>`;
-                    });
-                    html += `</table>`;
-                }
-                lista.innerHTML = html;
-            } catch (e) {
-                lista.innerHTML = "<p style='padding:20px;'>Error al conectar con el almacén.</p>";
-            }
-        }
-
-        function seleccionarAlimento(nombre, puntos) {
-            if(inputDestinoNombre) {
-                inputDestinoNombre.value = nombre;
-                inputDestinoPuntos.value = puntos;
-                verificarFilaNueva(inputDestinoNombre);
-                actualizarPuntosDia(inputDestinoPuntos);
-            }
-            cerrarDespensaMini();
-        }
-
-        function cerrarDespensaMini() {
-            document.getElementById('despensa-mini-container').style.display = 'none';
-        }
-
-        function filtrarMini() {
-            const val = document.getElementById('bus-mini').value.toLowerCase();
-            document.querySelectorAll('.fila-alimento').forEach(f => {
-                f.style.display = f.innerText.toLowerCase().includes(val) ? "" : "none";
+        for (let cat in grupos) {
+            let htmlCat = `<div class="cabecera-grupo">${cat}</div><table style="width:100%">`;
+            grupos[cat].forEach(item => {
+                const nombreEsc = item.Nombre.replace(/'/g, "\\'");
+                htmlCat += `
+                    <tr class="fila-alimento" onclick="seleccionarMini('${nombreEsc}', ${item.Netos})">
+                        <td style="padding:10px; font-size:14px;">${item.Nombre}</td>
+                        <td style="text-align:right; padding:10px;"><span class="credito-badge">${item.Netos} pts</span></td>
+                    </tr>`;
             });
+            contenedor.innerHTML += htmlCat + "</table>";
         }
+    }
 
-        // --- LÓGICA DE CÁLCULOS ---
-        function verificarFilaNueva(input) {
-            const lista = input.closest('.lista-ingredientes');
-            const filas = lista.querySelectorAll('.fila-ingrediente');
-            const ultimaFila = filas[filas.length - 1];
-            if (input.parentElement === ultimaFila && input.value.trim() !== "") {
-                const nuevaFila = document.createElement('div');
-                nuevaFila.className = 'fila-ingrediente';
-                nuevaFila.innerHTML = `
-                    <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
-                    <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
-                `;
-                lista.appendChild(nuevaFila);
-            }
+    function seleccionarMini(nombre, puntos) {
+        if (inputDestinoNombre) {
+            inputDestinoNombre.value = nombre;
+            inputDestinoPuntos.value = puntos;
+            verificarFilaNueva(inputDestinoNombre);
+            actualizarPuntosDia(inputDestinoPuntos);
         }
+        cerrarDespensaMini();
+    }
 
-        function actualizarPuntosDia(el) {
-            const ficha = el.closest('.dia-ficha');
-            if (!ficha) return;
-            const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); 
-            const displayRestante = ficha.querySelector('.input-restantes-dia');
-            const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
-            
-            let sumaConsumida = 0;
-            todosLosIngredientes.forEach(ing => { sumaConsumida += parseFloat(ing.value) || 0; });
-            
-            const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
-            const resultadoResta = presupuestoManual - sumaConsumida;
-            
-            if (displayRestante) {
-                displayRestante.value = resultadoResta;
-                displayRestante.style.backgroundColor = resultadoResta < 0 ? "#e74c3c" : "white";
-                displayRestante.style.color = resultadoResta < 0 ? "white" : "#d35400";
-            }
-        }
+    function cerrarDespensaMini() { document.getElementById('despensa-mini-container').style.display = 'none'; }
 
-        function guardarNuevoMenu() { 
-            alert("Planificación guardada con éxito."); 
-            cerrarNuevoMenu(); 
+    function filtrarMini() {
+        const val = document.getElementById('bus-mini').value.toLowerCase();
+        document.querySelectorAll('.fila-alimento').forEach(f => {
+            f.style.display = f.innerText.toLowerCase().includes(val) ? "" : "none";
+        });
+    }
+
+    // --- 4. CÁLCULOS ---
+    function verificarFilaNueva(input) {
+        const lista = input.closest('.lista-ingredientes');
+        const filas = lista.querySelectorAll('.fila-ingrediente');
+        if (input.parentElement === filas[filas.length - 1] && input.value.trim() !== "") {
+            const nueva = document.createElement('div');
+            nueva.className = 'fila-ingrediente';
+            nueva.innerHTML = `
+                <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
+                <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">`;
+            lista.appendChild(nueva);
         }
-    </script>
+    }
+
+    function actualizarPuntosDia(el) {
+        const ficha = el.closest('.dia-ficha');
+        const total = parseFloat(ficha.querySelector('.input-puntos-dia').value) || 0;
+        const sumandos = ficha.querySelectorAll('.input-puntos-ing');
+        let consumido = 0;
+        sumandos.forEach(s => consumido += parseFloat(s.value) || 0);
+        
+        const restante = total - consumido;
+        const resDisplay = ficha.querySelector('.input-restantes-dia');
+        resDisplay.value = restante;
+        resDisplay.style.backgroundColor = restante < 0 ? "#e74c3c" : "white";
+        resDisplay.style.color = restante < 0 ? "white" : "#d35400";
+    }
+
+</script>
 </body>
 </html>
