@@ -1151,24 +1151,18 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 
 // VARIABLES GLOBALES PARA LA DESPENSA
-let contextoInsercion = null; // Referencia al momento (comida, cena, etc.) que pidió el ingrediente
-let inventarioCompleto = []; // Cache de los datos que vienen del Excel (hoja "alimentos")
-let itemTemporal = null;     // El ingrediente seleccionado actualmente en la lista
+let contextoInsercion = null; // Contenedor de la lista de ingredientes donde se insertará
+let inventarioCompleto = []; // Cache de los datos que vienen del Excel
+let inputDestinoNombre = null;
+let inputDestinoPuntos = null;
 
 /**
- * 1. NAVEGACIÓN BLINDADA
+ * 1. NAVEGACIÓN Y MODALES
  */
 function volverInicio() {
-    if (window.location.pathname.includes('/vistas/')) {
-        window.location.href = '../index.html';
-    } else {
-        window.location.href = 'index.html';
-    }
+    window.location.href = window.location.pathname.includes('/vistas/') ? '../index.html' : 'index.html';
 }
 
-/**
- * 2. CONTROL DEL MODAL (VENTANA EMERGENTE)
- */
 function abrirNuevoMenu() {
     const modal = document.getElementById('modal-nuevo');
     if (modal) {
@@ -1186,33 +1180,23 @@ function cerrarNuevoMenu() {
 }
 
 /**
- * 3. LÓGICA DEL ACORDEÓN SEMANAL
+ * 2. LÓGICA DEL ACORDEÓN SEMANAL
  */
 function toggleDia(idFicha) {
     const fichaSeleccionada = document.getElementById(idFicha);
-    if (!fichaSeleccionada) return;
-
-    if (fichaSeleccionada.classList.contains('activo')) {
-        return; 
-    }
+    if (!fichaSeleccionada || fichaSeleccionada.classList.contains('activo')) return;
 
     const fichaAbiertaAnterior = document.querySelector('.dia-ficha.activo');
-    if (fichaAbiertaAnterior) {
-        fichaAbiertaAnterior.classList.remove('activo');
-    }
+    if (fichaAbiertaAnterior) fichaAbiertaAnterior.classList.remove('activo');
 
     fichaSeleccionada.classList.add('activo');
-
     setTimeout(() => {
-        fichaSeleccionada.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-        });
+        fichaSeleccionada.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
 }
 
 /**
- * 4. GESTIÓN DE FILAS DINÁMICAS (INGREDIENTES)
+ * 3. GESTIÓN DE FILAS DINÁMICAS
  */
 function verificarFilaNueva(input) {
     const filaActual = input.parentElement;
@@ -1220,184 +1204,141 @@ function verificarFilaNueva(input) {
     const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
     
     if (filaActual === todasLasFilas[todasLasFilas.length - 1] && input.value.trim() !== "") {
-        crearNuevaFila(contenedor);
+        const nuevaFila = document.createElement('div');
+        nuevaFila.className = 'fila-ingrediente';
+        nuevaFila.innerHTML = `
+            <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
+            <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
+        `;
+        contenedor.appendChild(nuevaFila);
     }
-}
-
-function crearNuevaFila(contenedor) {
-    const nuevaFila = document.createElement('div');
-    nuevaFila.className = 'fila-ingrediente';
-    
-    nuevaFila.innerHTML = `
-        <input type="text" class="input-ingrediente" placeholder="Añadir ingrediente..." oninput="verificarFilaNueva(this)">
-        <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
-    `;
-    
-    contenedor.appendChild(nuevaFila);
 }
 
 /**
- * 5. LÓGICA DE LA DESPENSA (IMPLEMENTACIÓN SINCRONIZADA)
+ * 4. SISTEMA DESPENSA MINI (OPTIMIZADO)
  */
-function abrirDespensa(dia, momento, boton) {
-    // Capturamos la lista exacta de ingredientes donde se pulsó el botón
-    contextoInsercion = boton.closest('.momento-seccion').querySelector('.lista-ingredientes');
+function abrirDespensaMini(btn) {
+    // Localizar dónde vamos a escribir el resultado
+    const seccion = btn.closest('.momento-seccion');
+    const lista = seccion.querySelector('.lista-ingredientes');
+    const filasIng = lista.querySelectorAll('.fila-ingrediente');
     
-    document.getElementById('modal-despensa').style.display = 'block';
-    console.log(`Abriendo despensa para: ${dia} - ${momento}`);
+    // Buscamos una fila vacía o usamos la última
+    let filaDestino = Array.from(filasIng).find(f => f.querySelector('.input-ingrediente').value.trim() === "") || filasIng[filasIng.length - 1];
+    
+    inputDestinoNombre = filaDestino.querySelector('.input-ingrediente');
+    inputDestinoPuntos = filaDestino.querySelector('.input-puntos-ing');
 
-    // Si la lista está vacía, la pedimos a Google Apps Script usando la función optimizada
+    document.getElementById('despensa-mini-container').style.display = 'block';
+    
+    // Cargar datos solo si el inventario está vacío
     if (inventarioCompleto.length === 0) {
         cargarDatosDesdeExcel();
     } else {
-        renderizarLista(inventarioCompleto);
+        renderizarListaMini(inventarioCompleto);
     }
 }
 
-function cerrarDespensa() {
-    document.getElementById('modal-despensa').style.display = 'none';
-    itemTemporal = null;
-}
-
-// Conecta con la función 'obtenerAlimentosDespensa' en tu Código.gs (Claves: Nombre, Netos)
 function cargarDatosDesdeExcel() {
-    const contenedor = document.getElementById('lista-despensa');
-    contenedor.innerHTML = '<div style="text-align: center; padding: 20px;">Conectando con la despensa...</div>';
+    const contenedor = document.getElementById('lista-mini-contenido');
+    contenedor.innerHTML = '<div style="text-align: center; padding: 20px;">Cargando despensa real...</div>';
 
     google.script.run
         .withSuccessHandler(function(datos) {
             inventarioCompleto = datos; 
-            renderizarLista(inventarioCompleto);
+            renderizarListaMini(inventarioCompleto);
         })
         .withFailureHandler(function(err) {
-            contenedor.innerHTML = '<div style="text-align: center; color:red; padding: 20px;">Error al conectar con la base de datos.</div>';
-            console.error(err);
+            contenedor.innerHTML = '<div style="text-align: center; color:red; padding: 20px;">Error de conexión.</div>';
         })
-        .obtenerAlimentosDespensa(); 
+        .obtenerAlimentosDespensa(); // Tu función en Código.gs
 }
 
-function renderizarLista(lista) {
-    const contenedor = document.getElementById('lista-despensa');
+function renderizarListaMini(lista) {
+    const contenedor = document.getElementById('lista-mini-contenido');
     contenedor.innerHTML = '';
     
-    if (!lista || lista.length === 0) {
-        contenedor.innerHTML = '<div style="text-align: center; padding: 20px;">No hay ingredientes disponibles en la hoja "alimentos".</div>';
-        return;
-    }
+    // Agrupar por categoría (Asumiendo que item.Categoria existe, si no, quitar agrupación)
+    const grupos = {};
+    lista.forEach(item => {
+        const cat = item.Categoria || "General";
+        if(!grupos[cat]) grupos[cat] = [];
+        grupos[cat].push(item);
+    });
 
-    lista.forEach((item) => {
-        const div = document.createElement('div');
-        div.className = 'item-despensa';
-        div.onclick = () => seleccionarItem(div, item);
-        
-        // Coincidencia exacta con las claves del servidor: item.Nombre e item.Netos
-        div.innerHTML = `
-            <span class="item-nombre">${item.Nombre}</span>
-            <span class="item-netos">${item.Netos} pts</span>
-        `;
-        contenedor.appendChild(div);
+    Object.keys(grupos).sort().forEach(cat => {
+        let htmlGrupo = `<div class="cabecera-grupo-despensa">${cat}</div><table class="tabla-despensa">`;
+        grupos[cat].forEach(item => {
+            // Escapamos comillas simples para el onclick
+            const nombreEscapado = item.Nombre.replace(/'/g, "\\'");
+            htmlGrupo += `
+                <tr class="fila-alimento fila-seleccionable" onclick="seleccionarAlimentoMini('${nombreEscapado}', ${item.Netos})">
+                    <td style="padding:12px;"><b>${item.Nombre}</b></td>
+                    <td style="text-align:right; padding:12px;"><span class="credito-badge">${item.Netos} pts</span></td>
+                </tr>`;
+        });
+        htmlGrupo += `</table>`;
+        contenedor.innerHTML += htmlGrupo;
     });
 }
 
-function seleccionarItem(elemento, datos) {
-    document.querySelectorAll('.item-despensa').forEach(i => i.classList.remove('seleccionado'));
-    elemento.classList.add('seleccionado');
-    itemTemporal = datos;
+function seleccionarAlimentoMini(nombre, puntos) {
+    if (inputDestinoNombre && inputDestinoPuntos) {
+        inputDestinoNombre.value = nombre;
+        inputDestinoPuntos.value = puntos;
+        
+        verificarFilaNueva(inputDestinoNombre);
+        actualizarPuntosDia(inputDestinoPuntos);
+    }
+    cerrarDespensaMini();
 }
 
-function incluirSeleccionado() {
-    if (!itemTemporal || !contextoInsercion) {
-        alert("Por favor, selecciona primero un ingrediente.");
-        return;
-    }
-
-    const filas = contextoInsercion.querySelectorAll('.fila-ingrediente');
-    
-    // Buscamos si ya existe una fila vacía para rellenarla en lugar de usar siempre la última
-    let filaDestino = null;
-    for (let f of filas) {
-        if (f.querySelector('.input-ingrediente').value.trim() === "") {
-            filaDestino = f;
-            break;
-        }
-    }
-
-    // Si no hay filas vacías, usamos la última disponible
-    if (!filaDestino) filaDestino = filas[filas.length - 1];
-    
-    const inputNombre = filaDestino.querySelector('.input-ingrediente');
-    const inputPuntos = filaDestino.querySelector('.input-puntos-ing');
-    
-    // Inyectamos los datos respetando las mayúsculas del objeto recibido
-    inputNombre.value = itemTemporal.Nombre;
-    inputPuntos.value = itemTemporal.Netos;
-
-    // Actualizamos los puntos totales del día y generamos fila nueva si es necesario
-    actualizarPuntosDia(inputPuntos);
-    verificarFilaNueva(inputNombre);
-
-    cerrarDespensa();
+function cerrarDespensaMini() {
+    document.getElementById('despensa-mini-container').style.display = 'none';
+    const buscador = document.getElementById('bus-mini');
+    if(buscador) buscador.value = "";
 }
 
-function filtrarDespensa() {
-    const busqueda = document.getElementById('input-busqueda-despensa').value.toLowerCase();
-    const filtrados = inventarioCompleto.filter(i => 
-        i.Nombre.toString().toLowerCase().includes(busqueda)
-    );
-    renderizarLista(filtrados);
+function filtrarMini() {
+    const val = document.getElementById('bus-mini').value.toLowerCase();
+    document.querySelectorAll('.fila-alimento').forEach(f => {
+        f.style.display = f.innerText.toLowerCase().includes(val) ? "" : "none";
+    });
 }
 
 /**
- * 6. CÁLCULOS DE PUNTOS (MANTENIDO)
+ * 5. CÁLCULOS DE PUNTOS
  */
 function actualizarPuntosDia(el) {
     const ficha = el.closest('.dia-ficha');
     if (!ficha) return;
     
-    const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia');
+    const inputTotal = ficha.querySelector('.input-puntos-dia');
     const displayRestante = ficha.querySelector('.input-restantes-dia');
-    const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
+    const puntosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
     
-    let sumaConsumida = 0;
-    todosLosIngredientes.forEach(ing => {
-        sumaConsumida += parseFloat(ing.value) || 0;
-    });
+    let consumido = 0;
+    puntosIngredientes.forEach(i => consumido += parseFloat(i.value) || 0);
 
-    const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
-    const resultadoResta = presupuestoManual - sumaConsumida;
+    const presupuesto = parseFloat(inputTotal.value) || 0;
+    const restante = presupuesto - consumido;
     
     if (displayRestante) {
-        displayRestante.value = resultadoResta;
-
-        if (resultadoResta < 0) {
-            displayRestante.style.color = "white";
-            displayRestante.style.backgroundColor = "#e74c3c";
-            displayRestante.style.fontWeight = "bold";
-        } else {
-            displayRestante.style.color = "#d35400";
-            displayRestante.style.backgroundColor = "white";
-            displayRestante.style.fontWeight = "normal";
-        }
+        displayRestante.value = restante;
+        displayRestante.style.backgroundColor = restante < 0 ? "#e74c3c" : "white";
+        displayRestante.style.color = restante < 0 ? "white" : "#d35400";
     }
 }
 
 function guardarNuevoMenu() {
-    const fecha = document.getElementById('input-fecha-nueva').value;
-    if (!fecha) {
-        alert("⚠️ Por favor, selecciona una fecha de inicio.");
+    if (!document.getElementById('input-fecha-nueva').value) {
+        alert("⚠️ Selecciona una fecha.");
         return;
     }
-    alert("Planificación guardada correctamente.");
+    alert("¡Planificación guardada!");
     cerrarNuevoMenu();
 }
 
-/**
- * 7. CARGA INICIAL
- */
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Sistema de Menús NutraFit: Activo y Blindado.");
-    
-    document.querySelectorAll('.input-puntos-dia').forEach(inputTotal => {
-        actualizarPuntosDia(inputTotal);
-    });
+    document.querySelectorAll('.input-puntos-dia').forEach(input => actualizarPuntosDia(input));
 });
