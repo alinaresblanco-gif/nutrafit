@@ -58,6 +58,12 @@
         .input-txt { flex-grow: 1; border: 1px solid #eee; padding: 10px; border-radius: 8px; outline: none; font-size: 0.9rem; }
         .input-pts { width: 45px; border: 1px solid #eee; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; color: var(--verde-oscuro); }
 
+        /* BOTÓN + */
+        .btn-abrir-despensa {
+            background: none; border: none; color: var(--verde-corp);
+            font-size: 1.3rem; cursor: pointer; padding: 0 5px;
+        }
+
         /* BARRA INFERIOR */
         .barra-puntos {
             position: fixed; bottom: 0; width: 100%; background: white;
@@ -67,6 +73,24 @@
         .box-pts { text-align: center; }
         .label-pts { font-size: 0.6rem; color: #888; display: block; }
         .val-pts { font-size: 1.1rem; font-weight: bold; color: var(--naranja); border: none; width: 50px; text-align: center; background: transparent; }
+
+        /* --- MODAL FLOTANTE PARA LA DESPENSA --- */
+        .modal-despensa {
+            display: none; position: fixed; z-index: 2000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-contenido {
+            background-color: white; margin: 5% auto;
+            width: 90%; height: 85vh; border-radius: 20px;
+            overflow: hidden; position: relative;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .btn-cerrar-modal {
+            position: absolute; top: 10px; right: 15px;
+            font-size: 25px; color: #666; cursor: pointer; z-index: 2100;
+        }
+        iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
@@ -87,35 +111,35 @@
         
         <div id="lunes" class="contenido-dia active">
             <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle" style="color: var(--verde-corp);"></i></div>
+                <div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-abrir-despensa" onclick="abrirModalDespensa()"><i class="fas fa-plus-circle"></i></button></div>
                 <div class="fila-ingrediente">
                     <input type="text" class="input-txt" placeholder="¿Qué vas a desayunar?" oninput="actualizarPuntos()">
                     <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
                 </div>
             </div>
             <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Almuerzo</span><i class="fas fa-plus-circle" style="color: var(--verde-corp);"></i></div>
+                <div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-abrir-despensa" onclick="abrirModalDespensa()"><i class="fas fa-plus-circle"></i></button></div>
                 <div class="fila-ingrediente">
                     <input type="text" class="input-txt" placeholder="Tentempié..." oninput="actualizarPuntos()">
                     <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
                 </div>
             </div>
             <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle" style="color: var(--verde-corp);"></i></div>
+                <div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-abrir-despensa" onclick="abrirModalDespensa()"><i class="fas fa-plus-circle"></i></button></div>
                 <div class="fila-ingrediente">
                     <input type="text" class="input-txt" placeholder="Plato principal..." oninput="actualizarPuntos()">
                     <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
                 </div>
             </div>
             <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle" style="color: var(--verde-corp);"></i></div>
+                <div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-abrir-despensa" onclick="abrirModalDespensa()"><i class="fas fa-plus-circle"></i></button></div>
                 <div class="fila-ingrediente">
                     <input type="text" class="input-txt" placeholder="Fruta, yogur..." oninput="actualizarPuntos()">
                     <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
                 </div>
             </div>
             <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle" style="color: var(--verde-corp);"></i></div>
+                <div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-abrir-despensa" onclick="abrirModalDespensa()"><i class="fas fa-plus-circle"></i></button></div>
                 <div class="fila-ingrediente">
                     <input type="text" class="input-txt" placeholder="Cena ligera..." oninput="actualizarPuntos()">
                     <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
@@ -124,11 +148,15 @@
         </div>
 
         <div id="martes" class="contenido-dia">
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Desayuno</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..."><input type="number" class="input-pts" value="0"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Comida</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..."><input type="number" class="input-pts" value="0"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Cena</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..."><input type="number" class="input-pts" value="0"></div></div>
+             <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-abrir-despensa" onclick="abrirModalDespensa()"><i class="fas fa-plus-circle"></i></button></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..."><input type="number" class="input-pts" value="0"></div></div>
         </div>
+    </div>
 
+    <div id="miModalDespensa" class="modal-despensa">
+        <div class="modal-contenido">
+            <span class="btn-cerrar-modal" onclick="cerrarModalDespensa()">&times;</span>
+            <iframe src="vistas/nuestra_despensa.html" id="iframeDespensa"></iframe>
+        </div>
     </div>
 
     <div class="barra-puntos">
@@ -144,12 +172,8 @@
 
     <script>
         function cambiarDia(diaId, btn) {
-            // Ocultar todos
             document.querySelectorAll('.contenido-dia').forEach(c => c.classList.remove('active'));
-            // Quitar clase active de botones
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            
-            // Mostrar seleccionado
             document.getElementById(diaId).classList.add('active');
             btn.classList.add('active');
             actualizarPuntos();
@@ -157,16 +181,32 @@
 
         function actualizarPuntos() {
             const diaActivo = document.querySelector('.contenido-dia.active');
+            if(!diaActivo) return;
             const inputs = diaActivo.querySelectorAll('.input-pts');
             let suma = 0;
             inputs.forEach(i => suma += parseFloat(i.value) || 0);
-            
             const presupuesto = parseFloat(document.getElementById('total-dia').value) || 0;
             const restante = presupuesto - suma;
-            
             const display = document.getElementById('restantes-val');
             display.value = restante;
             display.style.color = restante < 0 ? "red" : "var(--naranja)";
+        }
+
+        // FUNCIONES PARA EL MODAL
+        function abrirModalDespensa() {
+            document.getElementById("miModalDespensa").style.display = "block";
+        }
+
+        function cerrarModalDespensa() {
+            document.getElementById("miModalDespensa").style.display = "none";
+        }
+
+        // Cerrar si pulsan fuera del recuadro blanco
+        window.onclick = function(event) {
+            let modal = document.getElementById("miModalDespensa");
+            if (event.target == modal) {
+                cerrarModalDespensa();
+            }
         }
     </script>
 </body>
