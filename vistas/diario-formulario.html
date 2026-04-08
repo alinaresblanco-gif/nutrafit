@@ -18,10 +18,10 @@
             margin: 0;
             font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--gris-fondo);
-            padding-top: 80px; /* Espacio para que la cabecera no tape la ficha */
+            padding-top: 80px;
         }
 
-        /* --- CABECERA FIJA --- */
+        /* --- CABECERA --- */
         .cabecera {
             background-color: var(--verde-corp);
             height: 60px;
@@ -29,9 +29,7 @@
             align-items: center;
             padding: 0 15px;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             z-index: 1000;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
@@ -39,28 +37,19 @@
         .btn-retroceso {
             background-color: rgba(255, 255, 255, 0.2);
             color: var(--blanco);
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             text-decoration: none;
         }
 
         .titulo-cabecera {
-            color: var(--blanco);
-            font-weight: bold;
-            flex-grow: 1;
-            text-align: center;
-            margin-right: 40px;
-            text-transform: uppercase;
+            color: var(--blanco); font-weight: bold; flex-grow: 1;
+            text-align: center; margin-right: 40px; text-transform: uppercase;
         }
 
-        /* --- CONTENEDOR DE FICHAS --- */
-        .contenedor-semana {
-            padding: 15px;
-        }
+        /* --- FICHAS --- */
+        .contenedor-semana { padding: 15px; }
 
         .dia-ficha {
             background: var(--blanco);
@@ -68,6 +57,7 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.05);
             border: 1px solid #e0e0e0;
             margin-bottom: 15px;
+            overflow: hidden;
         }
 
         .dia-header {
@@ -75,200 +65,114 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
         }
 
-        .dia-nombre {
-            font-weight: 800;
-            color: var(--verde-oscuro);
-        }
+        .dia-nombre { font-weight: 800; color: var(--verde-oscuro); }
 
-        .puntos-header {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+        .puntos-header { display: flex; gap: 10px; align-items: center; }
 
-        .punto-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .punto-item { display: flex; flex-direction: column; align-items: center; }
 
-        .label-mini {
-            font-size: 0.6rem;
-            color: #999;
-            font-weight: bold;
-        }
+        .label-mini { font-size: 0.6rem; color: #999; font-weight: bold; }
 
         .input-puntos {
-            width: 45px;
-            height: 30px;
+            width: 45px; height: 30px;
             border: 2px solid var(--verde-corp);
-            border-radius: 6px;
-            text-align: center;
-            font-weight: bold;
+            border-radius: 6px; text-align: center; font-weight: bold;
         }
 
         .caja-restante {
-            min-width: 45px;
-            height: 30px;
-            background: #f0f0f0;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+            min-width: 45px; height: 30px;
+            background: #f0f0f0; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
         }
 
+        /* --- CONTENIDO (OCULTO POR DEFECTO) --- */
         .dia-contenido {
+            display: none; 
             padding: 15px;
             border-top: 1px solid #eee;
             background-color: #fafafa;
         }
+
+        /* CUANDO ESTÁ ACTIVO */
+        .dia-ficha.activo .dia-contenido { display: block; }
+        .dia-ficha.activo .fa-chevron-down { transform: rotate(180deg); color: var(--verde-corp); }
+
+        .fa-chevron-down { transition: transform 0.3s ease; color: #ccc; }
+
+        /* --- BLOQUES INTERNOS --- */
         .momento-bloque {
-    background: white;
-    margin-bottom: 10px;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #eee;
-}
+            background: white; margin-bottom: 10px; padding: 12px;
+            border-radius: 10px; border: 1px solid #eee;
+        }
 
-.momento-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+        .momento-header { display: flex; justify-content: space-between; align-items: center; }
 
-.momento-nombre {
-    font-size: 0.85rem;
-    font-weight: bold;
-    color: var(--verde-corp);
-    text-transform: uppercase;
-}
+        .momento-nombre { font-size: 0.85rem; font-weight: bold; color: var(--verde-corp); text-transform: uppercase; }
 
-.btn-anadir {
-    background-color: var(--verde-corp);
-    color: white;
-    border: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+        .btn-anadir {
+            background-color: var(--verde-corp); color: white; border: none;
+            width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
 
-.lista-ingredientes-vacia {
-    margin-top: 8px;
-    font-size: 0.8rem;
-    color: #bbb;
-    font-style: italic;
-    border-top: 1px dashed #eee;
-    padding-top: 8px;
-}
-/* Aseguramos que el contenido empiece oculto */
-.dia-contenido {
-    display: none; 
-    padding: 15px;
-    border-top: 1px solid #eee;
-    background-color: #fafafa;
-}
-
-/* Clase que añadiremos con JS para mostrarlo */
-.dia-ficha.activo .dia-contenido {
-    display: block;
-}
-
-/* Rotar la flecha cuando esté abierto */
-.dia-ficha.activo .fa-chevron-down {
-    transform: rotate(180deg);
-}
-
-.fa-chevron-down {
-    transition: transform 0.3s ease;
-}
+        .lista-ingredientes-vacia {
+            margin-top: 8px; font-size: 0.8rem; color: #bbb;
+            font-style: italic; border-top: 1px dashed #eee; padding-top: 8px;
+        }
     </style>
 </head>
 <body>
 
     <header class="cabecera">
-        <a href="index.html" class="btn-retroceso">
-            <i class="fas fa-arrow-left"></i>
-        </a>
+        <a href="index.html" class="btn-retroceso"><i class="fas fa-arrow-left"></i></a>
         <div class="titulo-cabecera">FORMULARIO MENÚ SEMANAL</div>
     </header>
 
     <div class="contenedor-semana">
-        <div class="dia-ficha">
+        <div class="dia-ficha" id="ficha-lunes">
             <div class="dia-header" onclick="toggleDia(this)">
                 <div class="dia-nombre">LUNES</div>
                 <div class="puntos-header">
                     <div class="punto-item">
                         <span class="label-mini">BASE</span>
-                        <input type="number" class="input-puntos" value="0">
+                        <input type="number" class="input-puntos" value="0" onclick="event.stopPropagation()">
                     </div>
                     <div class="punto-item">
                         <span class="label-mini">RESTAN</span>
                         <div class="caja-restante">0</div>
                     </div>
-                    <i class="fas fa-chevron-down" style="color:#ccc"></i>
+                    <i class="fas fa-chevron-down"></i>
                 </div>
             </div>
             
             <div class="dia-contenido">
-    <div class="momento-bloque">
-        <div class="momento-header">
-            <span class="momento-nombre">Desayuno</span>
-            <button class="btn-anadir" onclick="alert('Abrir despensa...')">+</button>
+                <div class="momento-bloque">
+                    <div class="momento-header">
+                        <span class="momento-nombre">Desayuno</span>
+                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abrir despensa...')">+</button>
+                    </div>
+                    <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+                </div>
+                <div class="momento-bloque">
+                    <div class="momento-header">
+                        <span class="momento-nombre">Comida</span>
+                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abrir despensa...')">+</button>
+                    </div>
+                    <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+                </div>
+            </div>
         </div>
-        <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
     </div>
 
-    <div class="momento-bloque">
-        <div class="momento-header">
-            <span class="momento-nombre">Almuerzo</span>
-            <button class="btn-anadir" onclick="alert('Abrir despensa...')">+</button>
-        </div>
-        <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
-    </div>
-
-    <div class="momento-bloque">
-        <div class="momento-header">
-            <span class="momento-nombre">Comida</span>
-            <button class="btn-anadir" onclick="alert('Abrir despensa...')">+</button>
-        </div>
-        <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
-    </div>
-
-    <div class="momento-bloque">
-        <div class="momento-header">
-            <span class="momento-nombre">Merienda</span>
-            <button class="btn-anadir" onclick="alert('Abrir despensa...')">+</button>
-        </div>
-        <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
-    </div>
-
-    <div class="momento-bloque">
-        <div class="momento-header">
-            <span class="momento-nombre">Cena</span>
-            <button class="btn-anadir" onclick="alert('Abrir despensa...')">+</button>
-        </div>
-        <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
-    </div>
-</div>
-        </div>
-    </div>
-<script>
-    function toggleDia(elemento) {
-        // Buscamos la ficha (el padre) del elemento que hemos pulsado
-        const ficha = elemento.closest('.dia-ficha');
-        
-        // Alternamos la clase 'activo'
-        ficha.classList.toggle('activo');
-    }
-</script>
+    <script>
+        function toggleDia(elemento) {
+            const ficha = elemento.closest('.dia-ficha');
+            ficha.classList.toggle('activo');
+        }
+    </script>
 </body>
 </html>
