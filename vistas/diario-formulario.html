@@ -21,7 +21,6 @@
             padding-top: 80px; 
         }
 
-        /* --- CABECERA FIJA --- */
         .cabecera {
             background-color: var(--verde-corp);
             height: 60px;
@@ -29,9 +28,7 @@
             align-items: center;
             padding: 0 15px;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             z-index: 1000;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
@@ -39,12 +36,9 @@
         .btn-retroceso {
             background-color: rgba(255, 255, 255, 0.2);
             color: var(--blanco);
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             text-decoration: none;
         }
 
@@ -57,7 +51,6 @@
             text-transform: uppercase;
         }
 
-        /* --- CONTENEDOR DE FICHAS --- */
         .contenedor-semana {
             padding: 15px;
         }
@@ -77,6 +70,7 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
+            background: white; /* Añadido para asegurar área de clic */
         }
 
         .dia-nombre {
@@ -122,21 +116,20 @@
             font-weight: bold;
         }
 
-        /* --- LÓGICA DE EXPANSIÓN (IMPORTANTE) --- */
+        /* --- ESTADO CERRADO / ABIERTO --- */
         .dia-contenido {
-            display: none; /* Empieza cerrado por defecto */
+            display: none; /* Por defecto cerrado */
             padding: 15px;
             border-top: 1px solid #eee;
             background-color: #fafafa;
         }
 
-        /* Esta clase hará que el Lunes se vea cuando hagamos clic */
-        .dia-ficha.activo .dia-contenido {
+        /* La clase 'abierto' fuerza la visualización */
+        .dia-ficha.abierto .dia-contenido {
             display: block !important;
         }
 
-        /* Rotación de la flecha */
-        .dia-ficha.activo .fa-chevron-down {
+        .dia-ficha.abierto .fa-chevron-down {
             transform: rotate(180deg);
             color: var(--verde-corp);
         }
@@ -145,7 +138,7 @@
             transition: transform 0.3s ease;
         }
 
-        /* --- BLOQUES DE MOMENTOS (TU CÓDIGO ORIGINAL) --- */
+        /* --- BLOQUES INTERNOS --- */
         .momento-bloque {
             background: white;
             margin-bottom: 10px;
@@ -179,7 +172,6 @@
             justify-content: center;
             font-size: 1.1rem;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .lista-ingredientes-vacia {
@@ -195,15 +187,13 @@
 <body>
 
     <header class="cabecera">
-        <a href="index.html" class="btn-retroceso">
-            <i class="fas fa-arrow-left"></i>
-        </a>
+        <a href="index.html" class="btn-retroceso"><i class="fas fa-arrow-left"></i></a>
         <div class="titulo-cabecera">FORMULARIO MENÚ SEMANAL</div>
     </header>
 
     <div class="contenedor-semana">
-        <div class="dia-ficha" id="ficha-lunes">
-            <div class="dia-header" onclick="toggleMenu()">
+        <div class="dia-ficha">
+            <div class="dia-header" onclick="alternarDia(this)">
                 <div class="dia-nombre">LUNES</div>
                 <div class="puntos-header">
                     <div class="punto-item">
@@ -222,7 +212,7 @@
                 <div class="momento-bloque">
                     <div class="momento-header">
                         <span class="momento-nombre">Desayuno</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abrir despensa...')">+</button>
+                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Despensa')">+</button>
                     </div>
                     <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
                 </div>
@@ -230,7 +220,7 @@
                 <div class="momento-bloque">
                     <div class="momento-header">
                         <span class="momento-nombre">Almuerzo</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abrir despensa...')">+</button>
+                        <button class="btn-anadir" onclick="event.stopPropagation()">+</button>
                     </div>
                     <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
                 </div>
@@ -238,7 +228,7 @@
                 <div class="momento-bloque">
                     <div class="momento-header">
                         <span class="momento-nombre">Comida</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abrir despensa...')">+</button>
+                        <button class="btn-anadir" onclick="event.stopPropagation()">+</button>
                     </div>
                     <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
                 </div>
@@ -246,7 +236,7 @@
                 <div class="momento-bloque">
                     <div class="momento-header">
                         <span class="momento-nombre">Merienda</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abrir despensa...')">+</button>
+                        <button class="btn-anadir" onclick="event.stopPropagation()">+</button>
                     </div>
                     <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
                 </div>
@@ -254,7 +244,7 @@
                 <div class="momento-bloque">
                     <div class="momento-header">
                         <span class="momento-nombre">Cena</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abrir despensa...')">+</button>
+                        <button class="btn-anadir" onclick="event.stopPropagation()">+</button>
                     </div>
                     <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
                 </div>
@@ -263,10 +253,15 @@
     </div>
 
     <script>
-        function toggleMenu() {
-            var ficha = document.getElementById("ficha-lunes");
-            // toggle añade o quita la clase "activo" cada vez que haces clic
-            ficha.classList.toggle("activo");
+        function alternarDia(cabecera) {
+            // Buscamos el contenedor padre (.dia-ficha) del elemento pulsado
+            var ficha = cabecera.parentElement;
+            
+            // Si la tiene, se la quita; si no la tiene, se la pone
+            ficha.classList.toggle("abierto");
+            
+            // Mensaje de prueba para confirmar que el clic funciona
+            console.log("Clic detectado en el lunes");
         }
     </script>
 
