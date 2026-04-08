@@ -3,174 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NutraFit Móvil</title>
+    <title>NutraFit Fijo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <style>
-        :root { --verde: #78a978; --naranja: #d35400; --fondo: #f8faf8; }
+        :root { --verde: #78a978; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: sans-serif; background: #f4f7f4; padding-bottom: 80px; }
         
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica; 
-            background: var(--fondo); display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-        }
+        .header { background: var(--verde); color: white; padding: 15px; text-align: center; font-weight: bold; }
 
-        /* HEADER FIJO */
-        .header { background: var(--verde); color: white; padding: 15px; text-align: center; font-weight: bold; flex-shrink: 0; }
-
-        /* TABS PARA MÓVIL (Scroll horizontal) */
-        .tabs-dias { 
-            display: flex; overflow-x: auto; background: white; padding: 10px; gap: 10px; 
-            border-bottom: 1px solid #ddd; flex-shrink: 0;
-            -webkit-overflow-scrolling: touch;
-        }
+        /* NAVEGACIÓN SIMPLE */
+        .tabs { display: flex; overflow-x: auto; background: #fff; padding: 10px; border-bottom: 1px solid #ddd; }
         .tab-btn { 
-            padding: 12px 20px; border-radius: 25px; border: 1px solid var(--verde); 
-            background: white; color: var(--verde); font-weight: bold; cursor: pointer; 
-            white-space: nowrap; min-width: 80px; text-align: center;
+            padding: 10px 20px; margin-right: 5px; border: 1px solid var(--verde); 
+            background: white; color: var(--verde); border-radius: 15px; font-weight: bold;
         }
-        .tab-btn.active { background: var(--verde) !important; color: white !important; }
+        .active-btn { background: var(--verde) !important; color: white !important; }
 
-        /* CONTENEDOR DE CONTENIDO */
-        .contenedor-principal { flex-grow: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
-        .contenido-dia { display: none; }
+        /* CONTENIDO */
+        .seccion-dia { display: none; padding: 15px; }
+        .visible { display: block !important; }
 
-        /* CARDS */
-        .card-momento { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        .momento-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .momento-titulo { color: var(--verde); font-weight: bold; font-size: 0.9rem; border-left: 4px solid var(--verde); padding-left: 8px; }
+        .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; }
+        .card-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        
+        /* INPUTS */
+        .fila { display: flex; gap: 5px; margin-bottom: 5px; }
+        input { padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        .in-txt { flex-grow: 1; }
+        .in-pts { width: 50px; text-align: center; font-weight: bold; }
 
-        /* INPUTS GRANDES PARA DEDOS */
-        .fila-ingrediente { display: flex; gap: 8px; margin-bottom: 8px; }
-        .input-txt { flex-grow: 1; border: 1px solid #ddd; padding: 12px; border-radius: 8px; font-size: 16px; } /* 16px evita zoom automático en iOS */
-        .input-pts { width: 55px; border: 1px solid #ddd; text-align: center; font-weight: bold; border-radius: 8px; font-size: 16px; background: #fdfdfd; }
-
-        /* BOTÓN + GRANDE */
-        .btn-plus { color: var(--verde); font-size: 1.8rem; border: none; background: none; cursor: pointer; display: flex; align-items: center; }
-
-        /* BARRA PUNTOS */
-        .barra-puntos { 
-            position: fixed; bottom: 0; width: 100%; background: white; 
-            display: flex; justify-content: space-around; padding: 12px; 
-            border-top: 2px solid #eee; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        /* MODAL */
+        #capa-modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 10000; 
         }
-        .box-pts { text-align: center; }
-        .box-pts span { font-size: 0.7rem; color: #888; text-transform: uppercase; }
-        .box-pts input { display: block; width: 60px; border: none; text-align: center; font-size: 1.2rem; font-weight: bold; color: var(--naranja); background: transparent; }
+        .modal-body { width: 95%; height: 80%; background: white; margin: 10% auto; border-radius: 15px; position: relative; }
+        .btn-cerrar { position: absolute; top: -10px; right: -10px; background: red; color: white; border-radius: 50%; width: 30px; height: 30px; text-align: center; line-height: 30px; font-weight: bold; border: 2px solid white; }
 
-        /* MODAL DESPENSA */
-        .modal-despensa { 
-            display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.8);
-        }
-        .modal-contenido { 
-            background: white; margin: 10% auto; width: 95%; height: 80vh; 
-            border-radius: 20px; overflow: hidden; position: relative; 
-        }
-        .btn-cerrar { position: absolute; top: 10px; right: 15px; font-size: 30px; font-weight: bold; color: #333; z-index: 100; }
-        iframe { width: 100%; height: 100%; border: none; }
+        /* PUNTOS */
+        .barra { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px; border-top: 2px solid #ddd; }
     </style>
 </head>
 <body>
 
-    <header class="header">NUTRAFIT MÓVIL</header>
+    <div class="header">NUTRAFIT (VERSIÓN MÓVIL)</div>
 
-    <div class="tabs-dias">
-        <button class="tab-btn active" data-dia="lunes">LUN</button>
-        <button class="tab-btn" data-dia="martes">MAR</button>
-        <button class="tab-btn" data-dia="miercoles">MIE</button>
-        <button class="tab-btn" data-dia="jueves">JUE</button>
-        <button class="tab-btn" data-dia="viernes">VIE</button>
-        <button class="tab-btn" data-dia="sabado">SAB</button>
-        <button class="tab-btn" data-dia="domingo">DOM</button>
+    <div class="tabs">
+        <button id="btn-lun" class="tab-btn active-btn" onclick="verDia('lun')">LUN</button>
+        <button id="btn-mar" class="tab-btn" onclick="verDia('mar')">MAR</button>
+        <button id="btn-mie" class="tab-btn" onclick="verDia('mie')">MIE</button>
     </div>
 
-    <div class="contenedor-principal">
-        <div id="lunes" class="contenido-dia" style="display: block;">
-            <div class="card-momento">
-                <div class="momento-header">
-                    <span class="momento-titulo">DESAYUNO</span>
-                    <button class="btn-plus" onclick="abrirModal()"><i class="fas fa-plus-circle"></i></button>
-                </div>
-                <div class="fila-ingrediente">
-                    <input type="text" class="input-txt" placeholder="¿Qué comes?">
-                    <input type="number" class="input-pts" value="0">
-                </div>
+    <div id="dia-lun" class="seccion-dia visible">
+        <div class="card">
+            <div class="card-h">
+                <b style="color:var(--verde)">DESAYUNO</b>
+                <i class="fas fa-plus-circle" style="font-size: 25px; color: var(--verde);" onclick="abrirD()"></i>
             </div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">ALMUERZO</span><button class="btn-plus" onclick="abrirModal()"><i class="fas fa-plus-circle"></i></button></div><div class="fila-ingrediente"><input type="text" class="input-txt"><input type="number" class="input-pts" value="0"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">COMIDA</span><button class="btn-plus" onclick="abrirModal()"><i class="fas fa-plus-circle"></i></button></div><div class="fila-ingrediente"><input type="text" class="input-txt"><input type="number" class="input-pts" value="0"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">MERIENDA</span><button class="btn-plus" onclick="abrirModal()"><i class="fas fa-plus-circle"></i></button></div><div class="fila-ingrediente"><input type="text" class="input-txt"><input type="number" class="input-pts" value="0"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">CENA</span><button class="btn-plus" onclick="abrirModal()"><i class="fas fa-plus-circle"></i></button></div><div class="fila-ingrediente"><input type="text" class="input-txt"><input type="number" class="input-pts" value="0"></div></div>
+            <div class="fila">
+                <input type="text" class="in-txt" placeholder="Ingrediente...">
+                <input type="number" class="in-pts" value="0" oninput="sumar()">
+            </div>
+        </div>
         </div>
 
-        <div id="martes" class="contenido-dia">
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">DESAYUNO MARTES</span></div><div class="fila-ingrediente"><input type="text" class="input-txt"><input type="number" class="input-pts" value="0"></div></div>
+    <div id="dia-mar" class="seccion-dia">
+        <div class="card"><b>MARTES</b><p>Contenido del martes...</p></div>
+    </div>
+
+    <div id="capa-modal">
+        <div class="modal-body">
+            <div class="btn-cerrar" onclick="cerrarD()">X</div>
+            <iframe src="vistas/nuestra_despensa.html" style="width:100%; height:100%; border:none;"></iframe>
         </div>
     </div>
 
-    <div id="modalDespensa" class="modal-despensa">
-        <div class="modal-contenido">
-            <span class="btn-cerrar" onclick="cerrarModal()">&times;</span>
-            <iframe src="vistas/nuestra_despensa.html"></iframe>
-        </div>
-    </div>
-
-    <div class="barra-puntos">
-        <div class="box-pts"><span>Presupuesto</span><input type="number" id="presupuesto" value="30"></div>
-        <div class="box-pts"><span>Restante</span><input type="number" id="restante" value="30" readonly></div>
+    <div class="barra">
+        <div>TOTAL: <input type="number" id="t-p" value="30" style="width:40px; border:none;" oninput="sumar()"></div>
+        <div>RESTAN: <b id="r-p" style="color:orange">30</b></div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // LÓGICA DE TABS
-            const botones = document.querySelectorAll('.tab-btn');
-            const dias = document.querySelectorAll('.contenido-dia');
+        // Lógica ultra-simple
+        function verDia(id) {
+            // 1. Ocultar todos los días
+            document.getElementById('dia-lun').classList.remove('visible');
+            document.getElementById('dia-mar').classList.remove('visible');
+            // 2. Quitar color a botones
+            document.getElementById('btn-lun').classList.remove('active-btn');
+            document.getElementById('btn-mar').classList.remove('active-btn');
 
-            botones.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // Quitar activo de botones
-                    botones.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-
-                    // Ocultar todos los días
-                    dias.forEach(d => d.style.display = 'none');
-                    
-                    // Mostrar el seleccionado
-                    const diaId = this.getAttribute('data-dia');
-                    document.getElementById(diaId).style.display = 'block';
-                    
-                    console.log("Día cambiado a: " + diaId);
-                    calcular();
-                });
-            });
-
-            // LÓGICA DE CÁLCULO
-            document.addEventListener('input', calcular);
-        });
-
-        function calcular() {
-            const diaActivo = document.querySelector('.contenido-dia[style*="display: block"]');
-            if(!diaActivo) return;
-
-            let suma = 0;
-            const pts = diaActivo.querySelectorAll('.input-pts');
-            pts.forEach(p => suma += parseFloat(p.value) || 0);
-
-            const total = parseFloat(document.getElementById('presupuesto').value) || 0;
-            const rest = total - suma;
-
-            const resInput = document.getElementById('restante');
-            resInput.value = rest;
-            resInput.style.color = rest < 0 ? "red" : "#d35400";
+            // 3. Mostrar el seleccionado
+            document.getElementById('dia-' + id).classList.add('visible');
+            document.getElementById('btn-' + id).classList.add('active-btn');
+            sumar();
         }
 
-        function abrirModal() {
-            document.getElementById('modalDespensa').style.display = 'block';
+        function abrirD() {
+            document.getElementById('capa-modal').style.display = 'block';
         }
 
-        function cerrarModal() {
-            document.getElementById('modalDespensa').style.display = 'none';
+        function cerrarD() {
+            document.getElementById('capa-modal').style.display = 'none';
+        }
+
+        function sumar() {
+            var diaActivo = document.querySelector('.seccion-dia.visible');
+            var pts = diaActivo.querySelectorAll('.in-pts');
+            var total = 0;
+            for (var i = 0; i < pts.length; i++) {
+                total += parseFloat(pts[i].value) || 0;
+            }
+            var pTotal = parseFloat(document.getElementById('t-p').value) || 0;
+            var resta = pTotal - total;
+            document.getElementById('r-p').innerText = resta;
+            document.getElementById('r-p').style.color = resta < 0 ? "red" : "orange";
         }
     </script>
 </body>
