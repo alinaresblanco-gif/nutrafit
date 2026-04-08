@@ -19,6 +19,7 @@
             font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--gris-fondo);
             padding-top: 80px;
+            padding-bottom: 100px; /* Espacio para el botón guardar */
         }
 
         /* --- CABECERA --- */
@@ -58,6 +59,7 @@
             border: 1px solid #e0e0e0;
             margin-bottom: 15px;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
 
         .dia-header {
@@ -66,20 +68,20 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
+            background: white;
         }
 
-        .dia-nombre { font-weight: 800; color: var(--verde-oscuro); }
+        .dia-nombre { font-weight: 800; color: var(--verde-oscuro); font-size: 1.1rem; }
 
         .puntos-header { display: flex; gap: 10px; align-items: center; }
-
         .punto-item { display: flex; flex-direction: column; align-items: center; }
-
-        .label-mini { font-size: 0.6rem; color: #999; font-weight: bold; }
+        .label-mini { font-size: 0.6rem; color: #999; font-weight: bold; margin-bottom: 2px; }
 
         .input-puntos {
             width: 45px; height: 30px;
             border: 2px solid var(--verde-corp);
             border-radius: 6px; text-align: center; font-weight: bold;
+            outline: none;
         }
 
         .caja-restante {
@@ -88,40 +90,49 @@
             display: flex; align-items: center; justify-content: center; font-weight: bold;
         }
 
-        /* --- CONTENIDO (OCULTO POR DEFECTO) --- */
+        /* --- ACORDEÓN --- */
         .dia-contenido {
-            display: none; 
+            display: none; /* Oculto inicialmente */
             padding: 15px;
             border-top: 1px solid #eee;
             background-color: #fafafa;
         }
 
-        /* CUANDO ESTÁ ACTIVO */
+        /* Mostrar cuando tiene clase 'activo' */
         .dia-ficha.activo .dia-contenido { display: block; }
         .dia-ficha.activo .fa-chevron-down { transform: rotate(180deg); color: var(--verde-corp); }
 
-        .fa-chevron-down { transition: transform 0.3s ease; color: #ccc; }
+        .fa-chevron-down { transition: transform 0.3s ease; color: #ccc; font-size: 1rem; }
 
-        /* --- BLOQUES INTERNOS --- */
+        /* --- BLOQUES DE COMIDA --- */
         .momento-bloque {
-            background: white; margin-bottom: 10px; padding: 12px;
-            border-radius: 10px; border: 1px solid #eee;
+            background: white; margin-bottom: 12px; padding: 15px;
+            border-radius: 12px; border: 1px solid #eee;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
         .momento-header { display: flex; justify-content: space-between; align-items: center; }
-
-        .momento-nombre { font-size: 0.85rem; font-weight: bold; color: var(--verde-corp); text-transform: uppercase; }
+        .momento-nombre { font-size: 0.9rem; font-weight: bold; color: var(--verde-corp); text-transform: uppercase; }
 
         .btn-anadir {
             background-color: var(--verde-corp); color: white; border: none;
-            width: 30px; height: 30px; border-radius: 50%;
+            width: 32px; height: 32px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
+            cursor: pointer; font-size: 1.2rem;
         }
 
         .lista-ingredientes-vacia {
-            margin-top: 8px; font-size: 0.8rem; color: #bbb;
-            font-style: italic; border-top: 1px dashed #eee; padding-top: 8px;
+            margin-top: 10px; font-size: 0.85rem; color: #aaa;
+            font-style: italic; border-top: 1px dashed #f0f0f0; padding-top: 10px;
+        }
+
+        /* --- BOTÓN GUARDAR --- */
+        .btn-guardar-fijo {
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
+            background: var(--verde-corp); color: white; padding: 15px 60px;
+            border-radius: 30px; font-weight: bold; text-decoration: none;
+            box-shadow: 0 5px 15px rgba(120, 169, 120, 0.4); z-index: 1001;
+            text-transform: uppercase; letter-spacing: 1px;
         }
     </style>
 </head>
@@ -133,8 +144,9 @@
     </header>
 
     <div class="contenedor-semana">
-        <div class="dia-ficha" id="ficha-lunes">
-            <div class="dia-header" onclick="toggleDia(this)">
+        
+        <div class="dia-ficha" id="lunes">
+            <div class="dia-header" onclick="toggleDia('lunes')">
                 <div class="dia-nombre">LUNES</div>
                 <div class="puntos-header">
                     <div class="punto-item">
@@ -153,24 +165,53 @@
                 <div class="momento-bloque">
                     <div class="momento-header">
                         <span class="momento-nombre">Desayuno</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abrir despensa...')">+</button>
+                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abriendo Despensa...')">+</button>
                     </div>
                     <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
                 </div>
+
+                <div class="momento-bloque">
+                    <div class="momento-header">
+                        <span class="momento-nombre">Almuerzo</span>
+                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abriendo Despensa...')">+</button>
+                    </div>
+                    <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+                </div>
+
                 <div class="momento-bloque">
                     <div class="momento-header">
                         <span class="momento-nombre">Comida</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abrir despensa...')">+</button>
+                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abriendo Despensa...')">+</button>
+                    </div>
+                    <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+                </div>
+
+                <div class="momento-bloque">
+                    <div class="momento-header">
+                        <span class="momento-nombre">Merienda</span>
+                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abriendo Despensa...')">+</button>
+                    </div>
+                    <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+                </div>
+
+                <div class="momento-bloque">
+                    <div class="momento-header">
+                        <span class="momento-nombre">Cena</span>
+                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Abriendo Despensa...')">+</button>
                     </div>
                     <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
                 </div>
             </div>
         </div>
-    </div>
+        
+        </div>
+
+    <a href="#" class="btn-guardar-fijo" onclick="alert('Menú de la semana guardado')">GUARDAR SEMANA</a>
 
     <script>
-        function toggleDia(elemento) {
-            const ficha = elemento.closest('.dia-ficha');
+        function toggleDia(idDia) {
+            const ficha = document.getElementById(idDia);
+            // Si ya tiene la clase activo, la quita. Si no, la pone.
             ficha.classList.toggle('activo');
         }
     </script>
