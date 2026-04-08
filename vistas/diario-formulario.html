@@ -3,55 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NutraFit - Planificador Semanal</title>
+    <title>NutraFit - Planificador Flotante</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <style>
         :root { --verde: #78a978; --naranja: #d35400; --fondo: #f4f7f4; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--fondo); display: flex; flex-direction: column; height: 100vh; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--fondo); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         .header { background: var(--verde); color: white; padding: 15px; text-align: center; font-weight: bold; flex-shrink: 0; }
 
-        /* NAVEGACIÓN POR PESTAÑAS (TABS) */
+        /* TABS */
         .tabs-container { display: flex; overflow-x: auto; background: white; padding: 10px; gap: 8px; border-bottom: 1px solid #ddd; flex-shrink: 0; }
-        .tab-link { 
-            padding: 10px 20px; border-radius: 20px; border: 1px solid var(--verde); 
-            background: white; color: var(--verde); font-weight: bold; cursor: pointer; white-space: nowrap;
-        }
+        .tab-link { padding: 10px 20px; border-radius: 20px; border: 1px solid var(--verde); background: white; color: var(--verde); font-weight: bold; cursor: pointer; }
         .tab-link.active { background: var(--verde) !important; color: white !important; }
 
-        /* ÁREA DE CONTENIDO */
+        /* CONTENIDO */
         .main-content { flex-grow: 1; overflow-y: auto; padding: 15px; padding-bottom: 120px; }
         .dia-wrapper { display: none; }
         .dia-wrapper.active { display: block; }
 
-        /* TARJETAS DE MOMENTOS */
         .moment-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .moment-title { 
-            display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 10px; border-left: 4px solid var(--verde); padding-left: 10px; 
-            color: var(--verde); font-weight: bold; font-size: 0.9rem;
-        }
+        .moment-title { display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--verde); padding-left: 10px; color: var(--verde); font-weight: bold; }
 
-        /* FILAS DE INGREDIENTES */
-        .row-ing { display: flex; gap: 8px; margin-bottom: 8px; }
-        input { padding: 12px; border: 1px solid #eee; border-radius: 8px; font-size: 16px; outline: none; }
+        .row-ing { display: flex; gap: 8px; margin-top: 10px; }
+        input { padding: 12px; border: 1px solid #eee; border-radius: 8px; font-size: 16px; }
         .input-name { flex-grow: 1; }
-        .input-pts { width: 55px; text-align: center; font-weight: bold; background: #fafafa; }
+        .input-pts { width: 60px; text-align: center; font-weight: bold; }
 
-        /* BOTÓN + */
-        .btn-plus { background: none; border: none; color: var(--verde); font-size: 1.5rem; cursor: pointer; padding: 0; }
-
-        /* BARRA DE PUNTOS FIJA */
-        .footer-points { 
-            position: fixed; bottom: 0; width: 100%; background: white; 
-            display: flex; justify-content: space-around; padding: 15px; 
-            border-top: 1px solid #ddd; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        /* VENTANA FLOTANTE (MITAD DE PANTALLA) */
+        #ventana-flotante { 
+            display: none; 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 55vh; /* Ocupa un poco más de la mitad para que se vea bien */
+            background: white; 
+            z-index: 2000; 
+            border-radius: 25px 25px 0 0; 
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+            border-top: 3px solid var(--verde);
+            animation: subir 0.3s ease-out;
         }
-        .pts-item { text-align: center; }
-        .pts-item small { font-size: 10px; color: #888; display: block; }
-        .pts-item b { font-size: 1.2rem; color: var(--naranja); }
+
+        @keyframes subir {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.4); 
+            z-index: 1999; 
+        }
+
+        .cabecera-flotante {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f9f9f9;
+            border-radius: 25px 25px 0 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* BARRA PUNTOS */
+        .footer-points { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #ddd; z-index: 10; }
     </style>
 </head>
 <body>
@@ -61,90 +82,64 @@
     <div class="tabs-container">
         <div class="tab-link active" onclick="showDay('lunes', this)">LUN</div>
         <div class="tab-link" onclick="showDay('martes', this)">MAR</div>
-        <div class="tab-link" onclick="showDay('miercoles', this)">MIE</div>
-        <div class="tab-link" onclick="showDay('jueves', this)">JUE</div>
-        <div class="tab-link" onclick="showDay('viernes', this)">VIE</div>
-        <div class="tab-link" onclick="showDay('sabado', this)">SAB</div>
-        <div class="tab-link" onclick="showDay('domingo', this)">DOM</div>
     </div>
 
     <div class="main-content">
-        
         <div id="lunes" class="dia-wrapper active">
             <div class="moment-card">
-                <div class="moment-title"><span>DESAYUNO</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div>
-                <div class="row-ing"><input type="text" class="input-name" placeholder="Ingrediente..."><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
+                <div class="moment-title">
+                    <span>DESAYUNO</span> 
+                    <button class="btn-plus" onclick="abrirFlotante()" style="background:none; border:none; color:var(--verde); font-size:1.5rem;"><i class="fas fa-plus-circle"></i></button>
+                </div>
+                <div class="row-ing"><input type="text" class="input-name"><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
             </div>
-            <div class="moment-card">
-                <div class="moment-title"><span>ALMUERZO</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div>
-                <div class="row-ing"><input type="text" class="input-name" placeholder="Ingrediente..."><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
             </div>
-            <div class="moment-card">
-                <div class="moment-title"><span>COMIDA</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div>
-                <div class="row-ing"><input type="text" class="input-name" placeholder="Ingrediente..."><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
-            </div>
-            <div class="moment-card">
-                <div class="moment-title"><span>MERIENDA</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div>
-                <div class="row-ing"><input type="text" class="input-name" placeholder="Ingrediente..."><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
-            </div>
-            <div class="moment-card">
-                <div class="moment-title"><span>CENA</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div>
-                <div class="row-ing"><input type="text" class="input-name" placeholder="Ingrediente..."><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
-            </div>
-        </div>
+    </div>
 
-        <div id="martes" class="dia-wrapper">
-            <div class="moment-card"><div class="moment-title"><span>DESAYUNO</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div><div class="row-ing"><input type="text" class="input-name"><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div></div>
-            <div class="moment-card"><div class="moment-title"><span>COMIDA</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div><div class="row-ing"><input type="text" class="input-name"><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div></div>
-            <div class="moment-card"><div class="moment-title"><span>CENA</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div><div class="row-ing"><input type="text" class="input-name"><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div></div>
+    <div id="fondo-oscuro" class="overlay" onclick="cerrarFlotante()"></div>
+    <div id="ventana-flotante">
+        <div class="cabecera-flotante">
+            <span style="font-weight:bold; color:var(--verde)">NUESTRA DESPENSA</span>
+            <button onclick="cerrarFlotante()" style="background:none; border:none; font-size:1.5rem;">&times;</button>
         </div>
-        
+        <iframe src="vistas/nuestra_despensa.html" style="width:100%; height:calc(100% - 60px); border:none;"></iframe>
     </div>
 
     <div class="footer-points">
-        <div class="pts-item"><small>PRESUPUESTO</small><input type="number" id="budget" value="30" style="width:40px; border:none; font-weight:bold; font-size:1.1rem; text-align:center;" oninput="calcTotal()"></div>
         <div class="pts-item"><small>RESTANTE</small><b id="left-pts">30</b></div>
     </div>
 
     <script>
         function showDay(dayId, btn) {
             var days = document.getElementsByClassName('dia-wrapper');
-            for(var i=0; i<days.length; i++) { 
-                days[i].style.display = 'none'; 
-                days[i].classList.remove('active'); 
-            }
-            
+            for(var i=0; i<days.length; i++) { days[i].style.display = 'none'; days[i].classList.remove('active'); }
             var tabs = document.getElementsByClassName('tab-link');
-            for(var i=0; i<tabs.length; i++) { 
-                tabs[i].classList.remove('active'); 
-            }
-            
+            for(var i=0; i<tabs.length; i++) { tabs[i].classList.remove('active'); }
             document.getElementById(dayId).style.display = 'block';
             document.getElementById(dayId).classList.add('active');
             btn.classList.add('active');
-            
             calcTotal();
+        }
+
+        function abrirFlotante() {
+            document.getElementById('fondo-oscuro').style.display = 'block';
+            document.getElementById('ventana-flotante').style.display = 'block';
+        }
+
+        function cerrarFlotante() {
+            document.getElementById('fondo-oscuro').style.display = 'none';
+            document.getElementById('ventana-flotante').style.display = 'none';
         }
 
         function calcTotal() {
             var activeDay = document.querySelector('.dia-wrapper.active');
             if(!activeDay) return;
-            
             var inputs = activeDay.getElementsByClassName('input-pts');
             var sum = 0;
-            for(var i=0; i<inputs.length; i++) {
-                sum += parseFloat(inputs[i].value) || 0;
-            }
-            
-            var budget = parseFloat(document.getElementById('budget').value) || 0;
-            var remaining = budget - sum;
-            
+            for(var i=0; i<inputs.length; i++) { sum += parseFloat(inputs[i].value) || 0; }
+            var remaining = 30 - sum;
             document.getElementById('left-pts').innerText = remaining;
-            document.getElementById('left-pts').style.color = remaining < 0 ? "red" : "var(--naranja)";
         }
-
-        // Esta función asume que tienes el script principal que gestiona abrirVista
-        // Si no, aquí podrías definir cómo quieres que se comporte.
     </script>
 </body>
 </html>
