@@ -18,7 +18,7 @@
             margin: 0;
             font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--gris-fondo);
-            padding-top: 80px; /* Espacio para que la cabecera no tape la ficha */
+            padding-top: 80px; 
         }
 
         /* --- CABECERA FIJA --- */
@@ -68,7 +68,7 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.05);
             border: 1px solid #e0e0e0;
             margin-bottom: 15px;
-            overflow: hidden; /* Asegura que el contenido no sobresalga al contraer */
+            overflow: hidden;
         }
 
         .dia-header {
@@ -76,7 +76,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            cursor: pointer; /* Indica que se puede clicar */
+            cursor: pointer;
         }
 
         .dia-nombre {
@@ -122,29 +122,30 @@
             font-weight: bold;
         }
 
-        /* --- ESTADOS DEL ACORDEÓN --- */
+        /* --- LÓGICA DE EXPANSIÓN (IMPORTANTE) --- */
         .dia-contenido {
-            display: none; /* OCULTO POR DEFECTO */
+            display: none; /* Empieza cerrado por defecto */
             padding: 15px;
             border-top: 1px solid #eee;
             background-color: #fafafa;
         }
 
-        /* Cuando la ficha tiene la clase 'activo', mostramos el contenido */
+        /* Esta clase hará que el Lunes se vea cuando hagamos clic */
         .dia-ficha.activo .dia-contenido {
-            display: block;
+            display: block !important;
         }
 
-        /* Rotación de la flecha al abrir */
+        /* Rotación de la flecha */
         .dia-ficha.activo .fa-chevron-down {
             transform: rotate(180deg);
-            color: var(--verde-corp) !important;
+            color: var(--verde-corp);
         }
 
         .fa-chevron-down {
             transition: transform 0.3s ease;
         }
 
+        /* --- BLOQUES DE MOMENTOS (TU CÓDIGO ORIGINAL) --- */
         .momento-bloque {
             background: white;
             margin-bottom: 10px;
@@ -202,7 +203,7 @@
 
     <div class="contenedor-semana">
         <div class="dia-ficha" id="ficha-lunes">
-            <div class="dia-header" onclick="toggleDia()">
+            <div class="dia-header" onclick="toggleMenu()">
                 <div class="dia-nombre">LUNES</div>
                 <div class="puntos-header">
                     <div class="punto-item">
@@ -262,8 +263,9 @@
     </div>
 
     <script>
-        function toggleDia() {
+        function toggleMenu() {
             var ficha = document.getElementById("ficha-lunes");
+            // toggle añade o quita la clase "activo" cada vez que haces clic
             ficha.classList.toggle("activo");
         }
     </script>
