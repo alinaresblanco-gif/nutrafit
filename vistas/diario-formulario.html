@@ -43,15 +43,6 @@
         /* BOTÓN + */
         .btn-plus { background: none; border: none; color: var(--verde); font-size: 1.5rem; cursor: pointer; padding: 0; }
 
-        /* MODAL FLOTANTE */
-        #modal-despensa { 
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%; 
-            background: rgba(0,0,0,0.8); z-index: 1000; 
-        }
-        .modal-box { background: white; width: 95%; height: 85%; margin: 10% auto; border-radius: 20px; overflow: hidden; position: relative; }
-        .close-modal { position: absolute; top: 10px; right: 20px; font-size: 30px; font-weight: bold; color: #333; z-index: 1001; }
-        iframe { width: 100%; height: 100%; border: none; }
-
         /* BARRA DE PUNTOS FIJA */
         .footer-points { 
             position: fixed; bottom: 0; width: 100%; background: white; 
@@ -81,40 +72,33 @@
         
         <div id="lunes" class="dia-wrapper active">
             <div class="moment-card">
-                <div class="moment-title"><span>DESAYUNO</span> <button class="btn-plus" onclick="openDespensa()">+</button></div>
+                <div class="moment-title"><span>DESAYUNO</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div>
                 <div class="row-ing"><input type="text" class="input-name" placeholder="Ingrediente..."><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
             </div>
             <div class="moment-card">
-                <div class="moment-title"><span>ALMUERZO</span> <button class="btn-plus" onclick="openDespensa()">+</button></div>
+                <div class="moment-title"><span>ALMUERZO</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div>
                 <div class="row-ing"><input type="text" class="input-name" placeholder="Ingrediente..."><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
             </div>
             <div class="moment-card">
-                <div class="moment-title"><span>COMIDA</span> <button class="btn-plus" onclick="openDespensa()">+</button></div>
+                <div class="moment-title"><span>COMIDA</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div>
                 <div class="row-ing"><input type="text" class="input-name" placeholder="Ingrediente..."><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
             </div>
             <div class="moment-card">
-                <div class="moment-title"><span>MERIENDA</span> <button class="btn-plus" onclick="openDespensa()">+</button></div>
+                <div class="moment-title"><span>MERIENDA</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div>
                 <div class="row-ing"><input type="text" class="input-name" placeholder="Ingrediente..."><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
             </div>
             <div class="moment-card">
-                <div class="moment-title"><span>CENA</span> <button class="btn-plus" onclick="openDespensa()">+</button></div>
+                <div class="moment-title"><span>CENA</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div>
                 <div class="row-ing"><input type="text" class="input-name" placeholder="Ingrediente..."><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div>
             </div>
         </div>
 
         <div id="martes" class="dia-wrapper">
-            <div class="moment-card"><div class="moment-title"><span>DESAYUNO</span> <button class="btn-plus" onclick="openDespensa()">+</button></div><div class="row-ing"><input type="text" class="input-name"><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div></div>
-            <div class="moment-card"><div class="moment-title"><span>COMIDA</span> <button class="btn-plus" onclick="openDespensa()">+</button></div><div class="row-ing"><input type="text" class="input-name"><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div></div>
-            <div class="moment-card"><div class="moment-title"><span>CENA</span> <button class="btn-plus" onclick="openDespensa()">+</button></div><div class="row-ing"><input type="text" class="input-name"><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div></div>
+            <div class="moment-card"><div class="moment-title"><span>DESAYUNO</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div><div class="row-ing"><input type="text" class="input-name"><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div></div>
+            <div class="moment-card"><div class="moment-title"><span>COMIDA</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div><div class="row-ing"><input type="text" class="input-name"><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div></div>
+            <div class="moment-card"><div class="moment-title"><span>CENA</span> <button class="btn-plus" onclick="abrirVista('nuestra_despensa')"><i class="fas fa-plus-circle"></i></button></div><div class="row-ing"><input type="text" class="input-name"><input type="number" class="input-pts" value="0" oninput="calcTotal()"></div></div>
         </div>
         
-        </div>
-
-    <div id="modal-despensa">
-        <div class="modal-box">
-            <span class="close-modal" onclick="closeDespensa()">×</span>
-            <iframe src="vistas/nuestra_despensa.html"></iframe>
-        </div>
     </div>
 
     <div class="footer-points">
@@ -124,28 +108,22 @@
 
     <script>
         function showDay(dayId, btn) {
-            // Ocultar todos los wrappers de días
             var days = document.getElementsByClassName('dia-wrapper');
-            for(var i=0; i<days.length; i++) { days[i].style.display = 'none'; days[i].classList.remove('active'); }
+            for(var i=0; i<days.length; i++) { 
+                days[i].style.display = 'none'; 
+                days[i].classList.remove('active'); 
+            }
             
-            // Quitar clase activa a botones
             var tabs = document.getElementsByClassName('tab-link');
-            for(var i=0; i<tabs.length; i++) { tabs[i].classList.remove('active'); }
+            for(var i=0; i<tabs.length; i++) { 
+                tabs[i].classList.remove('active'); 
+            }
             
-            // Mostrar día seleccionado
             document.getElementById(dayId).style.display = 'block';
             document.getElementById(dayId).classList.add('active');
             btn.classList.add('active');
             
             calcTotal();
-        }
-
-        function openDespensa() {
-            document.getElementById('modal-despensa').style.display = 'block';
-        }
-
-        function closeDespensa() {
-            document.getElementById('modal-despensa').style.display = 'none';
         }
 
         function calcTotal() {
@@ -164,6 +142,9 @@
             document.getElementById('left-pts').innerText = remaining;
             document.getElementById('left-pts').style.color = remaining < 0 ? "red" : "var(--naranja)";
         }
+
+        // Esta función asume que tienes el script principal que gestiona abrirVista
+        // Si no, aquí podrías definir cómo quieres que se comporte.
     </script>
 </body>
 </html>
