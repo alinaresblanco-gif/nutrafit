@@ -169,27 +169,6 @@
     border-top: 1px dashed #eee;
     padding-top: 8px;
 }
-/* Aseguramos que el contenido empiece oculto */
-.dia-contenido {
-    display: none; 
-    padding: 15px;
-    border-top: 1px solid #eee;
-    background-color: #fafafa;
-}
-
-/* Clase que añadiremos con JS para mostrarlo */
-.dia-ficha.activo .dia-contenido {
-    display: block;
-}
-
-/* Rotar la flecha cuando esté abierto */
-.dia-ficha.activo .fa-chevron-down {
-    transform: rotate(180deg);
-}
-
-.fa-chevron-down {
-    transition: transform 0.3s ease;
-}
     </style>
 </head>
 <body>
@@ -203,7 +182,7 @@
 
     <div class="contenedor-semana">
         <div class="dia-ficha">
-            <div class="dia-header" onclick="toggleDia(this)">
+            <div class="dia-header">
                 <div class="dia-nombre">LUNES</div>
                 <div class="puntos-header">
                     <div class="punto-item">
@@ -261,14 +240,6 @@
 </div>
         </div>
     </div>
-<script>
-    function toggleDia(elemento) {
-        // Buscamos la ficha (el padre) del elemento que hemos pulsado
-        const ficha = elemento.closest('.dia-ficha');
-        
-        // Alternamos la clase 'activo'
-        ficha.classList.toggle('activo');
-    }
-</script>
+
 </body>
 </html>
