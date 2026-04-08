@@ -12,15 +12,17 @@
             --verde-oscuro: #5a8a5a;
             --blanco: #ffffff;
             --gris-fondo: #f4f7f4;
+            --sombra: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         body {
             margin: 0;
             font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--gris-fondo);
-            padding-top: 80px; 
+            padding-top: 70px;
         }
 
+        /* --- CABECERA --- */
         .cabecera {
             background-color: var(--verde-corp);
             height: 60px;
@@ -30,240 +32,177 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        .btn-retroceso {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: var(--blanco);
-            width: 40px; height: 40px;
-            border-radius: 50%;
+        .btn-nav {
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            width: 40px; height: 40px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            text-decoration: none;
+            cursor: pointer; text-decoration: none;
         }
 
         .titulo-cabecera {
-            color: var(--blanco);
-            font-weight: bold;
-            flex-grow: 1;
-            text-align: center;
-            margin-right: 40px;
-            text-transform: uppercase;
+            color: var(--blanco); font-weight: bold; flex-grow: 1;
+            text-align: center; margin-right: 40px; text-transform: uppercase;
         }
 
-        .contenedor-semana {
-            padding: 15px;
-        }
+        /* --- ACORDEÓN (Lógica del código antiguo) --- */
+        .contenedor-semana { padding: 15px; }
 
-        .dia-ficha {
-            background: var(--blanco);
-            border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-            border: 1px solid #e0e0e0;
-            margin-bottom: 15px;
-            overflow: hidden;
+        .dia-ficha { 
+            margin-bottom: 12px; 
+            border-radius: 12px; 
+            border: 1px solid #e0e0e0; 
+            overflow: hidden; 
+            background: white;
+            transition: 0.3s; 
         }
 
         .dia-header {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            background: white; /* Añadido para asegurar área de clic */
-        }
-
-        .dia-nombre {
-            font-weight: 800;
-            color: var(--verde-oscuro);
-        }
-
-        .puntos-header {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .punto-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .label-mini {
-            font-size: 0.6rem;
-            color: #999;
-            font-weight: bold;
-        }
-
-        .input-puntos {
-            width: 45px;
-            height: 30px;
-            border: 2px solid var(--verde-corp);
-            border-radius: 6px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .caja-restante {
-            min-width: 45px;
-            height: 30px;
-            background: #f0f0f0;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        /* --- ESTADO CERRADO / ABIERTO --- */
-        .dia-contenido {
-            display: none; /* Por defecto cerrado */
-            padding: 15px;
-            border-top: 1px solid #eee;
-            background-color: #fafafa;
-        }
-
-        /* La clase 'abierto' fuerza la visualización */
-        .dia-ficha.abierto .dia-contenido {
-            display: block !important;
-        }
-
-        .dia-ficha.abierto .fa-chevron-down {
-            transform: rotate(180deg);
-            color: var(--verde-corp);
-        }
-
-        .fa-chevron-down {
-            transition: transform 0.3s ease;
-        }
-
-        /* --- BLOQUES INTERNOS --- */
-        .momento-bloque {
-            background: white;
-            margin-bottom: 10px;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #eee;
-        }
-
-        .momento-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .momento-nombre {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: var(--verde-corp);
-            text-transform: uppercase;
-        }
-
-        .btn-anadir {
-            background-color: var(--verde-corp);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
+            background: var(--verde-corp); 
+            color: white; 
+            padding: 12px 15px;
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
             cursor: pointer;
         }
 
-        .lista-ingredientes-vacia {
-            margin-top: 8px;
-            font-size: 0.8rem;
-            color: #bbb;
-            font-style: italic;
-            border-top: 1px dashed #eee;
-            padding-top: 8px;
+        /* El cuerpo está oculto por defecto */
+        .dia-cuerpo { 
+            padding: 15px; 
+            background: white; 
+            display: none; 
+        }
+
+        /* Cuando tiene la clase 'activo', se muestra (Como en tu código antiguo) */
+        .dia-ficha.activo .dia-cuerpo { 
+            display: block; 
+        }
+
+        .dia-ficha.activo { 
+            border-color: var(--verde-corp); 
+            box-shadow: var(--sombra); 
+        }
+
+        /* --- PUNTOS --- */
+        .input-puntos-dia { width: 45px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: var(--verde-oscuro); outline: none; background: white; }
+        .input-restantes-dia { width: 45px; border-radius: 5px; border: none; text-align: center; font-weight: bold; color: #d35400; background: #fff; outline: none; pointer-events: none; }
+
+        /* --- MOMENTOS --- */
+        .momento-seccion { margin-bottom: 18px; }
+        .momento-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .momento-titulo { color: var(--verde-corp); font-weight: bold; font-size: 0.85rem; text-transform: uppercase; border-left: 3px solid var(--verde-corp); padding-left: 8px; }
+        
+        .fila-ingrediente { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f2f2f2; padding-bottom: 5px; margin-bottom: 5px; }
+        .input-ingrediente { flex-grow: 1; border: none; outline: none; font-size: 0.95rem; color: #555; background: transparent; }
+        .input-puntos-ing { width: 40px; border: none; background: #f7f7f7; text-align: center; font-weight: bold; color: var(--verde-oscuro); border-radius: 4px; padding: 4px 0; }
+        .btn-add-momento { background: none; border: none; color: var(--verde-corp); cursor: pointer; font-size: 1.1rem; }
+
+        /* --- MODAL DESPENSA --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none; z-index: 2000;
+            backdrop-filter: blur(3px);
+        }
+        .modal-contenido {
+            position: absolute; bottom: 0; width: 100%; height: 70vh;
+            background: white; border-radius: 25px 25px 0 0;
+            display: flex; flex-direction: column; overflow: hidden;
         }
     </style>
 </head>
 <body>
 
     <header class="cabecera">
-        <a href="index.html" class="btn-retroceso"><i class="fas fa-arrow-left"></i></a>
+        <a href="index.html" class="btn-nav"><i class="fas fa-chevron-left"></i></a>
         <div class="titulo-cabecera">FORMULARIO MENÚ SEMANAL</div>
     </header>
 
     <div class="contenedor-semana">
-        <div class="dia-ficha">
-            <div class="dia-header" onclick="alternarDia(this)">
-                <div class="dia-nombre">LUNES</div>
-                <div class="puntos-header">
-                    <div class="punto-item">
-                        <span class="label-mini">BASE</span>
-                        <input type="number" class="input-puntos" value="0" onclick="event.stopPropagation()">
-                    </div>
-                    <div class="punto-item">
-                        <span class="label-mini">RESTAN</span>
-                        <div class="caja-restante">0</div>
-                    </div>
-                    <i class="fas fa-chevron-down" style="color:#ccc"></i>
+        <div class="dia-ficha" id="ficha-lunes">
+            <div class="dia-header" onclick="toggleDia('ficha-lunes')">
+                <div style="width: 32px;"></div> <strong>LUNES</strong>
+                <div style="display: flex; gap: 10px;">
+                    <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">TOTAL</span><input type="number" class="input-puntos-dia" value="0" onclick="event.stopPropagation()" oninput="actualizarPuntosDia(this)"></div>
+                    <div style="text-align: center;"><span style="font-size: 0.5rem; display: block;">RESTAN</span><input type="number" class="input-restantes-dia" value="0" readonly></div>
                 </div>
             </div>
             
-            <div class="dia-contenido">
-                <div class="momento-bloque">
-                    <div class="momento-header">
-                        <span class="momento-nombre">Desayuno</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation(); alert('Despensa')">+</button>
-                    </div>
-                    <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+            <div class="dia-cuerpo">
+                <div class="momento-seccion">
+                    <div class="momento-header"><span class="momento-titulo">Desayuno</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div>
+                    <div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div>
                 </div>
-
-                <div class="momento-bloque">
-                    <div class="momento-header">
-                        <span class="momento-nombre">Almuerzo</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation()">+</button>
-                    </div>
-                    <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+                <div class="momento-seccion">
+                    <div class="momento-header"><span class="momento-titulo">Almuerzo</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div>
+                    <div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div>
                 </div>
-
-                <div class="momento-bloque">
-                    <div class="momento-header">
-                        <span class="momento-nombre">Comida</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation()">+</button>
-                    </div>
-                    <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+                <div class="momento-seccion">
+                    <div class="momento-header"><span class="momento-titulo">Comida</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div>
+                    <div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div>
                 </div>
-
-                <div class="momento-bloque">
-                    <div class="momento-header">
-                        <span class="momento-nombre">Merienda</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation()">+</button>
-                    </div>
-                    <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+                <div class="momento-seccion">
+                    <div class="momento-header"><span class="momento-titulo">Merienda</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div>
+                    <div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div>
                 </div>
-
-                <div class="momento-bloque">
-                    <div class="momento-header">
-                        <span class="momento-nombre">Cena</span>
-                        <button class="btn-anadir" onclick="event.stopPropagation()">+</button>
-                    </div>
-                    <div class="lista-ingredientes-vacia">Sin ingredientes seleccionados</div>
+                <div class="momento-seccion">
+                    <div class="momento-header"><span class="momento-titulo">Cena</span><button class="btn-add-momento" onclick="abrirDespensa(this)"><i class="fas fa-plus"></i></button></div>
+                    <div class="lista-ingredientes"><div class="fila-ingrediente"><input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)"><input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)"></div></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        function alternarDia(cabecera) {
-            // Buscamos el contenedor padre (.dia-ficha) del elemento pulsado
-            var ficha = cabecera.parentElement;
+        function toggleDia(idFicha) {
+            const ficha = document.getElementById(idFicha);
+            const estaActivo = ficha.classList.contains('activo');
             
-            // Si la tiene, se la quita; si no la tiene, se la pone
-            ficha.classList.toggle("abierto");
+            // Cerramos todos primero
+            document.querySelectorAll('.dia-ficha').forEach(f => f.classList.remove('activo'));
             
-            // Mensaje de prueba para confirmar que el clic funciona
-            console.log("Clic detectado en el lunes");
+            // Si no estaba activo, lo abrimos
+            if (!estaActivo) {
+                ficha.classList.add('activo');
+            }
+        }
+
+        function verificarFilaNueva(input) {
+            const lista = input.closest('.lista-ingredientes');
+            const filas = lista.querySelectorAll('.fila-ingrediente');
+            const ultimaFila = filas[filas.length - 1];
+            if (input.parentElement === ultimaFila && input.value.trim() !== "") {
+                const nuevaFila = document.createElement('div');
+                nuevaFila.className = 'fila-ingrediente';
+                nuevaFila.innerHTML = `
+                    <input type="text" class="input-ingrediente" placeholder="Añadir..." oninput="verificarFilaNueva(this)">
+                    <input type="number" class="input-puntos-ing" value="0" oninput="actualizarPuntosDia(this)">
+                `;
+                lista.appendChild(nuevaFila);
+            }
+        }
+
+        function actualizarPuntosDia(el) {
+            const ficha = el.closest('.dia-ficha');
+            if (!ficha) return;
+            const inputPresupuestoTotal = ficha.querySelector('.input-puntos-dia'); 
+            const displayRestante = ficha.querySelector('.input-restantes-dia');
+            const todosLosIngredientes = ficha.querySelectorAll('.input-puntos-ing');
+            let sumaConsumida = 0;
+            todosLosIngredientes.forEach(ing => { sumaConsumida += parseFloat(ing.value) || 0; });
+            const presupuestoManual = parseFloat(inputPresupuestoTotal.value) || 0;
+            const resultadoResta = presupuestoManual - sumaConsumida;
+            if (displayRestante) {
+                displayRestante.value = resultadoResta;
+                displayRestante.style.color = resultadoResta < 0 ? "white" : "#d35400";
+                displayRestante.style.backgroundColor = resultadoResta < 0 ? "#e74c3c" : "white";
+            }
+        }
+
+        function abrirDespensa(btn) {
+            alert("Aquí se abriría tu modal de despensa como en el código antiguo");
         }
     </script>
-
 </body>
 </html>
