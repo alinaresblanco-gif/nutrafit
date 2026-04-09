@@ -1148,49 +1148,70 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 /** * CODIGO DIARIO-FORMULARIO */
 /* ============================================================
-    LOGICA COMPLETA - CORRECCIÓN LUPA
+    LOGICA COMPLETA - NUTRAFIT PLANNER
    ============================================================ */
 
 let baseDeDatosAlimentos = [];
 
 window.onload = function() {
     actualizarPuntos();
-    // Forzamos el estado inicial del panel para que el JS sepa dónde está
+    // Forzamos el estado inicial del panel para que el JS sepa exactamente dónde está
     const panel = document.getElementById('panel-despensa');
-    if(panel) panel.style.right = "-100%";
+    if(panel) {
+        panel.style.right = "-100%";
+    }
 };
 
-// ... (tus funciones de cambiarDia, gestionarNuevaFila y actualizarPuntos se mantienen igual) ...
-
+/**
+ * Navegación entre los días de la semana
+ */
 function cambiarDia(diaId, btn) {
+    // 1. Ocultar todos los contenidos de días
     const todosLosContenidos = document.querySelectorAll('.contenido-dia');
     todosLosContenidos.forEach(dia => {
         dia.classList.remove('active');
         dia.style.display = 'none';
     });
+
+    // 2. Desactivar todos los botones de pestañas
     const todosLosBotones = document.querySelectorAll('.tab-btn');
-    todosLosBotones.forEach(b => b.classList.remove('active'));
+    todosLosBotones.forEach(b => {
+        b.classList.remove('active');
+    });
+
+    // 3. Activar el día seleccionado
     const diaSeleccionado = document.getElementById(diaId);
     if (diaSeleccionado) {
         diaSeleccionado.classList.add('active');
         diaSeleccionado.style.display = 'block';
         btn.classList.add('active');
+        
+        // Ejecutar cálculo de puntos para el nuevo día visible
         actualizarPuntos();
     }
 }
 
+/**
+ * Gestión automática de filas de ingredientes
+ */
 function gestionarNuevaFila(inputActual) {
     const contenedor = inputActual.closest('.contenedor-ingredientes');
     const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
     const ultimaFila = todasLasFilas[todasLasFilas.length - 1];
     const inputUltimaFila = ultimaFila.querySelector('.input-txt');
 
+    // Si el usuario escribe en la última fila disponible, creamos otra debajo automáticamente
     if (inputActual === inputUltimaFila && inputActual.value.trim() !== "") {
         crearFilaNueva(contenedor);
     }
+    
+    // Recalcular puntos con el nuevo valor
     actualizarPuntos();
 }
 
+/**
+ * Crea físicamente la nueva fila en el DOM
+ */
 function crearFilaNueva(contenedor) {
     const nuevaFila = document.createElement('div');
     nuevaFila.className = 'fila-ingrediente';
@@ -1201,29 +1222,46 @@ function crearFilaNueva(contenedor) {
     contenedor.appendChild(nuevaFila);
 }
 
+/**
+ * Cálculo automático de puntos restantes
+ */
 function actualizarPuntos() {
+    // Buscar el día que está visible actualmente
     const diaActivo = document.querySelector('.contenido-dia.active');
     if (!diaActivo) return;
+
+    // Sumar todos los inputs de puntos dentro de ese día activo
     const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
     let sumaTotal = 0;
+    
     inputsPuntos.forEach(input => {
         sumaTotal += parseFloat(input.value) || 0;
     });
-    const presupuesto = parseFloat(document.getElementById('total-dia').value) || 0;
+
+    // Obtener presupuesto y calcular restante
+    const presupuestoInput = document.getElementById('total-dia');
+    const presupuesto = parseFloat(presupuestoInput.value) || 0;
     const restante = presupuesto - sumaTotal;
+
+    // Actualizar el display de puntos restantes
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
         displayRestante.value = restante;
+        // Feedback visual: Rojo si es negativo
         displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
     }
 }
 
+/**
+ * Función para regresar al menú principal
+ */
 function irAlMenu() {
     window.location.href = 'index.html';
 }
 
 /**
  * FUNCIÓN DE LA LUPA CORREGIDA
+ * Controla la apertura y cierre del panel lateral
  */
 function toggleDespensa() {
     const panel = document.getElementById('panel-despensa');
@@ -1231,12 +1269,12 @@ function toggleDespensa() {
     
     if (!panel) return;
 
-    // Si está escondido (o no tiene valor), lo ponemos en 0 (abierto)
-    if (panel.style.right === "-100%" || panel.style.right === "") {
+    // Si el panel no tiene un estilo definido aún o está en -100% (cerrado)
+    if (panel.style.right === "" || panel.style.right === "-100%") {
         panel.style.right = "0px";
         if (btn) btn.style.transform = "rotate(90deg)";
     } else {
-        // Si está abierto, lo escondemos
+        // Si está abierto, lo escondemos volviéndolo a sacar de la pantalla
         panel.style.right = "-100%";
         if (btn) btn.style.transform = "rotate(0deg)";
     }
