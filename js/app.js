@@ -1147,6 +1147,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 /** * CODIGO DIARIO-FORMULARIO */
+/* ============================================================
+    LOGICA COMPLETA NUTRAFIT - PLANIFICADOR
+   ============================================================ */
+
+// Variable para almacenar alimentos (si llegas a usar el Excel en el futuro)
+let baseDeDatosAlimentos = [];
+
+/**
+ * Inicialización al cargar la página
+ */
+window.onload = function() {
+    actualizarPuntos();
+    // Si tienes la función de carga de Excel, la llamarías aquí:
+    // cargarAlimentosDesdeExcel(); 
+};
+
 /**
  * Navegación entre los días de la semana
  */
@@ -1180,20 +1196,29 @@ function cambiarDia(diaId, btn) {
 
 /**
  * Gestión automática de filas de ingredientes
- * Se activa cada vez que el usuario escribe en un campo de texto
  */
 function gestionarNuevaFila(inputActual) {
     const contenedor = inputActual.closest('.contenedor-ingredientes');
+    if (!contenedor) return;
+
     const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
     const ultimaFila = todasLasFilas[todasLasFilas.length - 1];
     const inputUltimaFila = ultimaFila.querySelector('.input-txt');
+
+    // Lógica para autocompletar puntos (si la base de datos tiene info)
+    if (typeof baseDeDatosAlimentos !== 'undefined' && baseDeDatosAlimentos.length > 0) {
+        const alimentoEncontrado = baseDeDatosAlimentos.find(a => a.nombre === inputActual.value);
+        if (alimentoEncontrado) {
+            const filaActual = inputActual.closest('.fila-ingrediente');
+            filaActual.querySelector('.input-pts').value = alimentoEncontrado.puntos;
+        }
+    }
 
     // Si el usuario escribe en la última fila disponible, creamos otra debajo automáticamente
     if (inputActual === inputUltimaFila && inputActual.value.trim() !== "") {
         crearFilaNueva(contenedor);
     }
     
-    // Recalcular puntos con el nuevo valor
     actualizarPuntos();
 }
 
@@ -1214,11 +1239,9 @@ function crearFilaNueva(contenedor) {
  * Cálculo automático de puntos restantes
  */
 function actualizarPuntos() {
-    // Buscar el día que está visible actualmente
     const diaActivo = document.querySelector('.contenido-dia.active');
     if (!diaActivo) return;
 
-    // Sumar todos los inputs de puntos dentro de ese día activo
     const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
     let sumaTotal = 0;
     
@@ -1226,28 +1249,59 @@ function actualizarPuntos() {
         sumaTotal += parseFloat(input.value) || 0;
     });
 
-    // Obtener presupuesto y calcular restante
     const presupuestoInput = document.getElementById('total-dia');
     const presupuesto = parseFloat(presupuestoInput.value) || 0;
     const restante = presupuesto - sumaTotal;
 
-    // Actualizar el display de puntos restantes
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
         displayRestante.value = restante;
-        // Feedback visual: Rojo si es negativo, naranja/verde según tu diseño
         displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
     }
 }
 
 /**
- * Función para regresar al menú principal
+ * Regresar al menú
  */
 function irAlMenu() {
     window.location.href = 'index.html';
 }
 
-// Inicializar el cálculo al cargar la página para que los contadores no empiecen vacíos
-window.onload = function() {
-    actualizarPuntos();
-};
+/**
+ * CONTROL DE LA DESPENSA (LUPA)
+ * Esta es la versión corregida para que funcione con tu HTML
+ */
+function toggleDespensa() {
+    const panel = document.getElementById('panel-despensa');
+    const btn = document.getElementById('btn-despensa');
+    
+    if (!panel) return;
+
+    // Si la posición derecha es 0px, está abierto, lo cerramos
+    if (panel.style.right === '0px' || panel.classList.contains('open')) {
+        panel.style.right = '-100%';
+        panel.classList.remove('open');
+        if (btn) btn.style.transform = 'rotate(0deg)';
+    } else {
+        // Lo abrimos
+        panel.style.right = '0px';
+        panel.classList.add('open');
+        if (btn) btn.style.transform = 'rotate(90deg)';
+    }
+}
+
+// Escuchador de eventos para asegurar que la lupa responda siempre
+document.addEventListener('DOMContentLoaded', () => {
+    const btnLupa = document.getElementById('btn-despensa');
+    if (btnLupa) {
+        btnLupa.onclick = function(e) {
+            e.preventDefault();
+            toggleDespensa();
+        };
+    }
+    
+    const btnCerrar = document.getElementById('close-despensa');
+    if (btnCerrar) {
+        btnCerrar.onclick = toggleDespensa;
+    }
+});
