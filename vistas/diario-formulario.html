@@ -11,17 +11,16 @@
             --verde-suave: #eef5ee;
             --verde-oscuro: #5a8a5a;
             --gris-fondo: #f8faf8;
-            --naranja: #e67e22;
+            --naranja: #d35400;
             --blanco: #ffffff;
             --shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         body {
-            margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; font-family: 'Segoe UI', sans-serif;
             background-color: var(--gris-fondo);
             display: flex; flex-direction: column; height: 100vh;
-            color: #333;
-            overflow: hidden; /* Evita scrolls raros en el cuerpo principal */
+            color: #333; overflow: hidden;
         }
 
         /* HEADER */
@@ -34,31 +33,25 @@
         .btn-volver {
             background: rgba(255,255,255,0.2); color: white;
             border: none; padding: 8px 12px; border-radius: 10px;
-            cursor: pointer; font-size: 0.9rem; transition: background 0.3s;
+            cursor: pointer; font-size: 0.9rem;
         }
 
-        /* TABS */
+        /* TABS DIAS */
         .tabs-dias {
             display: flex; overflow-x: auto; background: white;
             padding: 12px 8px; gap: 10px; border-bottom: 1px solid #edf2ed;
         }
         .tab-btn {
-            padding: 8px 22px; border-radius: 25px; border: 2px solid transparent;
+            padding: 8px 22px; border-radius: 25px; border: none;
             background: var(--verde-suave); color: var(--verde-oscuro);
-            white-space: nowrap; cursor: pointer; font-weight: 700; 
-            font-size: 0.75rem; flex-shrink: 0;
+            white-space: nowrap; cursor: pointer; font-weight: 700; flex-shrink: 0;
         }
         .tab-btn.active { background: var(--verde-corp) !important; color: white !important; }
 
-        /* CONTENIDO */
-        .contenedor-principal { flex-grow: 1; overflow-y: auto; padding: 20px 15px; padding-bottom: 140px; }
-        .contenido-dia { display: none; animation: fadeIn 0.4s ease; }
+        /* CONTENIDO PRINCIPAL */
+        .contenedor-principal { flex-grow: 1; overflow-y: auto; padding: 20px 15px; padding-bottom: 120px; }
+        .contenido-dia { display: none; }
         .contenido-dia.active { display: block; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
 
         .card-momento {
             background: var(--blanco); border-radius: 18px; padding: 18px;
@@ -74,29 +67,34 @@
         .momento-titulo::before { content: ''; width: 4px; height: 16px; background: var(--verde-corp); border-radius: 2px; }
 
         .fila-ingrediente { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .input-txt { flex-grow: 1; border: 1px solid #e0e6e0; padding: 12px 15px; border-radius: 12px; outline: none; font-size: 0.95rem; background: #fafafa; }
-        .input-pts { width: 55px; border: 2px solid var(--verde-suave); padding: 10px; border-radius: 12px; text-align: center; font-weight: 800; color: var(--verde-oscuro); background: var(--verde-suave); }
-
-        .btn-add-icon { color: var(--verde-corp); font-size: 1.4rem; cursor: pointer; }
+        .input-txt { flex-grow: 1; border: 1px solid #e0e6e0; padding: 12px 15px; border-radius: 12px; outline: none; background: #fafafa; }
+        .input-pts { width: 55px; border: none; padding: 10px; border-radius: 12px; text-align: center; font-weight: 800; color: var(--verde-oscuro); background: var(--verde-suave); }
 
         /* BARRA INFERIOR */
         .barra-puntos {
             position: fixed; bottom: 20px; left: 15px; right: 15px;
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            display: flex; justify-content: space-around; padding: 15px;
-            border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            background: white; display: flex; justify-content: space-around; 
+            padding: 15px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             z-index: 1000;
         }
         .box-pts { text-align: center; flex: 1; }
-        .box-pts:first-child { border-right: 1px solid #eee; }
-        .label-pts { font-size: 0.65rem; color: #888; font-weight: 700; text-transform: uppercase; }
-        .val-pts { font-size: 1.3rem; font-weight: 800; border: none; width: 100%; text-align: center; background: transparent; outline: none; }
+        .label-pts { font-size: 0.65rem; color: #888; font-weight: 700; text-transform: uppercase; display: block; }
+        .val-pts { font-size: 1.3rem; font-weight: 800; border: none; width: 100%; text-align: center; outline: none; background: transparent; }
 
-        /* BOTÓN LUPA Y PANEL (AJUSTES FINALES) */
+        /* LUPA Y PANEL */
         #btn-despensa {
-            -webkit-tap-highlight-color: transparent;
-            outline: none;
-            user-select: none;
+            position: fixed; bottom: 100px; right: 20px; width: 60px; height: 60px; 
+            background: var(--naranja); color: white; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 24px; cursor: pointer; z-index: 99999 !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s;
+        }
+
+        #panel-despensa {
+            position: fixed; top: 0; right: -100%; width: 85%; max-width: 400px; 
+            height: 100%; background: white; z-index: 100000 !important;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.2); transition: 0.4s;
+            display: flex; flex-direction: column; visibility: hidden;
         }
     </style>
 </head>
@@ -121,16 +119,15 @@
     <div class="contenedor-principal">
         <div id="lunes" class="contenido-dia active">
             <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle btn-add-icon"></i></div>
+                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
                 <div class="contenedor-ingredientes">
                     <div class="fila-ingrediente">
-                        <input type="text" list="lista-alimentos" class="input-txt" placeholder="Escribe ingrediente..." oninput="gestionarNuevaFila(this)">
+                        <input type="text" class="input-txt" placeholder="Escribe ingrediente..." oninput="gestionarNuevaFila(this)">
                         <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
                     </div>
                 </div>
             </div>
-            </div>
-
+        </div>
         <div id="martes" class="contenido-dia"></div>
         <div id="miercoles" class="contenido-dia"></div>
         <div id="jueves" class="contenido-dia"></div>
@@ -144,49 +141,41 @@
             <span class="label-pts">Presupuesto</span>
             <input type="number" id="total-dia" class="val-pts" value="30" oninput="actualizarPuntos()">
         </div>
-        <div class="box-pts">
+        <div class="box-pts" style="border-left: 1px solid #eee;">
             <span class="label-pts">Disponible</span>
             <input type="number" id="restantes-val" class="val-pts" value="30" readonly>
         </div>
     </div>
 
-    <div id="btn-despensa" onclick="toggleDespensa()" style="position: fixed; bottom: 100px; right: 20px; width: 60px; height: 60px; background: #d35400; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 99999 !important; transition: all 0.3s ease;">
-        🔍
-    </div>
+    <div id="btn-despensa" onclick="toggleDespensa()">🔍</div>
 
-    <div id="panel-despensa" style="position: fixed; top: 0; right: -100%; width: 85%; max-width: 400px; height: 100%; background: white; box-shadow: -5px 0 20px rgba(0,0,0,0.3); transition: right 0.4s ease-in-out; z-index: 100000 !important; display: flex; flex-direction: column; visibility: hidden;">
-        <div style="padding: 15px; background: #d35400; color: white; display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; font-size: 1.1rem; font-family: sans-serif;">Consulta de Créditos</h3>
-            <span onclick="toggleDespensa()" style="cursor: pointer; font-size: 28px; padding: 5px; line-height: 1;">&times;</span>
+    <div id="panel-despensa">
+        <div style="padding: 15px; background: var(--naranja); color: white; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1.1rem;">Consulta de Créditos</h3>
+            <span onclick="toggleDespensa()" style="cursor: pointer; font-size: 28px;">&times;</span>
         </div>
-        <iframe src="vistas/nuestra_despensa.html" style="flex-grow: 1; border: none; width: 100%; height: 100%;"></iframe>
+        <iframe src="vistas/nuestra_despensa.html" style="flex-grow: 1; border: none; width: 100%;"></iframe>
     </div>
 
-    <datalist id="lista-alimentos">
-        <option value="Manzana"><option value="Pechuga de Pollo"><option value="Arroz Integral">
-    </datalist>
-
+    <script src="app.js"></script>
+    
     <script>
-        // Función de la lupa integrada para evitar fallos de carga
+        // ESTA FUNCIÓN DEBE ESTAR AQUÍ PARA EVITAR EL ERROR DE LA CONSOLA
         function toggleDespensa() {
             const panel = document.getElementById('panel-despensa');
             const btn = document.getElementById('btn-despensa');
-            
             if (!panel) return;
 
             if (panel.style.right === "-100%" || panel.style.right === "" || panel.style.visibility === "hidden") {
                 panel.style.visibility = "visible";
                 panel.style.right = "0px";
-                if (btn) btn.style.transform = "scale(0.8) rotate(90deg)";
+                if (btn) btn.style.transform = "rotate(90deg) scale(0.8)";
             } else {
                 panel.style.right = "-100%";
-                setTimeout(() => {
-                    if (panel.style.right === "-100%") panel.style.visibility = "hidden";
-                }, 400);
-                if (btn) btn.style.transform = "scale(1) rotate(0deg)";
+                setTimeout(() => { panel.style.visibility = "hidden"; }, 400);
+                if (btn) btn.style.transform = "rotate(0deg) scale(1)";
             }
         }
     </script>
-    <script src="app.js"></script>
 </body>
 </html>
