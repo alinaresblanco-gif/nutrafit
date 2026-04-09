@@ -1179,6 +1179,38 @@ function cambiarDia(diaId, btn) {
 }
 
 /**
+ * Gestión automática de filas de ingredientes
+ * Se activa cada vez que el usuario escribe en un campo de texto
+ */
+function gestionarNuevaFila(inputActual) {
+    const contenedor = inputActual.closest('.contenedor-ingredientes');
+    const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
+    const ultimaFila = todasLasFilas[todasLasFilas.length - 1];
+    const inputUltimaFila = ultimaFila.querySelector('.input-txt');
+
+    // Si el usuario escribe en la última fila disponible, creamos otra debajo automáticamente
+    if (inputActual === inputUltimaFila && inputActual.value.trim() !== "") {
+        crearFilaNueva(contenedor);
+    }
+    
+    // Recalcular puntos con el nuevo valor
+    actualizarPuntos();
+}
+
+/**
+ * Crea físicamente la nueva fila en el DOM
+ */
+function crearFilaNueva(contenedor) {
+    const nuevaFila = document.createElement('div');
+    nuevaFila.className = 'fila-ingrediente';
+    nuevaFila.innerHTML = `
+        <input type="text" list="lista-alimentos" class="input-txt" placeholder="Otro ingrediente..." oninput="gestionarNuevaFila(this)">
+        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+    `;
+    contenedor.appendChild(nuevaFila);
+}
+
+/**
  * Cálculo automático de puntos restantes
  */
 function actualizarPuntos() {
@@ -1186,7 +1218,7 @@ function actualizarPuntos() {
     const diaActivo = document.querySelector('.contenido-dia.active');
     if (!diaActivo) return;
 
-    // Sumar todos los inputs de puntos dentro de ese día
+    // Sumar todos los inputs de puntos dentro de ese día activo
     const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
     let sumaTotal = 0;
     
@@ -1199,22 +1231,23 @@ function actualizarPuntos() {
     const presupuesto = parseFloat(presupuestoInput.value) || 0;
     const restante = presupuesto - sumaTotal;
 
-    // Actualizar el display
+    // Actualizar el display de puntos restantes
     const displayRestante = document.getElementById('restantes-val');
-    displayRestante.value = restante;
-
-    // Cambiar color a rojo si nos pasamos del presupuesto
-    displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
+    if (displayRestante) {
+        displayRestante.value = restante;
+        // Feedback visual: Rojo si es negativo, naranja/verde según tu diseño
+        displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
+    }
 }
 
-// Inicializar el cálculo al cargar la página
-window.onload = function() {
-    actualizarPuntos();
-};
 /**
  * Función para regresar al menú principal
  */
 function irAlMenu() {
-    // Redirige al archivo index.html que está en la raíz
     window.location.href = 'index.html';
 }
+
+// Inicializar el cálculo al cargar la página para que los contadores no empiecen vacíos
+window.onload = function() {
+    actualizarPuntos();
+};

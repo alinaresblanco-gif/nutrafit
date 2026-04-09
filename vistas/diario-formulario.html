@@ -87,7 +87,6 @@
         .box-pts:first-child { border-right: 1px solid #eee; }
         .label-pts { font-size: 0.65rem; color: #888; font-weight: 700; text-transform: uppercase; }
         
-        /* COLOR VERDE PARA PRESUPUESTO */
         #total-dia { color: var(--verde-corp); }
         .val-pts { font-size: 1.3rem; font-weight: 800; border: none; width: 100%; text-align: center; background: transparent; outline: none; }
     </style>
@@ -97,7 +96,8 @@
     <div class="header">
         <button class="btn-volver" onclick="irAlMenu()"><i class="fas fa-chevron-left"></i> Volver</button>
         <span>NUTRAFIT PLANNER</span>
-        <div style="width: 60px;"></div> </div>
+        <div style="width: 60px;"></div> 
+    </div>
 
     <div class="tabs-dias">
         <button class="tab-btn active" onclick="cambiarDia('lunes', this)">LUN</button>
@@ -105,32 +105,63 @@
         <button class="tab-btn" onclick="cambiarDia('miercoles', this)">MIE</button>
         <button class="tab-btn" onclick="cambiarDia('jueves', this)">JUE</button>
         <button class="tab-btn" onclick="cambiarDia('viernes', this)">VIE</button>
-        <button class="tab-btn" onclick="sabado" onclick="cambiarDia('sabado', this)">SAB</button>
-        <button class="tab-btn" onclick="domingo" onclick="cambiarDia('domingo', this)">DOM</button>
+        <button class="tab-btn" onclick="cambiarDia('sabado', this)">SAB</button>
+        <button class="tab-btn" onclick="cambiarDia('domingo', this)">DOM</button>
     </div>
 
     <div class="contenedor-principal">
         <div id="lunes" class="contenido-dia active">
+            
             <div class="card-momento">
                 <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle btn-add-icon"></i></div>
-                <div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Ingrediente..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" list="lista-alimentos" class="input-txt" placeholder="Escribe ingrediente..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
             </div>
+
             <div class="card-momento">
                 <div class="momento-header"><span class="momento-titulo">Almuerzo</span><i class="fas fa-plus-circle btn-add-icon"></i></div>
-                <div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Media mañana..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" list="lista-alimentos" class="input-txt" placeholder="Media mañana..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
             </div>
+
             <div class="card-momento">
                 <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle btn-add-icon"></i></div>
-                <div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Plato principal..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" list="lista-alimentos" class="input-txt" placeholder="Plato principal..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
             </div>
+
             <div class="card-momento">
                 <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle btn-add-icon"></i></div>
-                <div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Merienda..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" list="lista-alimentos" class="input-txt" placeholder="Merienda..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
             </div>
+
             <div class="card-momento">
                 <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle btn-add-icon"></i></div>
-                <div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Cena..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" list="lista-alimentos" class="input-txt" placeholder="Cena..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
             </div>
+
         </div>
 
         <div id="martes" class="contenido-dia"></div>
@@ -151,6 +182,14 @@
             <input type="number" id="restantes-val" class="val-pts" value="30" readonly>
         </div>
     </div>
+
+    <datalist id="lista-alimentos">
+        <option value="Manzana">
+        <option value="Pechuga de Pollo">
+        <option value="Arroz Integral">
+        <option value="Yogur Desnatado">
+        <option value="Pan de Centeno">
+    </datalist>
 
     <script src="app.js"></script>
 </body>
