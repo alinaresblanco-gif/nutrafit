@@ -1151,12 +1151,13 @@ document.addEventListener('DOMContentLoaded', () => {
     LOGICA APP.JS - PLANIFICADOR CON CONEXIÓN A EXCEL
    ============================================================ */
 
-// Variable global para guardar los puntos de cada alimento (se carga desde Google Sheets)
+// Variable global para guardar los puntos de cada alimento
 let baseDeDatosAlimentos = [];
 
 // Inicialización al cargar la página
 window.onload = function() {
     actualizarPuntos();
+    console.log("Iniciando carga de alimentos...");
     cargarAlimentosDesdeExcel();
 };
 
@@ -1164,21 +1165,34 @@ window.onload = function() {
  * Carga los alimentos desde la hoja "alimentos" del Excel
  */
 function cargarAlimentosDesdeExcel() {
-    google.script.run.withSuccessHandler(function(alimentos) {
-        baseDeDatosAlimentos = alimentos;
-        const dl = document.getElementById('lista-alimentos');
-        
-        // Limpiamos y llenamos el datalist para el buscador
-        if (dl) {
-            dl.innerHTML = "";
-            alimentos.forEach(item => {
-                let option = document.createElement('option');
-                option.value = item.nombre;
-                dl.appendChild(option);
-            });
-            console.log("Alimentos cargados desde Excel: " + alimentos.length);
-        }
-    }).obtenerAlimentos();
+    // Verificamos si google.script existe (ejecución dentro de Google Apps Script)
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+            .withSuccessHandler(function(alimentos) {
+                baseDeDatosAlimentos = alimentos;
+                const dl = document.getElementById('lista-alimentos');
+                
+                if (dl) {
+                    dl.innerHTML = "";
+                    alimentos.forEach(item => {
+                        let option = document.createElement('option');
+                        option.value = item.nombre;
+                        dl.appendChild(option);
+                    });
+                    console.log("✅ ÉXITO: Alimentos cargados: " + alimentos.length);
+                }
+            })
+            .withFailureHandler(function(err) {
+                console.error("❌ ERROR en Google Script:", err);
+            })
+            .obtenerAlimentos();
+    } else {
+        console.warn("⚠️ Ejecución local: Usando base de datos de prueba.");
+        baseDeDatosAlimentos = [
+            {nombre: "Ejemplo Alimento 1", puntos: 5},
+            {nombre: "Ejemplo Alimento 2", puntos: 10}
+        ];
+    }
 }
 
 /**
@@ -1215,11 +1229,13 @@ function cambiarDia(diaId, btn) {
  */
 function gestionarNuevaFila(inputActual) {
     const contenedor = inputActual.closest('.contenedor-ingredientes');
+    if (!contenedor) return;
+
     const fila = inputActual.closest('.fila-ingrediente');
     const inputPts = fila.querySelector('.input-pts');
 
     // 1. BUSCAR PUNTOS AUTOMÁTICAMENTE
-    // Buscamos si el texto escrito coincide exactamente con algún nombre del Excel
+    // Buscamos si el texto escrito coincide exactamente con algún nombre de la base de datos
     const alimentoEncontrado = baseDeDatosAlimentos.find(a => a.nombre === inputActual.value);
     if (alimentoEncontrado) {
         inputPts.value = alimentoEncontrado.puntos;
@@ -1276,7 +1292,7 @@ function actualizarPuntos() {
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
         displayRestante.value = restante;
-        // Feedback visual: Rojo si es negativo, naranja/verde según diseño
+        // Feedback visual: Rojo si es negativo
         displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
     }
 }
