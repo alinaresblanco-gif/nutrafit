@@ -192,5 +192,33 @@
     </datalist>
 
     <script src="app.js"></script>
+    <div id="btn-despensa" onclick="toggleDespensa()" style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #d35400; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2000; transition: transform 0.3s;">
+  🔍
+</div>
+
+<div id="panel-despensa" style="position: fixed; top: 0; right: -100%; width: 350px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.2); transition: right 0.4s ease; z-index: 1999; display: flex; flex-direction: column;">
+    
+    <div style="padding: 20px; background: #d35400; color: white; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0;">Mi Despensa</h3>
+        <span onclick="toggleDespensa()" style="cursor: pointer; font-size: 20px;">✖</span>
+    </div>
+
+    <iframe src="nuestra_despensa.html" style="flex-grow: 1; border: none; width: 100%;"></iframe>
+</div>
+
+<script>
+function toggleDespensa() {
+    const panel = document.getElementById('panel-despensa');
+    const btn = document.getElementById('btn-despensa');
+    
+    if (panel.style.right === '0px') {
+        panel.style.right = '-100%';
+        btn.style.transform = 'rotate(0deg)';
+    } else {
+        panel.style.right = '0px';
+        btn.style.transform = 'rotate(90deg)';
+    }
+}
+</script>
 </body>
 </html>
