@@ -159,3 +159,40 @@
         100% { transform: rotate(360deg); }
     }
 </style>
+//para cargar en la vista diario-formulario-html
+<script>
+  // Al cargar la página, pedimos los datos al servidor
+  window.onload = function() {
+    console.log("Solicitando alimentos al servidor...");
+    google.script.run
+      .withSuccessHandler(mostrarAlimentos)
+      .withFailureHandler(function(err) {
+          console.error("Error al obtener alimentos:", err);
+          document.getElementById('mensaje-error').innerText = "Error al cargar datos.";
+      })
+      .obtenerAlimentos(); // Esta función debe existir en tu Código.gs
+  };
+
+  function mostrarAlimentos(datos) {
+    console.log("Datos recibidos:", datos);
+    const contenedor = document.getElementById('lista-alimentos'); // O el ID que uses para la lista
+    if (!datos || datos.length === 0) {
+      contenedor.innerHTML = "<p>No hay alimentos registrados.</p>";
+      return;
+    }
+
+    // Aquí va tu lógica para pintar los alimentos, por ejemplo:
+    let html = "";
+    datos.forEach(fila => {
+      html += `<div class="item-alimento">
+                <strong>${fila[0]}</strong> - ${fila[7]} pts
+               </div>`;
+    });
+    
+    contenedor.innerHTML = html;
+
+    // IMPORTANTE: Quitar el cargador/spinner
+    const loader = document.getElementById('loader'); 
+    if(loader) loader.style.display = 'none';
+  }
+</script>
