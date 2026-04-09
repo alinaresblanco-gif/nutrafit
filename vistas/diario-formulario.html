@@ -22,6 +22,16 @@
             display: flex; flex-direction: column; height: 100vh;
             color: #333;
         }
+        /* Nueva clase para mostrar el panel */
+#panel-despensa.abierto {
+    right: 0px !important;
+}
+
+/* Evitar el recuadro azul feo al pulsar */
+#btn-despensa {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+}
 
         /* HEADER CON BOTÓN VOLVER */
         .header {
