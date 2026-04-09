@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzSAjFva9cEZeIY5gLc-EbIcQUwm7GmOMyiUbe6IK1cNjJ_OkxrhbOVIn_YqxFkil2n/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzhnx4pNRSb7vfnGrKYRunL7_cczWAIdtpqNoLY1xvEWiqlBr5Q7aPNSDVKlZAHveE5/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1147,54 +1147,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 /** * CODIGO DIARIO-FORMULARIO */
-/* ============================================================
-    LOGICA APP.JS - PLANIFICADOR CON CONEXIÓN A EXCEL
-   ============================================================ */
-
-// Variable global para guardar los puntos de cada alimento
-let baseDeDatosAlimentos = [];
-
-// Inicialización al cargar la página
-window.onload = function() {
-    actualizarPuntos();
-    console.log("Iniciando carga de alimentos...");
-    cargarAlimentosDesdeExcel();
-};
-
-/**
- * Carga los alimentos desde la hoja "alimentos" del Excel
- */
-function cargarAlimentosDesdeExcel() {
-    // Verificamos si google.script existe (ejecución dentro de Google Apps Script)
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-            .withSuccessHandler(function(alimentos) {
-                baseDeDatosAlimentos = alimentos;
-                const dl = document.getElementById('lista-alimentos');
-                
-                if (dl) {
-                    dl.innerHTML = "";
-                    alimentos.forEach(item => {
-                        let option = document.createElement('option');
-                        option.value = item.nombre;
-                        dl.appendChild(option);
-                    });
-                    console.log("✅ ÉXITO: Alimentos cargados: " + alimentos.length);
-                }
-            })
-            .withFailureHandler(function(err) {
-                console.error("❌ ERROR en Google Script:", err);
-            })
-            .obtenerAlimentos();
-    } else {
-        console.warn("⚠️ Ejecución local: Usando base de datos de prueba.");
-        baseDeDatosAlimentos = [
-            {nombre: "Ejemplo Alimento 1", puntos: 5},
-            {nombre: "Ejemplo Alimento 2", puntos: 10}
-        ];
-    }
-}
-
 /**
  * Navegación entre los días de la semana
  */
@@ -1221,27 +1173,17 @@ function cambiarDia(diaId, btn) {
         
         // Ejecutar cálculo de puntos para el nuevo día visible
         actualizarPuntos();
+    } else {
+        console.error("No se encontró el contenido para el día:", diaId);
     }
 }
 
 /**
- * Gestión de filas e ingredientes con autocompletado de puntos
+ * Gestión automática de filas de ingredientes
+ * Se activa cada vez que el usuario escribe en un campo de texto
  */
 function gestionarNuevaFila(inputActual) {
     const contenedor = inputActual.closest('.contenedor-ingredientes');
-    if (!contenedor) return;
-
-    const fila = inputActual.closest('.fila-ingrediente');
-    const inputPts = fila.querySelector('.input-pts');
-
-    // 1. BUSCAR PUNTOS AUTOMÁTICAMENTE
-    // Buscamos si el texto escrito coincide exactamente con algún nombre de la base de datos
-    const alimentoEncontrado = baseDeDatosAlimentos.find(a => a.nombre === inputActual.value);
-    if (alimentoEncontrado) {
-        inputPts.value = alimentoEncontrado.puntos;
-    }
-
-    // 2. LÓGICA DE CREAR FILA NUEVA
     const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
     const ultimaFila = todasLasFilas[todasLasFilas.length - 1];
     const inputUltimaFila = ultimaFila.querySelector('.input-txt');
@@ -1251,7 +1193,7 @@ function gestionarNuevaFila(inputActual) {
         crearFilaNueva(contenedor);
     }
     
-    // Recalcular puntos totales del día
+    // Recalcular puntos con el nuevo valor
     actualizarPuntos();
 }
 
@@ -1272,10 +1214,11 @@ function crearFilaNueva(contenedor) {
  * Cálculo automático de puntos restantes
  */
 function actualizarPuntos() {
+    // Buscar el día que está visible actualmente
     const diaActivo = document.querySelector('.contenido-dia.active');
     if (!diaActivo) return;
 
-    // Sumar todos los inputs de puntos dentro del día visible
+    // Sumar todos los inputs de puntos dentro de ese día activo
     const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
     let sumaTotal = 0;
     
@@ -1292,7 +1235,7 @@ function actualizarPuntos() {
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
         displayRestante.value = restante;
-        // Feedback visual: Rojo si es negativo
+        // Feedback visual: Rojo si es negativo, naranja/verde según tu diseño
         displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
     }
 }
@@ -1303,3 +1246,8 @@ function actualizarPuntos() {
 function irAlMenu() {
     window.location.href = 'index.html';
 }
+
+// Inicializar el cálculo al cargar la página para que los contadores no empiecen vacíos
+window.onload = function() {
+    actualizarPuntos();
+};
