@@ -1153,34 +1153,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let baseDeDatosAlimentos = [];
 
+/**
+ * Inicialización al cargar la página
+ */
 window.onload = function() {
     actualizarPuntos();
 };
 
 /**
  * Navegación entre los días de la semana
+ * Cambia la visibilidad de los contenedores según el día seleccionado
  */
 function cambiarDia(diaId, btn) {
+    // 1. Ocultar todos los contenidos de días
     const todosLosContenidos = document.querySelectorAll('.contenido-dia');
     todosLosContenidos.forEach(dia => {
         dia.classList.remove('active');
         dia.style.display = 'none';
     });
 
+    // 2. Desactivar todos los botones de pestañas
     const todosLosBotones = document.querySelectorAll('.tab-btn');
     todosLosBotones.forEach(b => b.classList.remove('active'));
 
+    // 3. Activar el día seleccionado
     const diaSeleccionado = document.getElementById(diaId);
     if (diaSeleccionado) {
         diaSeleccionado.classList.add('active');
         diaSeleccionado.style.display = 'block';
         btn.classList.add('active');
+        
+        // Ejecutar cálculo de puntos para el nuevo día visible
         actualizarPuntos();
     }
 }
 
 /**
  * Gestión automática de filas de ingredientes
+ * Crea una nueva fila cuando el usuario escribe en la última disponible
  */
 function gestionarNuevaFila(inputActual) {
     const contenedor = inputActual.closest('.contenedor-ingredientes');
@@ -1191,9 +1201,14 @@ function gestionarNuevaFila(inputActual) {
     if (inputActual === inputUltimaFila && inputActual.value.trim() !== "") {
         crearFilaNueva(contenedor);
     }
+    
+    // Recalcular puntos con el nuevo valor ingresado
     actualizarPuntos();
 }
 
+/**
+ * Crea físicamente la nueva fila en el DOM
+ */
 function crearFilaNueva(contenedor) {
     const nuevaFila = document.createElement('div');
     nuevaFila.className = 'fila-ingrediente';
@@ -1208,46 +1223,41 @@ function crearFilaNueva(contenedor) {
  * Cálculo automático de puntos restantes
  */
 function actualizarPuntos() {
+    // Buscar el día que está visible actualmente
     const diaActivo = document.querySelector('.contenido-dia.active');
     if (!diaActivo) return;
 
+    // Sumar todos los inputs de puntos dentro de ese día activo
     const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
     let sumaTotal = 0;
+    
     inputsPuntos.forEach(input => {
         sumaTotal += parseFloat(input.value) || 0;
     });
 
-    const presupuesto = parseFloat(document.getElementById('total-dia').value) || 0;
+    // Obtener presupuesto y calcular restante
+    const presupuestoInput = document.getElementById('total-dia');
+    const presupuesto = parseFloat(presupuestoInput.value) || 0;
     const restante = presupuesto - sumaTotal;
 
+    // Actualizar el display de puntos restantes
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
         displayRestante.value = restante;
+        
+        // Feedback visual: Rojo si es negativo, naranja si es positivo
         displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
     }
 }
 
+/**
+ * Función para regresar al menú principal
+ */
 function irAlMenu() {
     window.location.href = 'index.html';
 }
 
-/**
- * FUNCIÓN DE LA LUPA (SISTEMA DE CLASES)
- * Sin cálculos de píxeles, simplemente añade o quita la clase 'abierto'
- */
-function toggleDespensa() {
-    const panel = document.getElementById('panel-despensa');
-    const btn = document.getElementById('btn-despensa');
-    
-    if (!panel) return;
-
-    // Alternar la clase 'abierto'
-    panel.classList.toggle('abierto');
-
-    // Rotar el botón según si la clase está presente o no
-    if (panel.classList.contains('abierto')) {
-        if (btn) btn.style.transform = "rotate(90deg)";
-    } else {
-        if (btn) btn.style.transform = "rotate(0deg)";
-    }
-}
+/* NOTA: La función toggleDespensa ha sido movida directamente 
+   al archivo HTML para garantizar su ejecución inmediata y 
+   evitar conflictos de carga.
+*/
