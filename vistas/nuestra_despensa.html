@@ -159,40 +159,76 @@
         100% { transform: rotate(360deg); }
     }
 </style>
-//para cargar en la vista diario-formulario-html
 <script>
-  // Al cargar la página, pedimos los datos al servidor
-  window.onload = function() {
-    console.log("Solicitando alimentos al servidor...");
-    google.script.run
-      .withSuccessHandler(mostrarAlimentos)
-      .withFailureHandler(function(err) {
-          console.error("Error al obtener alimentos:", err);
-          document.getElementById('mensaje-error').innerText = "Error al cargar datos.";
-      })
-      .obtenerAlimentos(); // Esta función debe existir en tu Código.gs
-  };
+    // 1. Ejecutar la carga en cuanto se abre la vista
+    window.onload = function() {
+        cargarDatosDespensa();
+    };
 
-  function mostrarAlimentos(datos) {
-    console.log("Datos recibidos:", datos);
-    const contenedor = document.getElementById('lista-alimentos'); // O el ID que uses para la lista
-    if (!datos || datos.length === 0) {
-      contenedor.innerHTML = "<p>No hay alimentos registrados.</p>";
-      return;
+    function cargarDatosDespensa() {
+        console.log("Iniciando consulta al almacén...");
+        // Llamamos a la función que pusimos en Código.gs
+        google.script.run
+            .withSuccessHandler(renderizarDespensa)
+            .withFailureHandler(errorAlCargar)
+            .obtenerAlimentos();
     }
 
-    // Aquí va tu lógica para pintar los alimentos, por ejemplo:
-    let html = "";
-    datos.forEach(fila => {
-      html += `<div class="item-alimento">
-                <strong>${fila[0]}</strong> - ${fila[7]} pts
-               </div>`;
-    });
-    
-    contenedor.innerHTML = html;
+    function renderizarDespensa(datos) {
+        const contenedor = document.getElementById('lista-alimentos-agrupados');
+        if (!datos || datos.length === 0) {
+            contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>No hay alimentos en la base de datos.</p>";
+            return;
+        }
 
-    // IMPORTANTE: Quitar el cargador/spinner
-    const loader = document.getElementById('loader'); 
-    if(loader) loader.style.display = 'none';
-  }
+        // Agrupamos los alimentos por su GRUPO (Columna 1 del Excel)
+        let grupos = {};
+        datos.forEach(fila => {
+            let nombre = fila[0];
+            let grupo = fila[1] || "OTROS";
+            let puntos = fila[7]; // Ajusta este número según la columna de puntos (0 es la A, 7 es la H)
+
+            if (!grupos[grupo]) grupos[grupo] = [];
+            grupos[grupo].push({ nombre, puntos });
+        });
+
+        let htmlFinal = "";
+
+        // Generamos el HTML para cada grupo
+        for (let nombreGrupo in grupos) {
+            htmlFinal += `<div class="cabecera-grupo-despensa">${nombreGrupo}</div>`;
+            htmlFinal += `<table class="tabla-despensa">`;
+            
+            grupos[nombreGrupo].forEach(alim => {
+                htmlFinal += `
+                    <tr class="fila-alimento">
+                        <td>${alim.nombre}</td>
+                        <td style="text-align:right">
+                            <span class="credito-badge">${alim.puntos} pts</span>
+                        </td>
+                    </tr>`;
+            });
+            
+            htmlFinal += `</table>`;
+        }
+
+        contenedor.innerHTML = htmlFinal;
+    }
+
+    function errorAlCargar(err) {
+        console.error("Error:", err);
+        document.getElementById('lista-alimentos-agrupados').innerHTML = 
+            "<p style='color:red; text-align:center;'>Error al conectar con el servidor.</p>";
+    }
+
+    // Función para el buscador
+    function filtrarDespensa() {
+        let input = document.getElementById('buscador-despensa').value.toLowerCase();
+        let filas = document.querySelectorAll('.fila-alimento');
+        
+        filas.forEach(fila => {
+            let texto = fila.innerText.toLowerCase();
+            fila.style.display = texto.includes(input) ? "" : "none";
+        });
+    }
 </script>
