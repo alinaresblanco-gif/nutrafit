@@ -3,70 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NutraFit - Menú Semanal</title>
+    <title>NutraFit - Planificador Premium</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root {
             --verde-corp: #78a978;
+            --verde-suave: #eef5ee;
             --verde-oscuro: #5a8a5a;
-            --gris-fondo: #f4f7f4;
-            --naranja: #d35400;
+            --gris-fondo: #f8faf8;
+            --naranja: #e67e22;
             --blanco: #ffffff;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         body {
-            margin: 0; font-family: 'Segoe UI', sans-serif;
+            margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--gris-fondo);
             display: flex; flex-direction: column; height: 100vh;
+            color: #333;
         }
 
+        /* HEADER MÁS MODERNO */
         .header {
             background: var(--verde-corp); color: white;
-            padding: 15px; text-align: center; font-weight: bold;
+            padding: 18px; text-align: center; font-weight: 700;
+            letter-spacing: 1px; font-size: 1.1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
         }
 
+        /* TABS CON EFECTO CAPSULA */
         .tabs-dias {
             display: flex; overflow-x: auto; background: white;
-            padding: 10px 5px; gap: 8px; border-bottom: 1px solid #ddd;
+            padding: 12px 8px; gap: 10px; border-bottom: 1px solid #edf2ed;
+            scrollbar-width: none; /* Ocultar scroll en Firefox */
         }
-        .tab-btn {
-            padding: 10px 18px; border-radius: 20px; border: 1px solid var(--verde-corp);
-            background: white; color: var(--verde-corp); white-space: nowrap;
-            cursor: pointer; font-weight: bold; font-size: 0.8rem;
-        }
-        .tab-btn.active { background: var(--verde-corp) !important; color: white !important; }
+        .tabs-dias::-webkit-scrollbar { display: none; } /* Ocultar scroll en Chrome */
 
-        .contenedor-principal { flex-grow: 1; overflow-y: auto; padding: 15px; padding-bottom: 120px; }
-        .contenido-dia { display: none; }
+        .tab-btn {
+            padding: 8px 22px; border-radius: 25px; border: 2px solid transparent;
+            background: var(--verde-suave); color: var(--verde-oscuro);
+            white-space: nowrap; cursor: pointer; font-weight: 700; 
+            font-size: 0.75rem; transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        .tab-btn.active { 
+            background: var(--verde-corp) !important; 
+            color: white !important;
+            box-shadow: 0 4px 8px rgba(120, 169, 120, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* CONTENEDOR PRINCIPAL */
+        .contenedor-principal { 
+            flex-grow: 1; overflow-y: auto; padding: 20px 15px; 
+            padding-bottom: 140px; 
+        }
+        .contenido-dia { display: none; animation: fadeIn 0.4s ease; }
         .contenido-dia.active { display: block; }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* TARJETAS ESTILO NEUMÓRFICO SUAVE */
         .card-momento {
-            background: white; border-radius: 15px; padding: 15px;
-            margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            background: var(--blanco); border-radius: 18px; padding: 18px;
+            margin-bottom: 20px; box-shadow: var(--shadow);
+            border: 1px solid rgba(120, 169, 120, 0.1);
         }
         .momento-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px; border-left: 4px solid var(--verde-corp); padding-left: 10px;
+            margin-bottom: 15px;
         }
-        .momento-titulo { color: var(--verde-corp); font-weight: bold; text-transform: uppercase; font-size: 0.85rem; }
+        .momento-titulo { 
+            color: var(--verde-oscuro); font-weight: 800; 
+            text-transform: uppercase; font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .momento-titulo::before {
+            content: ''; width: 4px; height: 16px; 
+            background: var(--verde-corp); border-radius: 2px;
+        }
 
-        .fila-ingrediente { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-        .input-txt { flex-grow: 1; border: 1px solid #eee; padding: 10px; border-radius: 8px; outline: none; font-size: 0.9rem; }
-        .input-pts { width: 45px; border: 1px solid #eee; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; color: var(--verde-oscuro); }
+        /* INPUTS ESTILIZADOS */
+        .fila-ingrediente { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        
+        .input-txt { 
+            flex-grow: 1; border: 1px solid #e0e6e0; padding: 12px 15px; 
+            border-radius: 12px; outline: none; font-size: 0.95rem; 
+            transition: border 0.3s; background: #fafafa;
+        }
+        .input-txt:focus { border-color: var(--verde-corp); background: white; }
 
+        .input-pts { 
+            width: 55px; border: 2px solid var(--verde-suave); padding: 10px; 
+            border-radius: 12px; text-align: center; font-weight: 800; 
+            color: var(--verde-oscuro); background: var(--verde-suave);
+            font-size: 0.9rem;
+        }
+
+        /* BOTÓN AÑADIR */
+        .btn-add-icon {
+            color: var(--verde-corp); font-size: 1.4rem; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-add-icon:active { transform: scale(1.2); }
+
+        /* BARRA INFERIOR FLOTANTE */
         .barra-puntos {
-            position: fixed; bottom: 0; width: 100%; background: white;
-            display: flex; justify-content: space-around; padding: 15px 0;
-            border-top: 2px solid #eee; box-shadow: 0 -3px 10px rgba(0,0,0,0.05);
+            position: fixed; bottom: 20px; left: 15px; right: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px); /* Efecto cristal */
+            display: flex; justify-content: space-around; padding: 15px;
+            border-radius: 20px; border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        .box-pts { text-align: center; }
-        .label-pts { font-size: 0.6rem; color: #888; display: block; }
-        .val-pts { font-size: 1.1rem; font-weight: bold; color: var(--naranja); border: none; width: 50px; text-align: center; background: transparent; }
+        .box-pts { text-align: center; flex: 1; }
+        .box-pts:first-child { border-right: 1px solid #eee; }
+        
+        .label-pts { font-size: 0.65rem; color: #888; font-weight: 700; text-transform: uppercase; }
+        .val-pts { 
+            font-size: 1.3rem; font-weight: 800; color: var(--naranja); 
+            border: none; width: 100%; text-align: center; background: transparent;
+            outline: none;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">PLANIFICADOR SEMANAL</div>
+    <div class="header">NUTRAFIT PLANNER</div>
 
     <div class="tabs-dias">
         <button class="tab-btn active" onclick="cambiarDia('lunes', this)">LUN</button>
@@ -81,13 +149,38 @@
     <div class="contenedor-principal">
         <div id="lunes" class="contenido-dia active">
             <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle"></i></div>
+                <div class="momento-header">
+                    <span class="momento-titulo">Desayuno</span>
+                    <i class="fas fa-plus-circle btn-add-icon" onclick="abrirVista('nuestra_despensa')"></i>
+                </div>
                 <div class="fila-ingrediente">
-                    <input type="text" class="input-txt" placeholder="Ingrediente..." oninput="actualizarPuntos()">
+                    <input type="text" class="input-txt" placeholder="Ej: Avena con nueces" oninput="actualizarPuntos()">
                     <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
                 </div>
             </div>
+
+            <div class="card-momento">
+                <div class="momento-header">
+                    <span class="momento-titulo">Comida</span>
+                    <i class="fas fa-plus-circle btn-add-icon" onclick="abrirVista('nuestra_despensa')"></i>
+                </div>
+                <div class="fila-ingrediente">
+                    <input type="text" class="input-txt" placeholder="Ej: Pechuga a la plancha" oninput="actualizarPuntos()">
+                    <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                </div>
             </div>
+            
+            <div class="card-momento">
+                <div class="momento-header">
+                    <span class="momento-titulo">Cena</span>
+                    <i class="fas fa-plus-circle btn-add-icon" onclick="abrirVista('nuestra_despensa')"></i>
+                </div>
+                <div class="fila-ingrediente">
+                    <input type="text" class="input-txt" placeholder="Ej: Ensalada variada" oninput="actualizarPuntos()">
+                    <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                </div>
+            </div>
+        </div>
 
         <div id="martes" class="contenido-dia"></div>
         <div id="miercoles" class="contenido-dia"></div>
@@ -99,11 +192,11 @@
 
     <div class="barra-puntos">
         <div class="box-pts">
-            <span class="label-pts">TOTAL DÍA</span>
+            <span class="label-pts">Presupuesto</span>
             <input type="number" id="total-dia" class="val-pts" value="30" oninput="actualizarPuntos()">
         </div>
         <div class="box-pts">
-            <span class="label-pts">RESTANTES</span>
+            <span class="label-pts">Disponible</span>
             <input type="number" id="restantes-val" class="val-pts" value="30" readonly>
         </div>
     </div>
