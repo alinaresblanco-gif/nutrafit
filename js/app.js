@@ -1146,5 +1146,68 @@ document.addEventListener('DOMContentLoaded', () => {
         inputBusqueda.addEventListener('input', filtrarRecetas);
     }
 });
-/** * codigo js diario-comida */
+/** * CODIGO DIARIO-FORMULARIO */
+/**
+ * Navegación entre los días de la semana
+ */
+function cambiarDia(diaId, btn) {
+    // 1. Ocultar todos los contenidos de días
+    const todosLosContenidos = document.querySelectorAll('.contenido-dia');
+    todosLosContenidos.forEach(dia => {
+        dia.classList.remove('active');
+        dia.style.display = 'none';
+    });
 
+    // 2. Desactivar todos los botones de pestañas
+    const todosLosBotones = document.querySelectorAll('.tab-btn');
+    todosLosBotones.forEach(b => {
+        b.classList.remove('active');
+    });
+
+    // 3. Activar el día seleccionado
+    const diaSeleccionado = document.getElementById(diaId);
+    if (diaSeleccionado) {
+        diaSeleccionado.classList.add('active');
+        diaSeleccionado.style.display = 'block';
+        btn.classList.add('active');
+        
+        // Ejecutar cálculo de puntos para el nuevo día visible
+        actualizarPuntos();
+    } else {
+        console.error("No se encontró el contenido para el día:", diaId);
+    }
+}
+
+/**
+ * Cálculo automático de puntos restantes
+ */
+function actualizarPuntos() {
+    // Buscar el día que está visible actualmente
+    const diaActivo = document.querySelector('.contenido-dia.active');
+    if (!diaActivo) return;
+
+    // Sumar todos los inputs de puntos dentro de ese día
+    const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
+    let sumaTotal = 0;
+    
+    inputsPuntos.forEach(input => {
+        sumaTotal += parseFloat(input.value) || 0;
+    });
+
+    // Obtener presupuesto y calcular restante
+    const presupuestoInput = document.getElementById('total-dia');
+    const presupuesto = parseFloat(presupuestoInput.value) || 0;
+    const restante = presupuesto - sumaTotal;
+
+    // Actualizar el display
+    const displayRestante = document.getElementById('restantes-val');
+    displayRestante.value = restante;
+
+    // Cambiar color a rojo si nos pasamos del presupuesto
+    displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
+}
+
+// Inicializar el cálculo al cargar la página
+window.onload = function() {
+    actualizarPuntos();
+};

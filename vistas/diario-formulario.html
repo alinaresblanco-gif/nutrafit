@@ -25,7 +25,6 @@
             padding: 15px; text-align: center; font-weight: bold;
         }
 
-        /* TABS SUPERIORES */
         .tabs-dias {
             display: flex; overflow-x: auto; background: white;
             padding: 10px 5px; gap: 8px; border-bottom: 1px solid #ddd;
@@ -35,14 +34,12 @@
             background: white; color: var(--verde-corp); white-space: nowrap;
             cursor: pointer; font-weight: bold; font-size: 0.8rem;
         }
-        .tab-btn.active { background: var(--verde-corp); color: white; }
+        .tab-btn.active { background: var(--verde-corp) !important; color: white !important; }
 
-        /* CONTENEDORES DE DÍA */
         .contenedor-principal { flex-grow: 1; overflow-y: auto; padding: 15px; padding-bottom: 120px; }
         .contenido-dia { display: none; }
         .contenido-dia.active { display: block; }
 
-        /* TARJETAS DE MOMENTOS */
         .card-momento {
             background: white; border-radius: 15px; padding: 15px;
             margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
@@ -53,12 +50,10 @@
         }
         .momento-titulo { color: var(--verde-corp); font-weight: bold; text-transform: uppercase; font-size: 0.85rem; }
 
-        /* FILAS DE INGREDIENTES */
         .fila-ingrediente { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
         .input-txt { flex-grow: 1; border: 1px solid #eee; padding: 10px; border-radius: 8px; outline: none; font-size: 0.9rem; }
         .input-pts { width: 45px; border: 1px solid #eee; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; color: var(--verde-oscuro); }
 
-        /* BARRA INFERIOR */
         .barra-puntos {
             position: fixed; bottom: 0; width: 100%; background: white;
             display: flex; justify-content: space-around; padding: 15px 0;
@@ -84,81 +79,22 @@
     </div>
 
     <div class="contenedor-principal">
-        
         <div id="lunes" class="contenido-dia active">
             <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle" style="color: var(--verde-corp);"></i></div>
+                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle"></i></div>
                 <div class="fila-ingrediente">
-                    <input type="text" class="input-txt" placeholder="¿Qué vas a desayunar?" oninput="actualizarPuntos()">
+                    <input type="text" class="input-txt" placeholder="Ingrediente..." oninput="actualizarPuntos()">
                     <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
                 </div>
             </div>
-            <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Almuerzo</span><i class="fas fa-plus-circle" style="color: var(--verde-corp);"></i></div>
-                <div class="fila-ingrediente">
-                    <input type="text" class="input-txt" placeholder="Tentempié..." oninput="actualizarPuntos()">
-                    <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
-                </div>
             </div>
-            <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle" style="color: var(--verde-corp);"></i></div>
-                <div class="fila-ingrediente">
-                    <input type="text" class="input-txt" placeholder="Plato principal..." oninput="actualizarPuntos()">
-                    <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
-                </div>
-            </div>
-            <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle" style="color: var(--verde-corp);"></i></div>
-                <div class="fila-ingrediente">
-                    <input type="text" class="input-txt" placeholder="Fruta, yogur..." oninput="actualizarPuntos()">
-                    <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
-                </div>
-            </div>
-            <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle" style="color: var(--verde-corp);"></i></div>
-                <div class="fila-ingrediente">
-                    <input type="text" class="input-txt" placeholder="Cena ligera..." oninput="actualizarPuntos()">
-                    <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
-                </div>
-            </div>
-        </div>
 
-        <div id="martes" class="contenido-dia">
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Desayuno</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Comida</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Cena</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-        </div>
-
-        <div id="miercoles" class="contenido-dia">
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Desayuno (MIE)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Comida (MIE)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Cena (MIE)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-        </div>
-
-        <div id="jueves" class="contenido-dia">
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Desayuno (JUE)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Comida (JUE)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Cena (JUE)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-        </div>
-
-        <div id="viernes" class="contenido-dia">
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Desayuno (VIE)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Comida (VIE)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Cena (VIE)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-        </div>
-
-        <div id="sabado" class="contenido-dia">
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Desayuno (SAB)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Comida (SAB)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Cena (SAB)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-        </div>
-
-        <div id="domingo" class="contenido-dia">
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Desayuno (DOM)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Comida (DOM)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-            <div class="card-momento"><div class="momento-header"><span class="momento-titulo">Cena (DOM)</span></div><div class="fila-ingrediente"><input type="text" class="input-txt" placeholder="Escribir..." oninput="actualizarPuntos()"><input type="number" class="input-pts" value="0" oninput="actualizarPuntos()"></div></div>
-        </div>
-
+        <div id="martes" class="contenido-dia"></div>
+        <div id="miercoles" class="contenido-dia"></div>
+        <div id="jueves" class="contenido-dia"></div>
+        <div id="viernes" class="contenido-dia"></div>
+        <div id="sabado" class="contenido-dia"></div>
+        <div id="domingo" class="contenido-dia"></div>
     </div>
 
     <div class="barra-puntos">
@@ -172,46 +108,6 @@
         </div>
     </div>
 
-    <script>
-        function cambiarDia(diaId, btn) {
-            // Ocultar todos los bloques de contenido
-            document.querySelectorAll('.contenido-dia').forEach(c => {
-                c.classList.remove('active');
-                c.style.display = 'none'; 
-            });
-
-            // Quitar clase active de todos los botones
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            
-            // Localizar el bloque del día seleccionado
-            const diaSeleccionado = document.getElementById(diaId);
-            
-            if (diaSeleccionado) {
-                // Activar bloque seleccionado
-                diaSeleccionado.classList.add('active');
-                diaSeleccionado.style.display = 'block';
-                // Activar botón seleccionado
-                btn.classList.add('active');
-                // Recalcular puntos del nuevo día visible
-                actualizarPuntos();
-            }
-        }
-
-        function actualizarPuntos() {
-            const diaActivo = document.querySelector('.contenido-dia.active');
-            if (!diaActivo) return;
-
-            const inputs = diaActivo.querySelectorAll('.input-pts');
-            let suma = 0;
-            inputs.forEach(i => suma += parseFloat(i.value) || 0);
-            
-            const presupuesto = parseFloat(document.getElementById('total-dia').value) || 0;
-            const restante = presupuesto - suma;
-            
-            const display = document.getElementById('restantes-val');
-            display.value = restante;
-            display.style.color = restante < 0 ? "red" : "var(--naranja)";
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
