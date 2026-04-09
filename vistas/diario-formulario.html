@@ -122,44 +122,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Almuerzo / MM</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
-                <div class="contenedor-ingredientes">
-                    <div class="fila-ingrediente">
-                        <input type="text" class="input-txt" placeholder="Fruta, frutos secos..." oninput="gestionarNuevaFila(this)">
-                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
-                    </div>
-                </div>
             </div>
-            <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
-                <div class="contenedor-ingredientes">
-                    <div class="fila-ingrediente">
-                        <input type="text" class="input-txt" placeholder="Plato principal..." oninput="gestionarNuevaFila(this)">
-                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
-                    </div>
-                </div>
-            </div>
-            <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
-                <div class="contenedor-ingredientes">
-                    <div class="fila-ingrediente">
-                        <input type="text" class="input-txt" placeholder="Snack..." oninput="gestionarNuevaFila(this)">
-                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
-                    </div>
-                </div>
-            </div>
-            <div class="card-momento">
-                <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
-                <div class="contenedor-ingredientes">
-                    <div class="fila-ingrediente">
-                        <input type="text" class="input-txt" placeholder="Cena ligera..." oninput="gestionarNuevaFila(this)">
-                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div id="martes" class="contenido-dia"></div>
         <div id="miercoles" class="contenido-dia"></div>
         <div id="jueves" class="contenido-dia"></div>
@@ -190,35 +153,48 @@
     </div>
 
     <script>
-    function toggleDespensa() {
-    const panel = document.getElementById('panel-despensa');
-    const iframe = document.getElementById('iframe-despensa');
-    
-    if (panel.style.right === "0px") {
-      panel.style.right = "-100%";
-      panel.style.visibility = "hidden";
-    } else {
-      panel.style.visibility = "visible";
-      panel.style.right = "0px";
-      
-      // Forzamos la carga solo si está vacío
-      if (!iframe.src || iframe.src === "" || iframe.src === window.location.href) {
-        // Mostramos un mensaje de carga interno antes de pedir la URL
-        iframe.srcdoc = "<style>body{display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#78a978;}</style><div>Cargando despensa...</div>";
+      // --- NUEVO: Escuchamos cuando el iframe nos pida datos ---
+      window.addEventListener("message", function(event) {
+        if (event.data === "PEDIR_ALIMENTOS") {
+          google.script.run.withSuccessHandler(function(datos) {
+            const iframe = document.getElementById('iframe-despensa');
+            // Enviamos los datos al interior del iframe
+            if (iframe && iframe.contentWindow) {
+              iframe.contentWindow.postMessage({ tipo: "DATOS_ALIMENTOS", lista: datos }, "*");
+            }
+          }).obtenerAlimentos();
+        }
+      });
+
+      // --- FUNCIÓN ACTUALIZADA ---
+      function toggleDespensa() {
+        const panel = document.getElementById('panel-despensa');
+        const iframe = document.getElementById('iframe-despensa');
         
-        google.script.run.withSuccessHandler(function(url) {
-          iframe.src = url + "?v=nuestra_despensa";
+        if (panel.style.right === "0px") {
+          panel.style.right = "-100%";
+          panel.style.visibility = "hidden";
+        } else {
+          panel.style.visibility = "visible";
+          panel.style.right = "0px";
+          
+          // Solo cargamos la URL si el iframe no tiene contenido
+          if (!iframe.src || iframe.src === "" || iframe.src === window.location.href) {
+            google.script.run.withSuccessHandler(function(url) {
+              // Limpiamos posibles barras finales para evitar errores de ruta
+              var urlBase = url.replace(/\/$/, "");
+              iframe.src = urlBase + "?v=nuestra_despensa";
+            }).getAppUrl();
+          }
+        }
+      }
+
+      // Navegación al menú principal
+      function irAlMenu() { 
+        google.script.run.withSuccessHandler(function(url){
+          window.top.location.href = url;
         }).getAppUrl();
       }
-    }
-  }
-
-    // Función para navegación al menú principal
-    function irAlMenu() { 
-        if (typeof google !== 'undefined') {
-            window.top.location.href = '<?= ScriptApp.getService().getUrl() ?>'; 
-        }
-    }
     </script>
 
     <script src="app.js"></script>

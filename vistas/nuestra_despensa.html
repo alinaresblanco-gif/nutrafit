@@ -162,80 +162,56 @@
 </style>
 
 <script>
-    // Variable para controlar los reintentos
-    let intentos = 0;
-
-    function inicializarDespensa() {
-        console.log("Intento de conexión #" + intentos);
-        
-        // Buscamos el objeto google en: 1. Esta ventana, 2. La ventana padre
-        var api = null;
-        if (typeof google !== 'undefined' && google.script) {
-            api = google;
-        } else if (window.parent && typeof window.parent.google !== 'undefined' && window.parent.google.script) {
-            api = window.parent.google;
-        }
-
-        if (api) {
-            console.log("¡Conexión establecida con Google Apps Script!");
-            api.script.run
-                .withSuccessHandler(renderizarDespensa)
-                .withFailureHandler(function(e) {
-                    console.error("Error en servidor:", e);
-                    document.getElementById('lista-alimentos-agrupados').innerHTML = 
-                        "<p style='color:red; text-align:center;'>Error al obtener datos.</p>";
-                })
-                .obtenerAlimentos();
-        } else {
-            intentos++;
-            // Si después de 20 intentos (10 segundos) no conecta, mostramos error
-            if (intentos > 20) {
-                document.getElementById('lista-alimentos-agrupados').innerHTML = 
-                    "<p style='text-align:center;'>La conexión está tardando demasiado. <br><button onclick='location.reload()'>Reintentar</button></p>";
-            } else {
-                setTimeout(inicializarDespensa, 500);
-            }
-        }
+    function inicializar() {
+        // Le pedimos al padre que ejecute la función de Google por nosotros
+        window.parent.postMessage("PEDIR_ALIMENTOS", "*");
     }
 
-    function renderizarDespensa(datos) {
+    // Escuchamos la respuesta del padre con los datos
+    window.addEventListener("message", function(event) {
+        if (event.data.tipo === "DATOS_ALIMENTOS") {
+            renderizar(event.data.lista);
+        }
+    });
+
+    function renderizar(datos) {
         const contenedor = document.getElementById('lista-alimentos-agrupados');
         if (!datos || datos.length === 0) {
-            contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>No hay alimentos disponibles.</p>";
+            contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>No hay alimentos en la base de datos.</p>";
             return;
         }
 
         let grupos = {};
         datos.forEach(fila => {
-            let grupo = fila[1] || "OTROS";
-            if (!grupos[grupo]) grupos[grupo] = [];
-            grupos[grupo].push({ nombre: fila[0], puntos: fila[7] });
+            let g = fila[1] || "OTROS";
+            if (!grupos[g]) grupos[g] = [];
+            grupos[g].push({ n: fila[0], p: fila[7] });
         });
 
-        let htmlFinal = "";
+        let html = "";
         for (let g in grupos) {
-            htmlFinal += `<div class="cabecera-grupo-despensa">${g}</div><table class="tabla-despensa">`;
+            html += `<div class="cabecera-grupo-despensa">${g}</div><table class="tabla-despensa">`;
             grupos[g].forEach(a => {
-                htmlFinal += `
+                html += `
                     <tr class="fila-alimento">
-                        <td>${a.nombre}</td>
+                        <td>${a.n}</td>
                         <td style="text-align:right">
-                            <span class="credito-badge">${a.puntos} pts</span>
+                            <span class="credito-badge">${a.p} pts</span>
                         </td>
                     </tr>`;
             });
-            htmlFinal += `</table>`;
+            html += `</table>`;
         }
-        contenedor.innerHTML = htmlFinal;
+        contenedor.innerHTML = html;
     }
 
     function filtrarDespensa() {
-        let busqueda = document.getElementById('buscador-despensa').value.toLowerCase();
+        let val = document.getElementById('buscador-despensa').value.toLowerCase();
         document.querySelectorAll('.fila-alimento').forEach(f => {
-            f.style.display = f.innerText.toLowerCase().includes(busqueda) ? "" : "none";
+            f.style.display = f.innerText.toLowerCase().includes(val) ? "" : "none";
         });
     }
 
-    // Iniciamos la búsqueda de conexión en cuanto cargue el DOM
-    document.addEventListener('DOMContentLoaded', inicializarDespensa);
+    // Arrancar al cargar
+    window.onload = inicializar;
 </script>
