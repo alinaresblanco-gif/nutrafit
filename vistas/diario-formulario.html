@@ -187,21 +187,38 @@
             <span onclick="toggleDespensa()" style="cursor: pointer; font-size: 28px;">&times;</span>
         </div>
         <iframe id="iframe-despensa" style="flex-grow: 1; border: none; width: 100%; height: 100%;"></iframe>
-
-<script>
-  // Esta función le pide a Google la URL real y la inyecta en el iframe
-  function cargarIframeDespensa() {
-    if (typeof google !== 'undefined') {
-      google.script.run.withSuccessHandler(function(url) {
-        document.getElementById('iframe-despensa').src = url + "?v=nuestra_despensa";
-      }).getAppUrl(); 
-    }
-  }
-
-  // Ejecutamos la carga automáticamente al abrir la página
-  window.addEventListener('load', cargarIframeDespensa);
-</script>
     </div>
+
+    <script>
+    function toggleDespensa() {
+        const panel = document.getElementById('panel-despensa');
+        const iframe = document.getElementById('iframe-despensa');
+        
+        if (panel.style.right === "0px") {
+            panel.style.right = "-100%";
+            panel.style.visibility = "hidden";
+        } else {
+            panel.style.visibility = "visible";
+            panel.style.right = "0px";
+            
+            // Si el iframe está vacío, le pedimos la URL a Google
+            if (!iframe.src || iframe.src === "" || iframe.src === window.location.href) {
+                if (typeof google !== 'undefined') {
+                    google.script.run.withSuccessHandler(function(url) {
+                        iframe.src = url + "?v=nuestra_despensa";
+                    }).getAppUrl();
+                }
+            }
+        }
+    }
+
+    // Función para navegación al menú principal
+    function irAlMenu() { 
+        if (typeof google !== 'undefined') {
+            window.top.location.href = '<?= ScriptApp.getService().getUrl() ?>'; 
+        }
+    }
+    </script>
 
     <script src="app.js"></script>
 </body>

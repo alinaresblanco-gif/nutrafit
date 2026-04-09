@@ -160,6 +160,7 @@
         100% { transform: rotate(360deg); }
     }
 </style>
+
 <script>
     // 1. Ejecutar la carga en cuanto se abre la vista
     window.onload = function() {
@@ -167,24 +168,24 @@
     };
 
     function cargarDatosDespensa() {
-    console.log("Iniciando consulta al almacén...");
-    
-    // Intentamos obtener la API de Google de la ventana actual o de la principal (padre)
-    var api = (typeof google !== 'undefined' && google.script) ? google : 
-              (window.parent && window.parent.google && window.parent.google.script) ? window.parent.google : null;
+        // Buscamos a google en esta ventana o en la superior (donde vive el script real)
+        const api = (typeof google !== 'undefined' && google.script) ? google : 
+                    (window.parent && window.parent.google && window.parent.google.script) ? window.parent.google : null;
 
-    if (api) {
-        api.script.run
-            .withSuccessHandler(renderizarDespensa)
-            .withFailureHandler(function(err) {
-                console.error("Error en servidor:", err);
-            })
-            .obtenerAlimentos();
-    } else {
-        console.warn("API de Google no detectada, reintentando...");
-        setTimeout(cargarDatosDespensa, 500);
+        if (api) {
+            api.script.run
+                .withSuccessHandler(renderizarDespensa)
+                .withFailureHandler(function(e){ 
+                    console.error("Error en el servidor:", e);
+                    document.getElementById('lista-alimentos-agrupados').innerHTML = 
+                        "<p style='color:red; text-align:center; padding:20px;'>Error al conectar con el almacén.</p>";
+                })
+                .obtenerAlimentos();
+        } else {
+            console.warn("API de Google no detectada, reintentando...");
+            setTimeout(cargarDatosDespensa, 500);
+        }
     }
-}
 
     function renderizarDespensa(datos) {
         const contenedor = document.getElementById('lista-alimentos-agrupados');
@@ -193,54 +194,35 @@
             return;
         }
 
-        // Agrupamos los alimentos por su GRUPO (Columna 1 del Excel)
         let grupos = {};
         datos.forEach(fila => {
-            let nombre = fila[0];
+            // Estructura: Columna 0 (Nombre), Columna 1 (Grupo), Columna 7 (Puntos)
             let grupo = fila[1] || "OTROS";
-            let puntos = fila[7]; // Ajusta este número según la columna de puntos (0 es la A, 7 es la H)
-
             if (!grupos[grupo]) grupos[grupo] = [];
-            grupos[grupo].push({ nombre, puntos });
+            grupos[grupo].push({ nombre: fila[0], puntos: fila[7] });
         });
 
         let htmlFinal = "";
-
-        // Generamos el HTML para cada grupo
-        for (let nombreGrupo in grupos) {
-            htmlFinal += `<div class="cabecera-grupo-despensa">${nombreGrupo}</div>`;
-            htmlFinal += `<table class="tabla-despensa">`;
-            
-            grupos[nombreGrupo].forEach(alim => {
+        for (let g in grupos) {
+            htmlFinal += `<div class="cabecera-grupo-despensa">${g}</div><table class="tabla-despensa">`;
+            grupos[g].forEach(a => {
                 htmlFinal += `
                     <tr class="fila-alimento">
-                        <td>${alim.nombre}</td>
+                        <td>${a.nombre}</td>
                         <td style="text-align:right">
-                            <span class="credito-badge">${alim.puntos} pts</span>
+                            <span class="credito-badge">${a.puntos} pts</span>
                         </td>
                     </tr>`;
             });
-            
             htmlFinal += `</table>`;
         }
-
         contenedor.innerHTML = htmlFinal;
     }
 
-    function errorAlCargar(err) {
-        console.error("Error:", err);
-        document.getElementById('lista-alimentos-agrupados').innerHTML = 
-            "<p style='color:red; text-align:center;'>Error al conectar con el servidor.</p>";
-    }
-
-    // Función para el buscador
     function filtrarDespensa() {
-        let input = document.getElementById('buscador-despensa').value.toLowerCase();
-        let filas = document.querySelectorAll('.fila-alimento');
-        
-        filas.forEach(fila => {
-            let texto = fila.innerText.toLowerCase();
-            fila.style.display = texto.includes(input) ? "" : "none";
+        let busqueda = document.getElementById('buscador-despensa').value.toLowerCase();
+        document.querySelectorAll('.fila-alimento').forEach(f => {
+            f.style.display = f.innerText.toLowerCase().includes(busqueda) ? "" : "none";
         });
     }
 </script>
