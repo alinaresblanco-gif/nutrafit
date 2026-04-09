@@ -1,43 +1,24 @@
-<div class="vista-cabecera-fija" style="height: 120px;"> 
-    <div class="cabecera-barra">
-        <button onclick="abrirVista('creditos-alimentos')" class="boton-nav-circular">
-            <i class="fas fa-chevron-left"></i>
-        </button>
-        
-        <span class="titulo-vista">
-            <i class="fas fa-warehouse"></i> NUESTRA DESPENSA
-        </span>
-
-        <button onclick="volverInicio()" class="boton-nav-circular">
-            <i class="fas fa-th-large"></i>
-        </button>
-    </div>
-
-    <div class="contenedor-buscador-corporativo">
-        <div class="caja-busqueda-v2">
-            <i class="fas fa-search"></i>
-            <input type="text" id="buscador-despensa" placeholder="Buscar alimento por nombre..." onkeyup="filtrarDespensa()">
-        </div>
-    </div>
-</div>
-
-<div class="contenido-scroll" style="margin-top: 130px; padding: 10px;">
-    <div id="lista-alimentos-agrupados">
-        <div class="cargando-container">
-            <div class="spinner-verde"></div>
-            <p>Consultando almacén de alimentos...</p>
-        </div>
-    </div>
-</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <style>
-    /* Estilos de la Cabecera */
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f9f9f9; color: #333; overflow-x: hidden; }
+    
+    /* Cabecera Corporativa Fija */
+    .vista-cabecera-fija {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        height: 120px;
+        background: #78a978;
+        z-index: 100;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
     .cabecera-barra {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 10px 15px;
-        background: #78a978;
         color: white;
     }
 
@@ -66,11 +47,13 @@
         font-weight: bold;
         font-size: 16px;
         letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .contenedor-buscador-corporativo {
         padding: 0 15px 10px 15px;
-        background: #78a978;
     }
 
     .caja-busqueda-v2 {
@@ -95,7 +78,12 @@
         color: #333;
     }
 
-    /* Estilo de Grupos y Alimentos */
+    /* Contenido y Listado */
+    .contenido-scroll {
+        margin-top: 130px;
+        padding: 10px;
+    }
+
     .cabecera-grupo-despensa {
         background: #f1f8f1;
         color: #4a6d4a;
@@ -104,7 +92,7 @@
         border-left: 5px solid #78a978;
         margin: 15px 0 5px 0;
         text-transform: uppercase;
-        font-size: 0.9em;
+        font-size: 0.85em;
         border-radius: 0 8px 8px 0;
     }
 
@@ -118,13 +106,10 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
-    .fila-alimento {
-        border-bottom: 1px solid #f5f5f5;
-    }
-
     .fila-alimento td {
         padding: 12px 15px;
         font-size: 15px;
+        border-bottom: 1px solid #f5f5f5;
     }
 
     .credito-badge {
@@ -137,7 +122,7 @@
         display: inline-block;
     }
 
-    /* Animación de carga */
+    /* Spinner de carga */
     .cargando-container {
         text-align: center;
         padding: 50px 20px;
@@ -159,3 +144,109 @@
         100% { transform: rotate(360deg); }
     }
 </style>
+
+<div class="vista-cabecera-fija"> 
+    <div class="cabecera-barra">
+        <button onclick="window.parent.toggleDespensa()" class="boton-nav-circular">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <span class="titulo-vista">
+            <i class="fas fa-warehouse"></i> NUESTRA DESPENSA
+        </span>
+
+        <button onclick="window.parent.toggleDespensa()" class="boton-nav-circular">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="contenedor-buscador-corporativo">
+        <div class="caja-busqueda-v2">
+            <i class="fas fa-search"></i>
+            <input type="text" id="buscador-despensa" placeholder="Buscar alimento..." onkeyup="filtrarDespensa()">
+        </div>
+    </div>
+</div>
+
+<div class="contenido-scroll">
+    <div id="lista-alimentos-agrupados">
+        <div class="cargando-container" id="loading">
+            <div class="spinner-verde"></div>
+            <p>Consultando almacén de alimentos...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Conexión robusta usando el objeto del padre
+    window.onload = function() {
+        const api = (window.parent && window.parent.google) ? window.parent.google : (typeof google !== 'undefined' ? google : null);
+        
+        if (api) {
+            api.script.run
+                .withSuccessHandler(dibujarDespensa)
+                .withFailureHandler(mostrarError)
+                .obtenerAlimentos();
+        } else {
+            document.getElementById('lista-alimentos-agrupados').innerHTML = 
+                "<p style='text-align:center; padding:20px;'>Error de conexión. Por favor, recarga la página principal.</p>";
+        }
+    };
+
+    function dibujarDespensa(datos) {
+        const contenedor = document.getElementById('lista-alimentos-agrupados');
+        if (!datos || datos.length === 0) {
+            contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>No hay alimentos registrados en el sistema.</p>";
+            return;
+        }
+
+        let htmlFinal = "";
+        let grupos = {};
+
+        // Organizar datos por categoría (Columna B / Índice 1)
+        datos.forEach(fila => {
+            let categoria = fila[1] || "OTROS";
+            if (!grupos[categoria]) grupos[categoria] = [];
+            grupos[categoria].push({ nombre: fila[0], puntos: fila[7] });
+        });
+
+        // Generar el HTML agrupado
+        for (let cat in grupos) {
+            htmlFinal += `<div class="cabecera-grupo-despensa">${cat}</div><table class="tabla-despensa">`;
+            grupos[cat].forEach(alim => {
+                htmlFinal += `
+                    <tr class="fila-alimento">
+                        <td>${alim.nombre}</td>
+                        <td style="text-align:right">
+                            <span class="credito-badge">${alim.puntos} pts</span>
+                        </td>
+                    </tr>`;
+            });
+            htmlFinal += `</table>`;
+        }
+        
+        contenedor.innerHTML = htmlFinal;
+    }
+
+    function filtrarDespensa() {
+        let busqueda = document.getElementById('buscador-despensa').value.toLowerCase();
+        document.querySelectorAll('.fila-alimento').forEach(fila => {
+            let texto = fila.innerText.toLowerCase();
+            fila.style.display = texto.includes(busqueda) ? "" : "none";
+        });
+        
+        // Ocultar cabeceras de grupo si no tienen hijos visibles
+        document.querySelectorAll('.cabecera-grupo-despensa').forEach(cab => {
+            let tabla = cab.nextElementSibling;
+            let tieneVisibles = Array.from(tabla.querySelectorAll('.fila-alimento'))
+                                    .some(f => f.style.display !== "none");
+            cab.style.display = tieneVisibles ? "" : "none";
+            tabla.style.display = tieneVisibles ? "" : "none";
+        });
+    }
+
+    function mostrarError(e) {
+        document.getElementById('lista-alimentos-agrupados').innerHTML = 
+            "<p style='text-align:center; color:red; padding:20px;'>Error al cargar datos: " + e + "</p>";
+    }
+</script>
