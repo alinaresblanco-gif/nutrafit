@@ -186,7 +186,21 @@
             <h3 style="margin: 0; font-size: 1.1rem;">Consulta de Créditos</h3>
             <span onclick="toggleDespensa()" style="cursor: pointer; font-size: 28px;">&times;</span>
         </div>
-        <iframe src="<?= ScriptApp.getService().getUrl() ?>?v=nuestra_despensa" style="flex-grow: 1; border: none; width: 100%;"></iframe>
+        <iframe id="iframe-despensa" style="flex-grow: 1; border: none; width: 100%; height: 100%;"></iframe>
+
+<script>
+  // Esta función le pide a Google la URL real y la inyecta en el iframe
+  function cargarIframeDespensa() {
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(function(url) {
+        document.getElementById('iframe-despensa').src = url + "?v=nuestra_despensa";
+      }).getAppUrl(); 
+    }
+  }
+
+  // Ejecutamos la carga automáticamente al abrir la página
+  window.addEventListener('load', cargarIframeDespensa);
+</script>
     </div>
 
     <script src="app.js"></script>

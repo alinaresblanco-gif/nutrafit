@@ -169,21 +169,20 @@
     function cargarDatosDespensa() {
     console.log("Iniciando consulta al almacén...");
     
-    // Detectamos si 'google' está disponible en esta ventana o en la superior
-    var api = (typeof google !== 'undefined') ? google : (window.parent && window.parent.google);
+    // Intentamos obtener la API de Google de la ventana actual o de la principal (padre)
+    var api = (typeof google !== 'undefined' && google.script) ? google : 
+              (window.parent && window.parent.google && window.parent.google.script) ? window.parent.google : null;
 
-    if (api && api.script) {
+    if (api) {
         api.script.run
             .withSuccessHandler(renderizarDespensa)
-            .withFailureHandler(errorAlCargar)
+            .withFailureHandler(function(err) {
+                console.error("Error en servidor:", err);
+            })
             .obtenerAlimentos();
     } else {
-        console.error("No se pudo encontrar la API de Google Apps Script");
-        document.getElementById('lista-alimentos-agrupados').innerHTML = 
-            "<p style='text-align:center; color:orange;'>Esperando conexión con el servidor...</p>";
-        
-        // Reintentar en 1 segundo si falla
-        setTimeout(cargarDatosDespensa, 1000);
+        console.warn("API de Google no detectada, reintentando...");
+        setTimeout(cargarDatosDespensa, 500);
     }
 }
 
