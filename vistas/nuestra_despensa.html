@@ -1,4 +1,3 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <div class="vista-cabecera-fija" style="height: 120px;"> 
     <div class="cabecera-barra">
         <button onclick="abrirVista('creditos-alimentos')" class="boton-nav-circular">
@@ -160,58 +159,3 @@
         100% { transform: rotate(360deg); }
     }
 </style>
-
-<script>
-    function inicializar() {
-        // Le pedimos al padre que ejecute la función de Google por nosotros
-        window.parent.postMessage("PEDIR_ALIMENTOS", "*");
-    }
-
-    // Escuchamos la respuesta del padre con los datos
-    window.addEventListener("message", function(event) {
-        if (event.data.tipo === "DATOS_ALIMENTOS") {
-            renderizar(event.data.lista);
-        }
-    });
-
-    function renderizar(datos) {
-        const contenedor = document.getElementById('lista-alimentos-agrupados');
-        if (!datos || datos.length === 0) {
-            contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>No hay alimentos en la base de datos.</p>";
-            return;
-        }
-
-        let grupos = {};
-        datos.forEach(fila => {
-            let g = fila[1] || "OTROS";
-            if (!grupos[g]) grupos[g] = [];
-            grupos[g].push({ n: fila[0], p: fila[7] });
-        });
-
-        let html = "";
-        for (let g in grupos) {
-            html += `<div class="cabecera-grupo-despensa">${g}</div><table class="tabla-despensa">`;
-            grupos[g].forEach(a => {
-                html += `
-                    <tr class="fila-alimento">
-                        <td>${a.n}</td>
-                        <td style="text-align:right">
-                            <span class="credito-badge">${a.p} pts</span>
-                        </td>
-                    </tr>`;
-            });
-            html += `</table>`;
-        }
-        contenedor.innerHTML = html;
-    }
-
-    function filtrarDespensa() {
-        let val = document.getElementById('buscador-despensa').value.toLowerCase();
-        document.querySelectorAll('.fila-alimento').forEach(f => {
-            f.style.display = f.innerText.toLowerCase().includes(val) ? "" : "none";
-        });
-    }
-
-    // Arrancar al cargar
-    window.onload = inicializar;
-</script>
