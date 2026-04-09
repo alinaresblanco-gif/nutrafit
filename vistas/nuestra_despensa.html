@@ -162,41 +162,51 @@
 </style>
 
 <script>
-    // 1. Ejecutar la carga en cuanto se abre la vista
-    window.onload = function() {
-        cargarDatosDespensa();
-    };
+    // Variable para controlar los reintentos
+    let intentos = 0;
 
-    function cargarDatosDespensa() {
-        // Buscamos a google en esta ventana o en la superior (donde vive el script real)
-        const api = (typeof google !== 'undefined' && google.script) ? google : 
-                    (window.parent && window.parent.google && window.parent.google.script) ? window.parent.google : null;
+    function inicializarDespensa() {
+        console.log("Intento de conexión #" + intentos);
+        
+        // Buscamos el objeto google en: 1. Esta ventana, 2. La ventana padre
+        var api = null;
+        if (typeof google !== 'undefined' && google.script) {
+            api = google;
+        } else if (window.parent && typeof window.parent.google !== 'undefined' && window.parent.google.script) {
+            api = window.parent.google;
+        }
 
         if (api) {
+            console.log("¡Conexión establecida con Google Apps Script!");
             api.script.run
                 .withSuccessHandler(renderizarDespensa)
-                .withFailureHandler(function(e){ 
-                    console.error("Error en el servidor:", e);
+                .withFailureHandler(function(e) {
+                    console.error("Error en servidor:", e);
                     document.getElementById('lista-alimentos-agrupados').innerHTML = 
-                        "<p style='color:red; text-align:center; padding:20px;'>Error al conectar con el almacén.</p>";
+                        "<p style='color:red; text-align:center;'>Error al obtener datos.</p>";
                 })
                 .obtenerAlimentos();
         } else {
-            console.warn("API de Google no detectada, reintentando...");
-            setTimeout(cargarDatosDespensa, 500);
+            intentos++;
+            // Si después de 20 intentos (10 segundos) no conecta, mostramos error
+            if (intentos > 20) {
+                document.getElementById('lista-alimentos-agrupados').innerHTML = 
+                    "<p style='text-align:center;'>La conexión está tardando demasiado. <br><button onclick='location.reload()'>Reintentar</button></p>";
+            } else {
+                setTimeout(inicializarDespensa, 500);
+            }
         }
     }
 
     function renderizarDespensa(datos) {
         const contenedor = document.getElementById('lista-alimentos-agrupados');
         if (!datos || datos.length === 0) {
-            contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>No hay alimentos en la base de datos.</p>";
+            contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>No hay alimentos disponibles.</p>";
             return;
         }
 
         let grupos = {};
         datos.forEach(fila => {
-            // Estructura: Columna 0 (Nombre), Columna 1 (Grupo), Columna 7 (Puntos)
             let grupo = fila[1] || "OTROS";
             if (!grupos[grupo]) grupos[grupo] = [];
             grupos[grupo].push({ nombre: fila[0], puntos: fila[7] });
@@ -225,4 +235,7 @@
             f.style.display = f.innerText.toLowerCase().includes(busqueda) ? "" : "none";
         });
     }
+
+    // Iniciamos la búsqueda de conexión en cuanto cargue el DOM
+    document.addEventListener('DOMContentLoaded', inicializarDespensa);
 </script>

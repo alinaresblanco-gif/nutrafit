@@ -191,26 +191,27 @@
 
     <script>
     function toggleDespensa() {
-        const panel = document.getElementById('panel-despensa');
-        const iframe = document.getElementById('iframe-despensa');
+    const panel = document.getElementById('panel-despensa');
+    const iframe = document.getElementById('iframe-despensa');
+    
+    if (panel.style.right === "0px") {
+      panel.style.right = "-100%";
+      panel.style.visibility = "hidden";
+    } else {
+      panel.style.visibility = "visible";
+      panel.style.right = "0px";
+      
+      // Forzamos la carga solo si está vacío
+      if (!iframe.src || iframe.src === "" || iframe.src === window.location.href) {
+        // Mostramos un mensaje de carga interno antes de pedir la URL
+        iframe.srcdoc = "<style>body{display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#78a978;}</style><div>Cargando despensa...</div>";
         
-        if (panel.style.right === "0px") {
-            panel.style.right = "-100%";
-            panel.style.visibility = "hidden";
-        } else {
-            panel.style.visibility = "visible";
-            panel.style.right = "0px";
-            
-            // Si el iframe está vacío, le pedimos la URL a Google
-            if (!iframe.src || iframe.src === "" || iframe.src === window.location.href) {
-                if (typeof google !== 'undefined') {
-                    google.script.run.withSuccessHandler(function(url) {
-                        iframe.src = url + "?v=nuestra_despensa";
-                    }).getAppUrl();
-                }
-            }
-        }
+        google.script.run.withSuccessHandler(function(url) {
+          iframe.src = url + "?v=nuestra_despensa";
+        }).getAppUrl();
+      }
     }
+  }
 
     // Función para navegación al menú principal
     function irAlMenu() { 
