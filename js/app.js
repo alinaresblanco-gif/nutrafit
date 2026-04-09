@@ -1260,22 +1260,29 @@ function irAlMenu() {
 }
 
 /**
- * FUNCIÓN DE LA LUPA CORREGIDA
- * Controla la apertura y cierre del panel lateral
+ * FUNCIÓN DE LA LUPA DEFINITIVA
+ * Controla la apertura y cierre con diagnóstico en consola
  */
 function toggleDespensa() {
     const panel = document.getElementById('panel-despensa');
     const btn = document.getElementById('btn-despensa');
     
-    if (!panel) return;
+    if (!panel) {
+        console.error("ERROR: No se encuentra el elemento 'panel-despensa' en el HTML.");
+        return;
+    }
 
-    // Si el panel no tiene un estilo definido aún o está en -100% (cerrado)
-    if (panel.style.right === "" || panel.style.right === "-100%") {
+    // Leemos el estilo actual. Si no tiene valor o es -100%, abrimos.
+    const estiloActual = panel.style.right;
+    console.log("Estado actual del panel (right):", estiloActual);
+
+    if (estiloActual === "" || estiloActual === "-100%") {
         panel.style.right = "0px";
         if (btn) btn.style.transform = "rotate(90deg)";
+        console.log("Acción: Abriendo panel...");
     } else {
-        // Si está abierto, lo escondemos volviéndolo a sacar de la pantalla
         panel.style.right = "-100%";
         if (btn) btn.style.transform = "rotate(0deg)";
+        console.log("Acción: Cerrando panel...");
     }
 }
