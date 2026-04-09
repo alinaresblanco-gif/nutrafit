@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <div class="vista-cabecera-fija" style="height: 120px;"> 
     <div class="cabecera-barra">
         <button onclick="abrirVista('creditos-alimentos')" class="boton-nav-circular">
@@ -166,13 +167,25 @@
     };
 
     function cargarDatosDespensa() {
-        console.log("Iniciando consulta al almacén...");
-        // Llamamos a la función que pusimos en Código.gs
-        google.script.run
+    console.log("Iniciando consulta al almacén...");
+    
+    // Detectamos si 'google' está disponible en esta ventana o en la superior
+    var api = (typeof google !== 'undefined') ? google : (window.parent && window.parent.google);
+
+    if (api && api.script) {
+        api.script.run
             .withSuccessHandler(renderizarDespensa)
             .withFailureHandler(errorAlCargar)
             .obtenerAlimentos();
+    } else {
+        console.error("No se pudo encontrar la API de Google Apps Script");
+        document.getElementById('lista-alimentos-agrupados').innerHTML = 
+            "<p style='text-align:center; color:orange;'>Esperando conexión con el servidor...</p>";
+        
+        // Reintentar en 1 segundo si falla
+        setTimeout(cargarDatosDespensa, 1000);
     }
+}
 
     function renderizarDespensa(datos) {
         const contenedor = document.getElementById('lista-alimentos-agrupados');
