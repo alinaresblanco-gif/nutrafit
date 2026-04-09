@@ -1148,50 +1148,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 /** * CODIGO DIARIO-FORMULARIO */
 /* ============================================================
-    LOGICA COMPLETA - NUTRAFIT PLANNER (VERSIÓN FINAL)
+    LOGICA COMPLETA - NUTRAFIT PLANNER (REVISIÓN FINAL)
    ============================================================ */
 
-let baseDeDatosAlimentos = [];
-
-/**
- * Inicialización al cargar la página
- */
 window.onload = function() {
     actualizarPuntos();
 };
 
-/**
- * Navegación entre los días de la semana
- * Cambia la visibilidad de los contenedores según el día seleccionado
- */
 function cambiarDia(diaId, btn) {
-    // 1. Ocultar todos los contenidos de días
     const todosLosContenidos = document.querySelectorAll('.contenido-dia');
     todosLosContenidos.forEach(dia => {
         dia.classList.remove('active');
         dia.style.display = 'none';
     });
 
-    // 2. Desactivar todos los botones de pestañas
     const todosLosBotones = document.querySelectorAll('.tab-btn');
     todosLosBotones.forEach(b => b.classList.remove('active'));
 
-    // 3. Activar el día seleccionado
     const diaSeleccionado = document.getElementById(diaId);
     if (diaSeleccionado) {
         diaSeleccionado.classList.add('active');
         diaSeleccionado.style.display = 'block';
         btn.classList.add('active');
-        
-        // Ejecutar cálculo de puntos para el nuevo día visible
         actualizarPuntos();
     }
 }
 
-/**
- * Gestión automática de filas de ingredientes
- * Crea una nueva fila cuando el usuario escribe en la última disponible
- */
 function gestionarNuevaFila(inputActual) {
     const contenedor = inputActual.closest('.contenedor-ingredientes');
     const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
@@ -1201,63 +1183,62 @@ function gestionarNuevaFila(inputActual) {
     if (inputActual === inputUltimaFila && inputActual.value.trim() !== "") {
         crearFilaNueva(contenedor);
     }
-    
-    // Recalcular puntos con el nuevo valor ingresado
     actualizarPuntos();
 }
 
-/**
- * Crea físicamente la nueva fila en el DOM
- */
 function crearFilaNueva(contenedor) {
     const nuevaFila = document.createElement('div');
     nuevaFila.className = 'fila-ingrediente';
     nuevaFila.innerHTML = `
-        <input type="text" list="lista-alimentos" class="input-txt" placeholder="Otro ingrediente..." oninput="gestionarNuevaFila(this)">
+        <input type="text" class="input-txt" placeholder="Otro ingrediente..." oninput="gestionarNuevaFila(this)">
         <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
     `;
     contenedor.appendChild(nuevaFila);
 }
 
-/**
- * Cálculo automático de puntos restantes
- */
 function actualizarPuntos() {
-    // Buscar el día que está visible actualmente
     const diaActivo = document.querySelector('.contenido-dia.active');
     if (!diaActivo) return;
 
-    // Sumar todos los inputs de puntos dentro de ese día activo
     const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
     let sumaTotal = 0;
-    
     inputsPuntos.forEach(input => {
         sumaTotal += parseFloat(input.value) || 0;
     });
 
-    // Obtener presupuesto y calcular restante
-    const presupuestoInput = document.getElementById('total-dia');
-    const presupuesto = parseFloat(presupuestoInput.value) || 0;
+    const presupuesto = parseFloat(document.getElementById('total-dia').value) || 0;
     const restante = presupuesto - sumaTotal;
 
-    // Actualizar el display de puntos restantes
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
         displayRestante.value = restante;
-        
-        // Feedback visual: Rojo si es negativo, naranja si es positivo
         displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
     }
 }
 
-/**
- * Función para regresar al menú principal
- */
 function irAlMenu() {
     window.location.href = 'index.html';
 }
 
-/* NOTA: La función toggleDespensa ha sido movida directamente 
-   al archivo HTML para garantizar su ejecución inmediata y 
-   evitar conflictos de carga.
-*/
+/**
+ * ESTA ES LA FUNCIÓN QUE TE DABA ERROR
+ * La he vuelto a incluir aquí para que el botón la encuentre.
+ */
+function toggleDespensa() {
+    const panel = document.getElementById('panel-despensa');
+    const btn = document.getElementById('btn-despensa');
+    
+    if (!panel) return;
+
+    if (panel.style.right === "-100%" || panel.style.right === "" || panel.style.visibility === "hidden") {
+        panel.style.visibility = "visible";
+        panel.style.right = "0px";
+        if (btn) btn.style.transform = "rotate(90deg) scale(0.8)";
+    } else {
+        panel.style.right = "-100%";
+        setTimeout(() => {
+            if (panel.style.right === "-100%") panel.style.visibility = "hidden";
+        }, 400);
+        if (btn) btn.style.transform = "rotate(0deg) scale(1)";
+    }
+}
