@@ -1211,3 +1211,10 @@ function actualizarPuntos() {
 window.onload = function() {
     actualizarPuntos();
 };
+/**
+ * Función para regresar al menú principal
+ */
+function irAlMenu() {
+    // Redirige al archivo index.html que está en la raíz
+    window.location.href = 'index.html';
+}
