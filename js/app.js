@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxEqCEzpvWh63X58DOYLKL9-eDUvn5H0nTYgUikOp5fErXv461P0SA34eu6Yg88BBFT/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzSAjFva9cEZeIY5gLc-EbIcQUwm7GmOMyiUbe6IK1cNjJ_OkxrhbOVIn_YqxFkil2n/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1147,6 +1147,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 /** * CODIGO DIARIO-FORMULARIO */
+/* ============================================================
+    LOGICA APP.JS - PLANIFICADOR CON CONEXIÓN A EXCEL
+   ============================================================ */
+
+// Variable global para guardar los puntos de cada alimento (se carga desde Google Sheets)
+let baseDeDatosAlimentos = [];
+
+// Inicialización al cargar la página
+window.onload = function() {
+    actualizarPuntos();
+    cargarAlimentosDesdeExcel();
+};
+
+/**
+ * Carga los alimentos desde la hoja "alimentos" del Excel
+ */
+function cargarAlimentosDesdeExcel() {
+    google.script.run.withSuccessHandler(function(alimentos) {
+        baseDeDatosAlimentos = alimentos;
+        const dl = document.getElementById('lista-alimentos');
+        
+        // Limpiamos y llenamos el datalist para el buscador
+        if (dl) {
+            dl.innerHTML = "";
+            alimentos.forEach(item => {
+                let option = document.createElement('option');
+                option.value = item.nombre;
+                dl.appendChild(option);
+            });
+            console.log("Alimentos cargados desde Excel: " + alimentos.length);
+        }
+    }).obtenerAlimentos();
+}
+
 /**
  * Navegación entre los días de la semana
  */
@@ -1173,17 +1207,25 @@ function cambiarDia(diaId, btn) {
         
         // Ejecutar cálculo de puntos para el nuevo día visible
         actualizarPuntos();
-    } else {
-        console.error("No se encontró el contenido para el día:", diaId);
     }
 }
 
 /**
- * Gestión automática de filas de ingredientes
- * Se activa cada vez que el usuario escribe en un campo de texto
+ * Gestión de filas e ingredientes con autocompletado de puntos
  */
 function gestionarNuevaFila(inputActual) {
     const contenedor = inputActual.closest('.contenedor-ingredientes');
+    const fila = inputActual.closest('.fila-ingrediente');
+    const inputPts = fila.querySelector('.input-pts');
+
+    // 1. BUSCAR PUNTOS AUTOMÁTICAMENTE
+    // Buscamos si el texto escrito coincide exactamente con algún nombre del Excel
+    const alimentoEncontrado = baseDeDatosAlimentos.find(a => a.nombre === inputActual.value);
+    if (alimentoEncontrado) {
+        inputPts.value = alimentoEncontrado.puntos;
+    }
+
+    // 2. LÓGICA DE CREAR FILA NUEVA
     const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
     const ultimaFila = todasLasFilas[todasLasFilas.length - 1];
     const inputUltimaFila = ultimaFila.querySelector('.input-txt');
@@ -1193,7 +1235,7 @@ function gestionarNuevaFila(inputActual) {
         crearFilaNueva(contenedor);
     }
     
-    // Recalcular puntos con el nuevo valor
+    // Recalcular puntos totales del día
     actualizarPuntos();
 }
 
@@ -1214,11 +1256,10 @@ function crearFilaNueva(contenedor) {
  * Cálculo automático de puntos restantes
  */
 function actualizarPuntos() {
-    // Buscar el día que está visible actualmente
     const diaActivo = document.querySelector('.contenido-dia.active');
     if (!diaActivo) return;
 
-    // Sumar todos los inputs de puntos dentro de ese día activo
+    // Sumar todos los inputs de puntos dentro del día visible
     const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
     let sumaTotal = 0;
     
@@ -1235,7 +1276,7 @@ function actualizarPuntos() {
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
         displayRestante.value = restante;
-        // Feedback visual: Rojo si es negativo, naranja/verde según tu diseño
+        // Feedback visual: Rojo si es negativo, naranja/verde según diseño
         displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
     }
 }
@@ -1246,8 +1287,3 @@ function actualizarPuntos() {
 function irAlMenu() {
     window.location.href = 'index.html';
 }
-
-// Inicializar el cálculo al cargar la página para que los contadores no empiecen vacíos
-window.onload = function() {
-    actualizarPuntos();
-};
