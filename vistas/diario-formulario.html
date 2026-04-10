@@ -36,10 +36,10 @@
             cursor: pointer; font-size: 0.9rem;
         }
 
-        /* SECCIÓN NUESTRA DESPENSA (Nuevo Bloque) */
+        /* SECCIÓN NUESTRA DESPENSA */
         .seccion-despensa {
             background: white;
-            height: 33vh; /* Aproximadamente 1/3 de la pantalla */
+            height: 30vh; 
             display: flex;
             flex-direction: column;
             border-bottom: 2px solid var(--verde-suave);
@@ -72,7 +72,6 @@
             font-size: 0.9rem;
             color: var(--verde-oscuro);
         }
-        /* Scroll de la despensa */
         .lista-despensa-scroll {
             flex-grow: 1;
             overflow-y: auto;
@@ -83,14 +82,14 @@
             justify-content: space-between;
             padding: 10px 0;
             border-bottom: 1px solid #f0f0f0;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .pts-tag {
             background: var(--verde-corp);
             color: white;
             padding: 2px 8px;
             border-radius: 10px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: bold;
         }
 
@@ -107,7 +106,7 @@
         }
         .tab-btn.active { background: var(--verde-corp) !important; color: white !important; }
 
-        /* Contenedor Inferior */
+        /* Contenedor Principal con Scroll */
         .contenedor-principal { flex-grow: 1; overflow-y: auto; padding: 20px 15px; padding-bottom: 140px; }
         .contenido-dia { display: none; }
         .contenido-dia.active { display: block; }
@@ -144,7 +143,7 @@
 <body>
 
     <div class="header">
-        <button class="btn-volver" onclick="irAlMenu()"><i class="fas fa-chevron-left"></i> Volver</button>
+        <button class="btn-volver" onclick="window.location.href='index.html'"><i class="fas fa-chevron-left"></i> Volver</button>
         <span>NUTRAFIT PLANNER</span>
         <div style="width: 60px;"></div> 
     </div>
@@ -158,13 +157,8 @@
             </div>
         </div>
         <div class="lista-despensa-scroll" id="lista-despensa">
-            <div class="item-despensa"><span>Manzana</span> <span class="pts-tag">0 pts</span></div>
-            <div class="item-despensa"><span>Aceite de Oliva</span> <span class="pts-tag">3 pts</span></div>
-            <div class="item-despensa"><span>Pechuga de Pollo</span> <span class="pts-tag">2 pts</span></div>
-            <div class="item-despensa"><span>Arroz Integral</span> <span class="pts-tag">4 pts</span></div>
-            <div class="item-despensa"><span>Huevo</span> <span class="pts-tag">2 pts</span></div>
-            <div class="item-despensa"><span>Pan Integral</span> <span class="pts-tag">3 pts</span></div>
-            <div class="item-despensa"><span>Yogur Natural</span> <span class="pts-tag">1 pts</span></div>
+            <div class="item-despensa"><span>Ejemplo: Manzana</span> <span class="pts-tag">0 pts</span></div>
+            <div class="item-despensa"><span>Ejemplo: Aceite Oliva (cda)</span> <span class="pts-tag">3 pts</span></div>
         </div>
     </div>
 
@@ -184,12 +178,49 @@
                 <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
                 <div class="contenedor-ingredientes">
                     <div class="fila-ingrediente">
-                        <input type="text" class="input-txt" placeholder="Escribe ingrediente..." oninput="gestionarNuevaFila(this)">
+                        <input type="text" class="input-txt" placeholder="Ingrediente..." oninput="gestionarNuevaFila(this)">
                         <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
                     </div>
                 </div>
             </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Almuerzo / MM</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Snack o fruta..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
             </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Plato principal..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Tarde..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Cena..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="martes" class="contenido-dia"></div>
         <div id="miercoles" class="contenido-dia"></div>
         <div id="jueves" class="contenido-dia"></div>
@@ -210,19 +241,5 @@
     </div>
 
     <script src="app.js"></script>
-    <script>
-        // Función rápida para probar el diseño de búsqueda
-        function filtrarDespensaLocal() {
-            let input = document.getElementById('busqueda-despensa').value.toLowerCase();
-            let items = document.getElementsByClassName('item-despensa');
-            for (let i = 0; i < items.length; i++) {
-                if (!items[i].innerHTML.toLowerCase().includes(input)) {
-                    items[i].style.display="none";
-                } else {
-                    items[i].style.display="flex";
-                }
-            }
-        }
-    </script>
 </body>
 </html>
