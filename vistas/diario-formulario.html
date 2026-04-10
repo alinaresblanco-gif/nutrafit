@@ -143,7 +143,7 @@
 <body>
 
     <div class="header">
-        <button class="btn-volver" onclick="window.location.href='index.html'"><i class="fas fa-chevron-left"></i> Volver</button>
+        <button class="btn-volver" onclick="irAlMenu()"><i class="fas fa-chevron-left"></i> Volver</button>
         <span>NUTRAFIT PLANNER</span>
         <div style="width: 60px;"></div> 
     </div>
@@ -157,16 +157,9 @@
             </div>
         </div>
         <div class="lista-despensa-scroll" id="lista-despensa">
-            <? if (typeof listaAlimentos !== 'undefined' && listaAlimentos.length > 0) { ?>
-              <? for (var i = 0; i < listaAlimentos.length; i++) { ?>
-                <div class="item-despensa">
-                    <span><?= listaAlimentos[i].nombre ?></span> 
-                    <span class="pts-tag"><?= listaAlimentos[i].netos ?> pts</span>
-                </div>
-              <? } ?>
-            <? } else { ?>
-                <div style="padding:15px; color:gray; font-size:0.8rem;">No se han encontrado alimentos en la hoja 'alimentos'.</div>
-            <? } ?>
+            <div id="cargando-alimentos" style="padding:15px; color:gray; font-size:0.8rem;">
+                <i class="fas fa-spinner fa-spin"></i> Cargando despensa...
+            </div>
         </div>
     </div>
 

@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbykPhZbcJpV7E9gPlIHRKUbj61quzYBIh-mUrxalFLBNljOJhTpiM_Hp4PfWiE9LnPH/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycby3HlOXF2x8PUeNn4WDNtpEcyezyvISdOUTsy5oMn4ZYxSo6AjfElpBsT4jrM0nmWcD/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1148,36 +1148,56 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 /** * CODIGO DIARIO-FORMULARIO */
 /* ============================================================
-    LOGICA - NUTRAFIT PLANNER (CON DESPENSA INTELIGENTE)
+    LOGICA - NUTRAFIT PLANNER (CON CARGA ASÍNCRONA)
    ============================================================ */
 
 window.onload = function() {
     actualizarPuntos();
+    cargarAlimentosDesdeExcel(); // Iniciamos la carga al abrir
 };
 
 /**
- * FILTRADO INTELIGENTE DE LA DESPENSA
- * Filtra los elementos del contenedor "NUESTRA DESPENSA" según el buscador
+ * 1. MOTOR DE CARGA: Conecta con Código.gs para traer alimentos
  */
-function filtrarDespensaLocal() {
-    const input = document.getElementById('busqueda-despensa').value.toLowerCase();
-    const items = document.getElementsByClassName('item-despensa');
-
-    for (let i = 0; i < items.length; i++) {
-        // Obtenemos el texto del primer span (el nombre del alimento)
-        const nombreAlimento = items[i].querySelector('span').innerText.toLowerCase();
-        
-        // Si el nombre contiene lo que buscamos, lo mostramos, si no, lo ocultamos
-        if (nombreAlimento.includes(input)) {
-            items[i].style.display = "flex";
-        } else {
-            items[i].style.display = "none";
-        }
-    }
+function cargarAlimentosDesdeExcel() {
+    // Llamamos a la función que creamos en el Código.gs
+    google.script.run
+        .withSuccessHandler(mostrarAlimentos)
+        .withFailureHandler(errorAlCargar)
+        .obtenerListaAlimentos();
 }
 
 /**
- * Cambia la pestaña del día (Lunes, Martes, etc.)
+ * 2. RENDERIZADO: Dibuja los alimentos en el scroll de la despensa
+ */
+function mostrarAlimentos(alimentos) {
+    const contenedor = document.getElementById('lista-despensa');
+    
+    if (!alimentos || alimentos.length === 0) {
+        contenedor.innerHTML = '<div style="padding:15px; color:gray;">No se encontraron alimentos.</div>';
+        return;
+    }
+
+    let html = '';
+    alimentos.forEach(item => {
+        html += `
+            <div class="item-despensa">
+                <span>${item.nombre}</span> 
+                <span class="pts-tag">${item.netos} pts</span>
+            </div>`;
+    });
+    
+    // Sustituimos el "Cargando..." por los alimentos reales
+    contenedor.innerHTML = html;
+}
+
+function errorAlCargar(err) {
+    document.getElementById('lista-despensa').innerHTML = 
+        '<div style="padding:15px; color:red;">Error al conectar con la base de datos.</div>';
+}
+
+/**
+ * 3. CONTROL DE PESTAÑAS: Cambia entre Lunes, Martes, etc.
  */
 function cambiarDia(diaId, btn) {
     const todosLosContenidos = document.querySelectorAll('.contenido-dia');
@@ -1199,7 +1219,7 @@ function cambiarDia(diaId, btn) {
 }
 
 /**
- * Detecta si el usuario escribió en la última fila para añadir otra automáticamente
+ * 4. GESTIÓN DE FILAS: Añade filas automáticas al escribir
  */
 function gestionarNuevaFila(inputActual) {
     const contenedor = inputActual.closest('.contenedor-ingredientes');
@@ -1213,9 +1233,6 @@ function gestionarNuevaFila(inputActual) {
     actualizarPuntos();
 }
 
-/**
- * Crea la estructura de una nueva fila de ingrediente
- */
 function crearFilaNueva(contenedor) {
     const nuevaFila = document.createElement('div');
     nuevaFila.className = 'fila-ingrediente';
@@ -1227,7 +1244,7 @@ function crearFilaNueva(contenedor) {
 }
 
 /**
- * Calcula la suma de puntos del día activo y actualiza el presupuesto restante
+ * 5. CÁLCULO DE PUNTOS: Suma total y presupuesto disponible
  */
 function actualizarPuntos() {
     const diaActivo = document.querySelector('.contenido-dia.active');
@@ -1246,16 +1263,16 @@ function actualizarPuntos() {
 
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
-        displayRestante.value = restante.toFixed(1); // Mantenemos un decimal por si los netos no son enteros
-        // Si los puntos se pasan del presupuesto, se pone en rojo
+        displayRestante.value = restante.toFixed(1);
         displayRestante.style.color = restante < 0 ? "#e74c3c" : "#5a8a5a";
     }
 }
 
 /**
- * Función para el botón volver corregida para navegación en Google Apps Script
+ * 6. NAVEGACIÓN
  */
 function irAlMenu() {
-    // Redirección directa al index.html de tu proyecto
-    window.location.href = 'index.html';
+    // Redirige al index principal de tu App Script
+    const urlApp = window.location.href.split('?')[0];
+    window.location.href = urlApp;
 }
