@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxO9h9pPUh4A_Z9F1rWtp0LFPeVj450GNdZow9coCYVp3ao61bRFEOHaNzgmL4Cm4hj/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbykPhZbcJpV7E9gPlIHRKUbj61quzYBIh-mUrxalFLBNljOJhTpiM_Hp4PfWiE9LnPH/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1148,12 +1148,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 /** * CODIGO DIARIO-FORMULARIO */
 /* ============================================================
-    LOGICA - NUTRAFIT PLANNER (SOLO PLANIFICADOR Y CRÉDITOS)
+    LOGICA - NUTRAFIT PLANNER (CON DESPENSA INTELIGENTE)
    ============================================================ */
 
 window.onload = function() {
     actualizarPuntos();
 };
+
+/**
+ * FILTRADO INTELIGENTE DE LA DESPENSA
+ * Filtra los elementos del contenedor "NUESTRA DESPENSA" según el buscador
+ */
+function filtrarDespensaLocal() {
+    const input = document.getElementById('busqueda-despensa').value.toLowerCase();
+    const items = document.getElementsByClassName('item-despensa');
+
+    for (let i = 0; i < items.length; i++) {
+        // Obtenemos el texto del primer span (el nombre del alimento)
+        const nombreAlimento = items[i].querySelector('span').innerText.toLowerCase();
+        
+        // Si el nombre contiene lo que buscamos, lo mostramos, si no, lo ocultamos
+        if (nombreAlimento.includes(input)) {
+            items[i].style.display = "flex";
+        } else {
+            items[i].style.display = "none";
+        }
+    }
+}
 
 /**
  * Cambia la pestaña del día (Lunes, Martes, etc.)
@@ -1225,18 +1246,16 @@ function actualizarPuntos() {
 
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
-        displayRestante.value = restante;
+        displayRestante.value = restante.toFixed(1); // Mantenemos un decimal por si los netos no son enteros
         // Si los puntos se pasan del presupuesto, se pone en rojo
-        displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
+        displayRestante.style.color = restante < 0 ? "#e74c3c" : "#5a8a5a";
     }
 }
 
 /**
- * Función para el botón volver (Ajustar según sea Google Apps Script o Local)
+ * Función para el botón volver corregida para navegación en Google Apps Script
  */
 function irAlMenu() {
-    // Si estás en Google Apps Script, lo ideal es usar:
-    // google.script.run.withSuccessHandler(function(url){ window.top.location.href = url; }).getAppUrl();
-    // Por ahora, dejamos la redirección estándar:
-    window.history.back(); 
+    // Redirección directa al index.html de tu proyecto
+    window.location.href = 'index.html';
 }

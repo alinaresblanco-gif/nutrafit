@@ -157,8 +157,16 @@
             </div>
         </div>
         <div class="lista-despensa-scroll" id="lista-despensa">
-            <div class="item-despensa"><span>Ejemplo: Manzana</span> <span class="pts-tag">0 pts</span></div>
-            <div class="item-despensa"><span>Ejemplo: Aceite Oliva (cda)</span> <span class="pts-tag">3 pts</span></div>
+            <? if (typeof listaAlimentos !== 'undefined' && listaAlimentos.length > 0) { ?>
+              <? for (var i = 0; i < listaAlimentos.length; i++) { ?>
+                <div class="item-despensa">
+                    <span><?= listaAlimentos[i].nombre ?></span> 
+                    <span class="pts-tag"><?= listaAlimentos[i].netos ?> pts</span>
+                </div>
+              <? } ?>
+            <? } else { ?>
+                <div style="padding:15px; color:gray; font-size:0.8rem;">No se han encontrado alimentos en la hoja 'alimentos'.</div>
+            <? } ?>
         </div>
     </div>
 
@@ -241,5 +249,16 @@
     </div>
 
     <script src="app.js"></script>
+    <script>
+        // Función de filtrado local para la búsqueda inmediata
+        function filtrarDespensaLocal() {
+            const input = document.getElementById('busqueda-despensa').value.toLowerCase();
+            const items = document.getElementsByClassName('item-despensa');
+            for (let i = 0; i < items.length; i++) {
+                const nombre = items[i].getElementsByTagName('span')[0].innerText.toLowerCase();
+                items[i].style.display = nombre.includes(input) ? "flex" : "none";
+            }
+        }
+    </script>
 </body>
 </html>
