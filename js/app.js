@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxsvikUr0Q9MNSJZQ35rD7izzVGfY1OdU9B0nkrC2KVteuFaB_DmA3oKxmQNJjWqSll/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxZpANqmbY-Xzz2AqN4wYiNkUFjGjziQh7iBa7CW8y2azlHixj5pYQJUbVhqx-cl05H/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1147,79 +1147,178 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 /** * CODIGO DIARIO-FORMULARIO */
+/* ============================================================
+    LOGICA - NUTRAFIT PLANNER (VERSIÓN FINAL COMPLETA)
+   ============================================================ */
+
 window.onload = function() {
     actualizarPuntos();
-    cargarDespensaSistemaHistorial(); 
+    // Iniciamos la carga de la despensa usando el canal seguro de Google
+    cargarAlimentosSeguro();
 };
 
-function cargarDespensaSistemaHistorial() {
-    // ESTA URL debe ser la de tu IMPLEMENTACIÓN ACTUAL (la que termina en /exec)
-    const urlScript = "https://script.google.com/macros/s/AKfycbx73F8jN_1ynyoanVl3CX-a9B-I45iy1BE6vhdJ0hrrRfipziuKz8/exec?tabla=alimentos";
+/**
+ * 1. MOTOR DE CARGA: Conecta con la función obtenerAlimentosDespensa del Código.gs
+ * No usa fetch para evitar errores de CORS.
+ */
+function cargarAlimentosSeguro() {
+    const contenedor = document.getElementById('lista-despensa');
+    
+    // Mostramos estado de carga inicial
+    if (contenedor) {
+        contenedor.innerHTML = '<div style="padding:15px; color:gray;">Cargando despensa...</div>';
+    }
 
-    // Usamos el modo 'no-cors' no es necesario si el doGet está bien configurado con finalizarJSON
-    fetch(urlScript)
-        .then(response => response.json())
-        .then(datos => {
-            console.log("Datos recibidos:", datos);
-            renderizarAlimentos(datos);
-        })
-        .catch(error => {
-            console.error('Error cargando despensa:', error);
-            document.getElementById('lista-despensa').innerHTML = 
-                `<div style="padding:15px; color:red;">Error de conexión. Revisa la consola.</div>`;
-        });
+    // Verificamos si estamos en el entorno de Google Apps Script
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+            .withSuccessHandler(mostrarAlimentos)
+            .withFailureHandler(function(err) {
+                console.error("Error en Google Script:", err);
+                errorAlCargar();
+            })
+            .obtenerAlimentosDespensa(); // Esta es la función que agregamos al Código.gs
+    } else {
+        // Si se abre el HTML fuera de Google (Localhost / Live Server)
+        console.warn("Entorno local detectado. Los datos reales solo se verán en el enlace /exec de Google.");
+        if (contenedor) {
+            contenedor.innerHTML = '<div class="item-despensa" style="color:orange; border-left:4px solid orange;">' +
+                                   '<span><b>Modo Vista Previa:</b> Los alimentos aparecerán al publicar en Google.</span></div>';
+        }
+    }
 }
 
-function renderizarAlimentos(filas) {
+/**
+ * 2. RENDERIZADO: Dibuja los alimentos en el scroll de la despensa
+ */
+function mostrarAlimentos(alimentos) {
     const contenedor = document.getElementById('lista-despensa');
-    if (!contenedor) return;
-
-    if (!filas || filas.length === 0) {
-        contenedor.innerHTML = '<div style="padding:15px;">No hay alimentos en la hoja.</div>';
+    if (!contenedor) return; 
+    
+    if (!alimentos || alimentos.length === 0) {
+        contenedor.innerHTML = '<div style="padding:15px; color:gray;">No se encontraron alimentos en el Excel.</div>';
         return;
     }
 
     let html = '';
-    filas.forEach(fila => {
-        // Mapeo según tu captura de Excel: Col A (0) es Nombre, Col I (8) es Netos
-        const nombre = fila[0];
-        const puntos = fila[8]; 
-
-        if (nombre && nombre !== "") {
-            html += `
-                <div class="item-despensa">
-                    <span>${nombre}</span>
-                    <span class="pts-tag">${puntos} pts</span>
-                </div>`;
-        }
+    alimentos.forEach(item => {
+        // Usamos item.nombre e item.netos que vienen del objeto mapeado en Código.gs
+        html += `
+            <div class="item-despensa">
+                <span>${item.nombre}</span> 
+                <span class="pts-tag">${item.netos} pts</span>
+            </div>`;
     });
-
+    
     contenedor.innerHTML = html;
 }
 
-// --- Resto de funciones (cambiarDia, actualizarPuntos, etc.) ---
-function actualizarPuntos() {
-    const diaActivo = document.querySelector('.contenido-dia.active');
-    if (!diaActivo) return;
-    const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
-    let sumaTotal = 0;
-    inputsPuntos.forEach(input => { sumaTotal += parseFloat(input.value) || 0; });
-    const presupuesto = parseFloat(document.getElementById('total-dia').value) || 0;
-    const restante = presupuesto - sumaTotal;
-    const display = document.getElementById('restantes-val');
-    if (display) {
-        display.value = restante.toFixed(1);
-        display.style.color = restante < 0 ? "#e74c3c" : "#5a8a5a";
+function errorAlCargar() {
+    const contenedor = document.getElementById('lista-despensa');
+    if (contenedor) {
+        contenedor.innerHTML = '<div style="padding:15px; color:red;">Error al conectar con la base de datos de alimentos.</div>';
     }
 }
 
+/**
+ * 3. CONTROL DE PESTAÑAS (DIAS DE LA SEMANA)
+ */
 function cambiarDia(diaId, btn) {
-    document.querySelectorAll('.contenido-dia').forEach(d => d.style.display = 'none');
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    const seleccionado = document.getElementById(diaId);
-    if (seleccionado) {
-        seleccionado.style.display = 'block';
+    const todosLosContenidos = document.querySelectorAll('.contenido-dia');
+    todosLosContenidos.forEach(dia => {
+        dia.classList.remove('active');
+        dia.style.display = 'none';
+    });
+
+    const todosLosBotones = document.querySelectorAll('.tab-btn');
+    todosLosBotones.forEach(b => b.classList.remove('active'));
+
+    const diaSeleccionado = document.getElementById(diaId);
+    if (diaSeleccionado) {
+        diaSeleccionado.classList.add('active');
+        diaSeleccionado.style.display = 'block';
         btn.classList.add('active');
         actualizarPuntos();
     }
+}
+
+/**
+ * 4. GESTIÓN DE FILAS DINÁMICAS: Añade filas automáticas al escribir
+ */
+function gestionarNuevaFila(inputActual) {
+    const contenedor = inputActual.closest('.contenedor-ingredientes');
+    if (!contenedor) return;
+    
+    const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
+    const ultimaFila = todasLasFilas[todasLasFilas.length - 1];
+    const inputUltimaFila = ultimaFila.querySelector('.input-txt');
+
+    // Si escribimos en la última fila, creamos una nueva abajo
+    if (inputActual === inputUltimaFila && inputActual.value.trim() !== "") {
+        crearFilaNueva(contenedor);
+    }
+    actualizarPuntos();
+}
+
+function crearFilaNueva(contenedor) {
+    const nuevaFila = document.createElement('div');
+    nuevaFila.className = 'fila-ingrediente';
+    nuevaFila.innerHTML = `
+        <input type="text" class="input-txt" placeholder="Otro ingrediente..." oninput="gestionarNuevaFila(this)">
+        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+    `;
+    contenedor.appendChild(nuevaFila);
+}
+
+/**
+ * 5. CÁLCULO DE PUNTOS Y PRESUPUESTO
+ */
+function actualizarPuntos() {
+    const diaActivo = document.querySelector('.contenido-dia.active');
+    if (!diaActivo) return;
+
+    const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
+    let sumaTotal = 0;
+    
+    inputsPuntos.forEach(input => {
+        sumaTotal += parseFloat(input.value) || 0;
+    });
+
+    const presupuestoInput = document.getElementById('total-dia');
+    const presupuesto = parseFloat(presupuestoInput.value) || 0;
+    const restante = presupuesto - sumaTotal;
+
+    const displayRestante = document.getElementById('restantes-val');
+    if (displayRestante) {
+        displayRestante.value = restante.toFixed(1);
+        // Color rojo si el balance es negativo
+        displayRestante.style.color = restante < 0 ? "#e74c3c" : "#5a8a5a";
+    }
+}
+
+/**
+ * 6. FILTRADO DE BÚSQUEDA EN DESPENSA
+ */
+function filtrarDespensaLocal() {
+    const input = document.getElementById('busqueda-despensa').value.toLowerCase();
+    const items = document.getElementsByClassName('item-despensa');
+    
+    for (let i = 0; i < items.length; i++) {
+        const nombre = items[i].getElementsByTagName('span')[0].innerText.toLowerCase();
+        // Mostrar u ocultar según el texto buscado
+        if (nombre.includes(input)) {
+            items[i].style.display = "flex";
+        } else {
+            items[i].style.display = "none";
+        }
+    }
+}
+
+/**
+ * 7. NAVEGACIÓN DE REGRESO
+ */
+function irAlMenu() {
+    // Redirige a la URL base de tu Google Script (index)
+    const urlApp = window.location.href.split('?')[0];
+    window.location.href = urlApp;
 }
