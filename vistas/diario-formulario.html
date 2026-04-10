@@ -77,20 +77,6 @@
         .box-pts { text-align: center; flex: 1; }
         .label-pts { font-size: 0.65rem; color: #888; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; }
         .val-pts { font-size: 1.3rem; font-weight: 800; border: none; width: 100%; text-align: center; background: transparent; outline: none; }
-
-        #btn-despensa {
-            position: fixed; bottom: 100px; right: 20px; width: 60px; height: 60px; 
-            background: var(--naranja); color: white; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 24px; cursor: pointer; z-index: 2000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s;
-        }
-        #panel-despensa {
-            position: fixed; top: 0; right: -100%; width: 85%; max-width: 400px; 
-            height: 100%; background: white; z-index: 3000;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.2); transition: 0.4s ease-in-out;
-            display: flex; flex-direction: column; visibility: hidden;
-        }
     </style>
 </head>
 <body>
@@ -177,16 +163,6 @@
             <span class="label-pts">Disponible</span>
             <input type="number" id="restantes-val" class="val-pts" value="30" readonly>
         </div>
-    </div>
-
-    <div id="btn-despensa" onclick="toggleDespensa()">🔍</div>
-
-    <div id="panel-despensa">
-        <div style="padding: 15px; background: var(--naranja); color: white; display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; font-size: 1.1rem;">Consulta de Créditos</h3>
-            <span onclick="toggleDespensa()" style="cursor: pointer; font-size: 28px;">&times;</span>
-        </div>
-        <iframe src="vistas/nuestra_despensa.html" style="flex-grow: 1; border: none; width: 100%;"></iframe>
     </div>
 
     <script src="app.js"></script>

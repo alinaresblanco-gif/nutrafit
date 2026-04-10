@@ -1148,13 +1148,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 /** * CODIGO DIARIO-FORMULARIO */
 /* ============================================================
-    LOGICA COMPLETA - NUTRAFIT PLANNER (REVISIÓN FINAL)
+    LOGICA - NUTRAFIT PLANNER (SOLO PLANIFICADOR Y CRÉDITOS)
    ============================================================ */
 
 window.onload = function() {
     actualizarPuntos();
 };
 
+/**
+ * Cambia la pestaña del día (Lunes, Martes, etc.)
+ */
 function cambiarDia(diaId, btn) {
     const todosLosContenidos = document.querySelectorAll('.contenido-dia');
     todosLosContenidos.forEach(dia => {
@@ -1174,6 +1177,9 @@ function cambiarDia(diaId, btn) {
     }
 }
 
+/**
+ * Detecta si el usuario escribió en la última fila para añadir otra automáticamente
+ */
 function gestionarNuevaFila(inputActual) {
     const contenedor = inputActual.closest('.contenedor-ingredientes');
     const todasLasFilas = contenedor.querySelectorAll('.fila-ingrediente');
@@ -1186,6 +1192,9 @@ function gestionarNuevaFila(inputActual) {
     actualizarPuntos();
 }
 
+/**
+ * Crea la estructura de una nueva fila de ingrediente
+ */
 function crearFilaNueva(contenedor) {
     const nuevaFila = document.createElement('div');
     nuevaFila.className = 'fila-ingrediente';
@@ -1196,49 +1205,38 @@ function crearFilaNueva(contenedor) {
     contenedor.appendChild(nuevaFila);
 }
 
+/**
+ * Calcula la suma de puntos del día activo y actualiza el presupuesto restante
+ */
 function actualizarPuntos() {
     const diaActivo = document.querySelector('.contenido-dia.active');
     if (!diaActivo) return;
 
     const inputsPuntos = diaActivo.querySelectorAll('.input-pts');
     let sumaTotal = 0;
+    
     inputsPuntos.forEach(input => {
         sumaTotal += parseFloat(input.value) || 0;
     });
 
-    const presupuesto = parseFloat(document.getElementById('total-dia').value) || 0;
+    const presupuestoInput = document.getElementById('total-dia');
+    const presupuesto = parseFloat(presupuestoInput.value) || 0;
     const restante = presupuesto - sumaTotal;
 
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
         displayRestante.value = restante;
+        // Si los puntos se pasan del presupuesto, se pone en rojo
         displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
     }
 }
 
-function irAlMenu() {
-    window.location.href = 'index.html';
-}
-
 /**
- * ESTA ES LA FUNCIÓN QUE TE DABA ERROR
- * La he vuelto a incluir aquí para que el botón la encuentre.
+ * Función para el botón volver (Ajustar según sea Google Apps Script o Local)
  */
-function toggleDespensa() {
-    const panel = document.getElementById('panel-despensa');
-    const btn = document.getElementById('btn-despensa');
-    
-    if (!panel) return;
-
-    if (panel.style.right === "-100%" || panel.style.right === "" || panel.style.visibility === "hidden") {
-        panel.style.visibility = "visible";
-        panel.style.right = "0px";
-        if (btn) btn.style.transform = "rotate(90deg) scale(0.8)";
-    } else {
-        panel.style.right = "-100%";
-        setTimeout(() => {
-            if (panel.style.right === "-100%") panel.style.visibility = "hidden";
-        }, 400);
-        if (btn) btn.style.transform = "rotate(0deg) scale(1)";
-    }
+function irAlMenu() {
+    // Si estás en Google Apps Script, lo ideal es usar:
+    // google.script.run.withSuccessHandler(function(url){ window.top.location.href = url; }).getAppUrl();
+    // Por ahora, dejamos la redirección estándar:
+    window.history.back(); 
 }
