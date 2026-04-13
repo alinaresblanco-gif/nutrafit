@@ -258,8 +258,16 @@
             }
         }
 
-        // Cargar despensa al abrir la página
-        window.addEventListener('load', cargarDespensaDiario);
+        // Cargar despensa con delay para asegurar DOM listo
+        console.log("Script diario-formulario cargado");
+        setTimeout(() => {
+            console.log("Ejecutando cargarDespensaDiario");
+            if (typeof cargarDespensaDiario === 'function') {
+                cargarDespensaDiario();
+            } else {
+                console.error("cargarDespensaDiario no está definida");
+            }
+        }, 500);
     </script>
 </body>
 </html>

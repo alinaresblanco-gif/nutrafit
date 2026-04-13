@@ -511,21 +511,40 @@ function filtrarDespensa() {
 async function cargarDespensaDiario() {
     const contenedor = document.getElementById('lista-despensa');
     const cargando = document.getElementById('cargando-alimentos');
-    if (!contenedor) return;
+    if (!contenedor) {
+        console.error("No encontré el contenedor lista-despensa");
+        return;
+    }
+
+    console.log("Iniciando carga de despensa...");
+    console.log("URL a consultar:", URL_GOOGLE_SCRIPT + "?tabla=alimentos");
 
     try {
-        const res = await fetch(URL_GOOGLE_SCRIPT + "?tabla=alimentos&t=" + new Date().getTime());
+        const urlFetch = URL_GOOGLE_SCRIPT + "?tabla=alimentos&t=" + new Date().getTime();
+        console.log("Haciendo fetch a:", urlFetch);
+        
+        const res = await fetch(urlFetch);
+        console.log("Respuesta recibida. Status:", res.status);
+        
+        if (!res.ok) {
+            throw new Error("HTTP error! status: " + res.status);
+        }
+        
         const datos = await res.json();
+        console.log("Datos recibidos:", datos);
         
         if (!datos || datos.length === 0) {
+            console.log("No hay datos o array vacío");
             if (cargando) cargando.innerHTML = "<p style='text-align:center; padding:20px;'>La despensa está vacía.</p>";
             return;
         }
 
+        console.log("Procesando " + datos.length + " alimentos");
         let htmlItems = "";
-        datos.forEach(fila => {
+        datos.forEach((fila, index) => {
             const nombre = fila[0];
             const puntos = Math.round(parseFloat(fila[8])) || 0;
+            console.log(`Item ${index}: ${nombre} - ${puntos} pts`);
             htmlItems += `
                 <div class="item-despensa">
                     <span>${nombre}</span>
@@ -534,9 +553,11 @@ async function cargarDespensaDiario() {
         });
 
         contenedor.innerHTML = htmlItems;
+        console.log("Despensa cargada exitosamente");
     } catch (e) {
         console.error("Error cargando despensa en diario:", e);
-        if (cargando) cargando.innerHTML = "<p style='text-align:center; padding:20px; color:red;'>Error al cargar despensa.</p>";
+        console.error("Stack:", e.stack);
+        if (cargando) cargando.innerHTML = `<p style='text-align:center; padding:20px; color:red;'>Error: ${e.message}</p>`;
     }
 }
 /* --- 8. LÓGICA DE LISTA DE COMPRA (DISEÑO IMAGEN 3) --- */
