@@ -1295,7 +1295,7 @@ function actualizarPuntos() {
         sumaTotal += parseFloat(input.value) || 0;
     });
 
-    const presupuestoInput = document.getElementById('total-dia');
+    const presupuestoInput = document.getElementById('total-' + diaActual);
     const presupuesto = parseFloat(presupuestoInput.value) || 0;
     const restante = (presupuesto - sumaTotal).toFixed(1);
 
@@ -1320,6 +1320,39 @@ function filtrarDespensaLocal() {
             items[i].style.display = nombre.includes(input) ? "flex" : "none";
         }
     }
+}
+
+/* --- FUNCIONES PARA DIARIO FORMULARIO --- */
+let diaActual = 'lunes';
+
+function cambiarDia(dia, btn) {
+    // Remover active
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.contenido-dia').forEach(d => d.classList.remove('active'));
+    
+    // Agregar active
+    btn.classList.add('active');
+    document.getElementById(dia).classList.add('active');
+    
+    // Cambiar id del presupuesto
+    const presupuestoInput = document.getElementById('total-' + diaActual);
+    presupuestoInput.id = 'total-' + dia;
+    
+    // Cargar value guardado
+    const saved = localStorage.getItem('presupuesto-' + dia);
+    if (saved !== null) {
+        presupuestoInput.value = saved;
+    } else {
+        presupuestoInput.value = 30; // default
+    }
+    
+    diaActual = dia;
+    actualizarPuntos();
+}
+
+function guardarPresupuestoActual() {
+    const val = document.getElementById('total-' + diaActual).value;
+    localStorage.setItem('presupuesto-' + diaActual, val);
 }
 
 function irAlMenu() {

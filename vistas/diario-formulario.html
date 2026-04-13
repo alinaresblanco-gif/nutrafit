@@ -223,18 +223,294 @@
             </div>
         </div>
 
-        <div id="martes" class="contenido-dia"></div>
-        <div id="miercoles" class="contenido-dia"></div>
-        <div id="jueves" class="contenido-dia"></div>
-        <div id="viernes" class="contenido-dia"></div>
-        <div id="sabado" class="contenido-dia"></div>
-        <div id="domingo" class="contenido-dia"></div>
+        <div id="martes" class="contenido-dia">
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Ingrediente..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Almuerzo / MM</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Snack o fruta..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Plato principal..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Tarde..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Cena..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="miercoles" class="contenido-dia">
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Ingrediente..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Almuerzo / MM</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Snack o fruta..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Plato principal..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Tarde..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Cena..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="jueves" class="contenido-dia">
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Ingrediente..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Almuerzo / MM</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Snack o fruta..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Plato principal..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Tarde..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Cena..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="viernes" class="contenido-dia">
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Ingrediente..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Almuerzo / MM</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Snack o fruta..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Plato principal..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Tarde..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Cena..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="sabado" class="contenido-dia">
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Ingrediente..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Almuerzo / MM</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Snack o fruta..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Plato principal..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Tarde..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Cena..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="domingo" class="contenido-dia">
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Desayuno</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Ingrediente..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Almuerzo / MM</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Snack o fruta..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Comida</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Plato principal..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Merienda</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Tarde..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+            <div class="card-momento">
+                <div class="momento-header"><span class="momento-titulo">Cena</span><i class="fas fa-plus-circle" style="color:var(--verde-corp)"></i></div>
+                <div class="contenedor-ingredientes">
+                    <div class="fila-ingrediente">
+                        <input type="text" class="input-txt" placeholder="Cena..." oninput="gestionarNuevaFila(this)">
+                        <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="barra-puntos">
         <div class="box-pts">
             <span class="label-pts">Presupuesto</span>
-            <input type="number" id="total-dia" class="val-pts" value="30" oninput="actualizarPuntos()">
+            <input type="number" id="total-lunes" class="val-pts" value="30" oninput="actualizarPuntos(); guardarPresupuestoActual()">
         </div>
         <div class="box-pts" style="border-left: 1px solid #eee;">
             <span class="label-pts">Disponible</span>
