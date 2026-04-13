@@ -114,7 +114,7 @@ async function cargarHistorico() {
     const contenedor = document.getElementById('datos-tabla');
     if (!contenedor) return;
     try {
-        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?t=" + new Date().getTime());
+        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=agua&t=" + new Date().getTime());
         const filas = await respuesta.json();
         contenedor.innerHTML = filas.map(fila => {
             const colorEstado = fila[2] === "COMPLETADO" ? "#2ecc71" : "#e67e22";
