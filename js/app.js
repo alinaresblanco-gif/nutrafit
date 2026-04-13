@@ -506,6 +506,39 @@ function filtrarDespensa() {
         fila.style.display = nombreAlimento.includes(textoBusqueda) ? "" : "none";
     });
 }
+
+/* --- NUEVA FUNCIÓN PARA CARGAR DESPENSA EN DIARIO-FORMULARIO --- */
+async function cargarDespensaDiario() {
+    const contenedor = document.getElementById('lista-despensa');
+    const cargando = document.getElementById('cargando-alimentos');
+    if (!contenedor) return;
+
+    try {
+        const res = await fetch(URL_GOOGLE_SCRIPT + "?tabla=alimentos&t=" + new Date().getTime());
+        const datos = await res.json();
+        
+        if (!datos || datos.length === 0) {
+            if (cargando) cargando.innerHTML = "<p style='text-align:center; padding:20px;'>La despensa está vacía.</p>";
+            return;
+        }
+
+        let htmlItems = "";
+        datos.forEach(fila => {
+            const nombre = fila[0];
+            const puntos = Math.round(parseFloat(fila[8])) || 0;
+            htmlItems += `
+                <div class="item-despensa">
+                    <span>${nombre}</span>
+                    <span class="pts-tag">${puntos} pts</span>
+                </div>`;
+        });
+
+        contenedor.innerHTML = htmlItems;
+    } catch (e) {
+        console.error("Error cargando despensa en diario:", e);
+        if (cargando) cargando.innerHTML = "<p style='text-align:center; padding:20px; color:red;'>Error al cargar despensa.</p>";
+    }
+}
 /* --- 8. LÓGICA DE LISTA DE COMPRA (DISEÑO IMAGEN 3) --- */
 let listaCompra = JSON.parse(localStorage.getItem('nutrafit_lista_compra')) || [];
 
