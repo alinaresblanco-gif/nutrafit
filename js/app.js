@@ -43,6 +43,10 @@ async function abrirVista(nombreVista) {
             setTimeout(cargarDespensa, 100); 
         }
 
+        if (nombreVista === 'diario-formulario') {
+            setTimeout(cargarDespensaDiario, 300);
+        }
+
         // Caso específico para tu nueva vista de Carrito
         if (nombreVista === 'carrito-compra') {
             setTimeout(actualizarInterfazCompra, 100);
