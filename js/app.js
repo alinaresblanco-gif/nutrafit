@@ -1210,11 +1210,27 @@ document.addEventListener('DOMContentLoaded', () => {
     LOGICA - NUTRAFIT PLANNER (ESTILO AGUA - SIN URLS)
    ============================================================ */
 
+const STORAGE_KEY_DIARIO_FORMULARIO = 'nutrafit_diario_formulario_estado';
+
 window.onload = function() {
     actualizarPuntos();
+    cargarSemanaActiva();
     // Llamamos a la carga segura de Google, igual que en el agua
     cargarDespensaGoogle();
 };
+
+document.addEventListener('input', function(event) {
+    const target = event.target;
+    if (!target) return;
+
+    if (target.matches('#fecha-inicio')) {
+        guardarSemanaSeleccionada();
+    }
+
+    if (target.matches('.input-txt') || target.matches('.input-pts')) {
+        guardarEstadoSemanaLocal();
+    }
+});
 
 /**
  * MOTOR DE CARGA: Usa google.script.run (Igual que el agua)
@@ -1349,12 +1365,150 @@ function cambiarDia(dia, btn) {
     
     diaActual = dia;
     localStorage.setItem('ultimaSemanaDiaActiva', dia);
+    guardarEstadoSemanaLocal();
     actualizarPuntos();
 }
 
 function guardarPresupuestoActual() {
     const val = document.getElementById('total-' + diaActual).value;
     localStorage.setItem('presupuesto-' + diaActual, val);
+    guardarEstadoSemanaLocal();
+}
+
+function guardarEstadoSemanaLocal() {
+    const fechaInput = document.getElementById('fecha-inicio');
+    const inicioSemana = fechaInput ? fechaInput.value : '';
+    const estado = {
+        fechaInicio: inicioSemana,
+        diaActivo: diaActual,
+        filasPorDia: {}
+    };
+
+    ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'].forEach(dia => {
+        const contenedorDia = document.getElementById(dia);
+        if (!contenedorDia) return;
+
+        estado.filasPorDia[dia] = [];
+        contenedorDia.querySelectorAll('.card-momento').forEach(card => {
+            const momento = card.querySelector('.momento-titulo')?.innerText.trim() || '';
+            const filas = [];
+
+            card.querySelectorAll('.fila-ingrediente').forEach(fila => {
+                const ingrediente = fila.querySelector('.input-txt')?.value.trim() || '';
+                const puntos = fila.querySelector('.input-pts')?.value.trim() || '0';
+                filas.push({ ingrediente, puntos });
+            });
+
+            estado.filasPorDia[dia].push({ momento, filas });
+        });
+    });
+
+    localStorage.setItem(STORAGE_KEY_DIARIO_FORMULARIO, JSON.stringify(estado));
+}
+
+function restaurarEstadoSemanaLocal() {
+    const saved = localStorage.getItem(STORAGE_KEY_DIARIO_FORMULARIO);
+    if (!saved) return false;
+
+    try {
+        const estado = JSON.parse(saved);
+        const fechaInput = document.getElementById('fecha-inicio');
+        if (fechaInput && estado.fechaInicio) {
+            fechaInput.value = estado.fechaInicio;
+        }
+
+        if (estado.filasPorDia) {
+            Object.keys(estado.filasPorDia).forEach(dia => {
+                const contenedorDia = document.getElementById(dia);
+                if (!contenedorDia) return;
+
+                const cards = contenedorDia.querySelectorAll('.card-momento');
+                const datosDia = estado.filasPorDia[dia] || [];
+
+                datosDia.forEach((datosCard, indexCard) => {
+                    const card = cards[indexCard];
+                    if (!card) return;
+                    const contenedorIngredientes = card.querySelector('.contenedor-ingredientes');
+                    if (!contenedorIngredientes) return;
+
+                    contenedorIngredientes.innerHTML = '';
+                    datosCard.filas.forEach(filaData => {
+                        const fila = document.createElement('div');
+                        fila.className = 'fila-ingrediente';
+
+                        const inputTxt = document.createElement('input');
+                        inputTxt.type = 'text';
+                        inputTxt.className = 'input-txt';
+                        inputTxt.placeholder = 'Ingrediente...';
+                        inputTxt.value = filaData.ingrediente || '';
+                        inputTxt.addEventListener('input', function() {
+                            gestionarNuevaFila(this);
+                            guardarEstadoSemanaLocal();
+                        });
+
+                        const inputPts = document.createElement('input');
+                        inputPts.type = 'number';
+                        inputPts.className = 'input-pts';
+                        inputPts.value = filaData.puntos || '0';
+                        inputPts.addEventListener('input', function() {
+                            actualizarPuntos();
+                            guardarEstadoSemanaLocal();
+                        });
+
+                        fila.appendChild(inputTxt);
+                        fila.appendChild(inputPts);
+                        contenedorIngredientes.appendChild(fila);
+                    });
+
+                    if (datosCard.filas.length === 0) {
+                        const fila = document.createElement('div');
+                        fila.className = 'fila-ingrediente';
+
+                        const inputTxt = document.createElement('input');
+                        inputTxt.type = 'text';
+                        inputTxt.className = 'input-txt';
+                        inputTxt.placeholder = 'Ingrediente...';
+                        inputTxt.addEventListener('input', function() {
+                            gestionarNuevaFila(this);
+                            guardarEstadoSemanaLocal();
+                        });
+
+                        const inputPts = document.createElement('input');
+                        inputPts.type = 'number';
+                        inputPts.className = 'input-pts';
+                        inputPts.value = '0';
+                        inputPts.addEventListener('input', function() {
+                            actualizarPuntos();
+                            guardarEstadoSemanaLocal();
+                        });
+
+                        fila.appendChild(inputTxt);
+                        fila.appendChild(inputPts);
+                        contenedorIngredientes.appendChild(fila);
+                    }
+                });
+            });
+        }
+
+        if (estado.diaActivo) {
+            diaActual = estado.diaActivo;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error restaurando estado del diario:', error);
+        return false;
+    }
+}
+
+function guardarSemanaSeleccionada() {
+    const fechaInput = document.getElementById('fecha-inicio');
+    const inicioSemana = fechaInput ? fechaInput.value : '';
+    if (inicioSemana) {
+        localStorage.setItem('ultimaSemanaGuardada', inicioSemana);
+        localStorage.setItem('ultimaSemanaDiaActiva', diaActual);
+        guardarEstadoSemanaLocal();
+    }
 }
 
 function getTabButton(dia) {
@@ -1362,10 +1516,24 @@ function getTabButton(dia) {
 }
 
 function cargarSemanaActiva() {
+    const fechaInput = document.getElementById('fecha-inicio');
+    if (fechaInput) {
+        fechaInput.addEventListener('change', guardarSemanaSeleccionada);
+    }
+
+    const estadoRestaurado = restaurarEstadoSemanaLocal();
+    if (estadoRestaurado) {
+        const diaA = diaActual || 'lunes';
+        const btn = getTabButton(diaA);
+        if (btn) {
+            cambiarDia(diaA, btn);
+        }
+        actualizarPuntos();
+        return;
+    }
+
     const ultimaSemana = localStorage.getItem('ultimaSemanaGuardada');
     const diaGuardado = localStorage.getItem('ultimaSemanaDiaActiva');
-    const fechaInput = document.getElementById('fecha-inicio');
-
     if (fechaInput && ultimaSemana) {
         fechaInput.value = ultimaSemana;
     }
@@ -1462,6 +1630,7 @@ function guardarMenuSemanal() {
         if (inicioSemana) {
             localStorage.setItem('ultimaSemanaGuardada', inicioSemana);
             localStorage.setItem('ultimaSemanaDiaActiva', diaActual);
+            guardarEstadoSemanaLocal();
         }
         alert('Menú guardado correctamente.');
     })
@@ -1479,11 +1648,36 @@ function guardarMenuSemanal() {
 function limpiarSemana() {
     localStorage.removeItem('ultimaSemanaGuardada');
     localStorage.removeItem('ultimaSemanaDiaActiva');
-    const fechaInput = document.getElementById('fecha-inicio');
-    if (fechaInput) fechaInput.value = '';
+    localStorage.removeItem(STORAGE_KEY_DIARIO_FORMULARIO);
+    reiniciarFormulario();
     const btn = getTabButton('lunes');
     if (btn) cambiarDia('lunes', btn);
     alert('Semana limpiada. Ahora puedes iniciar una nueva semana.');
+}
+
+function reiniciarFormulario() {
+    const fechaInput = document.getElementById('fecha-inicio');
+    if (fechaInput) fechaInput.value = '';
+
+    document.querySelectorAll('.card-momento').forEach(card => {
+        const contenedor = card.querySelector('.contenedor-ingredientes');
+        if (!contenedor) return;
+        contenedor.innerHTML =
+            '<div class="fila-ingrediente">' +
+            '<input type="text" class="input-txt" placeholder="Ingrediente..." oninput="gestionarNuevaFila(this); guardarEstadoSemanaLocal();">' +
+            '<input type="number" class="input-pts" value="0" oninput="actualizarPuntos(); guardarEstadoSemanaLocal();">' +
+            '</div>';
+    });
+
+    document.querySelectorAll('[id^="total-"]').forEach(input => {
+        if (input.tagName === 'INPUT') input.value = 30;
+    });
+
+    const displayRestante = document.getElementById('restantes-val');
+    if (displayRestante) {
+        displayRestante.value = 30;
+        displayRestante.style.color = '#d35400';
+    }
 }
 
 function irAlMenu() {
