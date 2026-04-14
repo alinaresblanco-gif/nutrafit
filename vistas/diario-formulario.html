@@ -214,64 +214,76 @@
         .barra-puntos {
             position: fixed; bottom: 20px; left: 15px; right: 15px;
             background: white; display: flex; justify-content: space-between; align-items: center;
-            gap: 10px; padding: 15px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            gap: 8px; padding: 12px 15px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             z-index: 1000;
             flex-wrap: wrap;
         }
-        .box-pts { text-align: center; flex: 1; min-width: 120px; }
-        .label-pts { font-size: 0.65rem; color: #888; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; }
-        .val-pts { font-size: 1.3rem; font-weight: 800; border: none; width: 100%; text-align: center; background: transparent; outline: none; }
+        .box-pts { text-align: center; flex: 1; min-width: 80px; max-width: 120px; }
+        .label-pts { font-size: 0.6rem; color: #888; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; display: block; }
+        .val-pts { font-size: 1.1rem; font-weight: 800; border: none; width: 100%; text-align: center; background: transparent; outline: none; }
 
-        /* Botón Guardar */
-        .btn-guardar {
+        /* Botones */
+        .btn-guardar, .btn-limpiar {
             background: linear-gradient(135deg, var(--verde-corp), var(--verde-oscuro));
             color: white;
             border: none;
-            padding: 12px 18px;
-            border-radius: 16px;
+            padding: 8px 12px;
+            border-radius: 12px;
             font-weight: 700;
-            font-size: 0.8rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(120, 169, 120, 0.3);
-            margin-left: 10px;
-            flex-shrink: 0;
-        }
-        .btn-guardar:hover {
-            background: linear-gradient(135deg, var(--verde-oscuro), #466b46);
-            box-shadow: 0 6px 16px rgba(120, 169, 120, 0.45);
-            transform: translateY(-2px);
-        }
-        .btn-guardar:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(120, 169, 120, 0.3);
-        }
-        .btn-guardar i, .btn-limpiar i {
-            font-size: 1rem;
-        }
-        .btn-limpiar {
-            background: #f0f0f0;
-            color: var(--verde-oscuro);
-            border: none;
-            padding: 12px 14px;
-            border-radius: 16px;
-            font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin-left: 0;
-            min-width: 45px;
+            box-shadow: 0 2px 8px rgba(120, 169, 120, 0.3);
+            flex-shrink: 0;
+            min-width: 35px;
+            height: 35px;
+        }
+        .btn-limpiar {
+            background: #f0f0f0;
+            color: var(--verde-oscuro);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .btn-guardar:hover {
+            background: linear-gradient(135deg, var(--verde-oscuro), #466b46);
+            box-shadow: 0 4px 12px rgba(120, 169, 120, 0.45);
+            transform: translateY(-1px);
         }
         .btn-limpiar:hover {
             background: #e8e8e8;
+        }
+        .btn-guardar:active, .btn-limpiar:active {
+            transform: translateY(0);
+        }
+        .btn-guardar i, .btn-limpiar i {
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 680px) {
+            .barra-puntos {
+                padding: 10px 12px;
+                gap: 6px;
+            }
+            .box-pts {
+                min-width: 70px;
+                max-width: 100px;
+            }
+            .label-pts {
+                font-size: 0.55rem;
+            }
+            .val-pts {
+                font-size: 1rem;
+            }
+            .btn-guardar, .btn-limpiar {
+                min-width: 32px;
+                height: 32px;
+                padding: 6px 10px;
+            }
+            .btn-guardar i, .btn-limpiar i {
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
@@ -651,17 +663,17 @@
             <span class="label-pts">Presupuesto</span>
             <input type="number" id="total-lunes" class="val-pts" value="30" step="1" min="0" inputmode="numeric" oninput="this.value = this.value ? Math.floor(this.value) : 0; actualizarPuntos(); guardarPresupuestoActual()">
         </div>
-        <div class="box-pts" style="border-left: 1px solid #eee;">
-            <span class="label-pts">Disponible</span>
-            <input type="number" id="restantes-val" class="val-pts" value="30" readonly>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
+        <div style="display:flex; align-items:center; gap:6px;">
             <button class="btn-guardar" id="btn-guardar-menu" type="button" onclick="guardarMenuSemanal()" title="Guardar menú semanal">
                 <i class="fas fa-save"></i>
             </button>
             <button class="btn-limpiar" id="btn-limpiar-semana" type="button" onclick="limpiarSemana()" title="Limpiar semana">
                 <i class="fas fa-trash-alt"></i>
             </button>
+        </div>
+        <div class="box-pts" style="border-left: 1px solid #eee;">
+            <span class="label-pts">Disponible</span>
+            <input type="number" id="restantes-val" class="val-pts" value="30" readonly>
         </div>
     </div>
 
