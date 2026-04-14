@@ -169,23 +169,24 @@
         .momento-titulo::before { content: ''; width: 4px; height: 16px; background: var(--verde-corp); border-radius: 2px; }
 
         .fila-ingrediente {
-            display: grid;
-            grid-template-columns: 1.5fr 0.9fr;
+            display: flex;
+            align-items: center;
             gap: 10px;
             margin-bottom: 10px;
-            align-items: center;
         }
         .input-txt {
+            flex: 1;
+            min-width: 0;
             border: 1px solid #e0e6e0;
             padding: 12px 15px;
             border-radius: 12px;
             outline: none;
             background: #fafafa;
             font-size: 0.95rem;
-            width: 100%;
         }
         .input-pts {
-            width: 55px;
+            width: 65px;
+            min-width: 65px;
             border: none;
             padding: 10px;
             border-radius: 12px;
@@ -196,7 +197,11 @@
         }
         @media (max-width: 680px) {
             .fila-ingrediente {
-                grid-template-columns: 1fr;
+                flex-wrap: wrap;
+            }
+            .input-pts {
+                width: 100%;
+                min-width: 0;
             }
             .input-pts {
                 width: 100%;
