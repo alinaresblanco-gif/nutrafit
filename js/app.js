@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxMy5E7R5_pjfda6c1rNnybNk9wXc25SDFTrAveJYirgcv3UO7yrG7PAC_RYgPZSHTY/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbyxCBLE_TeseaHKhM6bkpdY3ep5fxtk6zgblcSW4lIZqTusu17G4XwLohUoqfBMvOqB/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -1706,9 +1706,20 @@ async function cargarHistorialSemanas() {
             return;
         }
 
+        // Filtrar filas con fecha válida (elimina fila de cabeceras si existe)
+        const datosFiltrados = datos.filter(fila => {
+            const val = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana inicio'] || fila['semana_inicio'] || fila['semana']);
+            return val && !isNaN(new Date(val).getTime());
+        });
+
+        if (datosFiltrados.length === 0) {
+            contenedor.innerHTML = "<p style='text-align:center; padding:20px; color:#666;'>No hay semanas guardadas</p>";
+            return;
+        }
+
         // Agrupar por semana (fecha de inicio)
         const semanasAgrupadas = {};
-        datos.forEach(fila => {
+        datosFiltrados.forEach(fila => {
             const semanaInicio = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana inicio'] || fila['semana_inicio'] || fila['semana']);
             if (semanaInicio) {
                 if (!semanasAgrupadas[semanaInicio]) {
@@ -1756,10 +1767,10 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
             return;
         }
 
-        // Filtrar datos de la semana específica
+        // Filtrar datos de la semana específica (excluye cabeceras)
         const datosSemana = datos.filter(fila => {
             const semanaInicio = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana_inicio'] || fila['semana']);
-            return semanaInicio === fechaSemana;
+            return semanaInicio === fechaSemana && !isNaN(new Date(semanaInicio).getTime());
         });
 
         if (datosSemana.length === 0) {
