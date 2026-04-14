@@ -1744,7 +1744,7 @@ async function cargarHistorialSemanas() {
 
             html += `
                 <div class="item-historial" onclick="cargarSemanaDesdeHistorial('${semanaFecha}')">
-                    <div class="fecha-historial">${new Date(semanaFecha).toLocaleDateString('es-ES')}</div>
+                    <div class="fecha-historial">${new Date(semanaFecha.replace(/-/g, '/')).toLocaleDateString('es-ES')}</div>
                     <div class="presupuesto-historial">${Math.round(totalPuntos)} pts</div>
                 </div>
             `;
