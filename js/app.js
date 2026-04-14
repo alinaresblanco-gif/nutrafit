@@ -1297,12 +1297,12 @@ function actualizarPuntos() {
 
     const presupuestoInput = document.getElementById('total-' + diaActual);
     const presupuesto = parseFloat(presupuestoInput.value) || 0;
-    const restante = (presupuesto - sumaTotal).toFixed(1);
+    const restante = Math.round(presupuesto - sumaTotal);
 
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
         displayRestante.value = restante;
-        displayRestante.style.color = restante < 0 ? "#e74c3c" : "#5a8a5a";
+        displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
     }
 }
 

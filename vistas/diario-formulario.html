@@ -97,19 +97,6 @@
             font-weight: bold;
         }
 
-        /* Tabs Días */
-        .tabs-dias {
-            display: flex; overflow-x: auto; background: white;
-            padding: 12px 8px; gap: 10px; border-bottom: 1px solid #edf2ed;
-        }
-        .tab-btn {
-            padding: 8px 22px; border-radius: 25px; border: none;
-            background: var(--verde-suave); color: var(--verde-oscuro);
-            white-space: nowrap; cursor: pointer; font-weight: 700; flex-shrink: 0;
-            font-size: 0.75rem;
-        }
-        .tab-btn.active { background: var(--verde-corp) !important; color: white !important; }
-
         .fecha-inicio-semana {
             background: white;
             margin: 10px 15px;
@@ -140,6 +127,13 @@
             color: #333;
             outline: none;
         }
+
+        .momento-header i {
+            display: none;
+        }
+
+        #total-lunes { color: var(--verde-corp); }
+        #restantes-val { color: #d35400 !important; }
 
         .tabs-dias {
             display: flex; overflow-x: auto; background: white;
@@ -564,7 +558,7 @@
     <div class="barra-puntos">
         <div class="box-pts">
             <span class="label-pts">Presupuesto</span>
-            <input type="number" id="total-lunes" class="val-pts" value="30" oninput="actualizarPuntos(); guardarPresupuestoActual()">
+            <input type="number" id="total-lunes" class="val-pts" value="30" step="1" min="0" inputmode="numeric" oninput="this.value = this.value ? Math.floor(this.value) : 0; actualizarPuntos(); guardarPresupuestoActual()">
         </div>
         <div class="box-pts" style="border-left: 1px solid #eee;">
             <span class="label-pts">Disponible</span>
