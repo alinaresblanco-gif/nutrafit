@@ -99,39 +99,33 @@
 
         .fecha-inicio-semana {
             background: white;
-            margin: 8px 15px 10px;
-            padding: 10px 12px;
-            border-radius: 16px;
+            margin: 10px 15px;
+            padding: 14px 16px;
+            border-radius: 18px;
             box-shadow: var(--shadow);
             border: 1px solid rgba(120, 169, 120, 0.2);
             position: sticky;
             top: 30vh;
             z-index: 45;
-            max-width: 280px;
         }
         .fecha-inicio-semana label {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--verde-oscuro);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .fecha-inicio-semana input[type="date"] {
             width: 100%;
             border: 1px solid #d8e0d8;
             border-radius: 14px;
-            padding: 10px 12px;
+            padding: 12px 14px;
             font-size: 0.95rem;
             background: #fafafa;
             color: #333;
             outline: none;
-        }
-        .fecha-inicio-semana input[type="date"]::placeholder {
-            color: #8a9a8a;
         }
 
         .momento-header i {
@@ -318,8 +312,8 @@
     </div>
 
     <div class="fecha-inicio-semana">
-        <label for="fecha-inicio" class="visually-hidden">Introducir Fecha Inicio Semana</label>
-        <input type="date" id="fecha-inicio" name="fecha-inicio" placeholder="Fecha inicio semana" />
+        <label for="fecha-inicio">Introducir Fecha Inicio Semana</label>
+        <input type="date" id="fecha-inicio" name="fecha-inicio" />
     </div>
 
     <div class="tabs-dias">
