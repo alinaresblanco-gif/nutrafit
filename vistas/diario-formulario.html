@@ -99,33 +99,39 @@
 
         .fecha-inicio-semana {
             background: white;
-            margin: 10px 15px;
-            padding: 14px 16px;
-            border-radius: 18px;
+            margin: 8px 15px 10px;
+            padding: 10px 12px;
+            border-radius: 16px;
             box-shadow: var(--shadow);
             border: 1px solid rgba(120, 169, 120, 0.2);
             position: sticky;
             top: 30vh;
             z-index: 45;
+            max-width: 280px;
         }
         .fecha-inicio-semana label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--verde-oscuro);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
         .fecha-inicio-semana input[type="date"] {
             width: 100%;
             border: 1px solid #d8e0d8;
             border-radius: 14px;
-            padding: 12px 14px;
+            padding: 10px 12px;
             font-size: 0.95rem;
             background: #fafafa;
             color: #333;
             outline: none;
+        }
+        .fecha-inicio-semana input[type="date"]::placeholder {
+            color: #8a9a8a;
         }
 
         .momento-header i {
@@ -214,23 +220,23 @@
         .barra-puntos {
             position: fixed; bottom: 20px; left: 15px; right: 15px;
             background: white; display: flex; justify-content: space-between; align-items: center;
-            gap: 8px; padding: 12px 15px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            gap: 14px; padding: 16px 18px; border-radius: 22px; box-shadow: 0 10px 25px rgba(0,0,0,0.12);
             z-index: 1000;
             flex-wrap: wrap;
         }
-        .box-pts { text-align: center; flex: 1; min-width: 80px; max-width: 120px; }
-        .label-pts { font-size: 0.6rem; color: #888; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; display: block; }
-        .val-pts { font-size: 1.1rem; font-weight: 800; border: none; width: 100%; text-align: center; background: transparent; outline: none; }
+        .box-pts { text-align: center; flex: 1; min-width: 100px; max-width: 150px; }
+        .label-pts { font-size: 0.65rem; color: #888; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .val-pts { font-size: 1.2rem; font-weight: 800; border: none; width: 100%; text-align: center; background: transparent; outline: none; }
 
         /* Botones */
         .btn-guardar, .btn-limpiar {
             background: linear-gradient(135deg, var(--verde-corp), var(--verde-oscuro));
             color: white;
             border: none;
-            padding: 8px 12px;
-            border-radius: 12px;
+            padding: 10px 14px;
+            border-radius: 14px;
             font-weight: 700;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -238,8 +244,8 @@
             transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(120, 169, 120, 0.3);
             flex-shrink: 0;
-            min-width: 35px;
-            height: 35px;
+            min-width: 42px;
+            height: 42px;
         }
         .btn-limpiar {
             background: #f0f0f0;
@@ -258,17 +264,18 @@
             transform: translateY(0);
         }
         .btn-guardar i, .btn-limpiar i {
-            font-size: 0.9rem;
+            font-size: 1rem;
+            margin: 0 2px;
         }
 
         @media (max-width: 680px) {
             .barra-puntos {
-                padding: 10px 12px;
-                gap: 6px;
+                padding: 12px 14px;
+                gap: 10px;
             }
             .box-pts {
-                min-width: 70px;
-                max-width: 100px;
+                min-width: 80px;
+                max-width: 120px;
             }
             .label-pts {
                 font-size: 0.55rem;
@@ -277,12 +284,12 @@
                 font-size: 1rem;
             }
             .btn-guardar, .btn-limpiar {
-                min-width: 32px;
-                height: 32px;
-                padding: 6px 10px;
+                min-width: 36px;
+                height: 36px;
+                padding: 8px 12px;
             }
             .btn-guardar i, .btn-limpiar i {
-                font-size: 0.8rem;
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -311,8 +318,8 @@
     </div>
 
     <div class="fecha-inicio-semana">
-        <label for="fecha-inicio">Introducir Fecha Inicio Semana</label>
-        <input type="date" id="fecha-inicio" name="fecha-inicio" />
+        <label for="fecha-inicio" class="visually-hidden">Introducir Fecha Inicio Semana</label>
+        <input type="date" id="fecha-inicio" name="fecha-inicio" placeholder="Fecha inicio semana" />
     </div>
 
     <div class="tabs-dias">
@@ -663,7 +670,7 @@
             <span class="label-pts">Presupuesto</span>
             <input type="number" id="total-lunes" class="val-pts" value="30" step="1" min="0" inputmode="numeric" oninput="this.value = this.value ? Math.floor(this.value) : 0; actualizarPuntos(); guardarPresupuestoActual()">
         </div>
-        <div style="display:flex; align-items:center; gap:6px;">
+        <div style="display:flex; align-items:center; gap:14px;">
             <button class="btn-guardar" id="btn-guardar-menu" type="button" onclick="guardarMenuSemanal()" title="Guardar menú semanal">
                 <i class="fas fa-save"></i>
             </button>
