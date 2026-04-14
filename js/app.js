@@ -520,8 +520,6 @@ async function cargarDespensaDiario() {
         return;
     }
 
-    asegurarCamposFilaIngredientes();
-
     console.log("Iniciando carga de despensa...");
     console.log("URL a consultar:", URL_GOOGLE_SCRIPT + "?tabla=alimentos");
 
@@ -1279,9 +1277,7 @@ function crearFilaNueva(contenedor) {
     const nuevaFila = document.createElement('div');
     nuevaFila.className = 'fila-ingrediente';
     nuevaFila.innerHTML = '<input type="text" class="input-txt" placeholder="Otro ingrediente..." oninput="gestionarNuevaFila(this)">' +
-                          '<input type="text" class="input-cantidad" placeholder="Cantidad..." oninput="actualizarPuntos()">' +
-                          '<input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">' +
-                          '<input type="text" class="input-notas" placeholder="Notas..." oninput="actualizarPuntos()">';
+                          '<input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">';
     contenedor.appendChild(nuevaFila);
 }
 
@@ -1359,34 +1355,6 @@ function guardarPresupuestoActual() {
     localStorage.setItem('presupuesto-' + diaActual, val);
 }
 
-function asegurarCamposFilaIngredientes() {
-    const filas = document.querySelectorAll('.fila-ingrediente');
-    filas.forEach(fila => {
-        if (!fila.querySelector('.input-cantidad')) {
-            const inputPts = fila.querySelector('.input-pts');
-            const cantidad = document.createElement('input');
-            cantidad.type = 'text';
-            cantidad.placeholder = 'Cantidad...';
-            cantidad.className = 'input-cantidad';
-            cantidad.oninput = actualizarPuntos;
-
-            const notas = document.createElement('input');
-            notas.type = 'text';
-            notas.placeholder = 'Notas...';
-            notas.className = 'input-notas';
-            notas.oninput = actualizarPuntos;
-
-            if (inputPts) {
-                fila.insertBefore(cantidad, inputPts);
-                fila.appendChild(notas);
-            } else {
-                fila.appendChild(cantidad);
-                fila.appendChild(notas);
-            }
-        }
-    });
-}
-
 function calcularFechaParaDia(fechaInicio, dia) {
     if (!fechaInicio) return "";
     const offsetMap = {
@@ -1435,12 +1403,10 @@ function guardarMenuSemanal() {
             const momento = card.querySelector('.momento-titulo')?.innerText.trim() || "";
             card.querySelectorAll('.fila-ingrediente').forEach(fila => {
                 const ingrediente = fila.querySelector('.input-txt')?.value.trim() || "";
-                const cantidad = fila.querySelector('.input-cantidad')?.value.trim() || "";
                 const puntos = fila.querySelector('.input-pts')?.value.trim() || "";
-                const notas = fila.querySelector('.input-notas')?.value.trim() || "";
 
-                if (!ingrediente && !cantidad && !puntos && !notas) return;
-                if (ingrediente === "" && cantidad === "" && notas === "" && Number(puntos) === 0) return;
+                if (!ingrediente && !puntos) return;
+                if (ingrediente === "" && Number(puntos) === 0) return;
 
                 filasGuardar.push({
                     'Semana inicio': inicioSemana,
@@ -1448,9 +1414,7 @@ function guardarMenuSemanal() {
                     'Día': diaMap[dia],
                     'Momento': momento,
                     'Ingrediente': ingrediente,
-                    'Cantidad': cantidad,
-                    'Puntos': puntos,
-                    'Notas': notas
+                    'Puntos': puntos
                 });
             });
         });
