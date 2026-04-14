@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxh9O350xDnNMMLttJIqFJvhVUunvnKsy6ph7fn06o3EbS4Wii3DYgk2gebmDpl66A/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbxMy5E7R5_pjfda6c1rNnybNk9wXc25SDFTrAveJYirgcv3UO7yrG7PAC_RYgPZSHTY/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -44,7 +44,10 @@ async function abrirVista(nombreVista) {
         }
 
         if (nombreVista === 'diario-formulario') {
-            setTimeout(cargarDespensaDiario, 300);
+            setTimeout(() => {
+                cargarDespensaDiario();
+                cargarHistorialSemanas();
+            }, 300);
         }
 
         // Caso específico para tu nueva vista de Carrito
@@ -1695,7 +1698,7 @@ async function cargarHistorialSemanas() {
     if (!contenedor) return;
 
     try {
-        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=menu_semanal&t=" + new Date().getTime());
+        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=menus_semanales&t=" + new Date().getTime());
         const datos = await respuesta.json();
 
         if (!datos || datos.length === 0) {
@@ -1706,7 +1709,7 @@ async function cargarHistorialSemanas() {
         // Agrupar por semana (fecha de inicio)
         const semanasAgrupadas = {};
         datos.forEach(fila => {
-            const semanaInicio = fila[0]; // Columna 'Semana inicio'
+            const semanaInicio = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana inicio'] || fila['semana_inicio'] || fila['semana']);
             if (semanaInicio) {
                 if (!semanasAgrupadas[semanaInicio]) {
                     semanasAgrupadas[semanaInicio] = [];
@@ -1724,7 +1727,8 @@ async function cargarHistorialSemanas() {
             let totalPuntos = 0;
 
             filasSemana.forEach(fila => {
-                totalPuntos += parseFloat(fila[5] || 0); // Columna 'Puntos'
+                const puntos = Array.isArray(fila) ? fila[5] : (fila['Puntos'] || fila['puntos'] || 0);
+                totalPuntos += parseFloat(puntos || 0);
             });
 
             html += `
@@ -1744,7 +1748,7 @@ async function cargarHistorialSemanas() {
 
 async function cargarSemanaDesdeHistorial(fechaSemana) {
     try {
-        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=menu_semanal&t=" + new Date().getTime());
+        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=menus_semanales&t=" + new Date().getTime());
         const datos = await respuesta.json();
 
         if (!datos || datos.length === 0) {
@@ -1753,7 +1757,10 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
         }
 
         // Filtrar datos de la semana específica
-        const datosSemana = datos.filter(fila => fila[0] === fechaSemana);
+        const datosSemana = datos.filter(fila => {
+            const semanaInicio = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana_inicio'] || fila['semana']);
+            return semanaInicio === fechaSemana;
+        });
 
         if (datosSemana.length === 0) {
             alert("No se encontraron datos para esta semana");
@@ -1772,10 +1779,10 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
         // Organizar datos por día y momento
         const datosPorDia = {};
         datosSemana.forEach(fila => {
-            const dia = fila[2]; // Columna 'Día'
-            const momento = fila[3]; // Columna 'Momento'
-            const ingrediente = fila[4]; // Columna 'Ingrediente'
-            const puntos = fila[5]; // Columna 'Puntos'
+            const dia = Array.isArray(fila) ? fila[2] : (fila['Día'] || fila['Dia'] || fila['dia']);
+            const momento = Array.isArray(fila) ? fila[3] : (fila['Momento'] || fila['momento']);
+            const ingrediente = Array.isArray(fila) ? fila[4] : (fila['Ingrediente'] || fila['ingrediente']);
+            const puntos = Array.isArray(fila) ? fila[5] : (fila['Puntos'] || fila['puntos'] || 0);
 
             if (!datosPorDia[dia]) {
                 datosPorDia[dia] = {};
