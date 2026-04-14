@@ -213,11 +213,12 @@
         /* Barra Inferior */
         .barra-puntos {
             position: fixed; bottom: 20px; left: 15px; right: 15px;
-            background: white; display: flex; justify-content: space-around; 
-            padding: 15px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            background: white; display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; padding: 15px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             z-index: 1000;
+            flex-wrap: wrap;
         }
-        .box-pts { text-align: center; flex: 1; }
+        .box-pts { text-align: center; flex: 1; min-width: 120px; }
         .label-pts { font-size: 0.65rem; color: #888; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; }
         .val-pts { font-size: 1.3rem; font-weight: 800; border: none; width: 100%; text-align: center; background: transparent; outline: none; }
 
@@ -249,8 +250,28 @@
             transform: translateY(0);
             box-shadow: 0 2px 8px rgba(120, 169, 120, 0.3);
         }
-        .btn-guardar i {
+        .btn-guardar i, .btn-limpiar i {
             font-size: 1rem;
+        }
+        .btn-limpiar {
+            background: #f0f0f0;
+            color: var(--verde-oscuro);
+            border: none;
+            padding: 12px 14px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-left: 0;
+            min-width: 45px;
+        }
+        .btn-limpiar:hover {
+            background: #e8e8e8;
         }
     </style>
 </head>
@@ -283,13 +304,13 @@
     </div>
 
     <div class="tabs-dias">
-        <button class="tab-btn active" onclick="cambiarDia('lunes', this)">LUN</button>
-        <button class="tab-btn" onclick="cambiarDia('martes', this)">MAR</button>
-        <button class="tab-btn" onclick="cambiarDia('miercoles', this)">MIE</button>
-        <button class="tab-btn" onclick="cambiarDia('jueves', this)">JUE</button>
-        <button class="tab-btn" onclick="cambiarDia('viernes', this)">VIE</button>
-        <button class="tab-btn" onclick="cambiarDia('sabado', this)">SAB</button>
-        <button class="tab-btn" onclick="cambiarDia('domingo', this)">DOM</button>
+        <button class="tab-btn active" data-dia="lunes" onclick="cambiarDia('lunes', this)">LUN</button>
+        <button class="tab-btn" data-dia="martes" onclick="cambiarDia('martes', this)">MAR</button>
+        <button class="tab-btn" data-dia="miercoles" onclick="cambiarDia('miercoles', this)">MIE</button>
+        <button class="tab-btn" data-dia="jueves" onclick="cambiarDia('jueves', this)">JUE</button>
+        <button class="tab-btn" data-dia="viernes" onclick="cambiarDia('viernes', this)">VIE</button>
+        <button class="tab-btn" data-dia="sabado" onclick="cambiarDia('sabado', this)">SAB</button>
+        <button class="tab-btn" data-dia="domingo" onclick="cambiarDia('domingo', this)">DOM</button>
     </div>
 
     <div class="contenedor-principal">
@@ -634,10 +655,14 @@
             <span class="label-pts">Disponible</span>
             <input type="number" id="restantes-val" class="val-pts" value="30" readonly>
         </div>
-        <button class="btn-guardar" id="btn-guardar-menu" type="button" onclick="guardarMenuSemanal()" title="Guardar menú semanal">
-            <i class="fas fa-save"></i>
-            <span>Guardar</span>
-        </button>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button class="btn-guardar" id="btn-guardar-menu" type="button" onclick="guardarMenuSemanal()" title="Guardar menú semanal">
+                <i class="fas fa-save"></i>
+            </button>
+            <button class="btn-limpiar" id="btn-limpiar-semana" type="button" onclick="limpiarSemana()" title="Limpiar semana">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
     </div>
 
     <script src="app.js"></script>

@@ -520,6 +520,7 @@ async function cargarDespensaDiario() {
         return;
     }
 
+    cargarSemanaActiva();
     console.log("Iniciando carga de despensa...");
     console.log("URL a consultar:", URL_GOOGLE_SCRIPT + "?tabla=alimentos");
 
@@ -1347,12 +1348,33 @@ function cambiarDia(dia, btn) {
     }
     
     diaActual = dia;
+    localStorage.setItem('ultimaSemanaDiaActiva', dia);
     actualizarPuntos();
 }
 
 function guardarPresupuestoActual() {
     const val = document.getElementById('total-' + diaActual).value;
     localStorage.setItem('presupuesto-' + diaActual, val);
+}
+
+function getTabButton(dia) {
+    return document.querySelector('.tab-btn[data-dia="' + dia + '"]');
+}
+
+function cargarSemanaActiva() {
+    const ultimaSemana = localStorage.getItem('ultimaSemanaGuardada');
+    const diaGuardado = localStorage.getItem('ultimaSemanaDiaActiva');
+    const fechaInput = document.getElementById('fecha-inicio');
+
+    if (fechaInput && ultimaSemana) {
+        fechaInput.value = ultimaSemana;
+    }
+
+    const diaA = diaGuardado || 'lunes';
+    const btn = getTabButton(diaA);
+    if (btn) {
+        cambiarDia(diaA, btn);
+    }
 }
 
 function calcularFechaParaDia(fechaInicio, dia) {
@@ -1437,6 +1459,10 @@ function guardarMenuSemanal() {
         body: JSON.stringify({ tipo: 'guardar_menu_semanal', filas: filasGuardar })
     })
     .then(() => {
+        if (inicioSemana) {
+            localStorage.setItem('ultimaSemanaGuardada', inicioSemana);
+            localStorage.setItem('ultimaSemanaDiaActiva', diaActual);
+        }
         alert('Menú guardado correctamente.');
     })
     .catch(() => {
@@ -1448,6 +1474,16 @@ function guardarMenuSemanal() {
             btn.innerHTML = textoOriginal;
         }
     });
+}
+
+function limpiarSemana() {
+    localStorage.removeItem('ultimaSemanaGuardada');
+    localStorage.removeItem('ultimaSemanaDiaActiva');
+    const fechaInput = document.getElementById('fecha-inicio');
+    if (fechaInput) fechaInput.value = '';
+    const btn = getTabButton('lunes');
+    if (btn) cambiarDia('lunes', btn);
+    alert('Semana limpiada. Ahora puedes iniciar una nueva semana.');
 }
 
 function irAlMenu() {
