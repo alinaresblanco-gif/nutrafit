@@ -286,6 +286,58 @@
                 font-size: 0.85rem;
             }
         }
+
+        /* SECCIÓN HISTORIAL */
+        .seccion-historial {
+            background: white;
+            margin: 20px 15px;
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(120, 169, 120, 0.2);
+            overflow: hidden;
+        }
+        .historial-header {
+            padding: 15px;
+            color: var(--verde-corp);
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: var(--verde-suave);
+            border-bottom: 1px solid rgba(120, 169, 120, 0.2);
+        }
+        .contenedor-historial {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .item-historial {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .item-historial:hover {
+            background: var(--verde-suave);
+        }
+        .item-historial:last-child {
+            border-bottom: none;
+        }
+        .fecha-historial {
+            font-weight: 700;
+            color: var(--verde-oscuro);
+            font-size: 0.9rem;
+        }
+        .presupuesto-historial {
+            background: var(--verde-corp);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -655,6 +707,16 @@
                         <input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORIAL DE SEMANAS -->
+    <div class="seccion-historial">
+        <div class="historial-header">Historial de Semanas</div>
+        <div class="contenedor-historial" id="contenedor-historial">
+            <div id="cargando-historial" style="padding:15px; color:gray; font-size:0.8rem;">
+                <i class="fas fa-spinner fa-spin"></i> Cargando historial...
             </div>
         </div>
     </div>

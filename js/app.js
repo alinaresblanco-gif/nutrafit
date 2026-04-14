@@ -1217,6 +1217,8 @@ window.onload = function() {
     cargarSemanaActiva();
     // Llamamos a la carga segura de Google, igual que en el agua
     cargarDespensaGoogle();
+    // Cargar historial de semanas
+    cargarHistorialSemanas();
 };
 
 document.addEventListener('input', function(event) {
@@ -1685,4 +1687,182 @@ function irAlMenu() {
     google.script.run.withSuccessHandler(function(url){
         window.open(url, '_top');
     }).getScriptUrl();
+}
+
+/* --- FUNCIONES PARA HISTORIAL DE SEMANAS --- */
+async function cargarHistorialSemanas() {
+    const contenedor = document.getElementById('contenedor-historial');
+    if (!contenedor) return;
+
+    try {
+        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=menu_semanal&t=" + new Date().getTime());
+        const datos = await respuesta.json();
+
+        if (!datos || datos.length === 0) {
+            contenedor.innerHTML = "<p style='text-align:center; padding:20px; color:#666;'>No hay semanas guardadas</p>";
+            return;
+        }
+
+        // Agrupar por semana (fecha de inicio)
+        const semanasAgrupadas = {};
+        datos.forEach(fila => {
+            const semanaInicio = fila[0]; // Columna 'Semana inicio'
+            if (semanaInicio) {
+                if (!semanasAgrupadas[semanaInicio]) {
+                    semanasAgrupadas[semanaInicio] = [];
+                }
+                semanasAgrupadas[semanaInicio].push(fila);
+            }
+        });
+
+        // Ordenar semanas por fecha descendente
+        const semanasOrdenadas = Object.keys(semanasAgrupadas).sort((a, b) => new Date(b) - new Date(a));
+
+        let html = "";
+        semanasOrdenadas.forEach(semanaFecha => {
+            const filasSemana = semanasAgrupadas[semanaFecha];
+            let totalPuntos = 0;
+
+            filasSemana.forEach(fila => {
+                totalPuntos += parseFloat(fila[5] || 0); // Columna 'Puntos'
+            });
+
+            html += `
+                <div class="item-historial" onclick="cargarSemanaDesdeHistorial('${semanaFecha}')">
+                    <div class="fecha-historial">${new Date(semanaFecha).toLocaleDateString('es-ES')}</div>
+                    <div class="presupuesto-historial">${Math.round(totalPuntos)} pts</div>
+                </div>
+            `;
+        });
+
+        contenedor.innerHTML = html;
+    } catch (error) {
+        console.error("Error cargando historial de semanas:", error);
+        contenedor.innerHTML = "<p style='text-align:center; padding:20px; color:red;'>Error al cargar el historial</p>";
+    }
+}
+
+async function cargarSemanaDesdeHistorial(fechaSemana) {
+    try {
+        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=menu_semanal&t=" + new Date().getTime());
+        const datos = await respuesta.json();
+
+        if (!datos || datos.length === 0) {
+            alert("No se encontraron datos para esta semana");
+            return;
+        }
+
+        // Filtrar datos de la semana específica
+        const datosSemana = datos.filter(fila => fila[0] === fechaSemana);
+
+        if (datosSemana.length === 0) {
+            alert("No se encontraron datos para esta semana");
+            return;
+        }
+
+        // Limpiar formulario actual
+        reiniciarFormulario();
+
+        // Establecer fecha de inicio
+        const fechaInput = document.getElementById('fecha-inicio');
+        if (fechaInput) {
+            fechaInput.value = fechaSemana;
+        }
+
+        // Organizar datos por día y momento
+        const datosPorDia = {};
+        datosSemana.forEach(fila => {
+            const dia = fila[2]; // Columna 'Día'
+            const momento = fila[3]; // Columna 'Momento'
+            const ingrediente = fila[4]; // Columna 'Ingrediente'
+            const puntos = fila[5]; // Columna 'Puntos'
+
+            if (!datosPorDia[dia]) {
+                datosPorDia[dia] = {};
+            }
+            if (!datosPorDia[dia][momento]) {
+                datosPorDia[dia][momento] = [];
+            }
+            datosPorDia[dia][momento].push({ ingrediente, puntos });
+        });
+
+        // Mapear nombres de días a IDs
+        const diaMap = {
+            'Lunes': 'lunes',
+            'Martes': 'martes',
+            'Miércoles': 'miercoles',
+            'Jueves': 'jueves',
+            'Viernes': 'viernes',
+            'Sábado': 'sabado',
+            'Domingo': 'domingo'
+        };
+
+        // Llenar formulario
+        Object.keys(datosPorDia).forEach(diaNombre => {
+            const diaId = diaMap[diaNombre];
+            if (!diaId) return;
+
+            const contenedorDia = document.getElementById(diaId);
+            if (!contenedorDia) return;
+
+            const cards = contenedorDia.querySelectorAll('.card-momento');
+
+            Object.keys(datosPorDia[diaNombre]).forEach(momento => {
+                // Encontrar la card correspondiente al momento
+                const card = Array.from(cards).find(c => 
+                    c.querySelector('.momento-titulo')?.innerText.trim() === momento
+                );
+
+                if (card) {
+                    const contenedorIngredientes = card.querySelector('.contenedor-ingredientes');
+                    if (contenedorIngredientes) {
+                        contenedorIngredientes.innerHTML = '';
+
+                        datosPorDia[diaNombre][momento].forEach(item => {
+                            const fila = document.createElement('div');
+                            fila.className = 'fila-ingrediente';
+
+                            const inputTxt = document.createElement('input');
+                            inputTxt.type = 'text';
+                            inputTxt.className = 'input-txt';
+                            inputTxt.placeholder = 'Ingrediente...';
+                            inputTxt.value = item.ingrediente || '';
+                            inputTxt.addEventListener('input', function() {
+                                gestionarNuevaFila(this);
+                                guardarEstadoSemanaLocal();
+                            });
+
+                            const inputPts = document.createElement('input');
+                            inputPts.type = 'number';
+                            inputPts.className = 'input-pts';
+                            inputPts.value = item.puntos || '0';
+                            inputPts.addEventListener('input', function() {
+                                actualizarPuntos();
+                                guardarEstadoSemanaLocal();
+                            });
+
+                            fila.appendChild(inputTxt);
+                            fila.appendChild(inputPts);
+                            contenedorIngredientes.appendChild(fila);
+                        });
+                    }
+                }
+            });
+        });
+
+        // Cambiar al día activo (lunes por defecto)
+        const btnLunes = getTabButton('lunes');
+        if (btnLunes) {
+            cambiarDia('lunes', btnLunes);
+        }
+
+        // Guardar estado
+        guardarEstadoSemanaLocal();
+
+        alert("Semana cargada correctamente desde el historial");
+
+    } catch (error) {
+        console.error("Error cargando semana desde historial:", error);
+        alert("Error al cargar la semana desde el historial");
+    }
 }
