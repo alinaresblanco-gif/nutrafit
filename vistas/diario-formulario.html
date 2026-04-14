@@ -168,9 +168,42 @@
         }
         .momento-titulo::before { content: ''; width: 4px; height: 16px; background: var(--verde-corp); border-radius: 2px; }
 
-        .fila-ingrediente { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .input-txt { flex-grow: 1; border: 1px solid #e0e6e0; padding: 12px 15px; border-radius: 12px; outline: none; background: #fafafa; font-size: 0.95rem; }
-        .input-pts { width: 55px; border: none; padding: 10px; border-radius: 12px; text-align: center; font-weight: 800; color: var(--verde-oscuro); background: var(--verde-suave); }
+        .fila-ingrediente {
+            display: grid;
+            grid-template-columns: 2fr 1fr 0.9fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .input-txt, .input-cantidad, .input-notas {
+            border: 1px solid #e0e6e0;
+            padding: 12px 15px;
+            border-radius: 12px;
+            outline: none;
+            background: #fafafa;
+            font-size: 0.95rem;
+        }
+        .input-cantidad, .input-notas {
+            width: 100%;
+        }
+        .input-pts {
+            width: 55px;
+            border: none;
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 800;
+            color: var(--verde-oscuro);
+            background: var(--verde-suave);
+        }
+        @media (max-width: 680px) {
+            .fila-ingrediente {
+                grid-template-columns: 1fr;
+            }
+            .input-pts {
+                width: 100%;
+            }
+        }
 
         /* Barra Inferior */
         .barra-puntos {
@@ -596,7 +629,7 @@
             <span class="label-pts">Disponible</span>
             <input type="number" id="restantes-val" class="val-pts" value="30" readonly>
         </div>
-        <button class="btn-guardar" id="btn-guardar-menu" title="Guardar menú semanal">
+        <button class="btn-guardar" id="btn-guardar-menu" type="button" onclick="guardarMenuSemanal()" title="Guardar menú semanal">
             <i class="fas fa-save"></i>
             <span>Guardar</span>
         </button>

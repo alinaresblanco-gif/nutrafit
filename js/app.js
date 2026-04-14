@@ -520,6 +520,8 @@ async function cargarDespensaDiario() {
         return;
     }
 
+    asegurarCamposFilaIngredientes();
+
     console.log("Iniciando carga de despensa...");
     console.log("URL a consultar:", URL_GOOGLE_SCRIPT + "?tabla=alimentos");
 
@@ -1277,7 +1279,9 @@ function crearFilaNueva(contenedor) {
     const nuevaFila = document.createElement('div');
     nuevaFila.className = 'fila-ingrediente';
     nuevaFila.innerHTML = '<input type="text" class="input-txt" placeholder="Otro ingrediente..." oninput="gestionarNuevaFila(this)">' +
-                          '<input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">';
+                          '<input type="text" class="input-cantidad" placeholder="Cantidad..." oninput="actualizarPuntos()">' +
+                          '<input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">' +
+                          '<input type="text" class="input-notas" placeholder="Notas..." oninput="actualizarPuntos()">';
     contenedor.appendChild(nuevaFila);
 }
 
@@ -1353,6 +1357,133 @@ function cambiarDia(dia, btn) {
 function guardarPresupuestoActual() {
     const val = document.getElementById('total-' + diaActual).value;
     localStorage.setItem('presupuesto-' + diaActual, val);
+}
+
+function asegurarCamposFilaIngredientes() {
+    const filas = document.querySelectorAll('.fila-ingrediente');
+    filas.forEach(fila => {
+        if (!fila.querySelector('.input-cantidad')) {
+            const inputPts = fila.querySelector('.input-pts');
+            const cantidad = document.createElement('input');
+            cantidad.type = 'text';
+            cantidad.placeholder = 'Cantidad...';
+            cantidad.className = 'input-cantidad';
+            cantidad.oninput = actualizarPuntos;
+
+            const notas = document.createElement('input');
+            notas.type = 'text';
+            notas.placeholder = 'Notas...';
+            notas.className = 'input-notas';
+            notas.oninput = actualizarPuntos;
+
+            if (inputPts) {
+                fila.insertBefore(cantidad, inputPts);
+                fila.appendChild(notas);
+            } else {
+                fila.appendChild(cantidad);
+                fila.appendChild(notas);
+            }
+        }
+    });
+}
+
+function calcularFechaParaDia(fechaInicio, dia) {
+    if (!fechaInicio) return "";
+    const offsetMap = {
+        lunes: 0,
+        martes: 1,
+        miercoles: 2,
+        jueves: 3,
+        viernes: 4,
+        sabado: 5,
+        domingo: 6
+    };
+    const offset = offsetMap[dia] || 0;
+    const fecha = new Date(fechaInicio);
+    if (isNaN(fecha.getTime())) return "";
+    fecha.setDate(fecha.getDate() + offset);
+    return fecha.toISOString().split('T')[0];
+}
+
+function guardarMenuSemanal() {
+    const inicioSemana = document.getElementById('fecha-inicio')?.value || "";
+    const diaMap = {
+        lunes: 'Lunes',
+        martes: 'Martes',
+        miercoles: 'Miércoles',
+        jueves: 'Jueves',
+        viernes: 'Viernes',
+        sabado: 'Sábado',
+        domingo: 'Domingo'
+    };
+    const dias = Object.keys(diaMap);
+
+    if (!inicioSemana && !confirm("No has ingresado la fecha de inicio de la semana. ¿Deseas guardar igualmente?")) {
+        return;
+    }
+
+    const filasGuardar = [];
+
+    dias.forEach(dia => {
+        const contenedorDia = document.getElementById(dia);
+        if (!contenedorDia) return;
+
+        const cards = contenedorDia.querySelectorAll('.card-momento');
+        const fechaDia = calcularFechaParaDia(inicioSemana, dia);
+
+        cards.forEach(card => {
+            const momento = card.querySelector('.momento-titulo')?.innerText.trim() || "";
+            card.querySelectorAll('.fila-ingrediente').forEach(fila => {
+                const ingrediente = fila.querySelector('.input-txt')?.value.trim() || "";
+                const cantidad = fila.querySelector('.input-cantidad')?.value.trim() || "";
+                const puntos = fila.querySelector('.input-pts')?.value.trim() || "";
+                const notas = fila.querySelector('.input-notas')?.value.trim() || "";
+
+                if (!ingrediente && !cantidad && !puntos && !notas) return;
+                if (ingrediente === "" && cantidad === "" && notas === "" && Number(puntos) === 0) return;
+
+                filasGuardar.push({
+                    'Semana inicio': inicioSemana,
+                    'Fecha': fechaDia,
+                    'Día': diaMap[dia],
+                    'Momento': momento,
+                    'Ingrediente': ingrediente,
+                    'Cantidad': cantidad,
+                    'Puntos': puntos,
+                    'Notas': notas
+                });
+            });
+        });
+    });
+
+    if (filasGuardar.length === 0) {
+        return alert('No hay datos para guardar en el menú semanal.');
+    }
+
+    const btn = document.getElementById('btn-guardar-menu');
+    const textoOriginal = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    }
+
+    fetch(URL_GOOGLE_SCRIPT, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ tipo: 'guardar_menu_semanal', filas: filasGuardar })
+    })
+    .then(() => {
+        alert('Menú guardado correctamente.');
+    })
+    .catch(() => {
+        alert('Error al guardar el menú. Comprueba tu conexión.');
+    })
+    .finally(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = textoOriginal;
+        }
+    });
 }
 
 function irAlMenu() {
