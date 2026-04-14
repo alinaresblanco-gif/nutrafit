@@ -43,6 +43,9 @@
             display: flex;
             flex-direction: column;
             border-bottom: 2px solid var(--verde-suave);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
         .despensa-header {
             padding: 12px 15px 5px;
@@ -114,6 +117,9 @@
             border-radius: 18px;
             box-shadow: var(--shadow);
             border: 1px solid rgba(120, 169, 120, 0.2);
+            position: sticky;
+            top: 30vh;
+            z-index: 45;
         }
         .fecha-inicio-semana label {
             display: block;
@@ -134,6 +140,21 @@
             color: #333;
             outline: none;
         }
+
+        .tabs-dias {
+            display: flex; overflow-x: auto; background: white;
+            padding: 12px 8px; gap: 10px; border-bottom: 1px solid #edf2ed;
+            position: sticky;
+            top: calc(30vh + 90px);
+            z-index: 40;
+        }
+        .tab-btn {
+            padding: 8px 22px; border-radius: 25px; border: none;
+            background: var(--verde-suave); color: var(--verde-oscuro);
+            white-space: nowrap; cursor: pointer; font-weight: 700; flex-shrink: 0;
+            font-size: 0.75rem;
+        }
+        .tab-btn.active { background: var(--verde-corp) !important; color: white !important; }
 
         /* Contenedor Principal con Scroll */
         .contenedor-principal { flex-grow: 1; overflow-y: auto; padding: 20px 15px; padding-bottom: 140px; }
