@@ -46,6 +46,19 @@ function formatearFechaES(valor) {
     return fecha ? fecha.toLocaleDateString('es-ES') : "---";
 }
 
+function extraerFilasRespuestaGoogle(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.datos)) return payload.datos;
+    if (Array.isArray(payload?.rows)) return payload.rows;
+    if (Array.isArray(payload?.data)) return payload.data;
+    return [];
+}
+
+function extraerMensajeErrorGoogle(payload) {
+    if (!payload || Array.isArray(payload)) return "";
+    return String(payload.error || payload.message || payload.mensaje || "").trim();
+}
+
 /* --- 1. NAVEGACIÓN TIPO APP (ACTUALIZADA) --- */
 async function abrirVista(nombreVista) {
     const pantallaInicio = document.getElementById('pantalla-inicio');
@@ -576,12 +589,18 @@ async function cargarDespensaDiario() {
             throw new Error("HTTP error! status: " + res.status);
         }
         
-        const datos = await res.json();
-        console.log("Datos recibidos:", datos);
+        const payload = await res.json();
+        console.log("Datos recibidos:", payload);
+        const datos = extraerFilasRespuestaGoogle(payload);
+        const mensajeBackend = extraerMensajeErrorGoogle(payload);
         
-        if (!datos || datos.length === 0) {
+        if (datos.length === 0) {
             console.log("No hay datos o array vacío");
-            if (cargando) cargando.innerHTML = "<p style='text-align:center; padding:20px;'>La despensa está vacía.</p>";
+            if (mensajeBackend) {
+                if (cargando) cargando.innerHTML = `<p style='text-align:center; padding:20px; color:red;'>Error de Google Sheets: ${mensajeBackend}</p>`;
+            } else {
+                if (cargando) cargando.innerHTML = "<p style='text-align:center; padding:20px;'>La despensa está vacía.</p>";
+            }
             return;
         }
 
@@ -1737,10 +1756,14 @@ async function cargarHistorialSemanas() {
 
     try {
         const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=menus_semanales&t=" + new Date().getTime());
-        const datos = await respuesta.json();
+        const payload = await respuesta.json();
+        const datos = extraerFilasRespuestaGoogle(payload);
+        const mensajeBackend = extraerMensajeErrorGoogle(payload);
 
-        if (!datos || datos.length === 0) {
-            contenedor.innerHTML = "<p style='text-align:center; padding:20px; color:#666;'>No hay semanas guardadas</p>";
+        if (datos.length === 0) {
+            contenedor.innerHTML = mensajeBackend
+                ? `<p style='text-align:center; padding:20px; color:red;'>Error de Google Sheets: ${mensajeBackend}</p>`
+                : "<p style='text-align:center; padding:20px; color:#666;'>No hay semanas guardadas</p>";
             return;
         }
 
@@ -1803,10 +1826,16 @@ async function cargarHistorialSemanas() {
 async function cargarSemanaDesdeHistorial(fechaSemana) {
     try {
         const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=menus_semanales&t=" + new Date().getTime());
-        const datos = await respuesta.json();
+        const payload = await respuesta.json();
+        const datos = extraerFilasRespuestaGoogle(payload);
+        const mensajeBackend = extraerMensajeErrorGoogle(payload);
 
-        if (!datos || datos.length === 0) {
-            alert("No se encontraron datos para esta semana");
+        if (datos.length === 0) {
+            if (mensajeBackend) {
+                alert("No se pudo cargar la semana: " + mensajeBackend);
+            } else {
+                alert("No se encontraron datos para esta semana");
+            }
             return;
         }
 
