@@ -1919,8 +1919,8 @@ async function imprimirSemanaPDF() {
 
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(17);
-    doc.text('NUTRAFIT PLANNER SEMANAL', 36, 17);
+    doc.setFontSize(22);
+    doc.text('NUTRAFIT PLANNER SEMANAL', ancho / 2, 17, { align: 'center' });
 
     const creditosLunes = obtenerCreditosLunesInforme();
     const fechaLunesFormateada = formatearFechaES(fechaLunes);
@@ -1993,7 +1993,9 @@ async function imprimirSemanaPDF() {
     doc.setTextColor(...verdeOscuro);
     doc.setFont('helvetica', 'bolditalic');
     doc.setFontSize(10);
-    doc.text('NutraFit dice: cada elección de hoy te acerca a tu mejor versión. ¡Sigue sumando salud, equipo!', margen, mensajeY);
+    const fraseMotivacional = 'La disciplina de hoy es la libertad de mañana: cumple con tu plan y deja que la satisfacción de haberlo logrado sea el motor de tu semana.';
+    const fraseLineas = doc.splitTextToSize(fraseMotivacional, ancho - (margen * 2));
+    doc.text(fraseLineas, margen, mensajeY);
 
     doc.save('NutraFit_Semana_' + fechaLunes + '.pdf');
 }
