@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nutrafit-v1';
+const CACHE_NAME = 'nutrafit-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -19,6 +19,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll(ASSETS);
     })
   );
+  self.skipWaiting();
 });
 
 // Activación: Limpia cachés antiguas
@@ -28,8 +29,14 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       );
-    })
+    }).then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Estrategia: Primero intenta red, si falla usa caché

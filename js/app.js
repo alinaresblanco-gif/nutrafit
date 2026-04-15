@@ -1995,7 +1995,7 @@ async function imprimirSemanaPDF() {
     doc.setFontSize(10);
     const fraseMotivacional = 'La disciplina de hoy es la libertad de mañana: cumple con tu plan y deja que la satisfacción de haberlo logrado sea el motor de tu semana.';
     const fraseLineas = doc.splitTextToSize(fraseMotivacional, ancho - (margen * 2));
-    doc.text(fraseLineas, margen, mensajeY);
+    doc.text(fraseLineas, ancho / 2, mensajeY, { align: 'center' });
 
     doc.save('NutraFit_Semana_' + fechaLunes + '.pdf');
 }

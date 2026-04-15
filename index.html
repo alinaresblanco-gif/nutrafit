@@ -17,6 +17,42 @@
 
     <link rel="apple-touch-icon" href="IMAGENES/logo.png">
     <link rel="icon" type="image/png" href="IMAGENES/logo.png">
+
+    <style>
+        .toast-actualizacion {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(46, 74, 46, 0.95);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            z-index: 9999;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            max-width: calc(100% - 30px);
+            text-align: center;
+        }
+
+        .toast-actualizacion.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-actualizacion.info {
+            background: rgba(46, 74, 46, 0.95);
+        }
+
+        .toast-actualizacion.ok {
+            background: rgba(90, 138, 90, 0.96);
+        }
+    </style>
 </head>
 <body>
 
@@ -63,6 +99,8 @@
     <div id="contenedor-vistas" style="display: none; min-height: 100vh; width: 100%;">
         </div>
 
+    <div id="toast-actualizacion" class="toast-actualizacion info" aria-live="polite"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
@@ -71,9 +109,64 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
+                const toast = document.getElementById('toast-actualizacion');
+                let temporizadorToast = null;
+
+                function mostrarToastActualizacion(mensaje, tipo = 'info', autocierreMs = 0) {
+                    if (!toast) return;
+                    toast.textContent = mensaje;
+                    toast.classList.remove('info', 'ok');
+                    toast.classList.add(tipo);
+                    toast.classList.add('visible');
+
+                    if (temporizadorToast) {
+                        clearTimeout(temporizadorToast);
+                        temporizadorToast = null;
+                    }
+
+                    if (autocierreMs > 0) {
+                        temporizadorToast = setTimeout(() => {
+                            toast.classList.remove('visible');
+                        }, autocierreMs);
+                    }
+                }
+
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker activo'))
+                    .then(reg => {
+                        console.log('Service Worker activo');
+
+                        if (reg.waiting) {
+                            mostrarToastActualizacion('Nueva versión detectada. Actualizando...', 'info');
+                            setTimeout(() => {
+                                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                            }, 450);
+                        }
+
+                        reg.addEventListener('updatefound', () => {
+                            const nuevoSW = reg.installing;
+                            if (!nuevoSW) return;
+
+                            nuevoSW.addEventListener('statechange', () => {
+                                if (nuevoSW.state === 'installed' && navigator.serviceWorker.controller) {
+                                    mostrarToastActualizacion('Hay una nueva versión. Aplicando cambios...', 'info');
+                                    setTimeout(() => {
+                                        nuevoSW.postMessage({ type: 'SKIP_WAITING' });
+                                    }, 450);
+                                }
+                            });
+                        });
+
+                        reg.update();
+                    })
                     .catch(err => console.log('Error al registrar SW:', err));
+
+                let recargaHecha = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (recargaHecha) return;
+                    recargaHecha = true;
+                    mostrarToastActualizacion('Versión actualizada. Recargando...', 'ok');
+                    window.location.reload();
+                });
             });
         }
     </script>
