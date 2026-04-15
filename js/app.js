@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbycp5TemDQ2J8jS-V61CdrTwbN-gclNxKiVUoDpRqGPJibpflws-_fAJUxi3d_ZoMFz/exec";
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwjfkP0heGq5EUYQMPLK5rEPG2fg8CSVqh4BsblQI8sXqO80adDyRgzA66rd_awByct/exec";
 
 // Variables globales de estado
 let vasosActuales = 0;
@@ -44,6 +44,35 @@ function formatearFechaES(valor) {
 
     const fecha = parseFechaYMD(ymd);
     return fecha ? fecha.toLocaleDateString('es-ES') : "---";
+}
+
+function obtenerPresupuestoSemanaActual() {
+    const guardadoLunes = parseFloat(localStorage.getItem('presupuesto-lunes'));
+    if (!isNaN(guardadoLunes)) return Math.round(guardadoLunes);
+
+    const inputActivo = document.getElementById('total-' + diaActual) || document.querySelector('[id^="total-"]');
+    const valorActivo = parseFloat(inputActivo?.value);
+    if (!isNaN(valorActivo)) return Math.round(valorActivo);
+
+    return 30;
+}
+
+function obtenerPresupuestoDesdeFila(fila) {
+    if (!fila) return null;
+
+    if (!Array.isArray(fila)) {
+        const valor = fila['Presupuesto'] ?? fila['presupuesto'] ?? fila['PRESUPUESTO'];
+        const numero = parseFloat(valor);
+        return isNaN(numero) ? null : Math.round(numero);
+    }
+
+    const candidatos = [fila[8], fila[7], fila[6]];
+    for (let i = 0; i < candidatos.length; i++) {
+        const numero = parseFloat(candidatos[i]);
+        if (!isNaN(numero)) return Math.round(numero);
+    }
+
+    return null;
 }
 
 function extraerFilasRespuestaGoogle(payload) {
@@ -1627,6 +1656,7 @@ function calcularFechaParaDia(fechaInicio, dia) {
 
 function guardarMenuSemanal() {
     const inicioSemana = document.getElementById('fecha-inicio')?.value || "";
+    const presupuestoSemana = obtenerPresupuestoSemanaActual();
     const diaMap = {
         lunes: 'Lunes',
         martes: 'Martes',
@@ -1666,7 +1696,8 @@ function guardarMenuSemanal() {
                     'Día': diaMap[dia],
                     'Momento': momento,
                     'Ingrediente': ingrediente,
-                    'Puntos': puntos
+                    'Puntos': puntos,
+                    'Presupuesto': presupuestoSemana
                 });
             });
         });
@@ -1802,16 +1833,23 @@ async function cargarHistorialSemanas() {
         semanasOrdenadas.forEach(semanaFecha => {
             const filasSemana = semanasAgrupadas[semanaFecha];
             let totalPuntos = 0;
+            let presupuestoSemana = null;
 
             filasSemana.forEach(fila => {
                 const puntos = Array.isArray(fila) ? fila[5] : (fila['Puntos'] || fila['puntos'] || 0);
                 totalPuntos += parseFloat(puntos || 0);
+
+                if (presupuestoSemana === null) {
+                    presupuestoSemana = obtenerPresupuestoDesdeFila(fila);
+                }
             });
+
+            const valorHistorial = presupuestoSemana !== null ? presupuestoSemana : Math.round(totalPuntos);
 
             html += `
                 <div class="item-historial" onclick="cargarSemanaDesdeHistorial('${semanaFecha}')">
                     <div class="fecha-historial">${formatearFechaES(semanaFecha)}</div>
-                    <div class="presupuesto-historial">${Math.round(totalPuntos)} pts</div>
+                    <div class="presupuesto-historial">${valorHistorial} pts</div>
                 </div>
             `;
         });
@@ -1858,6 +1896,19 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
         const fechaInput = document.getElementById('fecha-inicio');
         if (fechaInput) {
             fechaInput.value = fechaSemana;
+        }
+
+        const presupuestoSemana = datosSemana.reduce((acc, fila) => {
+            if (acc !== null) return acc;
+            return obtenerPresupuestoDesdeFila(fila);
+        }, null);
+
+        if (presupuestoSemana !== null) {
+            const presupuestoInput = document.getElementById('total-' + diaActual) || document.querySelector('[id^="total-"]');
+            if (presupuestoInput) {
+                presupuestoInput.value = presupuestoSemana;
+            }
+            localStorage.setItem('presupuesto-lunes', String(presupuestoSemana));
         }
 
         // Organizar datos por día y momento
