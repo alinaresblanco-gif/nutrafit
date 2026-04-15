@@ -290,7 +290,7 @@
         /* SECCIÓN HISTORIAL */
         .seccion-historial {
             background: white;
-            margin: 20px 15px;
+            margin: 20px 0 0 0;
             border-radius: 18px;
             box-shadow: var(--shadow);
             border: 1px solid rgba(120, 169, 120, 0.2);
@@ -307,8 +307,7 @@
             border-bottom: 1px solid rgba(120, 169, 120, 0.2);
         }
         .contenedor-historial {
-            max-height: 300px;
-            overflow-y: auto;
+            overflow-y: visible;
         }
         .item-historial {
             display: flex;
@@ -709,16 +708,17 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- HISTORIAL DE SEMANAS -->
-    <div class="seccion-historial">
-        <div class="historial-header">Historial de Semanas</div>
-        <div class="contenedor-historial" id="contenedor-historial">
-            <div id="cargando-historial" style="padding:15px; color:gray; font-size:0.8rem;">
-                <i class="fas fa-spinner fa-spin"></i> Cargando historial...
+        <!-- HISTORIAL DE SEMANAS -->
+        <div class="seccion-historial">
+            <div class="historial-header">Historial de Semanas</div>
+            <div class="contenedor-historial" id="contenedor-historial">
+                <div id="cargando-historial" style="padding:15px; color:gray; font-size:0.8rem;">
+                    <i class="fas fa-spinner fa-spin"></i> Cargando historial...
+                </div>
             </div>
         </div>
+
     </div>
 
     <div class="barra-puntos">
