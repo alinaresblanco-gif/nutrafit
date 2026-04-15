@@ -8,6 +8,44 @@ let vasosActuales = 0;
 const objetivoDiario = 8;
 let graficoPesoInstancia = null;
 
+function parseFechaYMD(fechaStr) {
+    if (!fechaStr) return null;
+    const partes = String(fechaStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!partes) return null;
+    const anio = Number(partes[1]);
+    const mes = Number(partes[2]);
+    const dia = Number(partes[3]);
+    return new Date(anio, mes - 1, dia);
+}
+
+function formatearFechaYMDLocal(fecha) {
+    if (!(fecha instanceof Date) || isNaN(fecha.getTime())) return "";
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    return `${anio}-${mes}-${dia}`;
+}
+
+function normalizarFechaYMD(valor) {
+    if (!valor) return "";
+
+    const fechaDirecta = parseFechaYMD(valor);
+    if (fechaDirecta) return formatearFechaYMDLocal(fechaDirecta);
+
+    const parsed = new Date(valor);
+    if (isNaN(parsed.getTime())) return "";
+
+    return formatearFechaYMDLocal(parsed);
+}
+
+function formatearFechaES(valor) {
+    const ymd = normalizarFechaYMD(valor);
+    if (!ymd) return "---";
+
+    const fecha = parseFechaYMD(ymd);
+    return fecha ? fecha.toLocaleDateString('es-ES') : "---";
+}
+
 /* --- 1. NAVEGACIÓN TIPO APP (ACTUALIZADA) --- */
 async function abrirVista(nombreVista) {
     const pantallaInicio = document.getElementById('pantalla-inicio');
@@ -1562,10 +1600,10 @@ function calcularFechaParaDia(fechaInicio, dia) {
         domingo: 6
     };
     const offset = offsetMap[dia] || 0;
-    const fecha = new Date(fechaInicio);
+    const fecha = parseFechaYMD(fechaInicio);
     if (isNaN(fecha.getTime())) return "";
     fecha.setDate(fecha.getDate() + offset);
-    return fecha.toISOString().split('T')[0];
+    return formatearFechaYMDLocal(fecha);
 }
 
 function guardarMenuSemanal() {
@@ -1709,7 +1747,7 @@ async function cargarHistorialSemanas() {
         // Filtrar filas con fecha válida (elimina fila de cabeceras si existe)
         const datosFiltrados = datos.filter(fila => {
             const val = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana inicio'] || fila['semana_inicio'] || fila['semana']);
-            return val && !isNaN(new Date(val).getTime());
+            return Boolean(normalizarFechaYMD(val));
         });
 
         if (datosFiltrados.length === 0) {
@@ -1720,7 +1758,8 @@ async function cargarHistorialSemanas() {
         // Agrupar por semana (fecha de inicio)
         const semanasAgrupadas = {};
         datosFiltrados.forEach(fila => {
-            const semanaInicio = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana inicio'] || fila['semana_inicio'] || fila['semana']);
+            const semanaInicioRaw = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana inicio'] || fila['semana_inicio'] || fila['semana']);
+            const semanaInicio = normalizarFechaYMD(semanaInicioRaw);
             if (semanaInicio) {
                 if (!semanasAgrupadas[semanaInicio]) {
                     semanasAgrupadas[semanaInicio] = [];
@@ -1730,7 +1769,11 @@ async function cargarHistorialSemanas() {
         });
 
         // Ordenar semanas por fecha descendente
-        const semanasOrdenadas = Object.keys(semanasAgrupadas).sort((a, b) => new Date(b) - new Date(a));
+        const semanasOrdenadas = Object.keys(semanasAgrupadas).sort((a, b) => {
+            const fechaA = parseFechaYMD(a);
+            const fechaB = parseFechaYMD(b);
+            return fechaB - fechaA;
+        });
 
         let html = "";
         semanasOrdenadas.forEach(semanaFecha => {
@@ -1744,7 +1787,7 @@ async function cargarHistorialSemanas() {
 
             html += `
                 <div class="item-historial" onclick="cargarSemanaDesdeHistorial('${semanaFecha}')">
-                    <div class="fecha-historial">${new Date(semanaFecha.replace(/-/g, '/')).toLocaleDateString('es-ES')}</div>
+                    <div class="fecha-historial">${formatearFechaES(semanaFecha)}</div>
                     <div class="presupuesto-historial">${Math.round(totalPuntos)} pts</div>
                 </div>
             `;
@@ -1769,8 +1812,9 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
 
         // Filtrar datos de la semana específica (excluye cabeceras)
         const datosSemana = datos.filter(fila => {
-            const semanaInicio = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana_inicio'] || fila['semana']);
-            return semanaInicio === fechaSemana && !isNaN(new Date(semanaInicio).getTime());
+            const semanaInicioRaw = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana_inicio'] || fila['semana']);
+            const semanaInicio = normalizarFechaYMD(semanaInicioRaw);
+            return semanaInicio === fechaSemana;
         });
 
         if (datosSemana.length === 0) {
