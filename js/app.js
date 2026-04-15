@@ -1817,6 +1817,187 @@ function irAlMenu() {
     }).getScriptUrl();
 }
 
+function obtenerCreditosLunesInforme() {
+    const guardado = parseFloat(localStorage.getItem('presupuesto-lunes'));
+    if (!isNaN(guardado)) return Math.round(guardado);
+
+    const inputLunes = document.getElementById('total-lunes');
+    const valorLunes = parseFloat(inputLunes?.value);
+    if (!isNaN(valorLunes)) return Math.round(valorLunes);
+
+    const inputActivo = document.getElementById('total-' + diaActual);
+    const valorActivo = parseFloat(inputActivo?.value);
+    if (!isNaN(valorActivo) && diaActual === 'lunes') return Math.round(valorActivo);
+
+    return 30;
+}
+
+async function cargarImagenComoDataURL(ruta) {
+    const response = await fetch(ruta);
+    if (!response.ok) {
+        throw new Error('No se pudo cargar el logo corporativo.');
+    }
+
+    const blob = await response.blob();
+    return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Error convirtiendo el logo.'));
+        reader.readAsDataURL(blob);
+    });
+}
+
+function obtenerDatosSemanaParaPDF() {
+    const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+    const momentos = ['Desayuno', 'Almuerzo / MM', 'Comida', 'Merienda', 'Cena'];
+    const tabla = {};
+
+    dias.forEach(dia => {
+        tabla[dia] = {};
+        momentos.forEach(momento => {
+            tabla[dia][momento] = [];
+        });
+
+        const contenedorDia = document.getElementById(dia);
+        if (!contenedorDia) return;
+
+        const cards = contenedorDia.querySelectorAll('.card-momento');
+        momentos.forEach((momento, idx) => {
+            const card = cards[idx];
+            if (!card) return;
+
+            const ingredientes = [];
+            card.querySelectorAll('.fila-ingrediente').forEach(fila => {
+                const ingrediente = fila.querySelector('.input-txt')?.value.trim() || '';
+                if (ingrediente) ingredientes.push(ingrediente);
+            });
+
+            tabla[dia][momento] = ingredientes;
+        });
+    });
+
+    return { dias, momentos, tabla };
+}
+
+function construirTextoCeldaIngredientes(ingredientes) {
+    if (!ingredientes || ingredientes.length === 0) return '-';
+    return ingredientes.map(item => '• ' + item).join('\n');
+}
+
+async function imprimirSemanaPDF() {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('No se ha encontrado la librería para generar PDF.');
+        return;
+    }
+
+    const fechaLunes = document.getElementById('fecha-inicio')?.value || '';
+    if (!fechaLunes) {
+        alert('Selecciona la fecha de inicio de semana antes de imprimir.');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    const verdeCorp = [120, 169, 120];
+    const verdeOscuro = [90, 138, 90];
+    const grisTexto = [60, 60, 60];
+
+    const ancho = doc.internal.pageSize.getWidth();
+    const alto = doc.internal.pageSize.getHeight();
+    const margen = 10;
+
+    doc.setFillColor(...verdeCorp);
+    doc.rect(0, 0, ancho, 28, 'F');
+
+    try {
+        const logoDataUrl = await cargarImagenComoDataURL('IMAGENES/logo.png');
+        doc.addImage(logoDataUrl, 'PNG', 10, 4.5, 20, 20);
+    } catch (error) {
+        console.warn(error.message);
+    }
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(17);
+    doc.text('NUTRAFIT PLANNER SEMANAL', 36, 17);
+
+    const creditosLunes = obtenerCreditosLunesInforme();
+    const fechaLunesFormateada = formatearFechaES(fechaLunes);
+
+    doc.setTextColor(...verdeOscuro);
+    doc.setFontSize(11);
+    doc.text('Semana (Lunes): ' + fechaLunesFormateada, margen, 37);
+    doc.text('Créditos Lunes: ' + creditosLunes + ' Créd.', margen + 85, 37);
+
+    const { dias, momentos, tabla } = obtenerDatosSemanaParaPDF();
+
+    const tablaY = 42;
+    const altoCabecera = 10;
+    const altoFila = 26;
+    const anchoMomento = 30;
+    const anchoDia = (ancho - (margen * 2) - anchoMomento) / 7;
+    const altoTabla = altoCabecera + (altoFila * momentos.length);
+
+    doc.setDrawColor(190, 210, 190);
+    doc.setLineWidth(0.2);
+
+    doc.setFillColor(238, 245, 238);
+    doc.rect(margen, tablaY, anchoMomento, altoCabecera, 'F');
+    doc.setTextColor(...verdeOscuro);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('Momento', margen + 2, tablaY + 6.5);
+
+    const nombresDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    dias.forEach((dia, idx) => {
+        const x = margen + anchoMomento + (idx * anchoDia);
+        doc.setFillColor(238, 245, 238);
+        doc.rect(x, tablaY, anchoDia, altoCabecera, 'F');
+        doc.setTextColor(...verdeOscuro);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text(nombresDias[idx], x + 2, tablaY + 6.5);
+    });
+
+    momentos.forEach((momento, row) => {
+        const y = tablaY + altoCabecera + (row * altoFila);
+
+        doc.setTextColor(...verdeOscuro);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.rect(margen, y, anchoMomento, altoFila);
+        const textoMomento = doc.splitTextToSize(momento, anchoMomento - 3);
+        doc.text(textoMomento, margen + 1.7, y + 5.5);
+
+        dias.forEach((dia, col) => {
+            const x = margen + anchoMomento + (col * anchoDia);
+            doc.rect(x, y, anchoDia, altoFila);
+
+            doc.setTextColor(...grisTexto);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.2);
+
+            const texto = construirTextoCeldaIngredientes(tabla[dia][momento]);
+            const lineas = doc.splitTextToSize(texto, anchoDia - 2.5);
+            const lineasRecortadas = lineas.slice(0, 6);
+            if (lineas.length > 6) {
+                lineasRecortadas[5] = '...';
+            }
+
+            doc.text(lineasRecortadas, x + 1.2, y + 4.4, { baseline: 'top' });
+        });
+    });
+
+    const mensajeY = Math.min(tablaY + altoTabla + 12, alto - 15);
+    doc.setTextColor(...verdeOscuro);
+    doc.setFont('helvetica', 'bolditalic');
+    doc.setFontSize(10);
+    doc.text('NutraFit dice: cada elección de hoy te acerca a tu mejor versión. ¡Sigue sumando salud, equipo!', margen, mensajeY);
+
+    doc.save('NutraFit_Semana_' + fechaLunes + '.pdf');
+}
+
 /* --- FUNCIONES PARA HISTORIAL DE SEMANAS --- */
 async function cargarHistorialSemanas() {
     const contenedor = document.getElementById('contenedor-historial');

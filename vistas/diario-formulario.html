@@ -118,7 +118,6 @@
             letter-spacing: 0.5px;
         }
         .fecha-inicio-semana input[type="date"] {
-            width: 100%;
             border: 1px solid #d8e0d8;
             border-radius: 14px;
             padding: 12px 14px;
@@ -126,6 +125,36 @@
             background: #fafafa;
             color: #333;
             outline: none;
+        }
+        .fila-fecha-acciones {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .fila-fecha-acciones input[type="date"] {
+            flex: 1;
+            min-width: 0;
+        }
+        .btn-imprimir-semana {
+            border: none;
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: var(--verde-corp);
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(120, 169, 120, 0.3);
+        }
+        .btn-imprimir-semana:hover {
+            background: var(--verde-oscuro);
+        }
+        .btn-imprimir-semana:active {
+            transform: translateY(1px);
         }
 
         .momento-header i {
@@ -379,7 +408,13 @@
 
     <div class="fecha-inicio-semana">
         <label for="fecha-inicio">Introducir Fecha Inicio Semana</label>
-        <input type="date" id="fecha-inicio" name="fecha-inicio" />
+        <div class="fila-fecha-acciones">
+            <input type="date" id="fecha-inicio" name="fecha-inicio" />
+            <button class="btn-imprimir-semana" type="button" onclick="imprimirSemanaPDF()" title="Imprimir Semana">
+                <i class="fas fa-print"></i>
+                Imprimir Semana
+            </button>
+        </div>
     </div>
 
     <div class="tabs-dias">
