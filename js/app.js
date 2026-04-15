@@ -1389,6 +1389,41 @@ function crearFilaNueva(contenedor) {
     contenedor.appendChild(nuevaFila);
 }
 
+function formatearPuntosMomento(valor) {
+    const numero = Math.round((valor + Number.EPSILON) * 10) / 10;
+    return Number.isInteger(numero) ? String(numero) : numero.toLocaleString('es-ES', { maximumFractionDigits: 1 });
+}
+
+function asegurarBadgeMomento(card) {
+    if (!card) return null;
+
+    let badge = card.querySelector('.momento-parcial');
+    if (badge) return badge;
+
+    const header = card.querySelector('.momento-header');
+    if (!header) return null;
+
+    badge = document.createElement('span');
+    badge.className = 'momento-parcial';
+    badge.textContent = '0 Créd.';
+    header.appendChild(badge);
+    return badge;
+}
+
+function actualizarPuntosPorMomento() {
+    document.querySelectorAll('.contenido-dia .card-momento').forEach(card => {
+        let subtotal = 0;
+        card.querySelectorAll('.input-pts').forEach(input => {
+            subtotal += parseFloat(input.value) || 0;
+        });
+
+        const badge = asegurarBadgeMomento(card);
+        if (badge) {
+            badge.textContent = formatearPuntosMomento(subtotal) + ' Créd.';
+        }
+    });
+}
+
 /**
  * CÁLCULO DE PUNTOS
  */
@@ -1412,6 +1447,8 @@ function actualizarPuntos() {
         displayRestante.value = restante;
         displayRestante.style.color = restante < 0 ? "#e74c3c" : "#d35400";
     }
+
+    actualizarPuntosPorMomento();
 }
 
 /**
