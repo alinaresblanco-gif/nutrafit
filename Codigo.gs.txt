@@ -1,0 +1,390 @@
+/* ============================================================
+    CONTROL TOTAL NUTRAFIT - VERSIÓN INTEGRAL (UNIFICADA)
+    VERSIÓN MEJORADA CON SOPORTE PARA DESPENSA DINÁMICO
+   ============================================================ */
+
+const SPREADSHEET_ID = "1ynyoanVl3CX-a9B-I45iy1BE6vhdJ0hrrRfipziuKz8";
+
+/**
+ * doGet: Gestiona la carga de páginas HTML y el envío de datos JSON
+ */
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const tabla = e.parameter.tabla || e.parameter.hoja;
+
+    // --- 1. LÓGICA DE CARGA DE VISTAS HTML ---
+    if (e.parameter.v) {
+      return HtmlService.createTemplateFromFile(e.parameter.v)
+          .evaluate()
+          .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+          .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
+
+    // --- 2. LÓGICA DE LECTURA DE DATOS (JSON) ---
+    if (!tabla) {
+      return HtmlService.createTemplateFromFile('index')
+          .evaluate()
+          .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+          .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
+
+    const tz = Session.getScriptTimeZone();
+
+    // CASO: ALIMENTOS
+    if (tabla === "alimentos") {
+      try {
+        const sheetNames = ["alimentos", "Alimentos", "ALIMENTOS"];
+        let sheet = null;
+        for (let name of sheetNames) {
+          sheet = ss.getSheetByName(name);
+          if (sheet) break;
+        }
+        if (!sheet) {
+          Logger.log("Error: No se encontró la hoja de alimentos");
+          return finalizarJSON([]);
+        }
+        const data = sheet.getDataRange().getValues();
+        if (data.length <= 1) return finalizarJSON([]);
+        data.shift();
+        const dataLimpia = data.filter(fila => fila[0] && fila[0].toString().trim() !== "");
+        Logger.log("Alimentos cargados: " + dataLimpia.length);
+        return finalizarJSON(dataLimpia);
+      } catch (err) {
+        Logger.log("Error en alimentos: " + err.toString());
+        return finalizarJSON([]);
+      }
+    }
+
+    // CASO: MENÚS SEMANALES
+    else if (tabla === "menus_semanales" || tabla === "menu_semanal") {
+      const sheet = ss.getSheetByName("menus_semanales");
+      if (!sheet) return finalizarJSON([]);
+      const vals = sheet.getDataRange().getValues();
+      if (vals.length <= 1) return finalizarJSON([]);
+
+      const cabeceras = vals.shift();
+
+      const resultado = vals
+        .filter(fila => fila[0] && fila[0].toString().trim() !== "")
+        .map(fila => {
+          const obj = {};
+          cabeceras.forEach((cab, i) => {
+            const celda = fila[i];
+            if (celda instanceof Date) {
+              // ✅ CORRECCIÓN: usar zona horaria local en lugar de toISOString() (UTC)
+              // toISOString() causaba desfase de -1 día en España (UTC+1/+2)
+              obj[cab] = Utilities.formatDate(celda, tz, "yyyy-MM-dd");
+            } else {
+              obj[cab] = (celda !== null && celda !== undefined) ? celda : "";
+            }
+          });
+          return obj;
+        });
+
+      return finalizarJSON(resultado);
+    }
+
+    // CASO: RECETAS
+    else if (tabla === "recetas") {
+      const sheetRec = ss.getSheetByName("recetas");
+      if (!sheetRec) return finalizarJSON([]);
+      const datos = sheetRec.getDataRange().getValues();
+      if (datos.length <= 1) return finalizarJSON([]);
+      datos.shift();
+      const filasLimpias = datos.map(fila => fila.map(celda => {
+        if (celda === null || celda === undefined) return "";
+        if (celda instanceof Date) return celda.toLocaleDateString();
+        return celda.toString();
+      }));
+      return finalizarJSON(filasLimpias);
+    }
+
+    // CASO: EJERCICIO
+    else if (tabla === "ejercicio") {
+      const sheet = ss.getSheetByName("ejercicio");
+      if (!sheet) return finalizarJSON([]);
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return finalizarJSON([]);
+      data.shift();
+      // ✅ CORRECCIÓN: convertir Date a string local para evitar desfase UTC
+      const dataConvertida = data.map(fila => fila.map(celda =>
+        celda instanceof Date
+          ? Utilities.formatDate(celda, tz, "yyyy-MM-dd'T'HH:mm:ss")
+          : celda
+      ));
+      return finalizarJSON(dataConvertida);
+    }
+
+    // CASO: PESO
+    else if (tabla === "peso") {
+      const sheet = ss.getSheetByName("Peso");
+      if (!sheet) return finalizarJSON([]);
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return finalizarJSON([]);
+      data.shift();
+      const dataConvertida = data.map(fila => fila.map(celda =>
+        celda instanceof Date
+          ? Utilities.formatDate(celda, tz, "yyyy-MM-dd")
+          : celda
+      ));
+      return finalizarJSON(dataConvertida.slice(-15).reverse());
+    }
+
+    // CASO: CRÉDITOS
+    else if (tabla === "creditos" || tabla === "CREDITOS") {
+      const sheet = ss.getSheetByName("Creditos") || ss.getSheetByName("CREDITOS");
+      if (!sheet) return finalizarJSON([]);
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return finalizarJSON([]);
+      data.shift();
+      const dataConvertida = data.map(fila => fila.map(celda =>
+        celda instanceof Date
+          ? Utilities.formatDate(celda, tz, "yyyy-MM-dd")
+          : celda
+      ));
+      return finalizarJSON(dataConvertida.slice(-10).reverse());
+    }
+
+    // CASO: AGUA (POR DEFECTO)
+    else {
+      const sheet = ss.getSheetByName("Control_Agua");
+      if (!sheet) return finalizarJSON([]);
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return finalizarJSON([]);
+      data.shift();
+      return finalizarJSON(data.slice(-10).reverse());
+    }
+
+  } catch (err) {
+    Logger.log("Error en doGet: " + err.toString());
+    return finalizarJSON({ error: err.toString() });
+  }
+}
+
+/**
+ * doPost: Gestión de guardado de datos
+ */
+function doPost(e) {
+  try {
+    var payload = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var tipo = payload.tipo || payload.accion;
+
+
+    // REGISTRO DE USUARIO
+    if (tipo === "registro_usuario") {
+      const hojaUsuarios = ss.getSheetByName("usuarios");
+      const { usuario_id, nombre, dispositivo_id } = payload;
+      const datos = hojaUsuarios.getDataRange().getValues();
+      const existe = datos.findIndex(fila => fila[0] === usuario_id);
+      if (existe !== -1) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "existe" })).setMimeType(ContentService.MimeType.JSON);
+      }
+      const fecha_registro = new Date();
+      hojaUsuarios.appendRow([
+        usuario_id,
+        nombre,
+        Utilities.formatDate(fecha_registro, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"),
+        false,
+        dispositivo_id,
+        "",
+        false
+      ]);
+      // Notificar al admin
+      MailApp.sendEmail({
+        to: "alinares.planner@gmail.com", // <-- CAMBIA POR TU CORREO
+        subject: "Nuevo registro en Nutrafit",
+        body: `Nuevo usuario registrado: ${nombre} (${usuario_id})\n\nValídalo en la hoja de usuarios.`
+      });
+      return ContentService.createTextOutput(JSON.stringify({ status: "pendiente" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // LOGIN DE USUARIO
+    if (tipo === "login_usuario") {
+      const hojaUsuarios = ss.getSheetByName("usuarios");
+      const { usuario_id, dispositivo_id } = payload;
+      const datos = hojaUsuarios.getDataRange().getValues();
+      const fila = datos.find(fila => fila[0] === usuario_id);
+      if (!fila) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "no_registrado" })).setMimeType(ContentService.MimeType.JSON);
+      }
+      if (!fila[3]) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "no_validado" })).setMimeType(ContentService.MimeType.JSON);
+      }
+      if (fila[4] !== dispositivo_id) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "otro_dispositivo" })).setMimeType(ContentService.MimeType.JSON);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "ok", nombre: fila[1] })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // NOTIFICAR VALIDACIÓN DE USUARIO (ADMIN)
+    if (tipo === "notificar_validacion") {
+      const hojaUsuarios = ss.getSheetByName("usuarios");
+      const { usuario_id } = payload;
+      const datos = hojaUsuarios.getDataRange().getValues();
+      const idx = datos.findIndex(fila => fila[0] === usuario_id);
+      if (idx === -1) {
+        return ContentService.createTextOutput("Usuario no encontrado");
+      }
+      const fila = datos[idx];
+      if (fila[3] && !fila[5]) {
+        // Solo si está validado y no se ha notificado
+        const fecha_validacion = new Date();
+        hojaUsuarios.getRange(idx + 1, 6).setValue(Utilities.formatDate(fecha_validacion, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"));
+        // Notificar al usuario
+        MailApp.sendEmail({
+          to: fila[0],
+          subject: "Nutrafit: Usuario validado",
+          body: `Hola ${fila[1]},\n\nTu usuario ha sido validado. Ya puedes acceder a Nutrafit.\n\n¡Bienvenida/o!`
+        });
+        return ContentService.createTextOutput("Notificado");
+      }
+      return ContentService.createTextOutput("No validado o ya notificado");
+    }
+
+    // GUARDAR EJERCICIO
+    if (tipo === "guardar_ejercicio") {
+      const sheetEj = ss.getSheetByName("ejercicio");
+      var celdaFoto = (payload.imagenBase64 && payload.imagenBase64.length > 100) ? "data:image/jpeg;base64," + payload.imagenBase64 : "";
+      var distLim = parseFloat(payload.distancia.toString().replace("'", "").replace(",", "."));
+      var tiempoLim = parseFloat(payload.tiempo.toString().replace("'", "").replace(",", "."));
+      var velMedia = (distLim > 0 && tiempoLim > 0) ? (distLim / (tiempoLim / 60)).toFixed(2) : 0;
+      sheetEj.appendRow([payload.usuario_id, new Date(), payload.actividad, tiempoLim, celdaFoto, payload.distancia, payload.pasos || 0, payload.desnivel || 0, velMedia]);
+      return ContentService.createTextOutput("Éxito Ejercicio");
+    }
+
+    // GUARDAR RECETA
+    else if (tipo === "guardar_receta") {
+      var sheetRec = ss.getSheetByName("recetas") || ss.insertSheet("recetas");
+      var celdaFotoRec = (payload.imagenBase64 && payload.imagenBase64.length > 100) ? "data:image/jpeg;base64," + payload.imagenBase64 : "";
+      sheetRec.appendRow([payload.usuario_id || "comun", new Date(), celdaFotoRec, payload.nombre, payload.categoria, payload.ingredientes, payload.elaboracion]);
+      return ContentService.createTextOutput("Éxito Receta");
+    }
+
+    // GUARDAR CRÉDITOS
+    else if (tipo === "creditos") {
+      var sheetCreditos = ss.getSheetByName("Creditos") || ss.getSheetByName("CREDITOS");
+      sheetCreditos.appendRow([payload.usuario_id, payload.fecha, payload.genero, payload.edad, payload.peso, payload.altura, payload.total]);
+      return ContentService.createTextOutput("Éxito Créditos");
+    }
+
+    // GUARDAR MENÚ SEMANAL
+    else if (tipo === "guardar_menu_semanal" || tipo === "guardarFila") {
+      var sheetMenus = ss.getSheetByName("menus_semanales") || ss.insertSheet("menus_semanales");
+
+      // ✅ Añadimos usuario_id como primera columna
+      const headers = ["usuario_id", "Semana inicio", "Fecha", "Día", "Momento", "Ingrediente", "Cantidad", "Puntos", "Notas", "Presupuesto"];
+
+      if (sheetMenus.getLastRow() === 0) {
+        sheetMenus.appendRow(headers);
+      } else {
+        const filaCabecera = sheetMenus.getRange(1, 1, 1, headers.length).getValues()[0];
+        if (filaCabecera.join("|") !== headers.join("|")) {
+          sheetMenus.getRange(1, 1, 1, headers.length).setValues([headers]);
+        }
+      }
+
+      const filas = Array.isArray(payload.filas)
+        ? payload.filas
+        : Array.isArray(payload.datos)
+          ? payload.datos
+          : [payload.datos || payload];
+
+      const filasParaGuardar = filas
+        .filter(f => f && typeof f === 'object' && Object.keys(f).length > 0)
+        .map(f => [
+          payload.usuario_id,
+          sanitizeCampo(f["Semana inicio"] || f.semana_inicio || f.semana || ""),
+          sanitizeCampo(f["Fecha"]         || f.fecha         || ""),
+          sanitizeCampo(f["Día"]           || f.Dia           || f.dia || ""),
+          sanitizeCampo(f["Momento"]       || f.momento       || ""),
+          sanitizeCampo(f["Ingrediente"]   || f.ingrediente   || ""),
+          "",
+          sanitizeCampo(f["Puntos"]        || f.puntos        || ""),
+          sanitizeCampo(f["Notas"]         || f.notas         || ""),
+          sanitizeCampo(f["Presupuesto"]   || f.presupuesto   || payload.presupuesto || "")
+        ]);
+
+      if (filasParaGuardar.length > 0) {
+        sheetMenus.getRange(
+          sheetMenus.getLastRow() + 1, 1,
+          filasParaGuardar.length, headers.length
+        ).setValues(filasParaGuardar);
+      }
+
+      return ContentService.createTextOutput("Éxito Menú Semanal");
+    }
+
+    // GUARDAR PESO
+    else if (tipo === "peso") {
+      const sheetPeso = ss.getSheetByName("Peso");
+      sheetPeso.appendRow([payload.usuario_id, payload.fecha, payload.peso, payload.diferencia]);
+      return ContentService.createTextOutput("Éxito Peso");
+    }
+
+    // GUARDAR ALIMENTO NUEVO
+    else if (tipo === "guardar_alimento") {
+      const sheetAlim = ss.getSheetByName("Alimentos") || ss.getSheetByName("alimentos") || ss.insertSheet("Alimentos");
+      sheetAlim.appendRow([payload.nombre, payload.grupo, payload.proteinas, payload.carbohidratos, payload.grasas, payload.fibra, payload.manual, payload.calculado, payload.neto, new Date()]);
+      return ContentService.createTextOutput("Éxito Alimento");
+    }
+
+    // GUARDAR AGUA (POR DEFECTO)
+    else {
+      const sheetAgua = ss.getSheetByName("Control_Agua");
+      const fechaActual = new Date();
+      sheetAgua.appendRow([
+        payload.usuario_id,
+        fechaActual.toLocaleDateString(),
+        (payload.vasos || 0) + " vasos",
+        (payload.vasos >= 8) ? "COMPLETADO" : "PENDIENTE",
+        fechaActual.toLocaleTimeString()
+      ]);
+      return ContentService.createTextOutput("Éxito Agua");
+    }
+
+  } catch (err) {
+    Logger.log("Error en doPost: " + err.toString());
+    return ContentService.createTextOutput("Error: " + err.toString());
+  }
+}
+
+/**
+ * Función específica para google.script.run
+ */
+function obtenerAlimentosDespensa() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const hoja = ss.getSheetByName("alimentos") || ss.getSheetByName("Alimentos");
+    if (!hoja) return [];
+    const datos = hoja.getDataRange().getValues();
+    const cabeceras = datos.shift();
+    const idxNombre = cabeceras.indexOf("Nombre");
+    const idxNetos = cabeceras.indexOf("Netos");
+    if (idxNombre === -1 || idxNetos === -1) return [];
+    return datos
+      .map(fila => ({ nombre: fila[idxNombre], netos: fila[idxNetos] }))
+      .filter(item => item.nombre !== "" && item.nombre !== undefined);
+  } catch (e) {
+    Logger.log("Error obtenerAlimentosDespensa: " + e.toString());
+    return [];
+  }
+}
+
+/**
+ * Auxiliar para retornar JSON
+ */
+function finalizarJSON(contenido) {
+  return ContentService.createTextOutput(JSON.stringify(contenido))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Sanitiza valores antes de guardar
+ */
+function sanitizeCampo(valor) {
+  if (valor === null || valor === undefined) return "";
+  if (typeof valor === "string") return valor.trim();
+  return valor;
+}

@@ -1,12 +1,16 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwjfkP0heGq5EUYQMPLK5rEPG2fg8CSVqh4BsblQI8sXqO80adDyRgzA66rd_awByct/exec";
+// const URL_GOOGLE_SCRIPT definido en index.html para autenticación
+
 
 // Variables globales de estado
 let vasosActuales = 0;
 const objetivoDiario = 8;
 let graficoPesoInstancia = null;
+// Usuario activo y dispositivo
+let usuarioActivo = localStorage.getItem('nutrafit_usuario_id') || null;
+let dispositivoId = localStorage.getItem('nutrafit_dispositivo_id') || null;
 
 function parseFechaYMD(fechaStr) {
     if (!fechaStr) return null;
@@ -90,23 +94,24 @@ function extraerMensajeErrorGoogle(payload) {
 
 /* --- 1. NAVEGACIÓN TIPO APP (ACTUALIZADA) --- */
 async function abrirVista(nombreVista) {
+    // Solo permitir si usuario autenticado
+    if (!usuarioActivo) {
+        alert('Debes iniciar sesión para acceder a la app.');
+        return;
+    }
     const pantallaInicio = document.getElementById('pantalla-inicio');
     const contenedorVistas = document.getElementById('contenedor-vistas');
-
     try {
         const respuesta = await fetch(`vistas/${nombreVista}.html`);
         const textoHtml = await respuesta.text();
-        
         contenedorVistas.innerHTML = textoHtml;
         pantallaInicio.style.display = 'none';
         contenedorVistas.style.display = 'block';
-
         // DISPARADORES SEGÚN LA VISTA CARGADA
         if (nombreVista === 'agua') {
             inicializarAgua();
             cargarHistorico();
         }
-
         if (nombreVista === 'creditos-diarios') {
             setTimeout(() => {
                 inicializarFecha(); 
@@ -114,27 +119,21 @@ async function abrirVista(nombreVista) {
                 cargarHistorialCreditos(); 
             }, 100);
         }
-
         if (nombreVista === 'evolucion-peso') {
             setTimeout(inicializarPeso, 100);
         }
-
         if (nombreVista === 'nuestra_despensa') {
             setTimeout(cargarDespensa, 100); 
         }
-
         if (nombreVista === 'diario-formulario') {
             setTimeout(() => {
                 cargarDespensaDiario();
                 cargarHistorialSemanas();
             }, 300);
         }
-
-        // Caso específico para tu nueva vista de Carrito
         if (nombreVista === 'carrito-compra') {
             setTimeout(actualizarInterfazCompra, 100);
         }
-
     } catch (error) {
         console.error("Error al abrir la vista:", error);
     }
@@ -181,8 +180,7 @@ async function reiniciarAgua() {
         try {
             await fetch(URL_GOOGLE_SCRIPT, {
                 method: "POST",
-                mode: "no-cors", 
-                body: JSON.stringify({ tipo: "agua", vasos: vasosActuales })
+                body: JSON.stringify({ tipo: "agua", vasos: vasosActuales, usuario_id: usuarioActivo })
             });
             alert("¡Datos enviados!");
             vasosActuales = 0;

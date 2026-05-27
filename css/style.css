@@ -1,3 +1,58 @@
+/* MODAL USUARIO NUTRAFIT */
+.modal-usuario {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-usuario.oculto { display: none; }
+.modal-usuario-contenido {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px 24px 24px 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    min-width: 320px;
+    max-width: 90vw;
+    text-align: center;
+}
+.modal-usuario-contenido h2 {
+    margin-bottom: 18px;
+    color: #78a978;
+    font-size: 1.4rem;
+}
+.modal-usuario-contenido input {
+    width: 90%;
+    margin: 8px 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #b7d3b7;
+    font-size: 1rem;
+}
+.modal-usuario-contenido button {
+    width: 90%;
+    margin: 10px 0 0 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: #78a978;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.modal-usuario-contenido button:hover {
+    background: #5e8e5e;
+}
+.modal-usuario-mensaje {
+    margin-top: 18px;
+    color: #b94a48;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
 /* =========================================
    CONFIGURACIÓN BASE
    ========================================= */

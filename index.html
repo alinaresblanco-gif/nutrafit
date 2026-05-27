@@ -55,6 +55,19 @@
     </style>
 </head>
 <body>
+    <!-- MODAL DE LOGIN/REGISTRO/BIENVENIDA -->
+    <div id="modal-usuario" class="modal-usuario oculto">
+        <div class="modal-usuario-contenido">
+            <h2 id="modal-usuario-titulo">Bienvenida a Nutrafit</h2>
+            <div id="modal-usuario-formulario">
+                <input type="email" id="input-correo" placeholder="Correo electrónico" autocomplete="email" required>
+                <input type="text" id="input-nombre" placeholder="Nombre" autocomplete="name" required>
+                <button id="btn-registrar-usuario">Registrarme</button>
+                <button id="btn-login-usuario">Ya tengo cuenta</button>
+            </div>
+            <div id="modal-usuario-mensaje" class="modal-usuario-mensaje"></div>
+        </div>
+    </div>
 
     <div id="pantalla-inicio" class="contenedor">
         <header class="cabecera-inicio">
@@ -171,4 +184,133 @@
         }
     </script>
 </body>
+    <script>
+    // --- AUTENTICACIÓN Y BIENVENIDA NUTRAFIT ---
+    const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwjfkP0heGq5EUYQMPLK5rEPG2fg8CSVqh4BsblQI8sXqO80adDyRgzA66rd_awByct/exec";
+    let usuarioActivo = null;
+    let dispositivoId = null;
+
+    function generarDispositivoId() {
+        let id = localStorage.getItem('nutrafit_dispositivo_id');
+        if (!id) {
+            id = 'nutrafit-' + Math.random().toString(36).substr(2, 12) + '-' + Date.now();
+            localStorage.setItem('nutrafit_dispositivo_id', id);
+        }
+        return id;
+    }
+
+    function mostrarModalUsuario(modo = 'bienvenida', mensaje = '') {
+        const modal = document.getElementById('modal-usuario');
+        const titulo = document.getElementById('modal-usuario-titulo');
+        const form = document.getElementById('modal-usuario-formulario');
+        const msg = document.getElementById('modal-usuario-mensaje');
+        modal.classList.remove('oculto');
+        msg.textContent = mensaje || '';
+        if (modo === 'bienvenida') {
+            titulo.textContent = 'Bienvenida a Nutrafit';
+            form.style.display = '';
+            msg.style.display = 'none';
+        } else if (modo === 'pendiente') {
+            titulo.textContent = 'Registro pendiente';
+            form.style.display = 'none';
+            msg.style.display = '';
+        } else if (modo === 'no_validado') {
+            titulo.textContent = 'Usuario no validado';
+            form.style.display = 'none';
+            msg.style.display = '';
+        } else if (modo === 'otro_dispositivo') {
+            titulo.textContent = 'Dispositivo no autorizado';
+            form.style.display = 'none';
+            msg.style.display = '';
+        } else if (modo === 'ok') {
+            modal.classList.add('oculto');
+        }
+    }
+
+    async function registrarUsuario() {
+        const correo = document.getElementById('input-correo').value.trim().toLowerCase();
+        const nombre = document.getElementById('input-nombre').value.trim();
+        if (!correo || !nombre) return mostrarModalUsuario('bienvenida', 'Introduce tu correo y nombre.');
+        const dispositivo_id = generarDispositivoId();
+        const res = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            body: JSON.stringify({ tipo: 'registro_usuario', usuario_id: correo, nombre, dispositivo_id })
+        });
+        const data = await res.json();
+        if (data.status === 'existe') {
+            mostrarModalUsuario('bienvenida', 'Ya existe un usuario con ese correo. Pulsa "Ya tengo cuenta".');
+        } else if (data.status === 'pendiente') {
+            localStorage.setItem('nutrafit_usuario_id', correo);
+            mostrarModalUsuario('pendiente', 'Tu registro está pendiente de validación por el administrador. Recibirás un correo cuando puedas acceder.');
+        } else {
+            mostrarModalUsuario('bienvenida', 'Error inesperado.');
+        }
+    }
+
+    async function loginUsuario() {
+        const correo = document.getElementById('input-correo').value.trim().toLowerCase();
+        if (!correo) return mostrarModalUsuario('bienvenida', 'Introduce tu correo.');
+        const dispositivo_id = generarDispositivoId();
+        const res = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            body: JSON.stringify({ tipo: 'login_usuario', usuario_id: correo, dispositivo_id })
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            localStorage.setItem('nutrafit_usuario_id', correo);
+            mostrarModalUsuario('ok');
+            usuarioActivo = correo;
+            setTimeout(() => {
+                document.getElementById('pantalla-inicio').style.display = 'flex';
+            }, 200);
+        } else if (data.status === 'no_registrado') {
+            mostrarModalUsuario('bienvenida', 'No existe ese usuario. Regístrate primero.');
+        } else if (data.status === 'no_validado') {
+            mostrarModalUsuario('no_validado', 'Tu usuario aún no ha sido validado por el administrador.');
+        } else if (data.status === 'otro_dispositivo') {
+            mostrarModalUsuario('otro_dispositivo', 'Este usuario solo puede usarse en el dispositivo donde se registró.');
+        } else {
+            mostrarModalUsuario('bienvenida', 'Error inesperado.');
+        }
+    }
+
+    function comprobarSesionUsuario() {
+        const correo = localStorage.getItem('nutrafit_usuario_id');
+        if (!correo) {
+            mostrarModalUsuario('bienvenida');
+            document.getElementById('pantalla-inicio').style.display = 'none';
+            return;
+        }
+        loginUsuarioAuto(correo);
+    }
+
+    async function loginUsuarioAuto(correo) {
+        const dispositivo_id = generarDispositivoId();
+        const res = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            body: JSON.stringify({ tipo: 'login_usuario', usuario_id: correo, dispositivo_id })
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            usuarioActivo = correo;
+            document.getElementById('modal-usuario').classList.add('oculto');
+            document.getElementById('pantalla-inicio').style.display = 'flex';
+        } else if (data.status === 'no_validado') {
+            mostrarModalUsuario('no_validado', 'Tu usuario aún no ha sido validado por el administrador.');
+            document.getElementById('pantalla-inicio').style.display = 'none';
+        } else if (data.status === 'otro_dispositivo') {
+            mostrarModalUsuario('otro_dispositivo', 'Este usuario solo puede usarse en el dispositivo donde se registró.');
+            document.getElementById('pantalla-inicio').style.display = 'none';
+        } else {
+            mostrarModalUsuario('bienvenida');
+            document.getElementById('pantalla-inicio').style.display = 'none';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('btn-registrar-usuario').onclick = registrarUsuario;
+        document.getElementById('btn-login-usuario').onclick = loginUsuario;
+        comprobarSesionUsuario();
+    });
+    </script>
 </html>
