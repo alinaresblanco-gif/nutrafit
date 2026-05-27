@@ -1,7 +1,7 @@
  /* =========================================
    SISTEMA CENTRAL NUTRAFIT
    ========================================= */
-// const URL_GOOGLE_SCRIPT definido en index.html para autenticación
+// const URL_GOOGLE_SCRIPT definido en index.html para autenticación (actualizado)
 
 
 // Variables globales de estado
