@@ -4,7 +4,7 @@
  */
 function testEnviarCorreo() {
   MailApp.sendEmail({
-    to: "alinares.planner@gmail.com",
+    to: "alinares.blanco@gmail.com",
     subject: "Prueba de envío desde Apps Script Nutrafit",
     body: "Este es un correo de prueba para verificar que MailApp.sendEmail funciona correctamente."
   });
@@ -205,7 +205,7 @@ function doPost(e) {
       ]);
       // Notificar al admin
       MailApp.sendEmail({
-        to: "alinares.planner@gmail.com", // <-- CAMBIA POR TU CORREO
+        to: "alinares.blanco@gmail.com", // <-- CAMBIA POR TU CORREO
         subject: "Nuevo registro en Nutrafit",
         body: `Nuevo usuario registrado: ${nombre} (${usuario_id})\n\nValídalo en la hoja de usuarios.`
       });
