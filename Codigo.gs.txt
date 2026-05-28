@@ -1,3 +1,15 @@
+/**
+ * Función de prueba para enviar un correo desde Apps Script
+ * Ejecuta esta función desde el editor para comprobar permisos y funcionamiento de MailApp.sendEmail
+ */
+function testEnviarCorreo() {
+  MailApp.sendEmail({
+    to: "alinares.planner@gmail.com",
+    subject: "Prueba de envío desde Apps Script Nutrafit",
+    body: "Este es un correo de prueba para verificar que MailApp.sendEmail funciona correctamente."
+  });
+  Logger.log("Correo de prueba enviado");
+}
 /* ============================================================
     CONTROL TOTAL NUTRAFIT - VERSIÓN INTEGRAL (UNIFICADA)
     VERSIÓN MEJORADA CON SOPORTE PARA DESPENSA DINÁMICO
