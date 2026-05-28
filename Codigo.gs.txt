@@ -170,7 +170,8 @@ function doGet(e) {
 
   } catch (err) {
     Logger.log("Error en doGet: " + err.toString());
-    return finalizarJSON({ error: err.toString() });
+    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -358,7 +359,8 @@ function doPost(e) {
 
   } catch (err) {
     Logger.log("Error en doPost: " + err.toString());
-    return ContentService.createTextOutput("Error: " + err.toString());
+    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
