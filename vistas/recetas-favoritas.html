@@ -178,15 +178,15 @@
     <div id="seccion-formulario" class="contenedor-principal" style="background:white; min-height:100vh;">
         <div class="titulo-seccion-verde">Nueva Receta</div>
         <div class="contenedor-fotos-flex">
-            <div class="btn-foto" onclick="intentarHacerFoto()">
+            <div class="btn-foto" onclick="intentarHacerFotoReceta()">
                 <i class="fas fa-camera"></i><br>Hacer Foto
             </div>
-            <div class="btn-foto" onclick="intentarSubirCaptura()">
+            <div class="btn-foto" onclick="intentarSubirCapturaReceta()">
                 <i class="fas fa-image"></i><br>Galería
             </div>
         </div>
         <img id="previa-receta-cont" src="">
-        <input type="file" id="input-captura" accept="image/*" style="display:none" onchange="previsualizarImagen(this)">
+        <input type="file" id="input-captura" accept="image/*" style="display:none" onchange="previsualizarImagenReceta(this)">
 
         <div class="campo-grupo">
             <label>Nombre de la Receta</label>

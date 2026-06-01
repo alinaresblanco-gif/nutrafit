@@ -1466,7 +1466,7 @@ function filtrarRecetas() {
 }
 
 /** * GESTIÓN DE IMÁGENES */
-function intentarHacerFoto() {
+function intentarHacerFotoReceta() {
     const input = document.getElementById('input-captura');
     if (input) {
         input.setAttribute('capture', 'environment');
@@ -1474,7 +1474,7 @@ function intentarHacerFoto() {
     }
 }
 
-function intentarSubirCaptura() {
+function intentarSubirCapturaReceta() {
     const input = document.getElementById('input-captura');
     if (input) {
         input.removeAttribute('capture');
@@ -1482,7 +1482,7 @@ function intentarSubirCaptura() {
     }
 }
 
-function previsualizarImagen(input) {
+function previsualizarImagenReceta(input) {
     if (input.files && input.files[0]) {
         const lector = new FileReader();
         lector.onload = e => {
