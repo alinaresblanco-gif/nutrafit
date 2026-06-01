@@ -58,40 +58,7 @@ function obtenerPresupuestoSemanaActual() {
     const valorActivo = parseFloat(inputActivo?.value);
     if (!isNaN(valorActivo)) return Math.round(valorActivo);
 
-    try {
-        const res = await fetch(URL_GOOGLE_SCRIPT, {
-            method: "POST",
-            body: JSON.stringify({
-                tipo: "registro_usuario",
-                usuario_id: email,
-                nombre: nombre,
-                dispositivo_id: dispositivoId
-            })
-        });
-        let data;
-        try {
-            data = await res.json();
-        } catch (jsonErr) {
-            const text = await res.text();
-            alert("Respuesta no válida del servidor: " + text);
-            return;
-        }
-        if (data.status === "pendiente") {
-            alert("Registro enviado. Espera validación del administrador.");
-            volverInicio();
-        } else if (data.status === "existe") {
-            alert("El usuario ya existe. Inicia sesión.");
-        } else {
-            alert("Error en el registro: " + (data.error || JSON.stringify(data)));
-        }
-    } catch (error) {
-        alert("Error de conexión o respuesta inválida del servidor.");
-        console.error(error);
-    }
-    if (Array.isArray(payload?.datos)) return payload.datos;
-    if (Array.isArray(payload?.rows)) return payload.rows;
-    if (Array.isArray(payload?.data)) return payload.data;
-    return [];
+    return 30;
 }
 
 function extraerMensajeErrorGoogle(payload) {

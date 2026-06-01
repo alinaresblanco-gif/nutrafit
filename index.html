@@ -187,8 +187,6 @@
     <script>
     // --- AUTENTICACIÓN Y BIENVENIDA NUTRAFIT ---
     const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbycWPWLyp3NKyPIEJ4iHm7emJM2MSw9KDy7-hcOXe8iCyiNCrU8vcgvINlA3t-cvc8/exec";
-    // let usuarioActivo = null; // Eliminado para evitar duplicidad, ya se declara en app.js
-    // let dispositivoId = null; // Eliminado para evitar duplicidad, ya se declara en app.js
 
     function generarDispositivoId() {
         let id = localStorage.getItem('nutrafit_dispositivo_id');
@@ -199,27 +197,37 @@
         return id;
     }
 
-    function mostrarModalUsuario(modo = 'bienvenida', mensaje = '') {
+    function mostrarModalUsuario(modo = 'email', mensaje = '') {
         const modal = document.getElementById('modal-usuario');
         const titulo = document.getElementById('modal-usuario-titulo');
         const form = document.getElementById('modal-usuario-formulario');
         const msg = document.getElementById('modal-usuario-mensaje');
+        const inputNombre = document.getElementById('input-nombre');
+        const btnPrincipal = document.getElementById('btn-registrar-usuario');
+        const btnSecundario = document.getElementById('btn-login-usuario');
+
         modal.classList.remove('oculto');
         msg.textContent = mensaje || '';
-        if (modo === 'bienvenida') {
+        if (modo === 'email') {
             titulo.textContent = 'Bienvenida a Nutrafit';
             form.style.display = '';
-            msg.style.display = 'none';
+            if (inputNombre) inputNombre.style.display = 'none';
+            if (btnPrincipal) btnPrincipal.textContent = 'Continuar';
+            if (btnSecundario) btnSecundario.textContent = 'Ya tengo cuenta';
+            msg.style.display = mensaje ? '' : 'none';
+        } else if (modo === 'registro') {
+            titulo.textContent = 'Solicitar acceso';
+            form.style.display = '';
+            if (inputNombre) inputNombre.style.display = '';
+            if (btnPrincipal) btnPrincipal.textContent = 'Enviar solicitud';
+            if (btnSecundario) btnSecundario.textContent = 'Usar otro correo';
+            msg.style.display = mensaje ? '' : 'none';
         } else if (modo === 'pendiente') {
             titulo.textContent = 'Registro pendiente';
             form.style.display = 'none';
             msg.style.display = '';
-        } else if (modo === 'no_validado') {
-            titulo.textContent = 'Usuario no validado';
-            form.style.display = 'none';
-            msg.style.display = '';
-        } else if (modo === 'otro_dispositivo') {
-            titulo.textContent = 'Dispositivo no autorizado';
+        } else if (modo === 'bloqueado') {
+            titulo.textContent = 'Acceso bloqueado';
             form.style.display = 'none';
             msg.style.display = '';
         } else if (modo === 'ok') {
@@ -227,89 +235,161 @@
         }
     }
 
-    async function registrarUsuario() {
+    async function consultarAccesoEmail() {
+        const correo = document.getElementById('input-correo').value.trim().toLowerCase();
+        if (!correo) return mostrarModalUsuario('email', 'Introduce tu correo para continuar.');
+
+        try {
+            const res = await fetch(URL_GOOGLE_SCRIPT, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'verificar_acceso', email: correo })
+            });
+            const data = await res.json();
+
+            if (data.status === 'activo') {
+                localStorage.setItem('nutrafit_usuario_id', correo);
+                usuarioActivo = correo;
+                mostrarModalUsuario('ok');
+                document.getElementById('pantalla-inicio').style.display = 'flex';
+            } else if (data.status === 'pendiente') {
+                mostrarModalUsuario('pendiente', 'Tu acceso está pendiente de validación. Recibirás un correo cuando te aprueben.');
+            } else if (data.status === 'bloqueado') {
+                mostrarModalUsuario('bloqueado', 'Tu acceso está bloqueado. Contacta con el administrador.');
+            } else if (data.status === 'no_existe') {
+                document.getElementById('input-nombre').style.display = '';
+                document.getElementById('input-nombre').value = document.getElementById('input-nombre').value || '';
+                document.getElementById('modal-usuario-titulo').textContent = 'Solicitar acceso';
+                document.getElementById('modal-usuario-mensaje').textContent = 'Ese correo no tiene acceso aún. Completa tu nombre para enviar la solicitud.';
+                document.getElementById('modal-usuario-mensaje').style.display = '';
+                document.getElementById('btn-registrar-usuario').textContent = 'Enviar solicitud';
+                document.getElementById('btn-login-usuario').textContent = 'Usar otro correo';
+            } else {
+                mostrarModalUsuario('email', 'No se pudo comprobar el acceso. Inténtalo de nuevo.');
+            }
+        } catch (error) {
+            console.error(error);
+            mostrarModalUsuario('email', 'Error de conexión o respuesta inválida del servidor.');
+        }
+    }
+
+    async function solicitarAcceso() {
         const correo = document.getElementById('input-correo').value.trim().toLowerCase();
         const nombre = document.getElementById('input-nombre').value.trim();
-        if (!correo || !nombre) return mostrarModalUsuario('bienvenida', 'Introduce tu correo y nombre.');
-        const dispositivo_id = generarDispositivoId();
-        const res = await fetch(URL_GOOGLE_SCRIPT, {
-            method: 'POST',
-            body: JSON.stringify({ tipo: 'registro_usuario', usuario_id: correo, nombre, dispositivo_id })
-        });
-        const data = await res.json();
-        if (data.status === 'existe') {
-            mostrarModalUsuario('bienvenida', 'Ya existe un usuario con ese correo. Pulsa "Ya tengo cuenta".');
-        } else if (data.status === 'pendiente') {
-            localStorage.setItem('nutrafit_usuario_id', correo);
-            mostrarModalUsuario('pendiente', 'Tu registro está pendiente de validación por el administrador. Recibirás un correo cuando puedas acceder.');
-        } else {
-            mostrarModalUsuario('bienvenida', 'Error inesperado.');
+        if (!correo) return mostrarModalUsuario('email', 'Introduce tu correo.');
+        if (!nombre) return mostrarModalUsuario('registro', 'Escribe tu nombre para enviar la solicitud.');
+
+        try {
+            const res = await fetch(URL_GOOGLE_SCRIPT, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'solicitar_acceso', email: correo, nombre: nombre })
+            });
+            const data = await res.json();
+
+            if (data.status === 'pendiente') {
+                mostrarModalUsuario('pendiente', 'Tu solicitud está siendo revisada. Recibirás un correo cuando el administrador la apruebe.');
+            } else if (data.status === 'activo') {
+                localStorage.setItem('nutrafit_usuario_id', correo);
+                usuarioActivo = correo;
+                mostrarModalUsuario('ok');
+                document.getElementById('pantalla-inicio').style.display = 'flex';
+            } else if (data.status === 'existe') {
+                mostrarModalUsuario('email', 'Ese correo ya existe. Usa "Ya tengo cuenta" para entrar.');
+            } else {
+                mostrarModalUsuario('email', 'Error en la solicitud: ' + (data.error || 'respuesta inesperada'));
+            }
+        } catch (error) {
+            console.error(error);
+            mostrarModalUsuario('email', 'No se pudo enviar la solicitud.');
         }
     }
 
     async function loginUsuario() {
         const correo = document.getElementById('input-correo').value.trim().toLowerCase();
-        if (!correo) return mostrarModalUsuario('bienvenida', 'Introduce tu correo.');
-        const dispositivo_id = generarDispositivoId();
+        if (!correo) return mostrarModalUsuario('email', 'Introduce tu correo.');
+
+        try {
+            const res = await fetch(URL_GOOGLE_SCRIPT, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'verificar_acceso', email: correo })
+            });
+            const data = await res.json();
+
+            if (data.status === 'activo') {
+                localStorage.setItem('nutrafit_usuario_id', correo);
+                usuarioActivo = correo;
+                mostrarModalUsuario('ok');
+                document.getElementById('pantalla-inicio').style.display = 'flex';
+            } else if (data.status === 'pendiente') {
+                mostrarModalUsuario('pendiente', 'Tu acceso sigue pendiente de validación.');
+            } else if (data.status === 'no_existe') {
+                document.getElementById('input-nombre').style.display = '';
+                mostrarModalUsuario('registro', 'No existe ese correo. Completa tu nombre y envía la solicitud.');
+            } else if (data.status === 'bloqueado') {
+                mostrarModalUsuario('bloqueado', 'Tu acceso está bloqueado.');
+            } else {
+                mostrarModalUsuario('email', 'No se pudo comprobar el acceso.');
+            }
+        } catch (error) {
+            console.error(error);
+            mostrarModalUsuario('email', 'No se pudo comprobar el acceso.');
+        }
+    }
+
+    async function loginUsuarioAuto(correo) {
         const res = await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
-            body: JSON.stringify({ tipo: 'login_usuario', usuario_id: correo, dispositivo_id })
+            body: JSON.stringify({ action: 'verificar_acceso', email: correo })
         });
         const data = await res.json();
-        if (data.status === 'ok') {
-            localStorage.setItem('nutrafit_usuario_id', correo);
-            mostrarModalUsuario('ok');
+        if (data.status === 'activo') {
             usuarioActivo = correo;
-            setTimeout(() => {
-                document.getElementById('pantalla-inicio').style.display = 'flex';
-            }, 200);
-        } else if (data.status === 'no_registrado') {
-            mostrarModalUsuario('bienvenida', 'No existe ese usuario. Regístrate primero.');
-        } else if (data.status === 'no_validado') {
-            mostrarModalUsuario('no_validado', 'Tu usuario aún no ha sido validado por el administrador.');
-        } else if (data.status === 'otro_dispositivo') {
-            mostrarModalUsuario('otro_dispositivo', 'Este usuario solo puede usarse en el dispositivo donde se registró.');
+            document.getElementById('modal-usuario').classList.add('oculto');
+            document.getElementById('pantalla-inicio').style.display = 'flex';
+        } else if (data.status === 'pendiente') {
+            mostrarModalUsuario('pendiente', 'Tu acceso aún está pendiente de validación.');
+            document.getElementById('pantalla-inicio').style.display = 'none';
+        } else if (data.status === 'bloqueado') {
+            mostrarModalUsuario('bloqueado', 'Tu acceso está bloqueado.');
+            document.getElementById('pantalla-inicio').style.display = 'none';
         } else {
-            mostrarModalUsuario('bienvenida', 'Error inesperado.');
+            mostrarModalUsuario('email');
+            document.getElementById('pantalla-inicio').style.display = 'none';
         }
     }
 
     function comprobarSesionUsuario() {
         const correo = localStorage.getItem('nutrafit_usuario_id');
         if (!correo) {
-            mostrarModalUsuario('bienvenida');
+            mostrarModalUsuario('email');
             document.getElementById('pantalla-inicio').style.display = 'none';
             return;
         }
         loginUsuarioAuto(correo);
     }
 
-    async function loginUsuarioAuto(correo) {
-        const dispositivo_id = generarDispositivoId();
-        const res = await fetch(URL_GOOGLE_SCRIPT, {
-            method: 'POST',
-            body: JSON.stringify({ tipo: 'login_usuario', usuario_id: correo, dispositivo_id })
-        });
-        const data = await res.json();
-        if (data.status === 'ok') {
-            usuarioActivo = correo;
-            document.getElementById('modal-usuario').classList.add('oculto');
-            document.getElementById('pantalla-inicio').style.display = 'flex';
-        } else if (data.status === 'no_validado') {
-            mostrarModalUsuario('no_validado', 'Tu usuario aún no ha sido validado por el administrador.');
-            document.getElementById('pantalla-inicio').style.display = 'none';
-        } else if (data.status === 'otro_dispositivo') {
-            mostrarModalUsuario('otro_dispositivo', 'Este usuario solo puede usarse en el dispositivo donde se registró.');
-            document.getElementById('pantalla-inicio').style.display = 'none';
-        } else {
-            mostrarModalUsuario('bienvenida');
-            document.getElementById('pantalla-inicio').style.display = 'none';
-        }
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('btn-registrar-usuario').onclick = registrarUsuario;
-        document.getElementById('btn-login-usuario').onclick = loginUsuario;
+        document.getElementById('btn-registrar-usuario').onclick = async () => {
+            const nombreVisible = document.getElementById('input-nombre').style.display !== 'none';
+            if (nombreVisible) {
+                await solicitarAcceso();
+            } else {
+                await consultarAccesoEmail();
+            }
+        };
+
+        document.getElementById('btn-login-usuario').onclick = async () => {
+            const nombreVisible = document.getElementById('input-nombre').style.display !== 'none';
+            if (nombreVisible) {
+                document.getElementById('input-nombre').style.display = 'none';
+                document.getElementById('btn-registrar-usuario').textContent = 'Continuar';
+                document.getElementById('btn-login-usuario').textContent = 'Ya tengo cuenta';
+                document.getElementById('modal-usuario-mensaje').textContent = '';
+                document.getElementById('modal-usuario-mensaje').style.display = 'none';
+            } else {
+                await loginUsuario();
+            }
+        };
+
         comprobarSesionUsuario();
     });
     </script>

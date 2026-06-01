@@ -16,6 +16,8 @@ function testEnviarCorreo() {
    ============================================================ */
 
 const SPREADSHEET_ID = "1ynyoanVl3CX-a9B-I45iy1BE6vhdJ0hrrRfipziuKz8";
+const ADMIN_EMAIL = "alinares.blanco@gmail.com";
+const ADMIN_KEY = "Nutrafit-Admin-2026";
 
 /**
  * doGet: Gestiona la carga de páginas HTML y el envío de datos JSON
@@ -23,6 +25,11 @@ const SPREADSHEET_ID = "1ynyoanVl3CX-a9B-I45iy1BE6vhdJ0hrrRfipziuKz8";
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+    if (e.parameter.action === "admin_aprobar" && e.parameter.adminKey === ADMIN_KEY && e.parameter.email) {
+      return aprobarUsuarioNutrafit(e.parameter.email);
+    }
+
     const tabla = e.parameter.tabla || e.parameter.hoja;
 
     // --- 1. LÓGICA DE CARGA DE VISTAS HTML ---
@@ -183,6 +190,14 @@ function doPost(e) {
     var payload = JSON.parse(e.postData.contents);
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     var tipo = payload.tipo || payload.accion;
+
+    if (tipo === "verificar_acceso") {
+      return verificarAccesoNutrafit(ss, payload);
+    }
+
+    if (tipo === "solicitar_acceso") {
+      return solicitarAccesoNutrafit(ss, payload);
+    }
 
 
     // REGISTRO DE USUARIO
@@ -392,6 +407,177 @@ function obtenerAlimentosDespensa() {
 function finalizarJSON(contenido) {
   return ContentService.createTextOutput(JSON.stringify(contenido))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function textoPlano(contenido) {
+  return ContentService.createTextOutput(String(contenido));
+}
+
+function asegurarCabeceraUsuarios(hojaUsuarios) {
+  const cabeceraEsperada = ["usuario_id", "nombre", "fecha_registro", "validado", "dispositivo_id", "fecha_validacion", "admin"];
+  const ultimaFila = hojaUsuarios.getLastRow();
+
+  if (ultimaFila === 0) {
+    hojaUsuarios.appendRow(cabeceraEsperada);
+    return;
+  }
+
+  const cabeceraActual = hojaUsuarios.getRange(1, 1, 1, cabeceraEsperada.length).getValues()[0];
+  const normalizada = cabeceraActual.map(valor => String(valor || "").trim().toLowerCase());
+  const esperada = cabeceraEsperada.map(valor => String(valor || "").trim().toLowerCase());
+
+  if (normalizada.join("|") !== esperada.join("|")) {
+    hojaUsuarios.getRange(1, 1, 1, cabeceraEsperada.length).setValues([cabeceraEsperada]);
+  }
+}
+
+function normalizarEmail(valor) {
+  return String(valor || "").trim().toLowerCase();
+}
+
+function obtenerUsuarioNutrafit(ss, email) {
+  const hojaUsuarios = ss.getSheetByName("usuarios");
+  if (!hojaUsuarios) return null;
+
+  asegurarCabeceraUsuarios(hojaUsuarios);
+
+  const datos = hojaUsuarios.getDataRange().getValues();
+  const emailBuscado = normalizarEmail(email);
+
+  for (let i = 1; i < datos.length; i++) {
+    const fila = datos[i];
+    if (normalizarEmail(fila[0]) === emailBuscado) {
+      return { hojaUsuarios, datos, fila, indice: i };
+    }
+  }
+
+  return { hojaUsuarios, datos, fila: null, indice: -1 };
+}
+
+function estadoUsuarioNutrafit(fila) {
+  if (!fila) return "no_existe";
+  const estadoColumna = fila[3];
+  if (estadoColumna === true || estadoColumna === "true") return "activo";
+  if (String(estadoColumna).toLowerCase() === "bloqueado") return "bloqueado";
+  if (String(estadoColumna).toLowerCase() === "activo") return "activo";
+  if (String(fila[0] || "").trim() === "") return "no_existe";
+  return "pendiente";
+}
+
+function verificarAccesoNutrafit(ss, payload) {
+  const email = normalizarEmail(payload.email || payload.usuario_id);
+  if (!email) {
+    return finalizarJSON({ status: "error", mensaje: "Email requerido" });
+  }
+
+  const info = obtenerUsuarioNutrafit(ss, email);
+  if (!info || !info.fila) {
+    return finalizarJSON({ status: "no_existe" });
+  }
+
+  const estado = estadoUsuarioNutrafit(info.fila);
+  if (estado === "activo") {
+    info.hojaUsuarios.getRange(info.indice + 1, 6).setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"));
+    return finalizarJSON({
+      status: "activo",
+      usuario: {
+        email: info.fila[0],
+        nombre: info.fila[1] || ""
+      }
+    });
+  }
+
+  if (estado === "bloqueado") {
+    return finalizarJSON({ status: "bloqueado" });
+  }
+
+  return finalizarJSON({ status: "pendiente" });
+}
+
+function solicitarAccesoNutrafit(ss, payload) {
+  const email = normalizarEmail(payload.email || payload.usuario_id);
+  const nombre = String(payload.nombre || "").trim();
+
+  if (!email || !nombre) {
+    return finalizarJSON({ status: "error", mensaje: "Email y nombre son obligatorios" });
+  }
+
+  const info = obtenerUsuarioNutrafit(ss, email);
+  if (!info || !info.hojaUsuarios) {
+    return finalizarJSON({ status: "error", mensaje: "No existe la hoja de usuarios" });
+  }
+
+  const estado = info.fila ? estadoUsuarioNutrafit(info.fila) : "no_existe";
+  if (estado === "activo") {
+    return finalizarJSON({ status: "activo" });
+  }
+
+  if (estado === "pendiente") {
+    enviarCorreoSolicitudAdminNutrafit(email, nombre, new Date().toISOString(), ss, info.hojaUsuarios, info.indice);
+    return finalizarJSON({ status: "pendiente", reenviado: true });
+  }
+
+  if (info.fila) {
+    return finalizarJSON({ status: estado });
+  }
+
+  const fecha_registro = new Date();
+  info.hojaUsuarios.appendRow([
+    email,
+    nombre,
+    Utilities.formatDate(fecha_registro, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"),
+    false,
+    "",
+    "",
+    false
+  ]);
+
+  enviarCorreoSolicitudAdminNutrafit(email, nombre, Utilities.formatDate(fecha_registro, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"), ss);
+
+  return finalizarJSON({ status: "pendiente" });
+}
+
+function enviarCorreoSolicitudAdminNutrafit(email, nombre, fechaIso) {
+  const urlBase = ScriptApp.getService().getUrl();
+  const urlAprobar = urlBase
+    ? urlBase + "?action=admin_aprobar&email=" + encodeURIComponent(email) + "&adminKey=" + encodeURIComponent(ADMIN_KEY)
+    : "";
+
+  const cuota = MailApp.getRemainingDailyQuota();
+  if (cuota <= 0) {
+    throw new Error("Cuota diaria de envío agotada");
+  }
+
+  MailApp.sendEmail({
+    to: ADMIN_EMAIL,
+    subject: "Nuevo registro en Nutrafit: " + nombre,
+    body:
+      "Nueva solicitud de acceso\n" +
+      "Nombre: " + nombre + "\n" +
+      "Email: " + email + "\n" +
+      "Fecha: " + fechaIso + "\n\n" +
+      (urlAprobar ? ("Aprobar: " + urlAprobar + "\n") : "")
+  });
+}
+
+function aprobarUsuarioNutrafit(email) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const info = obtenerUsuarioNutrafit(ss, email);
+  if (!info || !info.fila) {
+    return textoPlano("Usuario no encontrado");
+  }
+
+  info.hojaUsuarios.getRange(info.indice + 1, 4).setValue(true);
+  info.hojaUsuarios.getRange(info.indice + 1, 6).setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"));
+  info.hojaUsuarios.getRange(info.indice + 1, 7).setValue(ADMIN_EMAIL);
+
+  MailApp.sendEmail({
+    to: normalizarEmail(email),
+    subject: "Nutrafit: acceso aprobado",
+    body: "Hola " + (info.fila[1] || "") + ",\n\nTu acceso ha sido aprobado. Ya puedes entrar en Nutrafit."
+  });
+
+  return textoPlano("Usuario aprobado y notificado");
 }
 
 /**
