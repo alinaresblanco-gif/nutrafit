@@ -294,7 +294,7 @@ async function reiniciarAgua() {
         if (!uid || !did) return alert("No hay sesión activa. Vuelve a identificarte.");
 
         try {
-            await fetch(URL_GOOGLE_SCRIPT, {
+            const respuesta = await fetch(URL_GOOGLE_SCRIPT, {
                 method: "POST",
                 body: JSON.stringify({
                     tipo: "agua",
@@ -303,12 +303,17 @@ async function reiniciarAgua() {
                     dispositivo_id: did
                 })
             });
+            const textoRespuesta = String(await respuesta.text()).trim();
+            const guardadoOk = respuesta.ok && /exito agua|éxito agua/i.test(textoRespuesta);
+            if (!guardadoOk) {
+                throw new Error(textoRespuesta || `Error HTTP ${respuesta.status}`);
+            }
             alert("¡Datos enviados!");
 
             // Actualiza caché local para que la próxima carga sea instantánea.
             const ahora = new Date();
             const filaNueva = [
-                (usuarioActivo || '').toLowerCase(),
+                String(uid || '').toLowerCase(),
                 ahora.toLocaleDateString('es-ES'),
                 `${vasosTotalesDia} vasos`,
                 (vasosTotalesDia >= objetivoDiario) ? "COMPLETADO" : "PENDIENTE",
@@ -324,7 +329,11 @@ async function reiniciarAgua() {
             localStorage.setItem('agua_nutrafit', '0');
             actualizarInterfazAgua();
             setTimeout(cargarHistorico, 300); 
-        } catch (error) { alert("Error al conectar."); }
+        } catch (error) {
+            console.error("Error guardando agua", error);
+            const detalle = error && error.message ? ` (${error.message})` : "";
+            alert("No se pudo guardar el registro" + detalle);
+        }
     }
 }
 
