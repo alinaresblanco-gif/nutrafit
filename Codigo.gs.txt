@@ -165,14 +165,27 @@ function doGet(e) {
       return finalizarJSON(dataConvertida.slice(-10).reverse());
     }
 
-    // CASO: AGUA (POR DEFECTO)
-    else {
+    // CASO: AGUA
+    else if (tabla === "agua") {
+      const usuarioId = normalizarEmail(e.parameter.usuario_id);
+      const dispositivoId = String(e.parameter.dispositivo_id || "").trim();
+
+      // Solo devolver datos cuando la sesión esté asociada al dispositivo autorizado.
+      if (!usuarioId || !dispositivoId || !sesionValidaNutrafit(ss, usuarioId, dispositivoId)) {
+        return finalizarJSON([]);
+      }
+
       const sheet = ss.getSheetByName("Control_Agua");
       if (!sheet) return finalizarJSON([]);
       const data = sheet.getDataRange().getValues();
       if (data.length <= 1) return finalizarJSON([]);
       data.shift();
-      return finalizarJSON(data.slice(-10).reverse());
+      const dataUsuario = data.filter(fila => normalizarEmail(fila[0]) === usuarioId);
+      return finalizarJSON(dataUsuario.slice(-10).reverse());
+    }
+
+    else {
+      return finalizarJSON([]);
     }
 
   } catch (err) {
@@ -361,9 +374,20 @@ function doPost(e) {
     // GUARDAR AGUA (POR DEFECTO)
     else {
       const sheetAgua = ss.getSheetByName("Control_Agua");
+      const usuarioId = normalizarEmail(payload.usuario_id);
+      const dispositivoId = String(payload.dispositivo_id || "").trim();
+
+      if (!sheetAgua) {
+        return ContentService.createTextOutput("No existe la hoja Control_Agua");
+      }
+
+      if (!usuarioId || !dispositivoId || !sesionValidaNutrafit(ss, usuarioId, dispositivoId)) {
+        return ContentService.createTextOutput("Sesión inválida");
+      }
+
       const fechaActual = new Date();
       sheetAgua.appendRow([
-        payload.usuario_id,
+        usuarioId,
         fechaActual.toLocaleDateString(),
         (payload.vasos || 0) + " vasos",
         (payload.vasos >= 8) ? "COMPLETADO" : "PENDIENTE",
@@ -452,6 +476,28 @@ function obtenerUsuarioNutrafit(ss, email) {
   }
 
   return { hojaUsuarios, datos, fila: null, indice: -1 };
+}
+
+function sesionValidaNutrafit(ss, usuarioId, dispositivoId) {
+  const usuario = normalizarEmail(usuarioId);
+  const dispositivo = String(dispositivoId || "").trim();
+  if (!usuario || !dispositivo) return false;
+
+  const info = obtenerUsuarioNutrafit(ss, usuario);
+  if (!info || !info.fila) return false;
+
+  const estado = estadoUsuarioNutrafit(info.fila);
+  if (estado !== "activo") return false;
+
+  const dispositivoGuardado = String(info.fila[4] || "").trim();
+
+  // Primera asociación de dispositivo para usuarios activos sin dispositivo registrado.
+  if (!dispositivoGuardado) {
+    info.hojaUsuarios.getRange(info.indice + 1, 5).setValue(dispositivo);
+    return true;
+  }
+
+  return dispositivoGuardado === dispositivo;
 }
 
 function estadoUsuarioNutrafit(fila) {

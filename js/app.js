@@ -154,7 +154,12 @@ async function reiniciarAgua() {
         try {
             await fetch(URL_GOOGLE_SCRIPT, {
                 method: "POST",
-                body: JSON.stringify({ tipo: "agua", vasos: vasosActuales, usuario_id: usuarioActivo })
+                body: JSON.stringify({
+                    tipo: "agua",
+                    vasos: vasosActuales,
+                    usuario_id: usuarioActivo,
+                    dispositivo_id: dispositivoId
+                })
             });
             alert("¡Datos enviados!");
             vasosActuales = 0;
@@ -169,11 +174,36 @@ async function cargarHistorico() {
     const contenedor = document.getElementById('datos-tabla');
     if (!contenedor) return;
     try {
-        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=agua&t=" + new Date().getTime());
+        if (!usuarioActivo || !dispositivoId) {
+            contenedor.innerHTML = "<tr><td colspan='3'>Sin sesión activa</td></tr>";
+            return;
+        }
+
+        const query = new URLSearchParams({
+            tabla: "agua",
+            usuario_id: usuarioActivo,
+            dispositivo_id: dispositivoId,
+            t: String(new Date().getTime())
+        });
+        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?" + query.toString());
         const filas = await respuesta.json();
         contenedor.innerHTML = filas.map(fila => {
-            const colorEstado = fila[2] === "COMPLETADO" ? "#2ecc71" : "#e67e22";
-            return `<tr><td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td><td>${fila[1]}</td><td style="color:${colorEstado}; font-weight:bold;">${fila[2]}</td></tr>`;
+            // Formato antiguo: [fecha, vasos, estado, hora]
+            // Formato nuevo:   [usuario_id, fecha, vasos, estado, hora]
+            const tieneUsuarioId = Array.isArray(fila) && fila.length >= 5;
+            const idxFecha = tieneUsuarioId ? 1 : 0;
+            const idxVasos = tieneUsuarioId ? 2 : 1;
+            const idxEstado = tieneUsuarioId ? 3 : 2;
+
+            const fechaRaw = fila[idxFecha];
+            const vasos = fila[idxVasos] || "";
+            const estado = fila[idxEstado] || "";
+            const colorEstado = estado === "COMPLETADO" ? "#2ecc71" : "#e67e22";
+
+            const fecha = new Date(fechaRaw);
+            const fechaTexto = isNaN(fecha.getTime()) ? String(fechaRaw || "") : fecha.toLocaleDateString('es-ES');
+
+            return `<tr><td>${fechaTexto}</td><td>${vasos}</td><td style="color:${colorEstado}; font-weight:bold;">${estado}</td></tr>`;
         }).join('') || "<tr><td colspan='3'>Sin registros</td></tr>";
     } catch (error) { console.error("Error historial agua", error); }
 }
