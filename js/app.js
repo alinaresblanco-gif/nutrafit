@@ -6,8 +6,10 @@
 
 // Variables globales de estado
 let vasosActuales = 0;
+let vasosTotalesDia = 0;
 const objetivoDiario = 8;
 let graficoPesoInstancia = null;
+let temporizadorReinicioAgua = null;
 // Usuario activo y dispositivo
 let usuarioActivo = localStorage.getItem('nutrafit_usuario_id') || null;
 let dispositivoId = localStorage.getItem('nutrafit_dispositivo_id') || null;
@@ -119,19 +121,110 @@ function volverInicio() {
 }
 
 /* --- 2. LÓGICA DE CONTROL DE AGUA --- */
+function obtenerFechaHoyLocal() {
+    return formatearFechaYMDLocal(new Date());
+}
+
+function obtenerPrefijoAguaUsuario() {
+    const usuario = (usuarioActivo || 'anonimo').toLowerCase();
+    return `agua_nutrafit_${usuario}`;
+}
+
+function claveAgua(sufijo) {
+    return `${obtenerPrefijoAguaUsuario()}_${sufijo}`;
+}
+
+function persistirEstadoAgua() {
+    localStorage.setItem(claveAgua('ciclo'), String(vasosActuales));
+    localStorage.setItem(claveAgua('total_dia'), String(vasosTotalesDia));
+    localStorage.setItem(claveAgua('fecha'), obtenerFechaHoyLocal());
+}
+
+function resetearAguaSiCambioDeDia() {
+    const fechaGuardada = localStorage.getItem(claveAgua('fecha'));
+    const hoy = obtenerFechaHoyLocal();
+    if (fechaGuardada && fechaGuardada !== hoy) {
+        vasosActuales = 0;
+        vasosTotalesDia = 0;
+        persistirEstadoAgua();
+    }
+}
+
+function programarReinicioAguaMedianoche() {
+    if (temporizadorReinicioAgua) {
+        clearTimeout(temporizadorReinicioAgua);
+    }
+
+    const ahora = new Date();
+    const proximaMedianoche = new Date(
+        ahora.getFullYear(),
+        ahora.getMonth(),
+        ahora.getDate() + 1,
+        0, 0, 0, 0
+    );
+    const msRestantes = Math.max(1000, proximaMedianoche.getTime() - ahora.getTime());
+
+    temporizadorReinicioAgua = setTimeout(() => {
+        vasosActuales = 0;
+        vasosTotalesDia = 0;
+        persistirEstadoAgua();
+        actualizarInterfazAgua();
+        programarReinicioAguaMedianoche();
+    }, msRestantes);
+}
+
 function inicializarAgua() {
-    const guardado = localStorage.getItem('agua_nutrafit');
-    vasosActuales = guardado ? parseInt(guardado) : 0;
+    const legacy = localStorage.getItem('agua_nutrafit');
+    const guardadoCiclo = localStorage.getItem(claveAgua('ciclo'));
+    const guardadoTotal = localStorage.getItem(claveAgua('total_dia'));
+    const fechaGuardada = localStorage.getItem(claveAgua('fecha'));
+    const hoy = obtenerFechaHoyLocal();
+
+    vasosActuales = guardadoCiclo !== null
+        ? parseInt(guardadoCiclo, 10) || 0
+        : (legacy ? parseInt(legacy, 10) || 0 : 0);
+    vasosTotalesDia = guardadoTotal !== null
+        ? parseInt(guardadoTotal, 10) || 0
+        : vasosActuales;
+
+    if (!fechaGuardada || fechaGuardada !== hoy) {
+        vasosActuales = 0;
+        vasosTotalesDia = 0;
+    }
+
+    persistirEstadoAgua();
     actualizarInterfazAgua();
+    programarReinicioAguaMedianoche();
 }
 
 function gestionarVaso(indiceVaso) {
+    resetearAguaSiCambioDeDia();
+
     if (indiceVaso < vasosActuales) {
-        vasosActuales = indiceVaso; 
+        const diferencia = indiceVaso - vasosActuales;
+        vasosActuales = indiceVaso;
+        vasosTotalesDia = Math.max(0, vasosTotalesDia + diferencia);
     } else {
-        if (vasosActuales < objetivoDiario) vasosActuales++;
+        if (vasosActuales < objetivoDiario) {
+            vasosActuales++;
+            vasosTotalesDia++;
+
+            if (vasosActuales === objetivoDiario) {
+                const continuar = confirm(
+                    "Has completado los 8 vasos de este ciclo.\n\n¿Quieres seguir acumulando más vasos hoy?"
+                );
+
+                if (continuar) {
+                    vasosActuales = 0;
+                    alert("Perfecto. Empezamos un nuevo ciclo de 8 vasos y seguimos sumando al total de hoy.");
+                }
+            }
+        }
     }
-    localStorage.setItem('agua_nutrafit', vasosActuales);
+
+    persistirEstadoAgua();
+    // Compatibilidad temporal con clave antigua
+    localStorage.setItem('agua_nutrafit', String(vasosActuales));
     actualizarInterfazAgua();
 }
 
@@ -140,7 +233,7 @@ function actualizarInterfazAgua() {
     const barra = document.getElementById('barra-llenado');
     const botones = document.querySelectorAll('.boton-vaso');
 
-    if (texto) texto.innerText = `${vasosActuales} / ${objetivoDiario} Vasos`;
+    if (texto) texto.innerText = `${vasosActuales} / ${objetivoDiario} Vasos (Total hoy: ${vasosTotalesDia})`;
     if (barra) barra.style.width = `${(vasosActuales / objetivoDiario) * 100}%`;
 
     botones.forEach((btn, index) => {
@@ -149,21 +242,25 @@ function actualizarInterfazAgua() {
 }
 
 async function reiniciarAgua() {
-    if (vasosActuales === 0) return alert("¡Marca al menos un vaso!");
+    resetearAguaSiCambioDeDia();
+
+    if (vasosTotalesDia === 0) return alert("¡Marca al menos un vaso!");
     if (confirm("¿Guardar y reiniciar?")) {
         try {
             await fetch(URL_GOOGLE_SCRIPT, {
                 method: "POST",
                 body: JSON.stringify({
                     tipo: "agua",
-                    vasos: vasosActuales,
+                    vasos: vasosTotalesDia,
                     usuario_id: usuarioActivo,
                     dispositivo_id: dispositivoId
                 })
             });
             alert("¡Datos enviados!");
             vasosActuales = 0;
-            localStorage.setItem('agua_nutrafit', 0);
+            vasosTotalesDia = 0;
+            persistirEstadoAgua();
+            localStorage.setItem('agua_nutrafit', '0');
             actualizarInterfazAgua();
             setTimeout(cargarHistorico, 2000); 
         } catch (error) { alert("Error al conectar."); }
