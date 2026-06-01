@@ -13,6 +13,41 @@ let temporizadorReinicioAgua = null;
 // Usuario activo y dispositivo
 let usuarioActivo = localStorage.getItem('nutrafit_usuario_id') || null;
 let dispositivoId = localStorage.getItem('nutrafit_dispositivo_id') || null;
+let vistaActual = null;
+
+function mostrarInicioEnContenedor() {
+    const pantallaInicio = document.getElementById('pantalla-inicio');
+    const contenedorVistas = document.getElementById('contenedor-vistas');
+    if (!pantallaInicio || !contenedorVistas) return;
+
+    pantallaInicio.style.display = 'flex';
+    contenedorVistas.style.display = 'none';
+    vistaActual = null;
+}
+
+function inicializarNavegacionMovil() {
+    if (window.__nutrafitNavInit) return;
+    window.__nutrafitNavInit = true;
+
+    // Estado base para que el botón atrás del móvil vuelva primero al inicio.
+    if (!history.state || !history.state.nutrafit) {
+        history.replaceState({ nutrafit: true, vista: null }, '', window.location.href);
+    }
+
+    window.addEventListener('popstate', (event) => {
+        const pantallaInicio = document.getElementById('pantalla-inicio');
+        const contenedorVistas = document.getElementById('contenedor-vistas');
+        if (!pantallaInicio || !contenedorVistas) return;
+
+        const estado = event.state;
+        if (estado && estado.nutrafit && estado.vista) {
+            abrirVista(estado.vista, { desdeHistorial: true });
+            return;
+        }
+
+        mostrarInicioEnContenedor();
+    });
+}
 
 function parseFechaYMD(fechaStr) {
     if (!fechaStr) return null;
@@ -69,7 +104,8 @@ function extraerMensajeErrorGoogle(payload) {
 }
 
 /* --- 1. NAVEGACIÓN TIPO APP (ACTUALIZADA) --- */
-async function abrirVista(nombreVista) {
+async function abrirVista(nombreVista, opciones = {}) {
+    const desdeHistorial = Boolean(opciones && opciones.desdeHistorial);
     // Solo permitir si usuario autenticado
     if (!usuarioActivo) {
         alert('Debes iniciar sesión para acceder a la app.');
@@ -83,6 +119,12 @@ async function abrirVista(nombreVista) {
         contenedorVistas.innerHTML = textoHtml;
         pantallaInicio.style.display = 'none';
         contenedorVistas.style.display = 'block';
+        vistaActual = nombreVista;
+
+        if (!desdeHistorial) {
+            history.pushState({ nutrafit: true, vista: nombreVista }, '', window.location.href);
+        }
+
         // DISPARADORES SEGÚN LA VISTA CARGADA
         if (nombreVista === 'agua') {
             inicializarAgua();
@@ -121,8 +163,12 @@ function volverInicio() {
 
     // Modo app embebida (index.html)
     if (pantallaInicio && contenedorVistas) {
-        pantallaInicio.style.display = 'flex';
-        contenedorVistas.style.display = 'none';
+        if (vistaActual && history.state && history.state.nutrafit && history.state.vista) {
+            history.back();
+            return;
+        }
+
+        mostrarInicioEnContenedor();
         return;
     }
 
@@ -1456,6 +1502,8 @@ async function compartirReceta() {
  * Aseguramos que la búsqueda funcione en tiempo real
  */
 document.addEventListener('DOMContentLoaded', () => {
+    inicializarNavegacionMovil();
+
     const inputBusqueda = document.getElementById('busqueda-recetas');
     if(inputBusqueda) {
         inputBusqueda.addEventListener('input', filtrarRecetas);
