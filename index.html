@@ -242,7 +242,7 @@
         try {
             const res = await fetch(URL_GOOGLE_SCRIPT, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'verificar_acceso', email: correo })
+                body: JSON.stringify({ tipo: 'verificar_acceso', email: correo })
             });
             const data = await res.json();
 
@@ -281,7 +281,7 @@
         try {
             const res = await fetch(URL_GOOGLE_SCRIPT, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'solicitar_acceso', email: correo, nombre: nombre })
+                body: JSON.stringify({ tipo: 'solicitar_acceso', email: correo, nombre: nombre })
             });
             const data = await res.json();
 
@@ -310,7 +310,7 @@
         try {
             const res = await fetch(URL_GOOGLE_SCRIPT, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'verificar_acceso', email: correo })
+                body: JSON.stringify({ tipo: 'verificar_acceso', email: correo })
             });
             const data = await res.json();
 
@@ -338,7 +338,7 @@
     async function loginUsuarioAuto(correo) {
         const res = await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
-            body: JSON.stringify({ action: 'verificar_acceso', email: correo })
+            body: JSON.stringify({ tipo: 'verificar_acceso', email: correo })
         });
         const data = await res.json();
         if (data.status === 'activo') {
