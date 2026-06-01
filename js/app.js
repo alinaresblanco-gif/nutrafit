@@ -1197,75 +1197,111 @@ function seleccionarActividad(tipo) {
 }
 
 // --- 6. CARGAR HISTORIAL DESDE GOOGLE SHEETS ---
+function pintarHistorialEjercicios(contenedor, resumenMinutos, datos) {
+    // Columnas: [usuario_id, fecha, actividad, tiempo, foto, distancia, pasos, desnivel, vel_media]
+    let minutosTotalesHoy = 0;
+    const hoyFecha = new Date().toISOString().split('T')[0];
+    contenedor.innerHTML = "";
+
+    if (!Array.isArray(datos) || datos.length === 0) {
+        contenedor.innerHTML = "<div style='padding:12px; color:#666;'>Sin actividades registradas</div>";
+        if (resumenMinutos) resumenMinutos.innerText = "0 min";
+        return;
+    }
+
+    datos.forEach(fila => {
+        const fechaRaw = String(fila[1] || "");
+        const fechaIso = fechaRaw.includes('T') ? fechaRaw.split('T')[0] : fechaRaw;
+        const fechaVista = formatearFechaES(fechaIso);
+        if (fechaIso === hoyFecha) {
+            minutosTotalesHoy += parseFloat(fila[3] || 0);
+        }
+
+        const actividad = String(fila[2] || "Actividad");
+        const tiempo = parseFloat(fila[3] || 0) || 0;
+        const imagen = fila[4];
+        const dist = parseFloat(fila[5] || 0) || 0;
+        const pasos = parseInt(fila[6] || 0, 10) || 0;
+        const desnivel = parseFloat(fila[7] || 0) || 0;
+        const vel = parseFloat(fila[8] || 0) || 0;
+
+        const card = document.createElement('div');
+        card.className = "tarjeta-actividad-final";
+
+        let htmlImagen = '';
+        if (imagen && String(imagen).startsWith('data:image')) {
+            htmlImagen = `
+                <div style="background:#000; width:100%; text-align:center; padding:5px; box-sizing:border-box;">
+                    <img src="${imagen}" style="width:100%; max-height:300px; object-fit:contain; display:block; border-radius:8px;">
+                </div>`;
+        }
+
+        const datosCompartir = {
+            act: actividad,
+            dist: dist,
+            tiempo: tiempo,
+            vel: vel
+        };
+        const jsonDatos = JSON.stringify(datosCompartir).replace(/"/g, '&quot;');
+
+        card.innerHTML = `
+            <div class="cabecera-card" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <strong>${actividad.toUpperCase()}</strong>
+                    <small>${fechaVista}</small>
+                </div>
+                <button onclick="compartirActividad('${jsonDatos}')" class="btn-compartir-mini">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+            </div>
+            ${htmlImagen}
+            <div class="bloque-blanco-datos">
+                <div class="dato-celda"><label>DISTANCIA</label><span>${dist} KM</span></div>
+                <div class="dato-celda"><label>TIEMPO</label><span>${tiempo} MIN</span></div>
+                <div class="dato-celda"><label>DESNIVEL</label><span>${desnivel} M</span></div>
+                <div class="dato-celda"><label>PASOS</label><span>${pasos}</span></div>
+            </div>
+            <div class="franja-velocidad">VEL. MEDIA: ${vel} KM/H</div>
+        `;
+        contenedor.appendChild(card);
+    });
+
+    if (resumenMinutos) resumenMinutos.innerText = minutosTotalesHoy + " min";
+}
+
 async function cargarHistorialEjercicios() {
     const contenedor = document.getElementById('lista-actividades-historial');
     const resumenMinutos = document.getElementById('minutos-hoy-resumen');
     if (!contenedor) return;
 
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    if (!uid) {
+        contenedor.innerHTML = "<div style='padding:12px; color:#666;'>Sin sesión activa</div>";
+        if (resumenMinutos) resumenMinutos.innerText = "0 min";
+        return;
+    }
+    if (!usuarioActivo) usuarioActivo = uid;
+
+    const cacheKey = `ejercicio_nutrafit_${uid.toLowerCase()}`;
+    const cacheLocal = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+
+    // 1) Pintado instantáneo desde caché local
+    if (cacheLocal.length > 0) {
+        pintarHistorialEjercicios(contenedor, resumenMinutos, cacheLocal);
+    }
+
+    // 2) Refresco desde backend
     try {
-        const respuesta = await fetch(`${URL_GOOGLE_SCRIPT}?tabla=ejercicio&t=${Date.now()}`);
+        const query = new URLSearchParams({ tabla: "ejercicio", usuario_id: uid, t: String(Date.now()) });
+        const respuesta = await fetch(`${URL_GOOGLE_SCRIPT}?${query.toString()}`);
         const datos = await respuesta.json();
-        
-        let minutosTotalesHoy = 0;
-        const hoyFecha = new Date().toISOString().split('T')[0];
-        contenedor.innerHTML = ""; 
-        
-        datos.reverse().forEach(fila => {
-            const fechaFila = fila[0] ? fila[0].split('T')[0] : "";
-            if (fechaFila === hoyFecha) {
-                minutosTotalesHoy += parseFloat(fila[2] || 0);
-            }
-
-            const card = document.createElement('div');
-            card.className = "tarjeta-actividad-final";
-            
-            let dist = fila[4];
-            if (dist && dist.toString().includes('2026')) {
-                 dist = parseFloat(dist) || dist;
-            }
-
-            let htmlImagen = '';
-            if (fila[3] && fila[3].toString().startsWith('data:image')) {
-                htmlImagen = `
-                    <div style="background:#000; width:100%; text-align:center; padding:5px; box-sizing:border-box;">
-                        <img src="${fila[3]}" style="width:100%; max-height:300px; object-fit:contain; display:block; border-radius:8px;">
-                    </div>`;
-            }
-
-            const datosCompartir = {
-                act: fila[1],
-                dist: dist,
-                tiempo: fila[2],
-                vel: fila[7]
-            };
-            const jsonDatos = JSON.stringify(datosCompartir).replace(/"/g, '&quot;');
-
-            card.innerHTML = `
-                <div class="cabecera-card" style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <strong>${fila[1].toUpperCase()}</strong>
-                        <small>${fechaFila}</small>
-                    </div>
-                    <button onclick="compartirActividad('${jsonDatos}')" class="btn-compartir-mini">
-                        <i class="fas fa-share-alt"></i>
-                    </button>
-                </div>
-                ${htmlImagen}
-                <div class="bloque-blanco-datos">
-                    <div class="dato-celda"><label>DISTANCIA</label><span>${dist} KM</span></div>
-                    <div class="dato-celda"><label>TIEMPO</label><span>${fila[2]} MIN</span></div>
-                    <div class="dato-celda"><label>DESNIVEL</label><span>${fila[6] || 0} M</span></div>
-                    <div class="dato-celda"><label>PASOS</label><span>${fila[5] || 0}</span></div>
-                </div>
-                <div class="franja-velocidad">VEL. MEDIA: ${fila[7] || 0} KM/H</div>
-            `;
-            contenedor.appendChild(card);
-        });
-
-        if(resumenMinutos) resumenMinutos.innerText = minutosTotalesHoy + " min";
-
+        pintarHistorialEjercicios(contenedor, resumenMinutos, datos);
+        localStorage.setItem(cacheKey, JSON.stringify(Array.isArray(datos) ? datos.slice(0, 20) : []));
     } catch (error) {
         console.log("Error cargando historial");
+        if (!cacheLocal.length) {
+            contenedor.innerHTML = "<div style='padding:12px; color:#666;'>No se pudo cargar el historial</div>";
+        }
     }
 }
 
@@ -1298,24 +1334,46 @@ async function validarYGuardarEjercicio() {
         velMedia = (parseFloat(distanciaLimpia) / (parseFloat(tiempo) / 60)).toFixed(2);
     }
 
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    const did = dispositivoId || localStorage.getItem('nutrafit_dispositivo_id');
+    if (!uid || !did) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';
+        return alert("No hay sesión activa. Vuelve a identificarte.");
+    }
+    if (!usuarioActivo) usuarioActivo = uid;
+    if (!dispositivoId) dispositivoId = did;
+
     const datos = {
         tipo: "guardar_ejercicio",
+        usuario_id: uid,
+        dispositivo_id: did,
         actividad: actividadActual,
         tiempo: tiempo,
-        distancia: "'" + distanciaLimpia, 
+        distancia: distanciaLimpia,
         pasos: document.getElementById('ej-pasos').value,
         desnivel: document.getElementById('ej-desnivel').value || 0,
-        velocidad: "'" + velMedia,
+        velocidad: velMedia,
         imagenBase64: imagenParaEnviar
     };
 
     try {
-        await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
+        const resp = await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', body: JSON.stringify(datos) });
+        const txt = String(await resp.text()).trim();
+        if (!resp.ok || !/exito|éxito/i.test(txt)) throw new Error(txt || `HTTP ${resp.status}`);
+
+        // Actualizar caché local inmediatamente
+        const cacheKey = `ejercicio_nutrafit_${uid.toLowerCase()}`;
+        const fechaIso = new Date().toISOString().split('.')[0];
+        const filaNueva = [uid, fechaIso, actividadActual, parseFloat(tiempo) || 0, imagenParaEnviar ? `data:image/jpeg;base64,${imagenParaEnviar}` : "", parseFloat(distanciaLimpia) || 0, document.getElementById('ej-pasos').value || 0, document.getElementById('ej-desnivel').value || 0, parseFloat(velMedia) || 0];
+        const cacheActual = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+        localStorage.setItem(cacheKey, JSON.stringify([filaNueva, ...cacheActual].slice(0, 20)));
+
         alert("¡Guardado!");
         reiniciarFormularioEjercicio();
-        setTimeout(cargarHistorialEjercicios, 1500);
+        cargarHistorialEjercicios();
     } catch (e) {
-        alert("Error de red");
+        alert("Error al guardar: " + (e.message || e));
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> GUARDAR ENTRENAMIENTO';

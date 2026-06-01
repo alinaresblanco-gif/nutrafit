@@ -121,18 +121,29 @@ function doGet(e) {
 
     // CASO: EJERCICIO
     else if (tabla === "ejercicio") {
+      const usuarioId = normalizarEmail(e.parameter.usuario_id);
+      if (!usuarioId) return finalizarJSON([]);
+
+      const infoUsr = obtenerUsuarioNutrafit(ss, usuarioId);
+      if (!infoUsr || !infoUsr.fila || estadoUsuarioNutrafit(infoUsr.fila) !== "activo") {
+        return finalizarJSON([]);
+      }
+
       const sheet = ss.getSheetByName("ejercicio");
       if (!sheet) return finalizarJSON([]);
       const data = sheet.getDataRange().getValues();
       if (data.length <= 1) return finalizarJSON([]);
       data.shift();
-      // ✅ CORRECCIÓN: convertir Date a string local para evitar desfase UTC
-      const dataConvertida = data.map(fila => fila.map(celda =>
-        celda instanceof Date
-          ? Utilities.formatDate(celda, tz, "yyyy-MM-dd'T'HH:mm:ss")
-          : celda
-      ));
-      return finalizarJSON(dataConvertida);
+
+      // Columnas: [usuario_id, fecha, actividad, tiempo, foto, distancia, pasos, desnivel, vel_media]
+      const dataUsuario = data
+        .filter(fila => normalizarEmail(fila[0]) === usuarioId)
+        .map(fila => fila.map(celda =>
+          celda instanceof Date
+            ? Utilities.formatDate(celda, tz, "yyyy-MM-dd'T'HH:mm:ss")
+            : celda
+        ));
+      return finalizarJSON(dataUsuario.slice(-20).reverse());
     }
 
     // CASO: PESO
@@ -318,11 +329,23 @@ function doPost(e) {
     // GUARDAR EJERCICIO
     if (tipo === "guardar_ejercicio") {
       const sheetEj = ss.getSheetByName("ejercicio");
+      const usuarioId = normalizarEmail(payload.usuario_id);
+      const dispositivoId = String(payload.dispositivo_id || "").trim();
+
+      if (!sheetEj) {
+        return ContentService.createTextOutput("No existe la hoja ejercicio");
+      }
+
+      if (!usuarioId || !dispositivoId || !sesionValidaNutrafit(ss, usuarioId, dispositivoId)) {
+        return ContentService.createTextOutput("Sesión inválida");
+      }
+
       var celdaFoto = (payload.imagenBase64 && payload.imagenBase64.length > 100) ? "data:image/jpeg;base64," + payload.imagenBase64 : "";
-      var distLim = parseFloat(payload.distancia.toString().replace("'", "").replace(",", "."));
-      var tiempoLim = parseFloat(payload.tiempo.toString().replace("'", "").replace(",", "."));
+      var distLim = parseFloat(String(payload.distancia || "0").replace("'", "").replace(",", "."));
+      var tiempoLim = parseFloat(String(payload.tiempo || "0").replace("'", "").replace(",", "."));
       var velMedia = (distLim > 0 && tiempoLim > 0) ? (distLim / (tiempoLim / 60)).toFixed(2) : 0;
-      sheetEj.appendRow([payload.usuario_id, new Date(), payload.actividad, tiempoLim, celdaFoto, payload.distancia, payload.pasos || 0, payload.desnivel || 0, velMedia]);
+
+      sheetEj.appendRow([usuarioId, new Date(), payload.actividad, tiempoLim, celdaFoto, distLim, payload.pasos || 0, payload.desnivel || 0, velMedia]);
       return ContentService.createTextOutput("Éxito Ejercicio");
     }
 
