@@ -466,37 +466,93 @@ async function guardarCreditos() {
     const total = document.getElementById('resultado-creditos').value;
     if (!total || total == 0) return alert("Primero calcula tus créditos");
 
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    if (!uid) return alert("No hay sesión activa. Vuelve a identificarte.");
+
+    const fecha  = document.getElementById('fecha-credito').value;
+    const genero = document.getElementById('genero-credito').value;
+    const edad   = document.getElementById('edad-credito').value;
+    const peso   = document.getElementById('peso-credito').value;
+    const altura = document.getElementById('altura-credito').value;
+
     const datos = {
         tipo: "creditos",
-        fecha: document.getElementById('fecha-credito').value,
-        genero: document.getElementById('genero-credito').value,
-        edad: document.getElementById('edad-credito').value,
-        peso: document.getElementById('peso-credito').value,
-        altura: document.getElementById('altura-credito').value,
-        total: total
+        usuario_id: uid,
+        fecha, genero, edad, peso, altura, total
     };
 
     try {
-        await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
+        const resp = await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', body: JSON.stringify(datos) });
+        const txt  = String(await resp.text()).trim();
+        if (!resp.ok || !/exito|éxito/i.test(txt)) throw new Error(txt || `HTTP ${resp.status}`);
+
         alert("¡Créditos guardados!");
-        setTimeout(cargarHistorialCreditos, 2000);
-    } catch (e) { alert("Error al guardar"); }
+
+        // Actualizar caché local inmediatamente
+        const cacheKey = `creditos_nutrafit_${uid.toLowerCase()}`;
+        const filaNueva = [uid, fecha, genero, edad, peso, altura, total];
+        const cacheActual = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+        localStorage.setItem(cacheKey, JSON.stringify([filaNueva, ...cacheActual].slice(0, 10)));
+
+        cargarHistorialCreditos();
+    } catch (e) {
+        console.error("Error guardando créditos", e);
+        alert("Error al guardar: " + (e.message || e));
+    }
+}
+
+function pintarHistorialCreditos(cuerpoTabla, filas) {
+    // Columnas en hoja: [usuario_id(0), fecha(1), genero(2), edad(3), peso(4), altura(5), total(6)]
+    if (!Array.isArray(filas) || filas.length === 0) {
+        cuerpoTabla.innerHTML = "<tr><td colspan='3' style='padding:15px;'>Sin registros</td></tr>";
+        return;
+    }
+    cuerpoTabla.innerHTML = filas.map(fila => {
+        const fecha   = formatearFechaES(fila[1] || fila[0] || '');
+        const total   = fila[6] !== undefined ? fila[6] : (fila[5] || '---');
+        const genero  = fila[2] || fila[1] || '---';
+        return `<tr>
+            <td>${fecha}</td>
+            <td style="font-weight:bold; color:#78a978;">${total}</td>
+            <td>${genero}</td>
+        </tr>`;
+    }).join('');
 }
 
 async function cargarHistorialCreditos() {
     const cuerpoTabla = document.getElementById('tabla-creditos-body');
     if (!cuerpoTabla) return;
+
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    if (!uid) {
+        cuerpoTabla.innerHTML = "<tr><td colspan='3' style='padding:15px;'>Sin sesión activa</td></tr>";
+        return;
+    }
+    if (!usuarioActivo) usuarioActivo = uid;
+
+    const cacheKey = `creditos_nutrafit_${uid.toLowerCase()}`;
+
+    // 1) Pintado instantáneo desde caché local
+    const cacheLocal = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+    if (cacheLocal.length > 0) pintarHistorialCreditos(cuerpoTabla, cacheLocal);
+
+    // 2) Refresco desde backend
     try {
-        const response = await fetch(URL_GOOGLE_SCRIPT + "?tabla=creditos&t=" + new Date().getTime());
+        const query = new URLSearchParams({
+            tabla: "creditos",
+            usuario_id: uid,
+            t: String(Date.now())
+        });
+        const response = await fetch(URL_GOOGLE_SCRIPT + "?" + query.toString());
         const datos = await response.json();
-        cuerpoTabla.innerHTML = datos.map(fila => `
-            <tr>
-                <td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td>
-                <td style="font-weight:bold; color:#78a978;">${fila[5] || '---'}</td>
-                <td>${fila[1] || '---'}</td>
-            </tr>
-        `).join('');
-    } catch (e) { console.log("Error créditos", e); }
+        pintarHistorialCreditos(cuerpoTabla, datos);
+        localStorage.setItem(cacheKey, JSON.stringify(Array.isArray(datos) ? datos.slice(0, 10) : []));
+    } catch (e) {
+        console.error("Error historial créditos", e);
+        if (!cacheLocal.length) {
+            cuerpoTabla.innerHTML = "<tr><td colspan='3' style='padding:15px;'>No se pudo cargar el historial</td></tr>";
+        }
+    }
 }
 
 /* --- 4. LÓGICA DE EVOLUCIÓN DE PESO --- */

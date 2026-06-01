@@ -152,17 +152,28 @@ function doGet(e) {
 
     // CASO: CRÉDITOS
     else if (tabla === "creditos" || tabla === "CREDITOS") {
+      const usuarioId = normalizarEmail(e.parameter.usuario_id);
+      if (!usuarioId) return finalizarJSON([]);
+
+      // Verificar usuario activo (igual que agua)
+      const infoUsr = obtenerUsuarioNutrafit(ss, usuarioId);
+      if (!infoUsr || !infoUsr.fila || estadoUsuarioNutrafit(infoUsr.fila) !== "activo") {
+        return finalizarJSON([]);
+      }
+
       const sheet = ss.getSheetByName("Creditos") || ss.getSheetByName("CREDITOS");
       if (!sheet) return finalizarJSON([]);
       const data = sheet.getDataRange().getValues();
       if (data.length <= 1) return finalizarJSON([]);
       data.shift();
-      const dataConvertida = data.map(fila => fila.map(celda =>
-        celda instanceof Date
-          ? Utilities.formatDate(celda, tz, "yyyy-MM-dd")
-          : celda
-      ));
-      return finalizarJSON(dataConvertida.slice(-10).reverse());
+
+      // Filtrar por usuario y convertir fechas
+      const dataUsuario = data
+        .filter(fila => normalizarEmail(fila[0]) === usuarioId)
+        .map(fila => fila.map(celda =>
+          celda instanceof Date ? Utilities.formatDate(celda, tz, "yyyy-MM-dd") : celda
+        ));
+      return finalizarJSON(dataUsuario.slice(-10).reverse());
     }
 
     // CASO: AGUA
