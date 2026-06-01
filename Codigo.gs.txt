@@ -523,6 +523,7 @@ function estadoUsuarioNutrafit(fila) {
 
 function verificarAccesoNutrafit(ss, payload) {
   const email = normalizarEmail(payload.email || payload.usuario_id);
+  const dispositivoId = String(payload.dispositivo_id || "").trim();
   if (!email) {
     return finalizarJSON({ status: "error", mensaje: "Email requerido" });
   }
@@ -534,6 +535,14 @@ function verificarAccesoNutrafit(ss, payload) {
 
   const estado = estadoUsuarioNutrafit(info.fila);
   if (estado === "activo") {
+    // Sincroniza el dispositivo activo para que el guardado posterior de datos no falle por sesión.
+    if (dispositivoId) {
+      const dispositivoGuardado = String(info.fila[4] || "").trim();
+      if (dispositivoGuardado !== dispositivoId) {
+        info.hojaUsuarios.getRange(info.indice + 1, 5).setValue(dispositivoId);
+      }
+    }
+
     info.hojaUsuarios.getRange(info.indice + 1, 6).setValue(Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"));
     return finalizarJSON({
       status: "activo",

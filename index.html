@@ -237,12 +237,13 @@
 
     async function consultarAccesoEmail() {
         const correo = document.getElementById('input-correo').value.trim().toLowerCase();
+        const did = generarDispositivoId();
         if (!correo) return mostrarModalUsuario('email', 'Introduce tu correo para continuar.');
 
         try {
             const res = await fetch(URL_GOOGLE_SCRIPT, {
                 method: 'POST',
-                body: JSON.stringify({ tipo: 'verificar_acceso', email: correo })
+                body: JSON.stringify({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did })
             });
             const data = await res.json();
 
@@ -305,12 +306,13 @@
 
     async function loginUsuario() {
         const correo = document.getElementById('input-correo').value.trim().toLowerCase();
+        const did = generarDispositivoId();
         if (!correo) return mostrarModalUsuario('email', 'Introduce tu correo.');
 
         try {
             const res = await fetch(URL_GOOGLE_SCRIPT, {
                 method: 'POST',
-                body: JSON.stringify({ tipo: 'verificar_acceso', email: correo })
+                body: JSON.stringify({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did })
             });
             const data = await res.json();
 
@@ -336,9 +338,10 @@
     }
 
     async function loginUsuarioAuto(correo) {
+        const did = generarDispositivoId();
         const res = await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
-            body: JSON.stringify({ tipo: 'verificar_acceso', email: correo })
+            body: JSON.stringify({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did })
         });
         const data = await res.json();
 
