@@ -543,11 +543,6 @@ function enviarCorreoSolicitudAdminNutrafit(email, nombre, fechaIso) {
     ? urlBase + "?action=admin_aprobar&email=" + encodeURIComponent(email) + "&adminKey=" + encodeURIComponent(ADMIN_KEY)
     : "";
 
-  const cuota = MailApp.getRemainingDailyQuota();
-  if (cuota <= 0) {
-    throw new Error("Cuota diaria de envío agotada");
-  }
-
   MailApp.sendEmail({
     to: ADMIN_EMAIL,
     subject: "Nuevo registro en Nutrafit: " + nombre,
