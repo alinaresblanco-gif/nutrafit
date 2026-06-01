@@ -116,8 +116,22 @@ async function abrirVista(nombreVista) {
 }
 
 function volverInicio() {
-    document.getElementById('pantalla-inicio').style.display = 'flex';
-    document.getElementById('contenedor-vistas').style.display = 'none';
+    const pantallaInicio = document.getElementById('pantalla-inicio');
+    const contenedorVistas = document.getElementById('contenedor-vistas');
+
+    // Modo app embebida (index.html)
+    if (pantallaInicio && contenedorVistas) {
+        pantallaInicio.style.display = 'flex';
+        contenedorVistas.style.display = 'none';
+        return;
+    }
+
+    // Compatibilidad para uso directo de vistas sueltas.
+    if (window.location.pathname.includes('/vistas/')) {
+        window.location.href = '../index.html';
+    } else {
+        window.location.href = 'index.html';
+    }
 }
 
 /* --- 2. LÓGICA DE CONTROL DE AGUA --- */
@@ -132,6 +146,34 @@ function obtenerPrefijoAguaUsuario() {
 
 function claveAgua(sufijo) {
     return `${obtenerPrefijoAguaUsuario()}_${sufijo}`;
+}
+
+function claveHistorialAgua() {
+    return claveAgua('historial');
+}
+
+function mapearFilaAguaParaVista(fila) {
+    // Formato antiguo: [fecha, vasos, estado, hora]
+    // Formato nuevo:   [usuario_id, fecha, vasos, estado, hora]
+    const tieneUsuarioId = Array.isArray(fila) && fila.length >= 5;
+    const idxFecha = tieneUsuarioId ? 1 : 0;
+    const idxVasos = tieneUsuarioId ? 2 : 1;
+    const idxEstado = tieneUsuarioId ? 3 : 2;
+
+    const fechaRaw = fila[idxFecha];
+    const vasos = fila[idxVasos] || "";
+    const estado = fila[idxEstado] || "";
+    const colorEstado = estado === "COMPLETADO" ? "#2ecc71" : "#e67e22";
+
+    const fecha = new Date(fechaRaw);
+    const fechaTexto = isNaN(fecha.getTime()) ? String(fechaRaw || "") : fecha.toLocaleDateString('es-ES');
+
+    return `<tr><td>${fechaTexto}</td><td>${vasos}</td><td style="color:${colorEstado}; font-weight:bold;">${estado}</td></tr>`;
+}
+
+function pintarHistoricoAgua(contenedor, filas) {
+    const lista = Array.isArray(filas) ? filas : [];
+    contenedor.innerHTML = lista.map(mapearFilaAguaParaVista).join('') || "<tr><td colspan='3'>Sin registros</td></tr>";
 }
 
 function persistirEstadoAgua() {
@@ -257,12 +299,26 @@ async function reiniciarAgua() {
                 })
             });
             alert("¡Datos enviados!");
+
+            // Actualiza caché local para que la próxima carga sea instantánea.
+            const ahora = new Date();
+            const filaNueva = [
+                (usuarioActivo || '').toLowerCase(),
+                ahora.toLocaleDateString('es-ES'),
+                `${vasosTotalesDia} vasos`,
+                (vasosTotalesDia >= objetivoDiario) ? "COMPLETADO" : "PENDIENTE",
+                ahora.toLocaleTimeString()
+            ];
+            const cacheActual = JSON.parse(localStorage.getItem(claveHistorialAgua()) || '[]');
+            const cacheNuevo = [filaNueva, ...cacheActual].slice(0, 10);
+            localStorage.setItem(claveHistorialAgua(), JSON.stringify(cacheNuevo));
+
             vasosActuales = 0;
             vasosTotalesDia = 0;
             persistirEstadoAgua();
             localStorage.setItem('agua_nutrafit', '0');
             actualizarInterfazAgua();
-            setTimeout(cargarHistorico, 2000); 
+            setTimeout(cargarHistorico, 300); 
         } catch (error) { alert("Error al conectar."); }
     }
 }
@@ -276,6 +332,13 @@ async function cargarHistorico() {
             return;
         }
 
+        // 1) Pintado instantáneo desde caché local
+        const cacheLocal = JSON.parse(localStorage.getItem(claveHistorialAgua()) || '[]');
+        if (Array.isArray(cacheLocal) && cacheLocal.length > 0) {
+            pintarHistoricoAgua(contenedor, cacheLocal);
+        }
+
+        // 2) Refresco desde backend
         const query = new URLSearchParams({
             tabla: "agua",
             usuario_id: usuarioActivo,
@@ -284,25 +347,15 @@ async function cargarHistorico() {
         });
         const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?" + query.toString());
         const filas = await respuesta.json();
-        contenedor.innerHTML = filas.map(fila => {
-            // Formato antiguo: [fecha, vasos, estado, hora]
-            // Formato nuevo:   [usuario_id, fecha, vasos, estado, hora]
-            const tieneUsuarioId = Array.isArray(fila) && fila.length >= 5;
-            const idxFecha = tieneUsuarioId ? 1 : 0;
-            const idxVasos = tieneUsuarioId ? 2 : 1;
-            const idxEstado = tieneUsuarioId ? 3 : 2;
-
-            const fechaRaw = fila[idxFecha];
-            const vasos = fila[idxVasos] || "";
-            const estado = fila[idxEstado] || "";
-            const colorEstado = estado === "COMPLETADO" ? "#2ecc71" : "#e67e22";
-
-            const fecha = new Date(fechaRaw);
-            const fechaTexto = isNaN(fecha.getTime()) ? String(fechaRaw || "") : fecha.toLocaleDateString('es-ES');
-
-            return `<tr><td>${fechaTexto}</td><td>${vasos}</td><td style="color:${colorEstado}; font-weight:bold;">${estado}</td></tr>`;
-        }).join('') || "<tr><td colspan='3'>Sin registros</td></tr>";
-    } catch (error) { console.error("Error historial agua", error); }
+        pintarHistoricoAgua(contenedor, filas);
+        localStorage.setItem(claveHistorialAgua(), JSON.stringify(Array.isArray(filas) ? filas.slice(0, 10) : []));
+    } catch (error) {
+        console.error("Error historial agua", error);
+        // Si falla red, mantiene lo que se pintó desde caché.
+        if (!contenedor.innerHTML || contenedor.innerHTML.trim() === "") {
+            contenedor.innerHTML = "<tr><td colspan='3'>No se pudo cargar el historial</td></tr>";
+        }
+    }
 }
 
 /* --- 3. LÓGICA DE CRÉDITOS --- */
@@ -1147,13 +1200,6 @@ function cerrarGpsMini() {
 let imagenRecetaBase64 = null;
 
 /** * NAVEGACIÓN Y UTILIDADES */
-function volverInicio() {
-    if (window.location.pathname.includes('/vistas/')) {
-        window.location.href = '../index.html';
-    } else {
-        window.location.href = 'index.html';
-    }
-}
 
 function abrirFormulario() {
     document.getElementById('seccion-explorar').style.display = 'none';
