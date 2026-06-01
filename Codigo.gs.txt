@@ -182,7 +182,16 @@ function doGet(e) {
       const data = sheet.getDataRange().getValues();
       if (data.length <= 1) return finalizarJSON([]);
       data.shift();
-      const dataUsuario = data.filter(fila => normalizarEmail(fila[0]) === usuarioId);
+      const dataUsuario = data.filter(fila => {
+        // Nuevo formato: [usuario_id, fecha, vasos, estado, hora]
+        if (Array.isArray(fila) && fila.length >= 5) {
+          return normalizarEmail(fila[0]) === usuarioId;
+        }
+
+        // Formato legado: [fecha, vasos, estado, hora]
+        // No tenía usuario_id, así que se mantiene compatibilidad para no perder historial previo.
+        return Array.isArray(fila) && fila.length >= 4;
+      });
       return finalizarJSON(dataUsuario.slice(-10).reverse());
     }
 
