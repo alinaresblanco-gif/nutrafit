@@ -625,54 +625,100 @@ async function guardarPeso() {
         alert("Te mantienes estable. ¡Sigue así!");
     }
 
-    const datos = { tipo: "peso", fecha: fecha, peso: pesoActual, diferencia: diferencia };
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    if (!uid) return alert("No hay sesión activa. Vuelve a identificarte.");
+    if (!usuarioActivo) usuarioActivo = uid;
+
+    const datos = { tipo: "peso", usuario_id: uid, fecha: fecha, peso: pesoActual, diferencia: diferencia };
 
     try {
-        await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        setTimeout(cargarHistorialPeso, 2000);
-    } catch (e) { alert("Error al guardar"); }
+        const resp = await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', body: JSON.stringify(datos) });
+        const txt  = String(await resp.text()).trim();
+        if (!resp.ok || !/exito|éxito/i.test(txt)) throw new Error(txt || `HTTP ${resp.status}`);
+
+        // Actualizar caché local inmediatamente
+        const cacheKey = `peso_nutrafit_${uid.toLowerCase()}`;
+        const filaNueva = [uid, fecha, String(pesoActual), String(diferencia)];
+        const cacheActual = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+        localStorage.setItem(cacheKey, JSON.stringify([filaNueva, ...cacheActual].slice(0, 15)));
+
+        cargarHistorialPeso();
+    } catch (e) {
+        console.error("Error guardando peso", e);
+        alert("Error al guardar: " + (e.message || e));
+    }
+}
+
+function pintarHistorialPeso(cuerpo, datos) {
+    // Columnas en hoja: [usuario_id(0), fecha(1), peso(2), diferencia(3)]
+    if (!Array.isArray(datos) || datos.length === 0) {
+        cuerpo.innerHTML = "<tr><td colspan='3'>Aún no hay registros</td></tr>";
+        return;
+    }
+    cuerpo.innerHTML = datos.map(fila => {
+        const dif   = parseFloat(fila[3]) || 0;
+        const icono = dif < 0 ? "↓" : (dif > 0 ? "↑" : "");
+        return `<tr>
+            <td>${formatearFechaES(fila[1] || '')}</td>
+            <td style="font-weight:bold;">${fila[2]} kg</td>
+            <td style="font-weight:bold; color:${dif < 0 ? '#2ecc71' : '#e74c3c'}">${icono} ${Math.abs(dif).toFixed(1)}</td>
+        </tr>`;
+    }).join('');
 }
 
 async function cargarHistorialPeso() {
     const cuerpo = document.getElementById('tabla-peso-body');
-    if(!cuerpo) return;
+    if (!cuerpo) return;
 
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    if (!uid) {
+        cuerpo.innerHTML = "<tr><td colspan='3'>Sin sesión activa</td></tr>";
+        return;
+    }
+    if (!usuarioActivo) usuarioActivo = uid;
+
+    const cacheKey = `peso_nutrafit_${uid.toLowerCase()}`;
+
+    // 1) Pintado instantáneo desde caché local
+    const cacheLocal = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+    if (cacheLocal.length > 0) {
+        pintarHistorialPeso(cuerpo, cacheLocal);
+        calcularIMC(parseFloat(cacheLocal[0][2]));
+        renderizarGrafico([...cacheLocal].reverse());
+    }
+
+    // 2) Refresco desde backend
     try {
-        const res = await fetch(URL_GOOGLE_SCRIPT + "?tabla=peso&t=" + new Date().getTime());
+        const query = new URLSearchParams({ tabla: "peso", usuario_id: uid, t: String(Date.now()) });
+        const res   = await fetch(URL_GOOGLE_SCRIPT + "?" + query.toString());
         const datos = await res.json();
 
-        if (!datos || datos.length === 0) {
-            cuerpo.innerHTML = "<tr><td colspan='3'>Aún no hay registros</td></tr>";
-            return;
+        pintarHistorialPeso(cuerpo, datos);
+        if (Array.isArray(datos) && datos.length > 0) {
+            calcularIMC(parseFloat(datos[0][2]));
+            renderizarGrafico([...datos].reverse());
+            localStorage.setItem(cacheKey, JSON.stringify(datos.slice(0, 15)));
         }
-
-        cuerpo.innerHTML = datos.map(fila => {
-            const dif = parseFloat(fila[2]) || 0;
-            const icono = dif < 0 ? "↓" : (dif > 0 ? "↑" : "");
-            return `<tr>
-                <td>${new Date(fila[0]).toLocaleDateString('es-ES')}</td>
-                <td style="font-weight:bold;">${fila[1]} kg</td>
-                <td style="font-weight:bold; color:${dif < 0 ? '#2ecc71' : '#e74c3c'}">${icono} ${Math.abs(dif).toFixed(1)}</td>
-            </tr>`;
-        }).join('');
-
-        calcularIMC(parseFloat(datos[0][1]));
-        renderizarGrafico([...datos].reverse());
-
-    } catch (e) { console.error("Error peso", e); }
+    } catch (e) {
+        console.error("Error peso", e);
+        if (!cacheLocal.length) {
+            cuerpo.innerHTML = "<tr><td colspan='3'>No se pudo cargar el historial</td></tr>";
+        }
+    }
 }
 
 function renderizarGrafico(datos) {
+    // datos: [usuario_id(0), fecha(1), peso(2), diferencia(3)]
     const ctx = document.getElementById('graficoPeso');
     if (!ctx || typeof Chart === 'undefined') return;
     if (graficoPesoInstancia) graficoPesoInstancia.destroy();
     graficoPesoInstancia = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: datos.map(f => new Date(f[0]).toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit'})),
+            labels: datos.map(f => formatearFechaES(f[1] || '')),
             datasets: [{
                 label: 'Peso',
-                data: datos.map(f => f[1]),
+                data: datos.map(f => parseFloat(f[2])),
                 borderColor: '#78a978',
                 tension: 0.4,
                 fill: true,

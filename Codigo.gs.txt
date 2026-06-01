@@ -137,17 +137,26 @@ function doGet(e) {
 
     // CASO: PESO
     else if (tabla === "peso") {
+      const usuarioId = normalizarEmail(e.parameter.usuario_id);
+      if (!usuarioId) return finalizarJSON([]);
+
+      const infoUsr = obtenerUsuarioNutrafit(ss, usuarioId);
+      if (!infoUsr || !infoUsr.fila || estadoUsuarioNutrafit(infoUsr.fila) !== "activo") {
+        return finalizarJSON([]);
+      }
+
       const sheet = ss.getSheetByName("Peso");
       if (!sheet) return finalizarJSON([]);
       const data = sheet.getDataRange().getValues();
       if (data.length <= 1) return finalizarJSON([]);
       data.shift();
-      const dataConvertida = data.map(fila => fila.map(celda =>
-        celda instanceof Date
-          ? Utilities.formatDate(celda, tz, "yyyy-MM-dd")
-          : celda
-      ));
-      return finalizarJSON(dataConvertida.slice(-15).reverse());
+
+      const dataUsuario = data
+        .filter(fila => normalizarEmail(fila[0]) === usuarioId)
+        .map(fila => fila.map(celda =>
+          celda instanceof Date ? Utilities.formatDate(celda, tz, "yyyy-MM-dd") : celda
+        ));
+      return finalizarJSON(dataUsuario.slice(-15).reverse());
     }
 
     // CASO: CRÉDITOS
