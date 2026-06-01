@@ -341,19 +341,30 @@
             body: JSON.stringify({ tipo: 'verificar_acceso', email: correo })
         });
         const data = await res.json();
+
+        // Comprobar si el usuario ya está en una vista para no interrumpir su navegación.
+        const enVista = () => document.getElementById('contenedor-vistas')?.style.display !== 'none';
+
         if (data.status === 'activo') {
             usuarioActivo = correo;
+            // Sincronizar el global de app.js por si se leyó antes del login
+            if (typeof window !== 'undefined') window._nutrafit_usuario = correo;
             document.getElementById('modal-usuario').classList.add('oculto');
-            document.getElementById('pantalla-inicio').style.display = 'flex';
+            // Solo mostrar pantalla inicio si el usuario NO está ya en una vista
+            if (!enVista()) {
+                document.getElementById('pantalla-inicio').style.display = 'flex';
+            }
         } else if (data.status === 'pendiente') {
             mostrarModalUsuario('pendiente', 'Tu acceso aún está pendiente de validación.');
-            document.getElementById('pantalla-inicio').style.display = 'none';
+            if (!enVista()) document.getElementById('pantalla-inicio').style.display = 'none';
         } else if (data.status === 'bloqueado') {
             mostrarModalUsuario('bloqueado', 'Tu acceso está bloqueado.');
-            document.getElementById('pantalla-inicio').style.display = 'none';
+            if (!enVista()) document.getElementById('pantalla-inicio').style.display = 'none';
         } else {
-            mostrarModalUsuario('email');
-            document.getElementById('pantalla-inicio').style.display = 'none';
+            if (!enVista()) {
+                mostrarModalUsuario('email');
+                document.getElementById('pantalla-inicio').style.display = 'none';
+            }
         }
     }
 
@@ -389,6 +400,13 @@
                 await loginUsuario();
             }
         };
+
+        // Garantizar que el dispositivo_id existe ANTES de que app.js lo necesite
+        const devId = generarDispositivoId();
+        // Actualizar el global de app.js si ya se cargó con null
+        if (typeof dispositivoId !== 'undefined' && !dispositivoId) {
+            dispositivoId = devId;
+        }
 
         comprobarSesionUsuario();
     });

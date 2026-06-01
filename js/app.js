@@ -288,14 +288,19 @@ async function reiniciarAgua() {
 
     if (vasosTotalesDia === 0) return alert("¡Marca al menos un vaso!");
     if (confirm("¿Guardar y reiniciar?")) {
+        // Re-leer sesión por si app.js se cargó antes del login
+        const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+        const did = dispositivoId || localStorage.getItem('nutrafit_dispositivo_id');
+        if (!uid || !did) return alert("No hay sesión activa. Vuelve a identificarte.");
+
         try {
             await fetch(URL_GOOGLE_SCRIPT, {
                 method: "POST",
                 body: JSON.stringify({
                     tipo: "agua",
                     vasos: vasosTotalesDia,
-                    usuario_id: usuarioActivo,
-                    dispositivo_id: dispositivoId
+                    usuario_id: uid,
+                    dispositivo_id: did
                 })
             });
             alert("¡Datos enviados!");
@@ -327,10 +332,18 @@ async function cargarHistorico() {
     const contenedor = document.getElementById('datos-tabla');
     if (!contenedor) return;
     try {
-        if (!usuarioActivo || !dispositivoId) {
+        // Re-leer siempre desde localStorage por si se generaron después de cargar app.js
+        const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+        const did = dispositivoId || localStorage.getItem('nutrafit_dispositivo_id');
+
+        if (!uid || !did) {
             contenedor.innerHTML = "<tr><td colspan='3'>Sin sesión activa</td></tr>";
             return;
         }
+
+        // Actualizar globales si estaban vacíos
+        if (!usuarioActivo) usuarioActivo = uid;
+        if (!dispositivoId) dispositivoId = did;
 
         // 1) Pintado instantáneo desde caché local
         const cacheLocal = JSON.parse(localStorage.getItem(claveHistorialAgua()) || '[]');
