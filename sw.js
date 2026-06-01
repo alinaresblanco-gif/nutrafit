@@ -1,9 +1,10 @@
-const CACHE_NAME = 'nutrafit-v2';
+const CACHE_NAME = 'nutrafit-v3-20260601-1';
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
-  './js/app.js',
+  './js/app.js?v=20260601-1',
+  './sw.js?v=20260601-1',
   './manifest.json',
   './IMAGENES/logo.png',
   './IMAGENES/IMAGEN_2.png',
