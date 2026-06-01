@@ -168,10 +168,12 @@ function doGet(e) {
     // CASO: AGUA
     else if (tabla === "agua") {
       const usuarioId = normalizarEmail(e.parameter.usuario_id);
-      const dispositivoId = String(e.parameter.dispositivo_id || "").trim();
 
-      // Solo devolver datos cuando la sesión esté asociada al dispositivo autorizado.
-      if (!usuarioId || !dispositivoId || !sesionValidaNutrafit(ss, usuarioId, dispositivoId)) {
+      // Para lectura solo se exige que el usuario exista y esté activo.
+      // El control de dispositivo se aplica únicamente en escritura (doPost).
+      if (!usuarioId) return finalizarJSON([]);
+      const infoUsuario = obtenerUsuarioNutrafit(ss, usuarioId);
+      if (!infoUsuario || !infoUsuario.fila || estadoUsuarioNutrafit(infoUsuario.fila) !== "activo") {
         return finalizarJSON([]);
       }
 
