@@ -2043,16 +2043,12 @@ function asegurarPapeleraEnFilasDiario() {
 function actualizarVisibilidadPapelerasDiario() {
     document.querySelectorAll('.contenedor-ingredientes').forEach(contenedor => {
         const filas = Array.from(contenedor.querySelectorAll('.fila-ingrediente'));
-        filas.forEach((fila, indice) => {
+        filas.forEach((fila) => {
             const boton = fila.querySelector('.btn-eliminar-fila');
             if (!boton) return;
 
             const txt = String(fila.querySelector('.input-txt')?.value || '').trim();
-            const pts = parseFloat(fila.querySelector('.input-pts')?.value);
-            const filaVacia = txt === '' && (isNaN(pts) || pts === 0);
-            const esUltima = indice === filas.length - 1;
-
-            boton.classList.toggle('oculta', esUltima && filaVacia);
+            boton.classList.toggle('oculta', txt === '');
         });
     });
 }
