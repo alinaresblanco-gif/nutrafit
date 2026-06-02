@@ -103,6 +103,17 @@ function extraerMensajeErrorGoogle(payload) {
     return String(payload.error || payload.message || payload.mensaje || "").trim();
 }
 
+function extraerFilasRespuestaGoogle(payload) {
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload;
+
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload.rows)) return payload.rows;
+    if (Array.isArray(payload.result)) return payload.result;
+
+    return [];
+}
+
 /* --- 1. NAVEGACIÓN TIPO APP (ACTUALIZADA) --- */
 async function abrirVista(nombreVista, opciones = {}) {
     const desdeHistorial = Boolean(opciones && opciones.desdeHistorial);
