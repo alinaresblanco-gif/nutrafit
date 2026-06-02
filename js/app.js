@@ -155,8 +155,9 @@ async function sincronizarPresupuestoConUltimoCredito() {
     if (ultimoCredito === null) return;
 
     presupuestoInput.value = String(ultimoCredito);
-    localStorage.setItem(clavePresupuestoDia('lunes'), String(ultimoCredito));
-    localStorage.setItem(clavePresupuestoDia(diaActual), String(ultimoCredito));
+    ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'].forEach(dia => {
+        localStorage.setItem(clavePresupuestoDia(dia), String(ultimoCredito));
+    });
     guardarEstadoSemanaLocal();
     actualizarPuntos();
 }
