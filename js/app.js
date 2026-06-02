@@ -88,7 +88,7 @@ function formatearFechaES(valor) {
 }
 
 function obtenerPresupuestoSemanaActual() {
-    const guardadoLunes = parseFloat(localStorage.getItem('presupuesto-lunes'));
+    const guardadoLunes = parseFloat(localStorage.getItem(clavePresupuestoDia('lunes')));
     if (!isNaN(guardadoLunes)) return Math.round(guardadoLunes);
 
     const inputActivo = document.getElementById('total-' + diaActual) || document.querySelector('[id^="total-"]');
@@ -1676,6 +1676,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const STORAGE_KEY_DIARIO_FORMULARIO = 'nutrafit_diario_formulario_estado';
 
+function obtenerPrefijoDiarioUsuario() {
+    const uid = (usuarioActivo || localStorage.getItem('nutrafit_usuario_id') || 'anonimo').toLowerCase();
+    return `diario_nutrafit_${uid}`;
+}
+
+function claveDiarioUsuario(sufijo) {
+    return `${obtenerPrefijoDiarioUsuario()}_${sufijo}`;
+}
+
+function claveEstadoDiarioFormulario() {
+    return claveDiarioUsuario('estado_formulario');
+}
+
+function claveSemanaGuardada() {
+    return claveDiarioUsuario('ultima_semana_guardada');
+}
+
+function claveDiaActivoSemana() {
+    return claveDiarioUsuario('dia_activo');
+}
+
+function clavePresupuestoDia(dia) {
+    return claveDiarioUsuario(`presupuesto_${dia}`);
+}
+
 window.onload = function() {
     actualizarPuntos();
     cargarSemanaActiva();
@@ -1859,7 +1884,7 @@ function cambiarDia(dia, btn) {
     presupuestoInput.id = 'total-' + dia;
     
     // Cargar value guardado
-    const saved = localStorage.getItem('presupuesto-' + dia);
+    const saved = localStorage.getItem(clavePresupuestoDia(dia));
     if (saved !== null) {
         presupuestoInput.value = saved;
     } else {
@@ -1867,14 +1892,14 @@ function cambiarDia(dia, btn) {
     }
     
     diaActual = dia;
-    localStorage.setItem('ultimaSemanaDiaActiva', dia);
+    localStorage.setItem(claveDiaActivoSemana(), dia);
     guardarEstadoSemanaLocal();
     actualizarPuntos();
 }
 
 function guardarPresupuestoActual() {
     const val = document.getElementById('total-' + diaActual).value;
-    localStorage.setItem('presupuesto-' + diaActual, val);
+    localStorage.setItem(clavePresupuestoDia(diaActual), val);
     guardarEstadoSemanaLocal();
 }
 
@@ -1906,11 +1931,11 @@ function guardarEstadoSemanaLocal() {
         });
     });
 
-    localStorage.setItem(STORAGE_KEY_DIARIO_FORMULARIO, JSON.stringify(estado));
+    localStorage.setItem(claveEstadoDiarioFormulario(), JSON.stringify(estado));
 }
 
 function restaurarEstadoSemanaLocal() {
-    const saved = localStorage.getItem(STORAGE_KEY_DIARIO_FORMULARIO);
+    const saved = localStorage.getItem(claveEstadoDiarioFormulario());
     if (!saved) return false;
 
     try {
@@ -2008,8 +2033,8 @@ function guardarSemanaSeleccionada() {
     const fechaInput = document.getElementById('fecha-inicio');
     const inicioSemana = fechaInput ? fechaInput.value : '';
     if (inicioSemana) {
-        localStorage.setItem('ultimaSemanaGuardada', inicioSemana);
-        localStorage.setItem('ultimaSemanaDiaActiva', diaActual);
+        localStorage.setItem(claveSemanaGuardada(), inicioSemana);
+        localStorage.setItem(claveDiaActivoSemana(), diaActual);
         guardarEstadoSemanaLocal();
     }
 }
@@ -2035,8 +2060,8 @@ function cargarSemanaActiva() {
         return;
     }
 
-    const ultimaSemana = localStorage.getItem('ultimaSemanaGuardada');
-    const diaGuardado = localStorage.getItem('ultimaSemanaDiaActiva');
+    const ultimaSemana = localStorage.getItem(claveSemanaGuardada());
+    const diaGuardado = localStorage.getItem(claveDiaActivoSemana());
     if (fechaInput && ultimaSemana) {
         fechaInput.value = ultimaSemana;
     }
@@ -2126,21 +2151,33 @@ function guardarMenuSemanal() {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
     }
 
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    const did = dispositivoId || localStorage.getItem('nutrafit_dispositivo_id');
+    if (!uid || !did) {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = textoOriginal;
+        }
+        return alert('No hay sesión activa. Vuelve a identificarte.');
+    }
+
     fetch(URL_GOOGLE_SCRIPT, {
         method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({ tipo: 'guardar_menu_semanal', filas: filasGuardar })
+        body: JSON.stringify({ tipo: 'guardar_menu_semanal', usuario_id: uid, dispositivo_id: did, filas: filasGuardar })
     })
-    .then(() => {
+    .then(async (resp) => {
+        const txt = String(await resp.text()).trim();
+        if (!resp.ok || !/exito|éxito/i.test(txt)) throw new Error(txt || `HTTP ${resp.status}`);
+
         if (inicioSemana) {
-            localStorage.setItem('ultimaSemanaGuardada', inicioSemana);
-            localStorage.setItem('ultimaSemanaDiaActiva', diaActual);
+            localStorage.setItem(claveSemanaGuardada(), inicioSemana);
+            localStorage.setItem(claveDiaActivoSemana(), diaActual);
             guardarEstadoSemanaLocal();
         }
         alert('Menú guardado correctamente.');
     })
-    .catch(() => {
-        alert('Error al guardar el menú. Comprueba tu conexión.');
+    .catch((error) => {
+        alert('Error al guardar el menú: ' + (error.message || error));
     })
     .finally(() => {
         if (btn) {
@@ -2151,9 +2188,9 @@ function guardarMenuSemanal() {
 }
 
 function limpiarSemana() {
-    localStorage.removeItem('ultimaSemanaGuardada');
-    localStorage.removeItem('ultimaSemanaDiaActiva');
-    localStorage.removeItem(STORAGE_KEY_DIARIO_FORMULARIO);
+    localStorage.removeItem(claveSemanaGuardada());
+    localStorage.removeItem(claveDiaActivoSemana());
+    localStorage.removeItem(claveEstadoDiarioFormulario());
     reiniciarFormulario();
     const btn = getTabButton('lunes');
     if (btn) cambiarDia('lunes', btn);
@@ -2193,7 +2230,7 @@ function irAlMenu() {
 }
 
 function obtenerCreditosLunesInforme() {
-    const guardado = parseFloat(localStorage.getItem('presupuesto-lunes'));
+    const guardado = parseFloat(localStorage.getItem(clavePresupuestoDia('lunes')));
     if (!isNaN(guardado)) return Math.round(guardado);
 
     const inputLunes = document.getElementById('total-lunes');
@@ -2376,12 +2413,60 @@ async function imprimirSemanaPDF() {
 }
 
 /* --- FUNCIONES PARA HISTORIAL DE SEMANAS --- */
+function obtenerValorMenuSemanal(fila, campo) {
+    const idx = {
+        usuario_id: 0,
+        semana_inicio: 1,
+        fecha: 2,
+        dia: 3,
+        momento: 4,
+        ingrediente: 5,
+        puntos: 7,
+        presupuesto: 9
+    };
+
+    if (Array.isArray(fila)) {
+        return fila[idx[campo]];
+    }
+
+    const mapaCampos = {
+        usuario_id: ['usuario_id', 'usuario id', 'usuario'],
+        semana_inicio: ['Semana inicio', 'semana inicio', 'semana_inicio', 'semana'],
+        fecha: ['Fecha', 'fecha'],
+        dia: ['Día', 'Dia', 'dia'],
+        momento: ['Momento', 'momento'],
+        ingrediente: ['Ingrediente', 'ingrediente'],
+        puntos: ['Puntos', 'puntos'],
+        presupuesto: ['Presupuesto', 'presupuesto']
+    };
+
+    const claves = mapaCampos[campo] || [];
+    for (const clave of claves) {
+        if (fila && Object.prototype.hasOwnProperty.call(fila, clave)) {
+            return fila[clave];
+        }
+    }
+    return undefined;
+}
+
+function obtenerPresupuestoDesdeFila(fila) {
+    const presupuesto = parseFloat(obtenerValorMenuSemanal(fila, 'presupuesto'));
+    return isNaN(presupuesto) ? null : Math.round(presupuesto);
+}
+
 async function cargarHistorialSemanas() {
     const contenedor = document.getElementById('contenedor-historial');
     if (!contenedor) return;
 
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    if (!uid) {
+        contenedor.innerHTML = "<p style='text-align:center; padding:20px; color:#666;'>Sin sesión activa</p>";
+        return;
+    }
+
     try {
-        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=menus_semanales&t=" + new Date().getTime());
+        const query = new URLSearchParams({ tabla: 'menus_semanales', usuario_id: uid, t: String(Date.now()) });
+        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?" + query.toString());
         const payload = await respuesta.json();
         const datos = extraerFilasRespuestaGoogle(payload);
         const mensajeBackend = extraerMensajeErrorGoogle(payload);
@@ -2395,7 +2480,7 @@ async function cargarHistorialSemanas() {
 
         // Filtrar filas con fecha válida (elimina fila de cabeceras si existe)
         const datosFiltrados = datos.filter(fila => {
-            const val = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana inicio'] || fila['semana_inicio'] || fila['semana']);
+            const val = obtenerValorMenuSemanal(fila, 'semana_inicio');
             return Boolean(normalizarFechaYMD(val));
         });
 
@@ -2407,7 +2492,7 @@ async function cargarHistorialSemanas() {
         // Agrupar por semana (fecha de inicio)
         const semanasAgrupadas = {};
         datosFiltrados.forEach(fila => {
-            const semanaInicioRaw = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana inicio'] || fila['semana_inicio'] || fila['semana']);
+            const semanaInicioRaw = obtenerValorMenuSemanal(fila, 'semana_inicio');
             const semanaInicio = normalizarFechaYMD(semanaInicioRaw);
             if (semanaInicio) {
                 if (!semanasAgrupadas[semanaInicio]) {
@@ -2431,7 +2516,7 @@ async function cargarHistorialSemanas() {
             let presupuestoSemana = null;
 
             filasSemana.forEach(fila => {
-                const puntos = Array.isArray(fila) ? fila[5] : (fila['Puntos'] || fila['puntos'] || 0);
+                const puntos = obtenerValorMenuSemanal(fila, 'puntos') || 0;
                 totalPuntos += parseFloat(puntos || 0);
 
                 if (presupuestoSemana === null) {
@@ -2458,7 +2543,14 @@ async function cargarHistorialSemanas() {
 
 async function cargarSemanaDesdeHistorial(fechaSemana) {
     try {
-        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?tabla=menus_semanales&t=" + new Date().getTime());
+        const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+        if (!uid) {
+            alert('Sin sesión activa. Vuelve a identificarte.');
+            return;
+        }
+
+        const query = new URLSearchParams({ tabla: 'menus_semanales', usuario_id: uid, t: String(Date.now()) });
+        const respuesta = await fetch(URL_GOOGLE_SCRIPT + "?" + query.toString());
         const payload = await respuesta.json();
         const datos = extraerFilasRespuestaGoogle(payload);
         const mensajeBackend = extraerMensajeErrorGoogle(payload);
@@ -2474,7 +2566,7 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
 
         // Filtrar datos de la semana específica (excluye cabeceras)
         const datosSemana = datos.filter(fila => {
-            const semanaInicioRaw = Array.isArray(fila) ? fila[0] : (fila['Semana inicio'] || fila['semana_inicio'] || fila['semana']);
+            const semanaInicioRaw = obtenerValorMenuSemanal(fila, 'semana_inicio');
             const semanaInicio = normalizarFechaYMD(semanaInicioRaw);
             return semanaInicio === fechaSemana;
         });
@@ -2503,16 +2595,16 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
             if (presupuestoInput) {
                 presupuestoInput.value = presupuestoSemana;
             }
-            localStorage.setItem('presupuesto-lunes', String(presupuestoSemana));
+            localStorage.setItem(clavePresupuestoDia('lunes'), String(presupuestoSemana));
         }
 
         // Organizar datos por día y momento
         const datosPorDia = {};
         datosSemana.forEach(fila => {
-            const dia = Array.isArray(fila) ? fila[2] : (fila['Día'] || fila['Dia'] || fila['dia']);
-            const momento = Array.isArray(fila) ? fila[3] : (fila['Momento'] || fila['momento']);
-            const ingrediente = Array.isArray(fila) ? fila[4] : (fila['Ingrediente'] || fila['ingrediente']);
-            const puntos = Array.isArray(fila) ? fila[5] : (fila['Puntos'] || fila['puntos'] || 0);
+            const dia = obtenerValorMenuSemanal(fila, 'dia');
+            const momento = obtenerValorMenuSemanal(fila, 'momento');
+            const ingrediente = obtenerValorMenuSemanal(fila, 'ingrediente');
+            const puntos = obtenerValorMenuSemanal(fila, 'puntos') || 0;
 
             if (!datosPorDia[dia]) {
                 datosPorDia[dia] = {};

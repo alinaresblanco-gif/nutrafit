@@ -77,6 +77,14 @@ function doGet(e) {
 
     // CASO: MENÚS SEMANALES
     else if (tabla === "menus_semanales" || tabla === "menu_semanal") {
+      const usuarioId = normalizarEmail(e.parameter.usuario_id);
+      if (!usuarioId) return finalizarJSON([]);
+
+      const infoUsr = obtenerUsuarioNutrafit(ss, usuarioId);
+      if (!infoUsr || !infoUsr.fila || estadoUsuarioNutrafit(infoUsr.fila) !== "activo") {
+        return finalizarJSON([]);
+      }
+
       const sheet = ss.getSheetByName("menus_semanales");
       if (!sheet) return finalizarJSON([]);
       const vals = sheet.getDataRange().getValues();
@@ -85,14 +93,12 @@ function doGet(e) {
       const cabeceras = vals.shift();
 
       const resultado = vals
-        .filter(fila => fila[0] && fila[0].toString().trim() !== "")
+        .filter(fila => normalizarEmail(fila[0]) === usuarioId)
         .map(fila => {
           const obj = {};
           cabeceras.forEach((cab, i) => {
             const celda = fila[i];
             if (celda instanceof Date) {
-              // ✅ CORRECCIÓN: usar zona horaria local en lugar de toISOString() (UTC)
-              // toISOString() causaba desfase de -1 día en España (UTC+1/+2)
               obj[cab] = Utilities.formatDate(celda, tz, "yyyy-MM-dd");
             } else {
               obj[cab] = (celda !== null && celda !== undefined) ? celda : "";
@@ -367,6 +373,12 @@ function doPost(e) {
     // GUARDAR MENÚ SEMANAL
     else if (tipo === "guardar_menu_semanal" || tipo === "guardarFila") {
       var sheetMenus = ss.getSheetByName("menus_semanales") || ss.insertSheet("menus_semanales");
+      const usuarioId = normalizarEmail(payload.usuario_id);
+      const dispositivoId = String(payload.dispositivo_id || "").trim();
+
+      if (!usuarioId || !dispositivoId || !sesionValidaNutrafit(ss, usuarioId, dispositivoId)) {
+        return ContentService.createTextOutput("Sesión inválida");
+      }
 
       // ✅ Añadimos usuario_id como primera columna
       const headers = ["usuario_id", "Semana inicio", "Fecha", "Día", "Momento", "Ingrediente", "Cantidad", "Puntos", "Notas", "Presupuesto"];
@@ -389,7 +401,7 @@ function doPost(e) {
       const filasParaGuardar = filas
         .filter(f => f && typeof f === 'object' && Object.keys(f).length > 0)
         .map(f => [
-          payload.usuario_id,
+          usuarioId,
           sanitizeCampo(f["Semana inicio"] || f.semana_inicio || f.semana || ""),
           sanitizeCampo(f["Fecha"]         || f.fecha         || ""),
           sanitizeCampo(f["Día"]           || f.Dia           || f.dia || ""),
