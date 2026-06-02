@@ -530,6 +530,31 @@ function pintarHistorialCreditos(cuerpoTabla, filas) {
     }).join('');
 }
 
+function aplicarUltimoRegistroCreditos(filas) {
+    if (!Array.isArray(filas) || filas.length === 0) return;
+
+    // El historial se pinta en orden más reciente -> más antiguo.
+    const ultimo = filas[0] || [];
+    const genElem = document.getElementById('genero-credito');
+    const edadElem = document.getElementById('edad-credito');
+    const pesoElem = document.getElementById('peso-credito');
+    const altElem = document.getElementById('altura-credito');
+
+    if (!genElem || !edadElem || !pesoElem || !altElem) return;
+
+    const genero = String(ultimo[2] || '').trim();
+    const edad = parseInt(ultimo[3], 10);
+    const peso = parseFloat(ultimo[4]);
+    const altura = parseFloat(ultimo[5]);
+
+    if (genero === 'Hombre' || genero === 'Mujer') genElem.value = genero;
+    if (!isNaN(edad) && edad > 0) edadElem.value = String(edad);
+    if (!isNaN(peso) && peso > 0) pesoElem.value = String(peso);
+    if (!isNaN(altura) && altura > 0) altElem.value = String(altura);
+
+    calcularCreditos();
+}
+
 async function cargarHistorialCreditos() {
     const cuerpoTabla = document.getElementById('tabla-creditos-body');
     if (!cuerpoTabla) return;
@@ -545,7 +570,10 @@ async function cargarHistorialCreditos() {
 
     // 1) Pintado instantáneo desde caché local
     const cacheLocal = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-    if (cacheLocal.length > 0) pintarHistorialCreditos(cuerpoTabla, cacheLocal);
+    if (cacheLocal.length > 0) {
+        pintarHistorialCreditos(cuerpoTabla, cacheLocal);
+        aplicarUltimoRegistroCreditos(cacheLocal);
+    }
 
     // 2) Refresco desde backend
     try {
@@ -558,6 +586,7 @@ async function cargarHistorialCreditos() {
         const datos = await response.json();
         pintarHistorialCreditos(cuerpoTabla, datos);
         localStorage.setItem(cacheKey, JSON.stringify(Array.isArray(datos) ? datos.slice(0, 10) : []));
+        aplicarUltimoRegistroCreditos(datos);
     } catch (e) {
         console.error("Error historial créditos", e);
         if (!cacheLocal.length) {
