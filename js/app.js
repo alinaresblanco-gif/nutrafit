@@ -1933,6 +1933,7 @@ window.onload = function() {
     cargarDespensaGoogle();
     // Cargar historial de semanas
     cargarHistorialSemanas();
+    asegurarPapeleraEnFilasDiario();
 };
 
 document.addEventListener('input', function(event) {
@@ -1945,6 +1946,7 @@ document.addEventListener('input', function(event) {
 
     if (target.matches('.input-txt') || target.matches('.input-pts')) {
         guardarEstadoSemanaLocal();
+        actualizarVisibilidadPapelerasDiario();
     }
 });
 
@@ -2010,8 +2012,65 @@ function crearFilaNueva(contenedor) {
     const nuevaFila = document.createElement('div');
     nuevaFila.className = 'fila-ingrediente';
     nuevaFila.innerHTML = '<input type="text" class="input-txt" placeholder="Otro ingrediente..." oninput="gestionarNuevaFila(this)">' +
+                          '<button type="button" class="btn-eliminar-fila" onclick="eliminarFilaIngrediente(this)" title="Eliminar línea"><i class="fas fa-trash-alt"></i></button>' +
                           '<input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">';
     contenedor.appendChild(nuevaFila);
+}
+
+function asegurarPapeleraEnFilasDiario() {
+    document.querySelectorAll('.fila-ingrediente').forEach(fila => {
+        const inputTxt = fila.querySelector('.input-txt');
+        const inputPts = fila.querySelector('.input-pts');
+        if (!inputTxt || !inputPts) return;
+
+        let botonEliminar = fila.querySelector('.btn-eliminar-fila');
+        if (!botonEliminar) {
+            botonEliminar = document.createElement('button');
+            botonEliminar.type = 'button';
+            botonEliminar.className = 'btn-eliminar-fila';
+            botonEliminar.title = 'Eliminar línea';
+            botonEliminar.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            botonEliminar.addEventListener('click', function() {
+                eliminarFilaIngrediente(this);
+            });
+            fila.insertBefore(botonEliminar, inputPts);
+        }
+    });
+
+    actualizarVisibilidadPapelerasDiario();
+}
+
+function actualizarVisibilidadPapelerasDiario() {
+    document.querySelectorAll('.contenedor-ingredientes').forEach(contenedor => {
+        const filas = Array.from(contenedor.querySelectorAll('.fila-ingrediente'));
+        filas.forEach((fila, indice) => {
+            const boton = fila.querySelector('.btn-eliminar-fila');
+            if (!boton) return;
+
+            const txt = String(fila.querySelector('.input-txt')?.value || '').trim();
+            const pts = parseFloat(fila.querySelector('.input-pts')?.value);
+            const filaVacia = txt === '' && (isNaN(pts) || pts === 0);
+            const esUltima = indice === filas.length - 1;
+
+            boton.classList.toggle('oculta', esUltima && filaVacia);
+        });
+    });
+}
+
+function eliminarFilaIngrediente(boton) {
+    const fila = boton?.closest('.fila-ingrediente');
+    const contenedor = fila?.closest('.contenedor-ingredientes');
+    if (!fila || !contenedor) return;
+
+    fila.remove();
+
+    if (contenedor.querySelectorAll('.fila-ingrediente').length === 0) {
+        crearFilaNueva(contenedor);
+    }
+
+    actualizarPuntos();
+    actualizarVisibilidadPapelerasDiario();
+    guardarEstadoSemanaLocal();
 }
 
 function formatearPuntosMomento(valor) {
@@ -2357,6 +2416,8 @@ function restaurarEstadoSemanaLocal() {
                     }
                 });
             });
+
+            asegurarPapeleraEnFilasDiario();
         }
 
         if (estado.diaActivo) {
@@ -2556,9 +2617,12 @@ function reiniciarFormulario() {
         contenedor.innerHTML =
             '<div class="fila-ingrediente">' +
             '<input type="text" class="input-txt" placeholder="Ingrediente..." oninput="gestionarNuevaFila(this); guardarEstadoSemanaLocal();">' +
+            '<button type="button" class="btn-eliminar-fila" onclick="eliminarFilaIngrediente(this)" title="Eliminar línea"><i class="fas fa-trash-alt"></i></button>' +
             '<input type="number" class="input-pts" value="0" oninput="actualizarPuntos(); guardarEstadoSemanaLocal();">' +
             '</div>';
     });
+
+    asegurarPapeleraEnFilasDiario();
 
     document.querySelectorAll('[id^="total-"]').forEach(input => {
         if (input.tagName === 'INPUT') input.value = 30;
@@ -3023,6 +3087,8 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
                             fila.appendChild(inputPts);
                             contenedorIngredientes.appendChild(fila);
                         });
+
+                        asegurarPapeleraEnFilasDiario();
                     }
                 }
             });

@@ -219,7 +219,8 @@
             margin-bottom: 10px;
         }
         .input-txt {
-            flex: 1;
+            flex: 0 1 80%;
+            max-width: 80%;
             min-width: 0;
             border: 1px solid #e0e6e0;
             padding: 12px 15px;
@@ -227,6 +228,27 @@
             outline: none;
             background: #fafafa;
             font-size: 0.95rem;
+        }
+        .btn-eliminar-fila {
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 10px;
+            background: #f9e3e3;
+            color: #c0392b;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 34px;
+        }
+        .btn-eliminar-fila:hover {
+            background: #f4cfcf;
+        }
+        .btn-eliminar-fila.oculta {
+            visibility: hidden;
+            pointer-events: none;
+            opacity: 0;
         }
         .input-pts {
             width: 65px;
@@ -246,6 +268,7 @@
             .input-txt {
                 min-width: 0;
                 width: auto;
+                max-width: 72%;
             }
             .input-pts {
                 flex: 0 0 55px;
