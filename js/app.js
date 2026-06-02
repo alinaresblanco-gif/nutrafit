@@ -98,6 +98,69 @@ function obtenerPresupuestoSemanaActual() {
     return 30;
 }
 
+async function obtenerUltimoCreditoCalculadoUsuario() {
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    if (!uid) return null;
+
+    const cacheKey = `creditos_nutrafit_${uid.toLowerCase()}`;
+    const cache = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+    if (Array.isArray(cache) && cache.length > 0) {
+        const ultimoCache = parseFloat(cache[0]?.[6]);
+        if (!isNaN(ultimoCache) && ultimoCache > 0) {
+            return Math.round(ultimoCache);
+        }
+    }
+
+    try {
+        const query = new URLSearchParams({
+            tabla: 'creditos',
+            usuario_id: uid,
+            t: String(Date.now())
+        });
+        const resp = await fetch(`${URL_GOOGLE_SCRIPT}?${query.toString()}`);
+        const filas = await resp.json();
+        if (Array.isArray(filas) && filas.length > 0) {
+            localStorage.setItem(cacheKey, JSON.stringify(filas.slice(0, 10)));
+            const ultimo = parseFloat(filas[0]?.[6]);
+            if (!isNaN(ultimo) && ultimo > 0) return Math.round(ultimo);
+        }
+    } catch (e) {
+        console.log('No se pudo leer último crédito para presupuesto semanal');
+    }
+
+    return null;
+}
+
+async function sincronizarPresupuestoConUltimoCredito() {
+    const presupuestoInput = document.getElementById('total-' + diaActual) || document.querySelector('[id^="total-"]');
+    if (!presupuestoInput) return;
+
+    // Solo aplicar al empezar semana nueva: sin fecha y sin ingredientes cargados.
+    const fechaSemana = String(document.getElementById('fecha-inicio')?.value || '').trim();
+    if (fechaSemana) return;
+
+    const hayIngredientes = Array.from(document.querySelectorAll('.contenido-dia .input-txt'))
+        .some(input => String(input.value || '').trim() !== '');
+    if (hayIngredientes) return;
+
+    const guardadoLunes = parseFloat(localStorage.getItem(clavePresupuestoDia('lunes')));
+    const actual = parseFloat(presupuestoInput.value);
+
+    // Solo auto-rellena si sigue el valor por defecto (30) o no hay presupuesto guardado.
+    const presupuestoPersonalizado = (!isNaN(guardadoLunes) && Math.round(guardadoLunes) !== 30)
+        || (!isNaN(actual) && Math.round(actual) !== 30);
+    if (presupuestoPersonalizado) return;
+
+    const ultimoCredito = await obtenerUltimoCreditoCalculadoUsuario();
+    if (ultimoCredito === null) return;
+
+    presupuestoInput.value = String(ultimoCredito);
+    localStorage.setItem(clavePresupuestoDia('lunes'), String(ultimoCredito));
+    localStorage.setItem(clavePresupuestoDia(diaActual), String(ultimoCredito));
+    guardarEstadoSemanaLocal();
+    actualizarPuntos();
+}
+
 function extraerMensajeErrorGoogle(payload) {
     if (!payload || Array.isArray(payload)) return "";
     return String(payload.error || payload.message || payload.mensaje || "").trim();
@@ -158,6 +221,7 @@ async function abrirVista(nombreVista, opciones = {}) {
             setTimeout(() => {
                 cargarDespensaDiario();
                 cargarHistorialSemanas();
+                sincronizarPresupuestoConUltimoCredito();
             }, 300);
         }
         if (nombreVista === 'carrito-compra') {
