@@ -649,7 +649,7 @@ async function guardarPeso() {
 
         // Actualizar caché local inmediatamente
         const cacheKey = `peso_nutrafit_${uid.toLowerCase()}`;
-        const filaNueva = [uid, fecha, String(pesoActual), String(diferencia)];
+        const filaNueva = [uid, fecha, String(pesoActual), String(diferencia), null];
         const cacheActual = JSON.parse(localStorage.getItem(cacheKey) || '[]');
         localStorage.setItem(cacheKey, JSON.stringify([filaNueva, ...cacheActual].slice(0, 15)));
 
@@ -661,20 +661,71 @@ async function guardarPeso() {
 }
 
 function pintarHistorialPeso(cuerpo, datos) {
-    // Columnas en hoja: [usuario_id(0), fecha(1), peso(2), diferencia(3)]
+    // Columnas en hoja: [usuario_id(0), fecha(1), peso(2), diferencia(3), rowId(4)]
     if (!Array.isArray(datos) || datos.length === 0) {
-        cuerpo.innerHTML = "<tr><td colspan='3'>Aún no hay registros</td></tr>";
+        cuerpo.innerHTML = "<tr><td colspan='4'>Aún no hay registros</td></tr>";
         return;
     }
     cuerpo.innerHTML = datos.map(fila => {
         const dif   = parseFloat(fila[3]) || 0;
         const icono = dif < 0 ? "↓" : (dif > 0 ? "↑" : "");
+        const rowId = fila[4] !== undefined ? String(fila[4]) : '';
+        const fecha = String(fila[1] || '').replace(/"/g, '&quot;');
+        const peso  = String(fila[2] || '').replace(/"/g, '&quot;');
+        const difTxt = String(fila[3] || '').replace(/"/g, '&quot;');
         return `<tr>
             <td>${formatearFechaES(fila[1] || '')}</td>
             <td style="font-weight:bold;">${fila[2]} kg</td>
             <td style="font-weight:bold; color:${dif < 0 ? '#2ecc71' : '#e74c3c'}">${icono} ${Math.abs(dif).toFixed(1)}</td>
+            <td style="text-align:center;">
+                <button onclick="eliminarRegistroPeso('${rowId}', '${fecha}', '${peso}', '${difTxt}')" title="Eliminar registro" style="border:none; background:transparent; color:#e74c3c; cursor:pointer; font-size:16px;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </td>
         </tr>`;
     }).join('');
+}
+
+async function eliminarRegistroPeso(rowId, fecha, peso, diferencia) {
+    if (!confirm('¿Eliminar este registro de peso?')) return;
+
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    const did = dispositivoId || localStorage.getItem('nutrafit_dispositivo_id');
+    if (!uid || !did) return alert('No hay sesión activa. Vuelve a identificarte.');
+
+    try {
+        const payload = {
+            tipo: 'eliminar_peso',
+            usuario_id: uid,
+            dispositivo_id: did,
+            row_id: rowId || '',
+            fecha: fecha || '',
+            peso: peso || '',
+            diferencia: diferencia || ''
+        };
+
+        const resp = await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', body: JSON.stringify(payload) });
+        const txt = String(await resp.text()).trim();
+        if (!resp.ok || !/exito|éxito/i.test(txt)) throw new Error(txt || `HTTP ${resp.status}`);
+
+        // Limpiar caché local (por rowId si existe; si no, por fecha+peso+diferencia)
+        const cacheKey = `peso_nutrafit_${uid.toLowerCase()}`;
+        const cache = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+        const nuevoCache = cache.filter(f => {
+            if (!Array.isArray(f)) return true;
+            const mismoRow = String(f[4] || '') && String(f[4] || '') === String(rowId || '');
+            const mismaFirma = String(f[1] || '') === String(fecha || '')
+                && String(f[2] || '') === String(peso || '')
+                && String(f[3] || '') === String(diferencia || '');
+            return !(mismoRow || mismaFirma);
+        });
+        localStorage.setItem(cacheKey, JSON.stringify(nuevoCache));
+
+        cargarHistorialPeso();
+    } catch (e) {
+        console.error('Error eliminando peso', e);
+        alert('No se pudo eliminar: ' + (e.message || e));
+    }
 }
 
 async function cargarHistorialPeso() {
@@ -683,7 +734,7 @@ async function cargarHistorialPeso() {
 
     const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
     if (!uid) {
-        cuerpo.innerHTML = "<tr><td colspan='3'>Sin sesión activa</td></tr>";
+        cuerpo.innerHTML = "<tr><td colspan='4'>Sin sesión activa</td></tr>";
         return;
     }
     if (!usuarioActivo) usuarioActivo = uid;
@@ -713,7 +764,7 @@ async function cargarHistorialPeso() {
     } catch (e) {
         console.error("Error peso", e);
         if (!cacheLocal.length) {
-            cuerpo.innerHTML = "<tr><td colspan='3'>No se pudo cargar el historial</td></tr>";
+            cuerpo.innerHTML = "<tr><td colspan='4'>No se pudo cargar el historial</td></tr>";
         }
     }
 }

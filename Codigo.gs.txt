@@ -168,11 +168,17 @@ function doGet(e) {
       if (data.length <= 1) return finalizarJSON([]);
       data.shift();
 
+      // Añadimos rowId al final para permitir borrado exacto desde frontend.
       const dataUsuario = data
-        .filter(fila => normalizarEmail(fila[0]) === usuarioId)
-        .map(fila => fila.map(celda =>
-          celda instanceof Date ? Utilities.formatDate(celda, tz, "yyyy-MM-dd") : celda
-        ));
+        .map((fila, idx) => ({ fila, rowId: idx + 2 }))
+        .filter(item => normalizarEmail(item.fila[0]) === usuarioId)
+        .map(item => {
+          const filaConvertida = item.fila.map(celda =>
+            celda instanceof Date ? Utilities.formatDate(celda, tz, "yyyy-MM-dd") : celda
+          );
+          filaConvertida.push(item.rowId);
+          return filaConvertida;
+        });
       return finalizarJSON(dataUsuario.slice(-15).reverse());
     }
 
@@ -428,6 +434,49 @@ function doPost(e) {
       const sheetPeso = ss.getSheetByName("Peso");
       sheetPeso.appendRow([payload.usuario_id, payload.fecha, payload.peso, payload.diferencia]);
       return ContentService.createTextOutput("Éxito Peso");
+    }
+
+    // ELIMINAR REGISTRO DE PESO
+    else if (tipo === "eliminar_peso") {
+      const sheetPeso = ss.getSheetByName("Peso");
+      const usuarioId = normalizarEmail(payload.usuario_id);
+      const dispositivoId = String(payload.dispositivo_id || "").trim();
+      const rowId = Number(payload.row_id || 0);
+      const fecha = String(payload.fecha || "").trim();
+      const peso = String(payload.peso || "").trim();
+
+      if (!sheetPeso) {
+        return ContentService.createTextOutput("No existe la hoja Peso");
+      }
+
+      if (!usuarioId || !dispositivoId || !sesionValidaNutrafit(ss, usuarioId, dispositivoId)) {
+        return ContentService.createTextOutput("Sesión inválida");
+      }
+
+      // 1) Intento principal: borrar por row_id exacto (viene de doGet peso)
+      if (rowId > 1 && rowId <= sheetPeso.getLastRow()) {
+        const fila = sheetPeso.getRange(rowId, 1, 1, 4).getValues()[0];
+        if (normalizarEmail(fila[0]) === usuarioId) {
+          sheetPeso.deleteRow(rowId);
+          return ContentService.createTextOutput("Éxito Eliminar Peso");
+        }
+      }
+
+      // 2) Fallback: buscar por usuario + fecha + peso desde abajo (más reciente primero)
+      const data = sheetPeso.getDataRange().getValues();
+      for (let i = data.length - 1; i >= 1; i--) {
+        const fila = data[i];
+        const filaUsuario = normalizarEmail(fila[0]);
+        const filaFecha = String(fila[1] || "").trim();
+        const filaPeso = String(fila[2] || "").trim();
+
+        if (filaUsuario === usuarioId && filaFecha === fecha && filaPeso === peso) {
+          sheetPeso.deleteRow(i + 1);
+          return ContentService.createTextOutput("Éxito Eliminar Peso");
+        }
+      }
+
+      return ContentService.createTextOutput("Registro no encontrado");
     }
 
     // GUARDAR ALIMENTO NUEVO
