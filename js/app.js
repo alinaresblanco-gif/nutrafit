@@ -222,6 +222,7 @@ async function abrirVista(nombreVista, opciones = {}) {
             setTimeout(() => {
                 cargarDespensaDiario();
                 cargarHistorialSemanas();
+                asegurarPapeleraEnFilasDiario();
                 sincronizarPresupuestoConUltimoCredito();
             }, 300);
         }
