@@ -989,9 +989,25 @@ async function cargarDespensaDiario() {
     }
 }
 /* --- 8. LÓGICA DE LISTA DE COMPRA (DISEÑO IMAGEN 3) --- */
-let listaCompra = JSON.parse(localStorage.getItem('nutrafit_lista_compra')) || [];
+let listaCompra = [];
+let claveListaCompraActual = null;
+
+function obtenerClaveListaCompraUsuario() {
+    const uid = (usuarioActivo || localStorage.getItem('nutrafit_usuario_id') || 'anonimo').toLowerCase();
+    return `nutrafit_lista_compra_${uid}`;
+}
+
+function sincronizarListaCompraUsuario() {
+    const nuevaClave = obtenerClaveListaCompraUsuario();
+    if (claveListaCompraActual === nuevaClave) return;
+
+    claveListaCompraActual = nuevaClave;
+    listaCompra = JSON.parse(localStorage.getItem(claveListaCompraActual) || '[]');
+}
 
 function agregarItemCompra() {
+    sincronizarListaCompraUsuario();
+
     const inputNombre = document.getElementById('item-nombre');
     const inputCantidad = document.getElementById('item-cantidad');
     
@@ -1023,6 +1039,8 @@ function agregarItemCompra() {
 }
 
 function toggleComprado(id) {
+    sincronizarListaCompraUsuario();
+
     const item = listaCompra.find(i => i.id === id);
     if (item) {
         item.comprado = !item.comprado;
@@ -1031,12 +1049,16 @@ function toggleComprado(id) {
 }
 
 function eliminarItemCompra(id) {
+    sincronizarListaCompraUsuario();
+
     // No preguntamos para eliminar uno solo para que sea ágil, como en la imagen
     listaCompra = listaCompra.filter(i => i.id !== id);
     actualizarInterfazCompra();
 }
 
 function limpiarListaCompra() {
+    sincronizarListaCompraUsuario();
+
     if (listaCompra.length === 0) return;
     if (confirm("¿Deseas vaciar toda la lista de la compra?")) {
         listaCompra = [];
@@ -1045,13 +1067,15 @@ function limpiarListaCompra() {
 }
 
 function actualizarInterfazCompra() {
+    sincronizarListaCompraUsuario();
+
     const contenedor = document.getElementById('lista-compra-items');
     const progreso = document.getElementById('progreso-compra');
     
     if (!contenedor) return;
 
     // Sincronizar con almacenamiento local (Persistencia)
-    localStorage.setItem('nutrafit_lista_compra', JSON.stringify(listaCompra));
+    localStorage.setItem(claveListaCompraActual, JSON.stringify(listaCompra));
 
     // Ordenar: Pendientes arriba (A-Z) y Comprados abajo
     listaCompra.sort((a, b) => {
