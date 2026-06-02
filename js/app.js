@@ -973,7 +973,7 @@ async function cargarDespensaDiario() {
             const puntos = Math.round(parseFloat(fila[8])) || 0;
             console.log(`Item ${index}: ${nombre} - ${puntos} pts`);
             htmlItems += `
-                <div class="item-despensa" data-nombre="${String(nombre || '').replace(/"/g, '&quot;')}">
+                <div class="item-despensa" data-nombre="${String(nombre || '').replace(/"/g, '&quot;')}" data-puntos="${puntos}">
                     <span>${nombre}</span>
                     <span class="pts-tag">${puntos} pts</span>
                 </div>`;
@@ -1894,9 +1894,10 @@ function inicializarSeleccionDespensaDiario() {
         if (!item) return;
 
         const nombre = (item.dataset.nombre || item.querySelector('span')?.innerText || '').trim();
+        const puntos = parseFloat(item.dataset.puntos || '0') || 0;
         if (!nombre) return;
 
-        insertarIngredienteDesdeDespensa(nombre);
+        insertarIngredienteDesdeDespensa(nombre, puntos);
     });
 }
 
@@ -1934,7 +1935,25 @@ function obtenerInputObjetivoDiario() {
     return null;
 }
 
-function insertarIngredienteDesdeDespensa(nombreIngrediente) {
+function aplicarIngredienteAPosicion(inputTxt, nombreIngrediente, puntosIngrediente) {
+    if (!inputTxt) return;
+
+    inputTxt.value = nombreIngrediente;
+    const fila = inputTxt.closest('.fila-ingrediente');
+    const inputPts = fila ? fila.querySelector('.input-pts') : null;
+    if (inputPts) {
+        inputPts.value = String(puntosIngrediente || 0);
+    }
+
+    inputDiarioActivo = inputTxt;
+    cardMomentoActiva = inputTxt.closest('.card-momento');
+    gestionarNuevaFila(inputTxt);
+    actualizarPuntos();
+    guardarEstadoSemanaLocal();
+    inputTxt.focus();
+}
+
+function insertarIngredienteDesdeDespensa(nombreIngrediente, puntosIngrediente) {
     const inputObjetivo = obtenerInputObjetivoDiario();
     if (!inputObjetivo) {
         alert('No se encontró un campo activo para insertar el ingrediente.');
@@ -1950,23 +1969,13 @@ function insertarIngredienteDesdeDespensa(nombreIngrediente) {
             const nuevosInputs = contenedorIngredientes.querySelectorAll('.input-txt');
             const ultimoInput = nuevosInputs[nuevosInputs.length - 1];
             if (ultimoInput) {
-                ultimoInput.value = nombreIngrediente;
-                inputDiarioActivo = ultimoInput;
-                cardMomentoActiva = card;
-                gestionarNuevaFila(ultimoInput);
-                guardarEstadoSemanaLocal();
-                ultimoInput.focus();
+                aplicarIngredienteAPosicion(ultimoInput, nombreIngrediente, puntosIngrediente);
                 return;
             }
         }
     }
 
-    inputObjetivo.value = nombreIngrediente;
-    inputDiarioActivo = inputObjetivo;
-    cardMomentoActiva = inputObjetivo.closest('.card-momento');
-    gestionarNuevaFila(inputObjetivo);
-    guardarEstadoSemanaLocal();
-    inputObjetivo.focus();
+    aplicarIngredienteAPosicion(inputObjetivo, nombreIngrediente, puntosIngrediente);
 }
 
 document.addEventListener('focusin', function(event) {
