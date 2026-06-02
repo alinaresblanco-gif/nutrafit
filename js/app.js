@@ -973,13 +973,14 @@ async function cargarDespensaDiario() {
             const puntos = Math.round(parseFloat(fila[8])) || 0;
             console.log(`Item ${index}: ${nombre} - ${puntos} pts`);
             htmlItems += `
-                <div class="item-despensa">
+                <div class="item-despensa" data-nombre="${String(nombre || '').replace(/"/g, '&quot;')}">
                     <span>${nombre}</span>
                     <span class="pts-tag">${puntos} pts</span>
                 </div>`;
         });
 
         contenedor.innerHTML = htmlItems;
+        inicializarSeleccionDespensaDiario();
         console.log("Despensa cargada exitosamente");
     } catch (e) {
         console.error("Error cargando despensa en diario:", e);
@@ -1880,6 +1881,113 @@ function filtrarDespensaLocal() {
 
 /* --- FUNCIONES PARA DIARIO FORMULARIO --- */
 let diaActual = 'lunes';
+let inputDiarioActivo = null;
+let cardMomentoActiva = null;
+
+function inicializarSeleccionDespensaDiario() {
+    const contenedor = document.getElementById('lista-despensa');
+    if (!contenedor || contenedor.dataset.listenerDespensa === '1') return;
+
+    contenedor.dataset.listenerDespensa = '1';
+    contenedor.addEventListener('click', function(event) {
+        const item = event.target.closest('.item-despensa');
+        if (!item) return;
+
+        const nombre = (item.dataset.nombre || item.querySelector('span')?.innerText || '').trim();
+        if (!nombre) return;
+
+        insertarIngredienteDesdeDespensa(nombre);
+    });
+}
+
+function obtenerInputObjetivoDiario() {
+    const diaActivo = document.querySelector('.contenido-dia.active');
+    if (!diaActivo) return null;
+
+    if (inputDiarioActivo && document.body.contains(inputDiarioActivo) && diaActivo.contains(inputDiarioActivo)) {
+        return inputDiarioActivo;
+    }
+
+    if (cardMomentoActiva && document.body.contains(cardMomentoActiva) && diaActivo.contains(cardMomentoActiva)) {
+        const vacioCard = Array.from(cardMomentoActiva.querySelectorAll('.input-txt')).find(i => !String(i.value || '').trim());
+        if (vacioCard) return vacioCard;
+
+        const contenedorIngredientes = cardMomentoActiva.querySelector('.contenedor-ingredientes');
+        if (contenedorIngredientes) {
+            crearFilaNueva(contenedorIngredientes);
+            const inputsCard = cardMomentoActiva.querySelectorAll('.input-txt');
+            return inputsCard[inputsCard.length - 1] || null;
+        }
+    }
+
+    const vacioDia = Array.from(diaActivo.querySelectorAll('.input-txt')).find(i => !String(i.value || '').trim());
+    if (vacioDia) return vacioDia;
+
+    const primeraCard = diaActivo.querySelector('.card-momento');
+    const contenedorIngredientes = primeraCard?.querySelector('.contenedor-ingredientes');
+    if (contenedorIngredientes) {
+        crearFilaNueva(contenedorIngredientes);
+        const inputsDia = diaActivo.querySelectorAll('.input-txt');
+        return inputsDia[inputsDia.length - 1] || null;
+    }
+
+    return null;
+}
+
+function insertarIngredienteDesdeDespensa(nombreIngrediente) {
+    const inputObjetivo = obtenerInputObjetivoDiario();
+    if (!inputObjetivo) {
+        alert('No se encontró un campo activo para insertar el ingrediente.');
+        return;
+    }
+
+    const valorActual = String(inputObjetivo.value || '').trim();
+    if (valorActual) {
+        const card = inputObjetivo.closest('.card-momento');
+        const contenedorIngredientes = card?.querySelector('.contenedor-ingredientes');
+        if (contenedorIngredientes) {
+            crearFilaNueva(contenedorIngredientes);
+            const nuevosInputs = contenedorIngredientes.querySelectorAll('.input-txt');
+            const ultimoInput = nuevosInputs[nuevosInputs.length - 1];
+            if (ultimoInput) {
+                ultimoInput.value = nombreIngrediente;
+                inputDiarioActivo = ultimoInput;
+                cardMomentoActiva = card;
+                gestionarNuevaFila(ultimoInput);
+                guardarEstadoSemanaLocal();
+                ultimoInput.focus();
+                return;
+            }
+        }
+    }
+
+    inputObjetivo.value = nombreIngrediente;
+    inputDiarioActivo = inputObjetivo;
+    cardMomentoActiva = inputObjetivo.closest('.card-momento');
+    gestionarNuevaFila(inputObjetivo);
+    guardarEstadoSemanaLocal();
+    inputObjetivo.focus();
+}
+
+document.addEventListener('focusin', function(event) {
+    const target = event.target;
+    if (!target || !target.matches || !target.matches('.input-txt')) return;
+
+    const card = target.closest('.card-momento');
+    const diaActivo = document.querySelector('.contenido-dia.active');
+    if (card && diaActivo && diaActivo.contains(target)) {
+        inputDiarioActivo = target;
+        cardMomentoActiva = card;
+    }
+});
+
+document.addEventListener('click', function(event) {
+    const card = event.target.closest('.card-momento');
+    const diaActivo = document.querySelector('.contenido-dia.active');
+    if (card && diaActivo && diaActivo.contains(card)) {
+        cardMomentoActiva = card;
+    }
+});
 
 function cambiarDia(dia, btn) {
     // Remover active
