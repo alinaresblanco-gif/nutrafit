@@ -142,13 +142,19 @@ function doGet(e) {
       data.shift();
 
       // Columnas: [usuario_id, fecha, actividad, tiempo, foto, distancia, pasos, desnivel, vel_media]
+      // Añadimos rowId al final para permitir borrado exacto desde frontend.
       const dataUsuario = data
-        .filter(fila => normalizarEmail(fila[0]) === usuarioId)
-        .map(fila => fila.map(celda =>
-          celda instanceof Date
-            ? Utilities.formatDate(celda, tz, "yyyy-MM-dd'T'HH:mm:ss")
-            : celda
-        ));
+        .map((fila, idx) => ({ fila, rowId: idx + 2 }))
+        .filter(item => normalizarEmail(item.fila[0]) === usuarioId)
+        .map(item => {
+          const filaConvertida = item.fila.map(celda =>
+            celda instanceof Date
+              ? Utilities.formatDate(celda, tz, "yyyy-MM-dd'T'HH:mm:ss")
+              : celda
+          );
+          filaConvertida.push(item.rowId);
+          return filaConvertida;
+        });
       return finalizarJSON(dataUsuario.slice(-20).reverse());
     }
 
@@ -473,6 +479,50 @@ function doPost(e) {
         if (filaUsuario === usuarioId && filaFecha === fecha && filaPeso === peso) {
           sheetPeso.deleteRow(i + 1);
           return ContentService.createTextOutput("Éxito Eliminar Peso");
+        }
+      }
+
+      return ContentService.createTextOutput("Registro no encontrado");
+    }
+
+    // ELIMINAR REGISTRO DE EJERCICIO
+    else if (tipo === "eliminar_ejercicio") {
+      const sheetEj = ss.getSheetByName("ejercicio");
+      const usuarioId = normalizarEmail(payload.usuario_id);
+      const dispositivoId = String(payload.dispositivo_id || "").trim();
+      const rowId = Number(payload.row_id || 0);
+      const fechaVal = String(payload.fecha || "").trim();
+      const actividad = String(payload.actividad || "").trim();
+
+      if (!sheetEj) {
+        return ContentService.createTextOutput("No existe la hoja ejercicio");
+      }
+
+      if (!usuarioId || !dispositivoId || !sesionValidaNutrafit(ss, usuarioId, dispositivoId)) {
+        return ContentService.createTextOutput("Sesión inválida");
+      }
+
+      // 1) Intento principal: borrar por row_id exacto
+      if (rowId > 1 && rowId <= sheetEj.getLastRow()) {
+        const fila = sheetEj.getRange(rowId, 1, 1, 3).getValues()[0];
+        if (normalizarEmail(fila[0]) === usuarioId) {
+          sheetEj.deleteRow(rowId);
+          return ContentService.createTextOutput("Éxito Eliminar Ejercicio");
+        }
+      }
+
+      // 2) Fallback: buscar por usuario + fecha + actividad desde abajo
+      const data = sheetEj.getDataRange().getValues();
+      for (let i = data.length - 1; i >= 1; i--) {
+        const fila = data[i];
+        const filaUsuario = normalizarEmail(fila[0]);
+        const filaFecha = String(fila[1] instanceof Date
+          ? Utilities.formatDate(fila[1], Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss")
+          : fila[1] || "").trim();
+        const filaActividad = String(fila[2] || "").trim();
+        if (filaUsuario === usuarioId && filaFecha.startsWith(fechaVal.substring(0, 10)) && filaActividad === actividad) {
+          sheetEj.deleteRow(i + 1);
+          return ContentService.createTextOutput("Éxito Eliminar Ejercicio");
         }
       }
 

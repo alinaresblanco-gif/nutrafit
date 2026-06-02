@@ -1330,6 +1330,7 @@ function pintarHistorialEjercicios(contenedor, resumenMinutos, datos) {
             vel: vel
         };
         const jsonDatos = JSON.stringify(datosCompartir).replace(/"/g, '&quot;');
+        const rowId = fila[9] !== undefined ? String(fila[9]) : '';
 
         card.innerHTML = `
             <div class="cabecera-card" style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -1339,6 +1340,9 @@ function pintarHistorialEjercicios(contenedor, resumenMinutos, datos) {
                 </div>
                 <button onclick="compartirActividad('${jsonDatos}')" class="btn-compartir-mini">
                     <i class="fas fa-share-alt"></i>
+                </button>
+                <button onclick="eliminarRegistroEjercicio('${rowId}', '${fechaRaw.replace(/'/g, "")}', '${actividad.replace(/'/g, "")}')" title="Eliminar actividad" class="btn-compartir-mini" style="color:#e74c3c; margin-left:6px;">
+                    <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
             ${htmlImagen}
@@ -1389,6 +1393,47 @@ async function cargarHistorialEjercicios() {
         if (!cacheLocal.length) {
             contenedor.innerHTML = "<div style='padding:12px; color:#666;'>No se pudo cargar el historial</div>";
         }
+    }
+}
+
+// --- 7b. ELIMINAR REGISTRO DE EJERCICIO ---
+async function eliminarRegistroEjercicio(rowId, fecha, actividad) {
+    if (!confirm('¿Eliminar esta actividad del historial?')) return;
+
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    const did = dispositivoId || localStorage.getItem('nutrafit_dispositivo_id');
+    if (!uid || !did) return alert('No hay sesión activa. Vuelve a identificarte.');
+
+    try {
+        const payload = {
+            tipo: 'eliminar_ejercicio',
+            usuario_id: uid,
+            dispositivo_id: did,
+            row_id: rowId || '',
+            fecha: fecha || '',
+            actividad: actividad || ''
+        };
+
+        const resp = await fetch(URL_GOOGLE_SCRIPT, { method: 'POST', body: JSON.stringify(payload) });
+        const txt = String(await resp.text()).trim();
+        if (!resp.ok || !/exito|éxito/i.test(txt)) throw new Error(txt || `HTTP ${resp.status}`);
+
+        // Actualizar caché local: eliminar por rowId o por fecha+actividad
+        const cacheKey = `ejercicio_nutrafit_${uid.toLowerCase()}`;
+        const cache = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+        const nuevoCache = cache.filter(f => {
+            if (!Array.isArray(f)) return true;
+            const mismoRow = String(f[9] || '') && String(f[9] || '') === String(rowId || '');
+            const mismaFirma = String(f[1] || '').startsWith(String(fecha || '').substring(0, 10))
+                && String(f[2] || '').trim() === String(actividad || '').trim();
+            return !(mismoRow || mismaFirma);
+        });
+        localStorage.setItem(cacheKey, JSON.stringify(nuevoCache));
+
+        cargarHistorialEjercicios();
+    } catch (e) {
+        console.error('Error eliminando ejercicio', e);
+        alert('No se pudo eliminar: ' + (e.message || e));
     }
 }
 
