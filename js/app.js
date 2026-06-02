@@ -2528,13 +2528,21 @@ function guardarMenuSemanal() {
     });
 }
 
-function limpiarSemana() {
+async function limpiarSemana() {
     localStorage.removeItem(claveSemanaGuardada());
     localStorage.removeItem(claveDiaActivoSemana());
     localStorage.removeItem(claveEstadoDiarioFormulario());
+    ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'].forEach(dia => {
+        localStorage.removeItem(clavePresupuestoDia(dia));
+    });
+
     reiniciarFormulario();
     const btn = getTabButton('lunes');
     if (btn) cambiarDia('lunes', btn);
+
+    // Al limpiar semana, se considera inicio de nuevo menú: aplicar último crédito calculado.
+    await sincronizarPresupuestoConUltimoCredito();
+
     alert('Semana limpiada. Ahora puedes iniciar una nueva semana.');
 }
 
