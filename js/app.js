@@ -3061,6 +3061,26 @@ function obtenerPresupuestoDesdeFila(fila) {
     return isNaN(presupuesto) ? null : Math.round(presupuesto);
 }
 
+function normalizarDiaMenuAId(diaValor) {
+    const texto = String(diaValor || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+    const mapa = {
+        lunes: 'lunes',
+        martes: 'martes',
+        miercoles: 'miercoles',
+        jueves: 'jueves',
+        viernes: 'viernes',
+        sabado: 'sabado',
+        domingo: 'domingo'
+    };
+
+    return mapa[texto] || '';
+}
+
 async function cargarHistorialSemanas() {
     const contenedor = document.getElementById('contenedor-historial');
     if (!contenedor) return;
@@ -3202,7 +3222,9 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
             if (presupuestoInput) {
                 presupuestoInput.value = presupuestoSemana;
             }
-            localStorage.setItem(clavePresupuestoDia('lunes'), String(presupuestoSemana));
+            ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'].forEach(dia => {
+                localStorage.setItem(clavePresupuestoDia(dia), String(presupuestoSemana));
+            });
         }
 
         // Organizar datos por día y momento
@@ -3212,6 +3234,8 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
             const momento = obtenerValorMenuSemanal(fila, 'momento');
             const ingrediente = obtenerValorMenuSemanal(fila, 'ingrediente');
             const puntos = obtenerValorMenuSemanal(fila, 'puntos') || 0;
+
+            if (!dia || !momento) return;
 
             if (!datosPorDia[dia]) {
                 datosPorDia[dia] = {};
@@ -3223,19 +3247,9 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
         });
 
         // Mapear nombres de días a IDs
-        const diaMap = {
-            'Lunes': 'lunes',
-            'Martes': 'martes',
-            'Miércoles': 'miercoles',
-            'Jueves': 'jueves',
-            'Viernes': 'viernes',
-            'Sábado': 'sabado',
-            'Domingo': 'domingo'
-        };
-
         // Llenar formulario
         Object.keys(datosPorDia).forEach(diaNombre => {
-            const diaId = diaMap[diaNombre];
+            const diaId = normalizarDiaMenuAId(diaNombre);
             if (!diaId) return;
 
             const contenedorDia = document.getElementById(diaId);
@@ -3246,7 +3260,7 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
             Object.keys(datosPorDia[diaNombre]).forEach(momento => {
                 // Encontrar la card correspondiente al momento
                 const card = Array.from(cards).find(c => 
-                    normalizarNombreMomento(c.querySelector('.momento-titulo')?.innerText.trim())
+                    normalizarNombreMomento((c.querySelector('.momento-titulo')?.innerText || '').trim())
                     === normalizarNombreMomento(momento)
                 );
 
@@ -3264,7 +3278,9 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
                             inputTxt.className = 'input-txt';
                             inputTxt.placeholder = 'Ingrediente...';
                             inputTxt.value = item.ingrediente || '';
-                            prepararInputIngredienteDiario(inputTxt);
+                            if (typeof prepararInputIngredienteDiario === 'function') {
+                                prepararInputIngredienteDiario(inputTxt);
+                            }
                             inputTxt.addEventListener('input', function() {
                                 gestionarNuevaFila(this);
                                 guardarEstadoSemanaLocal();
@@ -3284,7 +3300,9 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
                             contenedorIngredientes.appendChild(fila);
                         });
 
-                        asegurarPapeleraEnFilasDiario();
+                        if (typeof asegurarPapeleraEnFilasDiario === 'function') {
+                            asegurarPapeleraEnFilasDiario();
+                        }
                     }
                 }
             });
