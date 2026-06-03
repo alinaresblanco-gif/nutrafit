@@ -118,7 +118,8 @@ async function obtenerUltimoCreditoCalculadoUsuario() {
             t: String(Date.now())
         });
         const resp = await fetch(`${URL_GOOGLE_SCRIPT}?${query.toString()}`);
-        const filas = await resp.json();
+        const payload = await resp.json();
+        const filas = extraerFilasRespuestaGoogle(payload);
         if (Array.isArray(filas) && filas.length > 0) {
             localStorage.setItem(cacheKey, JSON.stringify(filas.slice(0, 10)));
             const ultimo = parseFloat(filas[0]?.[6]);
@@ -136,19 +137,11 @@ async function sincronizarPresupuestoConUltimoCredito() {
     if (!presupuestoInput) return;
 
     const diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
-    const presupuestosGuardados = diasSemana
-        .map(dia => parseFloat(localStorage.getItem(clavePresupuestoDia(dia))))
-        .filter(valor => !isNaN(valor));
-    const actual = parseFloat(presupuestoInput.value);
-
-    // Mantener intactos presupuestos personalizados diferentes de 30.
-    const presupuestoPersonalizado = presupuestosGuardados.some(valor => Math.round(valor) !== 30)
-        || (!isNaN(actual) && Math.round(actual) !== 30);
-    if (presupuestoPersonalizado) return;
 
     const ultimoCredito = await obtenerUltimoCreditoCalculadoUsuario();
     if (ultimoCredito === null) return;
 
+    // Blindaje: al abrir menús siempre sincroniza con el último crédito diario válido.
     presupuestoInput.value = String(ultimoCredito);
     diasSemana.forEach(dia => {
         localStorage.setItem(clavePresupuestoDia(dia), String(ultimoCredito));
