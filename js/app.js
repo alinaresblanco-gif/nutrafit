@@ -1075,7 +1075,107 @@ function filtrarDespensa() {
 
 const DESPENSA_CACHE_KEY = 'nutrafit_despensa_cache_v1';
 const DESPENSA_REFRESH_MS = 60000;
+const DESPENSA_DATALIST_ID = 'despensa-opciones-diario';
 let despensaRefreshInterval = null;
+let catalogoDespensaDiario = [];
+let indiceDespensaDiario = new Map();
+
+function normalizarTextoDespensa(texto) {
+    return String(texto || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+}
+
+function actualizarCatalogoDespensaDiario(items) {
+    const lista = Array.isArray(items) ? items : [];
+    catalogoDespensaDiario = lista
+        .map(item => ({
+            nombre: String(item.nombre || '').trim(),
+            puntos: Math.round(parseFloat(item.puntos) || 0)
+        }))
+        .filter(item => item.nombre !== '');
+
+    indiceDespensaDiario = new Map();
+    catalogoDespensaDiario.forEach(item => {
+        const clave = normalizarTextoDespensa(item.nombre);
+        if (!clave || indiceDespensaDiario.has(clave)) return;
+        indiceDespensaDiario.set(clave, item);
+    });
+
+    const inputActivo = document.activeElement;
+    if (inputActivo && inputActivo.matches && inputActivo.matches('.input-txt')) {
+        actualizarOpcionesDatalistDespensa(inputActivo);
+    }
+}
+
+function asegurarDatalistDespensaDiario() {
+    let datalist = document.getElementById(DESPENSA_DATALIST_ID);
+    if (datalist) return datalist;
+
+    datalist = document.createElement('datalist');
+    datalist.id = DESPENSA_DATALIST_ID;
+    document.body.appendChild(datalist);
+    return datalist;
+}
+
+function obtenerCoincidenciasDespensa(texto, maximo = 30) {
+    const criterio = normalizarTextoDespensa(texto);
+    if (!criterio) {
+        return catalogoDespensaDiario.slice(0, maximo);
+    }
+
+    return catalogoDespensaDiario
+        .filter(item => normalizarTextoDespensa(item.nombre).includes(criterio))
+        .slice(0, maximo);
+}
+
+function actualizarOpcionesDatalistDespensa(inputTxt) {
+    if (!inputTxt || !inputTxt.matches || !inputTxt.matches('.input-txt')) return;
+
+    const datalist = asegurarDatalistDespensaDiario();
+    datalist.innerHTML = '';
+
+    const coincidencias = obtenerCoincidenciasDespensa(inputTxt.value, 30);
+    coincidencias.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.nombre;
+        option.label = `${item.nombre} (${item.puntos} pts)`;
+        datalist.appendChild(option);
+    });
+
+    inputTxt.setAttribute('list', DESPENSA_DATALIST_ID);
+}
+
+function aplicarCreditoAutomaticoDespensa(inputTxt) {
+    if (!inputTxt) return;
+
+    const nombre = String(inputTxt.value || '').trim();
+    const match = indiceDespensaDiario.get(normalizarTextoDespensa(nombre));
+    if (!match) return;
+
+    const fila = inputTxt.closest('.fila-ingrediente');
+    const inputPts = fila ? fila.querySelector('.input-pts') : null;
+    if (!inputPts) return;
+
+    const puntosSugeridos = String(match.puntos || 0);
+    if (inputPts.value !== puntosSugeridos) {
+        inputPts.value = puntosSugeridos;
+        actualizarPuntos();
+    }
+}
+
+function prepararInputIngredienteDiario(inputTxt) {
+    if (!inputTxt) return;
+    inputTxt.setAttribute('list', DESPENSA_DATALIST_ID);
+    inputTxt.setAttribute('autocomplete', 'off');
+}
+
+function inicializarAutocompleteDespensaDiario(root = document) {
+    asegurarDatalistDespensaDiario();
+    root.querySelectorAll('.input-txt').forEach(prepararInputIngredienteDiario);
+}
 
 function leerCacheDespensaDiario() {
     try {
@@ -1121,7 +1221,6 @@ function renderizarDespensaDiario(items) {
 
 async function refrescarDespensaDiario(mostrarErrorEnPantalla = false) {
     const contenedor = document.getElementById('lista-despensa');
-    if (!contenedor) return;
 
     try {
         const urlFetch = URL_GOOGLE_SCRIPT + "?tabla=alimentos&t=" + Date.now();
@@ -1133,9 +1232,9 @@ async function refrescarDespensaDiario(mostrarErrorEnPantalla = false) {
         const mensajeBackend = extraerMensajeErrorGoogle(payload);
 
         if (!Array.isArray(datos) || datos.length === 0) {
-            if (mensajeBackend && mostrarErrorEnPantalla) {
+            if (mensajeBackend && mostrarErrorEnPantalla && contenedor) {
                 contenedor.innerHTML = `<p style='text-align:center; padding:20px; color:red;'>Error de Google Sheets: ${mensajeBackend}</p>`;
-            } else if (mostrarErrorEnPantalla) {
+            } else if (mostrarErrorEnPantalla && contenedor) {
                 contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>La despensa está vacía.</p>";
             }
             return;
@@ -1147,10 +1246,13 @@ async function refrescarDespensaDiario(mostrarErrorEnPantalla = false) {
         }));
 
         guardarCacheDespensaDiario(items);
-        renderizarDespensaDiario(items);
+        actualizarCatalogoDespensaDiario(items);
+        if (contenedor) {
+            renderizarDespensaDiario(items);
+        }
     } catch (e) {
         console.error("Error cargando despensa en diario:", e);
-        if (mostrarErrorEnPantalla) {
+        if (mostrarErrorEnPantalla && contenedor) {
             contenedor.innerHTML = `<p style='text-align:center; padding:20px; color:red;'>Error: ${e.message}</p>`;
         }
     }
@@ -1170,21 +1272,22 @@ function iniciarRefrescoDespensaDiario() {
 /* --- NUEVA FUNCIÓN PARA CARGAR DESPENSA EN DIARIO-FORMULARIO --- */
 async function cargarDespensaDiario() {
     const contenedor = document.getElementById('lista-despensa');
-    if (!contenedor) {
-        console.error("No encontré el contenedor lista-despensa");
-        return;
-    }
-
     cargarSemanaActiva();
+    inicializarAutocompleteDespensaDiario(document);
 
     // Pintado instantáneo desde caché local para evitar esperas.
     const cache = leerCacheDespensaDiario();
+    actualizarCatalogoDespensaDiario(cache);
     if (cache.length > 0) {
-        renderizarDespensaDiario(cache);
+        if (contenedor) {
+            renderizarDespensaDiario(cache);
+        }
         refrescarDespensaDiario(false);
     } else {
-        contenedor.innerHTML = '<div style="padding:15px; color:gray;"><i class="fas fa-spinner fa-spin"></i> Cargando despensa...</div>';
-        await refrescarDespensaDiario(true);
+        if (contenedor) {
+            contenedor.innerHTML = '<div style="padding:15px; color:gray;"><i class="fas fa-spinner fa-spin"></i> Cargando despensa...</div>';
+        }
+        await refrescarDespensaDiario(Boolean(contenedor));
     }
 
     // Refresco en segundo plano cada 60 segundos.
@@ -1986,9 +2089,7 @@ function clavePresupuestoDia(dia) {
 
 window.onload = function() {
     actualizarPuntos();
-    cargarSemanaActiva();
-    // Llamamos a la carga segura de Google, igual que en el agua
-    cargarDespensaGoogle();
+    cargarDespensaDiario();
     // Cargar historial de semanas
     cargarHistorialSemanas();
     asegurarPapeleraEnFilasDiario();
@@ -2002,10 +2103,24 @@ document.addEventListener('input', function(event) {
         guardarSemanaSeleccionada();
     }
 
+    if (target.matches('.input-txt')) {
+        prepararInputIngredienteDiario(target);
+        actualizarOpcionesDatalistDespensa(target);
+        aplicarCreditoAutomaticoDespensa(target);
+    }
+
     if (target.matches('.input-txt') || target.matches('.input-pts')) {
         guardarEstadoSemanaLocal();
         actualizarVisibilidadPapelerasDiario();
     }
+});
+
+document.addEventListener('focusin', function(event) {
+    const target = event.target;
+    if (!target || !target.matches || !target.matches('.input-txt')) return;
+
+    prepararInputIngredienteDiario(target);
+    actualizarOpcionesDatalistDespensa(target);
 });
 
 /**
@@ -2073,6 +2188,9 @@ function crearFilaNueva(contenedor) {
                           '<button type="button" class="btn-eliminar-fila" onclick="eliminarFilaIngrediente(this)" title="Eliminar línea"><i class="fas fa-trash-alt"></i></button>' +
                           '<input type="number" class="input-pts" value="0" oninput="actualizarPuntos()">';
     contenedor.appendChild(nuevaFila);
+
+    const inputTxt = nuevaFila.querySelector('.input-txt');
+    prepararInputIngredienteDiario(inputTxt);
 }
 
 function asegurarPapeleraEnFilasDiario() {
@@ -2424,6 +2542,7 @@ function restaurarEstadoSemanaLocal() {
                         inputTxt.className = 'input-txt';
                         inputTxt.placeholder = 'Ingrediente...';
                         inputTxt.value = filaData.ingrediente || '';
+                        prepararInputIngredienteDiario(inputTxt);
                         inputTxt.addEventListener('input', function() {
                             gestionarNuevaFila(this);
                             guardarEstadoSemanaLocal();
@@ -2451,6 +2570,7 @@ function restaurarEstadoSemanaLocal() {
                         inputTxt.type = 'text';
                         inputTxt.className = 'input-txt';
                         inputTxt.placeholder = 'Ingrediente...';
+                        prepararInputIngredienteDiario(inputTxt);
                         inputTxt.addEventListener('input', function() {
                             gestionarNuevaFila(this);
                             guardarEstadoSemanaLocal();
@@ -3133,6 +3253,7 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
                             inputTxt.className = 'input-txt';
                             inputTxt.placeholder = 'Ingrediente...';
                             inputTxt.value = item.ingrediente || '';
+                            prepararInputIngredienteDiario(inputTxt);
                             inputTxt.addEventListener('input', function() {
                                 gestionarNuevaFila(this);
                                 guardarEstadoSemanaLocal();
