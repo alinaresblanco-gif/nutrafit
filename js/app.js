@@ -135,19 +135,14 @@ async function sincronizarPresupuestoConUltimoCredito() {
     const presupuestoInput = document.getElementById('total-' + diaActual) || document.querySelector('[id^="total-"]');
     if (!presupuestoInput) return;
 
-    // Solo aplicar al empezar semana nueva: sin fecha y sin ingredientes cargados.
-    const fechaSemana = String(document.getElementById('fecha-inicio')?.value || '').trim();
-    if (fechaSemana) return;
-
-    const hayIngredientes = Array.from(document.querySelectorAll('.contenido-dia .input-txt'))
-        .some(input => String(input.value || '').trim() !== '');
-    if (hayIngredientes) return;
-
-    const guardadoLunes = parseFloat(localStorage.getItem(clavePresupuestoDia('lunes')));
+    const diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+    const presupuestosGuardados = diasSemana
+        .map(dia => parseFloat(localStorage.getItem(clavePresupuestoDia(dia))))
+        .filter(valor => !isNaN(valor));
     const actual = parseFloat(presupuestoInput.value);
 
-    // Solo auto-rellena si sigue el valor por defecto (30) o no hay presupuesto guardado.
-    const presupuestoPersonalizado = (!isNaN(guardadoLunes) && Math.round(guardadoLunes) !== 30)
+    // Mantener intactos presupuestos personalizados diferentes de 30.
+    const presupuestoPersonalizado = presupuestosGuardados.some(valor => Math.round(valor) !== 30)
         || (!isNaN(actual) && Math.round(actual) !== 30);
     if (presupuestoPersonalizado) return;
 
@@ -155,7 +150,7 @@ async function sincronizarPresupuestoConUltimoCredito() {
     if (ultimoCredito === null) return;
 
     presupuestoInput.value = String(ultimoCredito);
-    ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'].forEach(dia => {
+    diasSemana.forEach(dia => {
         localStorage.setItem(clavePresupuestoDia(dia), String(ultimoCredito));
     });
     guardarEstadoSemanaLocal();
