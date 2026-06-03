@@ -2668,7 +2668,11 @@ function calcularFechaParaDia(fechaInicio, dia) {
     return formatearFechaYMDLocal(fecha);
 }
 
-function guardarMenuSemanal() {
+function actualizarSemanaActiva() {
+    guardarMenuSemanal('actualizar');
+}
+
+function guardarMenuSemanal(modo = 'nuevo') {
     const inicioSemana = document.getElementById('fecha-inicio')?.value || "";
     const presupuestoSemana = obtenerPresupuestoSemanaActual();
     const diaMap = {
@@ -2682,8 +2686,19 @@ function guardarMenuSemanal() {
     };
     const dias = Object.keys(diaMap);
 
-    if (!inicioSemana && !confirm("No has ingresado la fecha de inicio de la semana. ¿Deseas guardar igualmente?")) {
+    if (!inicioSemana) {
+        alert('Debes indicar la fecha de inicio de la semana.');
         return;
+    }
+
+    if (modo === 'actualizar') {
+        if (!confirm('Vas a actualizar la semana activa en Google Sheets. Se reemplazará lo guardado previamente para esa semana.')) {
+            return;
+        }
+    } else {
+        if (!confirm('Vas a guardar una semana nueva. Si esa fecha ya existe, usa Actualizar.')) {
+            return;
+        }
     }
 
     const filasGuardar = [];
@@ -2721,11 +2736,11 @@ function guardarMenuSemanal() {
         return alert('No hay datos para guardar en el menú semanal.');
     }
 
-    const btn = document.getElementById('btn-guardar-menu');
+    const btn = document.getElementById(modo === 'actualizar' ? 'btn-actualizar-menu' : 'btn-guardar-menu');
     const textoOriginal = btn ? btn.innerHTML : '';
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     }
 
     const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
@@ -2740,7 +2755,13 @@ function guardarMenuSemanal() {
 
     fetch(URL_GOOGLE_SCRIPT, {
         method: 'POST',
-        body: JSON.stringify({ tipo: 'guardar_menu_semanal', usuario_id: uid, dispositivo_id: did, filas: filasGuardar })
+        body: JSON.stringify({
+            tipo: modo === 'actualizar' ? 'actualizar_menu_semanal' : 'guardar_menu_semanal',
+            modo: modo,
+            usuario_id: uid,
+            dispositivo_id: did,
+            filas: filasGuardar
+        })
     })
     .then(async (resp) => {
         const txt = String(await resp.text()).trim();

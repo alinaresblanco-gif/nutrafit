@@ -229,7 +229,7 @@
         .val-pts { font-size: 1.2rem; font-weight: 800; border: none; width: 100%; text-align: center; background: transparent; outline: none; }
 
         /* Botones */
-        .btn-guardar, .btn-limpiar {
+        .btn-guardar, .btn-actualizar, .btn-limpiar {
             background: linear-gradient(135deg, var(--verde-corp), var(--verde-oscuro));
             color: white;
             border: none;
@@ -247,6 +247,10 @@
             min-width: 42px;
             height: 42px;
         }
+        .btn-actualizar {
+            background: linear-gradient(135deg, #f39c12, #d35400);
+            box-shadow: 0 2px 8px rgba(211, 84, 0, 0.28);
+        }
         .btn-limpiar {
             background: #f0f0f0;
             color: var(--verde-oscuro);
@@ -257,13 +261,18 @@
             box-shadow: 0 4px 12px rgba(120, 169, 120, 0.45);
             transform: translateY(-1px);
         }
+        .btn-actualizar:hover {
+            background: linear-gradient(135deg, #e67e22, #ba4a00);
+            box-shadow: 0 4px 12px rgba(211, 84, 0, 0.36);
+            transform: translateY(-1px);
+        }
         .btn-limpiar:hover {
             background: #e8e8e8;
         }
-        .btn-guardar:active, .btn-limpiar:active {
+        .btn-guardar:active, .btn-actualizar:active, .btn-limpiar:active {
             transform: translateY(0);
         }
-        .btn-guardar i, .btn-limpiar i {
+        .btn-guardar i, .btn-actualizar i, .btn-limpiar i {
             font-size: 1rem;
             margin: 0 2px;
         }
@@ -283,12 +292,12 @@
             .val-pts {
                 font-size: 1rem;
             }
-            .btn-guardar, .btn-limpiar {
+            .btn-guardar, .btn-actualizar, .btn-limpiar {
                 min-width: 36px;
                 height: 36px;
                 padding: 8px 12px;
             }
-            .btn-guardar i, .btn-limpiar i {
+            .btn-guardar i, .btn-actualizar i, .btn-limpiar i {
                 font-size: 0.85rem;
             }
         }
@@ -724,7 +733,8 @@
             <input type="number" id="total-lunes" class="val-pts" value="30" step="1" min="0" inputmode="numeric" oninput="this.value = this.value ? Math.floor(this.value) : 0; actualizarPuntos(); guardarPresupuestoActual()">
         </div>
         <div style="display:flex; align-items:center; gap:14px;">
-            <button class="btn-guardar" id="btn-guardar-menu" type="button" onclick="guardarMenuSemanal()" title="Guardar menú semanal">
+                <button class="btn-actualizar" id="btn-actualizar-menu" type="button" onclick="actualizarSemanaActiva()" title="Actualizar Semana Activa"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn-guardar" id="btn-guardar-menu" type="button" onclick="guardarMenuSemanal()" title="Guardar semana nueva">
                 <i class="fas fa-save"></i>
             </button>
             <button class="btn-limpiar" id="btn-limpiar-semana" type="button" onclick="limpiarSemana()" title="Limpiar semana">

@@ -383,10 +383,11 @@ function doPost(e) {
     }
 
     // GUARDAR MENÚ SEMANAL
-    else if (tipo === "guardar_menu_semanal" || tipo === "guardarFila") {
+    else if (tipo === "guardar_menu_semanal" || tipo === "guardarFila" || tipo === "actualizar_menu_semanal") {
       var sheetMenus = ss.getSheetByName("menus_semanales") || ss.insertSheet("menus_semanales");
       const usuarioId = normalizarEmail(payload.usuario_id);
       const dispositivoId = String(payload.dispositivo_id || "").trim();
+      const esActualizacion = (tipo === "actualizar_menu_semanal") || (String(payload.modo || "").toLowerCase() === "actualizar");
 
       if (!usuarioId || !dispositivoId || !sesionValidaNutrafit(ss, usuarioId, dispositivoId)) {
         return ContentService.createTextOutput("Sesión inválida");
@@ -425,8 +426,7 @@ function doPost(e) {
           sanitizeCampo(f["Presupuesto"]   || f.presupuesto   || payload.presupuesto || "")
         ]);
 
-      // Si se guarda una semana existente (mismo usuario + misma fecha de inicio),
-      // reemplazamos sus filas para evitar duplicados al editar.
+      // Semanas incluidas en esta operación.
       const semanasAReemplazar = Array.from(new Set(
         filasParaGuardar
           .map(fila => String(fila[1] || '').trim()) // Columna "Semana inicio"
@@ -435,13 +435,30 @@ function doPost(e) {
 
       if (semanasAReemplazar.length > 0 && sheetMenus.getLastRow() > 1) {
         const dataActual = sheetMenus.getDataRange().getValues();
-        for (let i = dataActual.length - 1; i >= 1; i--) {
-          const fila = dataActual[i];
-          const filaUsuario = normalizarEmail(fila[0]);
-          const filaSemanaInicio = String(fila[1] || '').trim();
 
-          if (filaUsuario === usuarioId && semanasAReemplazar.includes(filaSemanaInicio)) {
-            sheetMenus.deleteRow(i + 1);
+        if (esActualizacion) {
+          // Actualizar semana activa: sustituye filas previas de esa semana.
+          for (let i = dataActual.length - 1; i >= 1; i--) {
+            const fila = dataActual[i];
+            const filaUsuario = normalizarEmail(fila[0]);
+            const filaSemanaInicio = String(fila[1] || '').trim();
+
+            if (filaUsuario === usuarioId && semanasAReemplazar.includes(filaSemanaInicio)) {
+              sheetMenus.deleteRow(i + 1);
+            }
+          }
+        } else {
+          // Guardar semana nueva: no sobrescribe una semana existente.
+          const existeSemana = dataActual.slice(1).some(fila => {
+            const filaUsuario = normalizarEmail(fila[0]);
+            const filaSemanaInicio = String(fila[1] || '').trim();
+            return filaUsuario === usuarioId && semanasAReemplazar.includes(filaSemanaInicio);
+          });
+
+          if (existeSemana) {
+            return ContentService
+              .createTextOutput("Ya existe una semana con esa fecha. Usa Actualizar para modificarla.")
+              .setMimeType(ContentService.MimeType.TEXT);
           }
         }
       }
@@ -453,7 +470,7 @@ function doPost(e) {
         ).setValues(filasParaGuardar);
       }
 
-      return ContentService.createTextOutput("Éxito Menú Semanal");
+      return ContentService.createTextOutput(esActualizacion ? "Éxito Actualizar Menú Semanal" : "Éxito Menú Semanal");
     }
 
     // GUARDAR PESO
