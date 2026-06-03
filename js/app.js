@@ -1073,66 +1073,122 @@ function filtrarDespensa() {
     });
 }
 
+const DESPENSA_CACHE_KEY = 'nutrafit_despensa_cache_v1';
+const DESPENSA_REFRESH_MS = 60000;
+let despensaRefreshInterval = null;
+
+function leerCacheDespensaDiario() {
+    try {
+        const raw = localStorage.getItem(DESPENSA_CACHE_KEY);
+        if (!raw) return [];
+        const cache = JSON.parse(raw);
+        return Array.isArray(cache.items) ? cache.items : [];
+    } catch (_) {
+        return [];
+    }
+}
+
+function guardarCacheDespensaDiario(items) {
+    const payload = {
+        updatedAt: Date.now(),
+        items: Array.isArray(items) ? items : []
+    };
+    localStorage.setItem(DESPENSA_CACHE_KEY, JSON.stringify(payload));
+}
+
+function renderizarDespensaDiario(items) {
+    const contenedor = document.getElementById('lista-despensa');
+    if (!contenedor) return;
+
+    if (!Array.isArray(items) || items.length === 0) {
+        contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>La despensa está vacía.</p>";
+        return;
+    }
+
+    const htmlItems = items.map(item => {
+        const nombre = String(item.nombre || '').trim();
+        const puntos = Math.round(parseFloat(item.puntos) || 0);
+        return `
+            <div class="item-despensa" data-nombre="${nombre.replace(/"/g, '&quot;')}" data-puntos="${puntos}">
+                <span>${nombre}</span>
+                <span class="pts-tag">${puntos} pts</span>
+            </div>`;
+    }).join('');
+
+    contenedor.innerHTML = htmlItems;
+    inicializarSeleccionDespensaDiario();
+}
+
+async function refrescarDespensaDiario(mostrarErrorEnPantalla = false) {
+    const contenedor = document.getElementById('lista-despensa');
+    if (!contenedor) return;
+
+    try {
+        const urlFetch = URL_GOOGLE_SCRIPT + "?tabla=alimentos&t=" + Date.now();
+        const res = await fetch(urlFetch);
+        if (!res.ok) throw new Error("HTTP error! status: " + res.status);
+
+        const payload = await res.json();
+        const datos = extraerFilasRespuestaGoogle(payload);
+        const mensajeBackend = extraerMensajeErrorGoogle(payload);
+
+        if (!Array.isArray(datos) || datos.length === 0) {
+            if (mensajeBackend && mostrarErrorEnPantalla) {
+                contenedor.innerHTML = `<p style='text-align:center; padding:20px; color:red;'>Error de Google Sheets: ${mensajeBackend}</p>`;
+            } else if (mostrarErrorEnPantalla) {
+                contenedor.innerHTML = "<p style='text-align:center; padding:20px;'>La despensa está vacía.</p>";
+            }
+            return;
+        }
+
+        const items = datos.map(fila => ({
+            nombre: fila[0],
+            puntos: Math.round(parseFloat(fila[8]) || 0)
+        }));
+
+        guardarCacheDespensaDiario(items);
+        renderizarDespensaDiario(items);
+    } catch (e) {
+        console.error("Error cargando despensa en diario:", e);
+        if (mostrarErrorEnPantalla) {
+            contenedor.innerHTML = `<p style='text-align:center; padding:20px; color:red;'>Error: ${e.message}</p>`;
+        }
+    }
+}
+
+function iniciarRefrescoDespensaDiario() {
+    if (despensaRefreshInterval) {
+        clearInterval(despensaRefreshInterval);
+    }
+
+    despensaRefreshInterval = setInterval(() => {
+        if (vistaActual !== 'diario-formulario') return;
+        refrescarDespensaDiario(false);
+    }, DESPENSA_REFRESH_MS);
+}
+
 /* --- NUEVA FUNCIÓN PARA CARGAR DESPENSA EN DIARIO-FORMULARIO --- */
 async function cargarDespensaDiario() {
     const contenedor = document.getElementById('lista-despensa');
-    const cargando = document.getElementById('cargando-alimentos');
     if (!contenedor) {
         console.error("No encontré el contenedor lista-despensa");
         return;
     }
 
     cargarSemanaActiva();
-    console.log("Iniciando carga de despensa...");
-    console.log("URL a consultar:", URL_GOOGLE_SCRIPT + "?tabla=alimentos");
 
-    try {
-        const urlFetch = URL_GOOGLE_SCRIPT + "?tabla=alimentos&t=" + new Date().getTime();
-        console.log("Haciendo fetch a:", urlFetch);
-        
-        const res = await fetch(urlFetch);
-        console.log("Respuesta recibida. Status:", res.status);
-        
-        if (!res.ok) {
-            throw new Error("HTTP error! status: " + res.status);
-        }
-        
-        const payload = await res.json();
-        console.log("Datos recibidos:", payload);
-        const datos = extraerFilasRespuestaGoogle(payload);
-        const mensajeBackend = extraerMensajeErrorGoogle(payload);
-        
-        if (datos.length === 0) {
-            console.log("No hay datos o array vacío");
-            if (mensajeBackend) {
-                if (cargando) cargando.innerHTML = `<p style='text-align:center; padding:20px; color:red;'>Error de Google Sheets: ${mensajeBackend}</p>`;
-            } else {
-                if (cargando) cargando.innerHTML = "<p style='text-align:center; padding:20px;'>La despensa está vacía.</p>";
-            }
-            return;
-        }
-
-        console.log("Procesando " + datos.length + " alimentos");
-        let htmlItems = "";
-        datos.forEach((fila, index) => {
-            const nombre = fila[0];
-            const puntos = Math.round(parseFloat(fila[8])) || 0;
-            console.log(`Item ${index}: ${nombre} - ${puntos} pts`);
-            htmlItems += `
-                <div class="item-despensa" data-nombre="${String(nombre || '').replace(/"/g, '&quot;')}" data-puntos="${puntos}">
-                    <span>${nombre}</span>
-                    <span class="pts-tag">${puntos} pts</span>
-                </div>`;
-        });
-
-        contenedor.innerHTML = htmlItems;
-        inicializarSeleccionDespensaDiario();
-        console.log("Despensa cargada exitosamente");
-    } catch (e) {
-        console.error("Error cargando despensa en diario:", e);
-        console.error("Stack:", e.stack);
-        if (cargando) cargando.innerHTML = `<p style='text-align:center; padding:20px; color:red;'>Error: ${e.message}</p>`;
+    // Pintado instantáneo desde caché local para evitar esperas.
+    const cache = leerCacheDespensaDiario();
+    if (cache.length > 0) {
+        renderizarDespensaDiario(cache);
+        refrescarDespensaDiario(false);
+    } else {
+        contenedor.innerHTML = '<div style="padding:15px; color:gray;"><i class="fas fa-spinner fa-spin"></i> Cargando despensa...</div>';
+        await refrescarDespensaDiario(true);
     }
+
+    // Refresco en segundo plano cada 60 segundos.
+    iniciarRefrescoDespensaDiario();
 }
 /* --- 8. LÓGICA DE LISTA DE COMPRA (DISEÑO IMAGEN 3) --- */
 let listaCompra = [];
