@@ -2767,7 +2767,9 @@ function guardarMenuSemanal(modo = 'nuevo') {
             localStorage.setItem(claveDiaActivoSemana(), diaActual);
             guardarEstadoSemanaLocal();
         }
-        alert('Menú guardado correctamente.');
+        alert(modo === 'actualizar'
+            ? 'Semana activa actualizada: se añadieron solo registros nuevos o modificados.'
+            : 'Semana nueva guardada correctamente.');
     })
     .catch((error) => {
         alert('Error al guardar el menú: ' + (error.message || error));

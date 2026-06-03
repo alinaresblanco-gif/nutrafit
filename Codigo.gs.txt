@@ -426,6 +426,13 @@ function doPost(e) {
           sanitizeCampo(f["Presupuesto"]   || f.presupuesto   || payload.presupuesto || "")
         ]);
 
+      function claveFilaMenu(fila) {
+        // Clave lógica de una comida dentro de la semana (ignora mayúsculas/minúsculas).
+        return [fila[1], fila[2], fila[3], fila[4], fila[5]]
+          .map(valor => String(valor || "").trim().toLowerCase())
+          .join("|");
+      }
+
       // Semanas incluidas en esta operación.
       const semanasAReemplazar = Array.from(new Set(
         filasParaGuardar
@@ -437,15 +444,35 @@ function doPost(e) {
         const dataActual = sheetMenus.getDataRange().getValues();
 
         if (esActualizacion) {
-          // Actualizar semana activa: sustituye filas previas de esa semana.
-          for (let i = dataActual.length - 1; i >= 1; i--) {
-            const fila = dataActual[i];
+          // Actualizar semana activa: sólo añade nuevas filas y actualiza las modificadas.
+          const mapaExistentes = {};
+          dataActual.slice(1).forEach((fila, idx) => {
             const filaUsuario = normalizarEmail(fila[0]);
             const filaSemanaInicio = String(fila[1] || '').trim();
+            if (filaUsuario !== usuarioId || !semanasAReemplazar.includes(filaSemanaInicio)) return;
 
-            if (filaUsuario === usuarioId && semanasAReemplazar.includes(filaSemanaInicio)) {
-              sheetMenus.deleteRow(i + 1);
+            const clave = claveFilaMenu(fila);
+            if (!(clave in mapaExistentes)) {
+              mapaExistentes[clave] = idx + 2; // row number real en la hoja
             }
+          });
+
+          const filasNuevas = [];
+          filasParaGuardar.forEach(fila => {
+            const clave = claveFilaMenu(fila);
+            const rowNum = mapaExistentes[clave];
+            if (rowNum) {
+              sheetMenus.getRange(rowNum, 1, 1, headers.length).setValues([fila]);
+            } else {
+              filasNuevas.push(fila);
+            }
+          });
+
+          if (filasNuevas.length > 0) {
+            sheetMenus.getRange(
+              sheetMenus.getLastRow() + 1, 1,
+              filasNuevas.length, headers.length
+            ).setValues(filasNuevas);
           }
         } else {
           // Guardar semana nueva: no sobrescribe una semana existente.
@@ -460,10 +487,16 @@ function doPost(e) {
               .createTextOutput("Ya existe una semana con esa fecha. Usa Actualizar para modificarla.")
               .setMimeType(ContentService.MimeType.TEXT);
           }
-        }
-      }
 
-      if (filasParaGuardar.length > 0) {
+          if (filasParaGuardar.length > 0) {
+            sheetMenus.getRange(
+              sheetMenus.getLastRow() + 1, 1,
+              filasParaGuardar.length, headers.length
+            ).setValues(filasParaGuardar);
+          }
+        }
+      } else if (filasParaGuardar.length > 0) {
+        // Primera carga (sin semanas previas) o sin colisiones.
         sheetMenus.getRange(
           sheetMenus.getLastRow() + 1, 1,
           filasParaGuardar.length, headers.length
