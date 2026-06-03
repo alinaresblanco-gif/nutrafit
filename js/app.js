@@ -98,6 +98,17 @@ function obtenerPresupuestoSemanaActual() {
     return 30;
 }
 
+function obtenerPresupuestoDiaActual() {
+    const guardado = parseFloat(localStorage.getItem(clavePresupuestoDia(diaActual)));
+    if (!isNaN(guardado)) return guardado;
+
+    const input = document.getElementById('total-' + diaActual);
+    const valorInput = parseFloat(input?.value);
+    if (!isNaN(valorInput)) return valorInput;
+
+    return 30;
+}
+
 async function obtenerUltimoCreditoCalculadoUsuario() {
     const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
     if (!uid) return null;
@@ -2284,7 +2295,10 @@ function actualizarPuntos() {
     });
 
     const presupuestoInput = document.getElementById('total-' + diaActual);
-    const presupuesto = parseFloat(presupuestoInput.value) || 0;
+    const presupuesto = obtenerPresupuestoDiaActual();
+    if (presupuestoInput) {
+        presupuestoInput.value = String(Math.round(presupuesto));
+    }
     const restante = Math.round(presupuesto - sumaTotal);
 
     const displayRestante = document.getElementById('restantes-val');
@@ -2586,6 +2600,8 @@ function restaurarEstadoSemanaLocal() {
         if (estado.diaActivo) {
             diaActual = estado.diaActivo;
         }
+
+        actualizarPuntos();
 
         return true;
     } catch (error) {
@@ -3316,6 +3332,7 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
 
         // Guardar estado
         guardarEstadoSemanaLocal();
+        actualizarPuntos();
 
         alert("Semana cargada correctamente desde el historial");
 
