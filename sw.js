@@ -51,6 +51,15 @@ self.addEventListener('message', (event) => {
 
 // Estrategia: Primero intenta red, si falla usa caché
 self.addEventListener('fetch', (event) => {
+  const reqUrl = new URL(event.request.url);
+
+  // No interceptar API de Apps Script ni recursos cross-origin: siempre red directa.
+  // Evita respuestas 503 cacheadas/ambiguas en móviles con PWA instalada.
+  if (reqUrl.hostname.includes('script.google.com') || reqUrl.origin !== self.location.origin) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
