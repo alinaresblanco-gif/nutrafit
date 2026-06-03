@@ -1,10 +1,19 @@
-const CACHE_NAME = 'nutrafit-v3-20260603-1';
+const SW_VERSION = (() => {
+  try {
+    const url = new URL(self.location.href);
+    return url.searchParams.get('v') || 'dev';
+  } catch (_) {
+    return 'dev';
+  }
+})();
+
+const CACHE_NAME = `nutrafit-v3-${SW_VERSION}`;
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
-  './js/app.js?v=20260603-1',
-  './sw.js?v=20260603-1',
+  `./js/app.js?v=${SW_VERSION}`,
+  `./sw.js?v=${SW_VERSION}`,
   './manifest.json',
   './IMAGENES/logo.png',
   './IMAGENES/IMAGEN_2.png',

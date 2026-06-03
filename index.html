@@ -117,7 +117,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script src="js/app.js?v=20260603-1"></script>
+    <script>
+        window.APP_VERSION = '20260603-1';
+    </script>
+    <script id="app-js" defer></script>
+    <script>
+        const appScript = document.getElementById('app-js');
+        if (appScript) {
+            appScript.src = `js/app.js?v=${window.APP_VERSION}`;
+        }
+    </script>
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -144,7 +153,8 @@
                     }
                 }
 
-                navigator.serviceWorker.register('./sw.js?v=20260603-1')
+                const appVersion = window.APP_VERSION || 'dev';
+                navigator.serviceWorker.register(`./sw.js?v=${appVersion}`)
                     .then(reg => {
                         console.log('Service Worker activo');
 
