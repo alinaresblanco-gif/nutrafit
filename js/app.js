@@ -157,6 +157,7 @@ async function sincronizarPresupuestoConUltimoCredito() {
     diasSemana.forEach(dia => {
         localStorage.setItem(clavePresupuestoDia(dia), String(ultimoCredito));
     });
+    recalcularDisponiblesSemana();
     guardarEstadoSemanaLocal();
     actualizarPuntos();
 }
@@ -2086,6 +2087,31 @@ function clavePresupuestoDia(dia) {
     return claveDiarioUsuario(`presupuesto_${dia}`);
 }
 
+function claveDisponibleDia(dia) {
+    return claveDiarioUsuario(`disponible_${dia}`);
+}
+
+function calcularRestanteDia(dia) {
+    const contenedorDia = document.getElementById(dia);
+    if (!contenedorDia) return 30;
+
+    let sumaTotal = 0;
+    contenedorDia.querySelectorAll('.input-pts').forEach(input => {
+        sumaTotal += parseFloat(input.value) || 0;
+    });
+
+    const presupuestoGuardado = parseFloat(localStorage.getItem(clavePresupuestoDia(dia)));
+    const presupuesto = !isNaN(presupuestoGuardado) ? presupuestoGuardado : 30;
+    return Math.round(presupuesto - sumaTotal);
+}
+
+function recalcularDisponiblesSemana() {
+    ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'].forEach(dia => {
+        const restante = calcularRestanteDia(dia);
+        localStorage.setItem(claveDisponibleDia(dia), String(restante));
+    });
+}
+
 window.onload = function() {
     actualizarPuntos();
     cargarDespensaDiario();
@@ -2300,6 +2326,7 @@ function actualizarPuntos() {
         presupuestoInput.value = String(Math.round(presupuesto));
     }
     const restante = Math.round(presupuesto - sumaTotal);
+    localStorage.setItem(claveDisponibleDia(diaActual), String(restante));
 
     const displayRestante = document.getElementById('restantes-val');
     if (displayRestante) {
@@ -2469,6 +2496,14 @@ function cambiarDia(dia, btn) {
     diaActual = dia;
     localStorage.setItem(claveDiaActivoSemana(), dia);
     guardarEstadoSemanaLocal();
+
+    const disponibleGuardado = parseFloat(localStorage.getItem(claveDisponibleDia(dia)));
+    const displayRestante = document.getElementById('restantes-val');
+    if (displayRestante && !isNaN(disponibleGuardado)) {
+        displayRestante.value = String(Math.round(disponibleGuardado));
+        displayRestante.style.color = disponibleGuardado < 0 ? "#e74c3c" : "#d35400";
+    }
+
     actualizarPuntos();
 }
 
@@ -2601,6 +2636,7 @@ function restaurarEstadoSemanaLocal() {
             diaActual = estado.diaActivo;
         }
 
+        recalcularDisponiblesSemana();
         actualizarPuntos();
 
         return true;
@@ -2797,6 +2833,7 @@ async function limpiarSemana() {
     localStorage.removeItem(claveEstadoDiarioFormulario());
     ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'].forEach(dia => {
         localStorage.removeItem(clavePresupuestoDia(dia));
+        localStorage.removeItem(claveDisponibleDia(dia));
     });
 
     reiniciarFormulario();
@@ -3332,6 +3369,7 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
 
         // Guardar estado
         guardarEstadoSemanaLocal();
+        recalcularDisponiblesSemana();
         actualizarPuntos();
 
         alert("Semana cargada correctamente desde el historial");
