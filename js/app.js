@@ -2712,6 +2712,14 @@ function obtenerCreditosLunesInforme() {
     return 30;
 }
 
+function normalizarNombreMomento(valor) {
+    const texto = String(valor || '').trim().toLowerCase();
+    if (texto === 'almuerzo / mm' || texto === 'almuerzo/mm' || texto === 'media mañana' || texto === 'media manana') {
+        return 'media manana';
+    }
+    return texto;
+}
+
 async function cargarImagenComoDataURL(ruta) {
     const response = await fetch(ruta);
     if (!response.ok) {
@@ -2729,7 +2737,7 @@ async function cargarImagenComoDataURL(ruta) {
 
 function obtenerDatosSemanaParaPDF() {
     const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
-    const momentos = ['Desayuno', 'Almuerzo / MM', 'Comida', 'Merienda', 'Cena'];
+    const momentos = ['Desayuno', 'Media mañana', 'Comida', 'Merienda', 'Cena'];
     const tabla = {};
 
     dias.forEach(dia => {
@@ -3107,7 +3115,8 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
             Object.keys(datosPorDia[diaNombre]).forEach(momento => {
                 // Encontrar la card correspondiente al momento
                 const card = Array.from(cards).find(c => 
-                    c.querySelector('.momento-titulo')?.innerText.trim() === momento
+                    normalizarNombreMomento(c.querySelector('.momento-titulo')?.innerText.trim())
+                    === normalizarNombreMomento(momento)
                 );
 
                 if (card) {
