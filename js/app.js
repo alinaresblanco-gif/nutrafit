@@ -3164,14 +3164,32 @@ async function cargarHistorialSemanas() {
             return Boolean(normalizarFechaYMD(val));
         });
 
-        if (datosFiltrados.length === 0) {
+        // Evita inflar histórico por registros duplicados en Google Sheets.
+        const datosSinDuplicados = [];
+        const clavesVistas = new Set();
+        datosFiltrados.forEach(fila => {
+            const semana = normalizarFechaYMD(obtenerValorMenuSemanal(fila, 'semana_inicio'));
+            const fecha = normalizarFechaYMD(obtenerValorMenuSemanal(fila, 'fecha')) || '';
+            const dia = String(obtenerValorMenuSemanal(fila, 'dia') || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+            const momento = normalizarNombreMomento(obtenerValorMenuSemanal(fila, 'momento') || '');
+            const ingrediente = String(obtenerValorMenuSemanal(fila, 'ingrediente') || '').trim().toLowerCase();
+            const puntos = String(obtenerValorMenuSemanal(fila, 'puntos') || '').trim();
+            const clave = [semana, fecha, dia, momento, ingrediente, puntos].join('|');
+
+            if (!clavesVistas.has(clave)) {
+                clavesVistas.add(clave);
+                datosSinDuplicados.push(fila);
+            }
+        });
+
+        if (datosSinDuplicados.length === 0) {
             contenedor.innerHTML = "<p style='text-align:center; padding:20px; color:#666;'>No hay semanas guardadas</p>";
             return;
         }
 
         // Agrupar por semana (fecha de inicio)
         const semanasAgrupadas = {};
-        datosFiltrados.forEach(fila => {
+        datosSinDuplicados.forEach(fila => {
             const semanaInicioRaw = obtenerValorMenuSemanal(fila, 'semana_inicio');
             const semanaInicio = normalizarFechaYMD(semanaInicioRaw);
             if (semanaInicio) {
@@ -3245,10 +3263,27 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
         }
 
         // Filtrar datos de la semana específica (excluye cabeceras)
-        const datosSemana = datos.filter(fila => {
+        const datosSemanaFiltrados = datos.filter(fila => {
             const semanaInicioRaw = obtenerValorMenuSemanal(fila, 'semana_inicio');
             const semanaInicio = normalizarFechaYMD(semanaInicioRaw);
             return semanaInicio === fechaSemana;
+        });
+
+        // Deduplicar filas de la semana para no repetir ingredientes/momentos al cargar.
+        const datosSemana = [];
+        const clavesSemana = new Set();
+        datosSemanaFiltrados.forEach(fila => {
+            const fecha = normalizarFechaYMD(obtenerValorMenuSemanal(fila, 'fecha')) || '';
+            const dia = String(obtenerValorMenuSemanal(fila, 'dia') || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+            const momento = normalizarNombreMomento(obtenerValorMenuSemanal(fila, 'momento') || '');
+            const ingrediente = String(obtenerValorMenuSemanal(fila, 'ingrediente') || '').trim().toLowerCase();
+            const puntos = String(obtenerValorMenuSemanal(fila, 'puntos') || '').trim();
+            const clave = [fechaSemana, fecha, dia, momento, ingrediente, puntos].join('|');
+
+            if (!clavesSemana.has(clave)) {
+                clavesSemana.add(clave);
+                datosSemana.push(fila);
+            }
         });
 
         if (datosSemana.length === 0) {
@@ -3290,27 +3325,28 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
 
             if (!dia || !momento) return;
 
-            if (!datosPorDia[dia]) {
-                datosPorDia[dia] = {};
+            const diaNorm = normalizarDiaMenuAId(dia);
+            const momentoNorm = normalizarNombreMomento(momento);
+            if (!diaNorm || !momentoNorm) return;
+
+            if (!datosPorDia[diaNorm]) {
+                datosPorDia[diaNorm] = {};
             }
-            if (!datosPorDia[dia][momento]) {
-                datosPorDia[dia][momento] = [];
+            if (!datosPorDia[diaNorm][momentoNorm]) {
+                datosPorDia[diaNorm][momentoNorm] = [];
             }
-            datosPorDia[dia][momento].push({ ingrediente, puntos });
+            datosPorDia[diaNorm][momentoNorm].push({ ingrediente, puntos });
         });
 
         // Mapear nombres de días a IDs
         // Llenar formulario
-        Object.keys(datosPorDia).forEach(diaNombre => {
-            const diaId = normalizarDiaMenuAId(diaNombre);
-            if (!diaId) return;
-
+        Object.keys(datosPorDia).forEach(diaId => {
             const contenedorDia = document.getElementById(diaId);
             if (!contenedorDia) return;
 
             const cards = contenedorDia.querySelectorAll('.card-momento');
 
-            Object.keys(datosPorDia[diaNombre]).forEach(momento => {
+            Object.keys(datosPorDia[diaId]).forEach(momento => {
                 // Encontrar la card correspondiente al momento
                 const card = Array.from(cards).find(c => 
                     normalizarNombreMomento((c.querySelector('.momento-titulo')?.innerText || '').trim())
@@ -3322,7 +3358,7 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
                     if (contenedorIngredientes) {
                         contenedorIngredientes.innerHTML = '';
 
-                        datosPorDia[diaNombre][momento].forEach(item => {
+                        datosPorDia[diaId][momento].forEach(item => {
                             const fila = document.createElement('div');
                             fila.className = 'fila-ingrediente';
 

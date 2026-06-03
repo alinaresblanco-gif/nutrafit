@@ -426,6 +426,16 @@ function doPost(e) {
           sanitizeCampo(f["Presupuesto"]   || f.presupuesto   || payload.presupuesto || "")
         ]);
 
+      // Evita duplicados en el propio payload antes de tocar la hoja.
+      const filasUnicasMap = {};
+      filasParaGuardar.forEach(fila => {
+        const clave = [fila[1], fila[2], fila[3], fila[4], fila[5]]
+          .map(valor => String(valor || "").trim().toLowerCase())
+          .join("|");
+        filasUnicasMap[clave] = fila;
+      });
+      const filasParaGuardarUnicas = Object.keys(filasUnicasMap).map(clave => filasUnicasMap[clave]);
+
       function claveFilaMenu(fila) {
         // Clave lógica de una comida dentro de la semana (ignora mayúsculas/minúsculas).
         return [fila[1], fila[2], fila[3], fila[4], fila[5]]
@@ -435,7 +445,7 @@ function doPost(e) {
 
       // Semanas incluidas en esta operación.
       const semanasAReemplazar = Array.from(new Set(
-        filasParaGuardar
+        filasParaGuardarUnicas
           .map(fila => String(fila[1] || '').trim()) // Columna "Semana inicio"
           .filter(valor => valor !== '')
       ));
@@ -444,35 +454,23 @@ function doPost(e) {
         const dataActual = sheetMenus.getDataRange().getValues();
 
         if (esActualizacion) {
-          // Actualizar semana activa: sólo añade nuevas filas y actualiza las modificadas.
-          const mapaExistentes = {};
+          // Actualizar semana activa: reemplazo total por usuario+semana para evitar duplicados acumulados.
+          const filasAEliminar = [];
           dataActual.slice(1).forEach((fila, idx) => {
             const filaUsuario = normalizarEmail(fila[0]);
             const filaSemanaInicio = String(fila[1] || '').trim();
-            if (filaUsuario !== usuarioId || !semanasAReemplazar.includes(filaSemanaInicio)) return;
-
-            const clave = claveFilaMenu(fila);
-            if (!(clave in mapaExistentes)) {
-              mapaExistentes[clave] = idx + 2; // row number real en la hoja
+            if (filaUsuario === usuarioId && semanasAReemplazar.includes(filaSemanaInicio)) {
+              filasAEliminar.push(idx + 2); // row number real en la hoja
             }
           });
 
-          const filasNuevas = [];
-          filasParaGuardar.forEach(fila => {
-            const clave = claveFilaMenu(fila);
-            const rowNum = mapaExistentes[clave];
-            if (rowNum) {
-              sheetMenus.getRange(rowNum, 1, 1, headers.length).setValues([fila]);
-            } else {
-              filasNuevas.push(fila);
-            }
-          });
+          filasAEliminar.sort((a, b) => b - a).forEach(rowNum => sheetMenus.deleteRow(rowNum));
 
-          if (filasNuevas.length > 0) {
+          if (filasParaGuardarUnicas.length > 0) {
             sheetMenus.getRange(
               sheetMenus.getLastRow() + 1, 1,
-              filasNuevas.length, headers.length
-            ).setValues(filasNuevas);
+              filasParaGuardarUnicas.length, headers.length
+            ).setValues(filasParaGuardarUnicas);
           }
         } else {
           // Guardar semana nueva: no sobrescribe una semana existente.
@@ -488,19 +486,19 @@ function doPost(e) {
               .setMimeType(ContentService.MimeType.TEXT);
           }
 
-          if (filasParaGuardar.length > 0) {
+          if (filasParaGuardarUnicas.length > 0) {
             sheetMenus.getRange(
               sheetMenus.getLastRow() + 1, 1,
-              filasParaGuardar.length, headers.length
-            ).setValues(filasParaGuardar);
+              filasParaGuardarUnicas.length, headers.length
+            ).setValues(filasParaGuardarUnicas);
           }
         }
-      } else if (filasParaGuardar.length > 0) {
+      } else if (filasParaGuardarUnicas.length > 0) {
         // Primera carga (sin semanas previas) o sin colisiones.
         sheetMenus.getRange(
           sheetMenus.getLastRow() + 1, 1,
-          filasParaGuardar.length, headers.length
-        ).setValues(filasParaGuardar);
+          filasParaGuardarUnicas.length, headers.length
+        ).setValues(filasParaGuardarUnicas);
       }
 
       return ContentService.createTextOutput(esActualizacion ? "Éxito Actualizar Menú Semanal" : "Éxito Menú Semanal");
