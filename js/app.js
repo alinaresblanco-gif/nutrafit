@@ -970,9 +970,10 @@ function recalcularAlimento() {
     const carb = parseFloat(document.getElementById('alim-carb').value) || 0;
     const gras = parseFloat(document.getElementById('alim-gras').value) || 0;
     const fibra = parseFloat(document.getElementById('alim-fibra').value) || 0;
-    
-    const resultadoBruto = (gras * 0.15) + (carb * 0.12) + (prot * 0.05) - (fibra * 0.01);
-    const resultadoRedondeado = Math.round(resultadoBruto);
+
+    const resultadoBruto = (gras * 0.25) + (carb * 0.10) + (prot * 0.09) + (fibra * 0.03);
+    const baseNoNegativa = Math.max(0, resultadoBruto);
+    const resultadoRedondeado = Math.floor(baseNoNegativa) + ((baseNoNegativa - Math.floor(baseNoNegativa)) >= 0.5 ? 1 : 0);
     
     const campoCalc = document.getElementById('alim-calc');
     if (campoCalc) campoCalc.value = Math.max(0, resultadoRedondeado).toFixed(0); 
