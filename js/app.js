@@ -968,7 +968,7 @@ function solicitarAccesoAdminAlimentos() {
 
     const mensaje = [
         'ATENCIÓN: solo el administrador puede modificar o introducir alimentos.',
-        'Si no eres el administrador, ponte en contacto con el.',
+        'Si no eres el administrador, ponte en contacto con él.',
         '',
         'Introduce la contraseña de administrador para continuar:'
     ].join('\n');
