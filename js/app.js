@@ -967,10 +967,10 @@ function solicitarAccesoAdminAlimentos() {
     if (adminAlimentosAutorizado) return true;
 
     const mensaje = [
-        'ATENCION: solo el administrador puede modificar o introducir alimentos.',
+        'ATENCIÓN: solo el administrador puede modificar o introducir alimentos.',
         'Si no eres el administrador, ponte en contacto con el.',
         '',
-        'Introduce la contrasena de administrador para continuar:'
+        'Introduce la contraseña de administrador para continuar:'
     ].join('\n');
 
     const claveIngresada = prompt(mensaje);
@@ -982,7 +982,7 @@ function solicitarAccesoAdminAlimentos() {
         return true;
     }
 
-    alert('Contrasena incorrecta. No tienes permiso para modificar o introducir alimentos.');
+    alert('Contraseña incorrecta. No tienes permiso para modificar o introducir alimentos.');
     return false;
 }
 
