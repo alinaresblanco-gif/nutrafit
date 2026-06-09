@@ -212,6 +212,9 @@ async function abrirVista(nombreVista, opciones = {}) {
                 cargarHistorialCreditos(); 
             }, 100);
         }
+        if (nombreVista === 'creditos-alimentos') {
+            setTimeout(inicializarProteccionCreditosAlimentos, 100);
+        }
         if (nombreVista === 'evolucion-peso') {
             setTimeout(inicializarPeso, 100);
         }
@@ -957,7 +960,66 @@ async function generarPDF() {
 }
 
 /* --- 6. LÓGICA DE ALIMENTOS Y DESPENSA --- */
+const CLAVE_ADMIN_ALIMENTOS = 'Nutra&Fit';
+let adminAlimentosAutorizado = false;
+
+function solicitarAccesoAdminAlimentos() {
+    if (adminAlimentosAutorizado) return true;
+
+    const mensaje = [
+        'ATENCION: solo el administrador puede modificar o introducir alimentos.',
+        'Si no eres el administrador, ponte en contacto con el.',
+        '',
+        'Introduce la contrasena de administrador para continuar:'
+    ].join('\n');
+
+    const claveIngresada = prompt(mensaje);
+    if (claveIngresada === null) return false;
+
+    if (claveIngresada === CLAVE_ADMIN_ALIMENTOS) {
+        adminAlimentosAutorizado = true;
+        alert('Acceso de administrador concedido.');
+        return true;
+    }
+
+    alert('Contrasena incorrecta. No tienes permiso para modificar o introducir alimentos.');
+    return false;
+}
+
+function inicializarProteccionCreditosAlimentos() {
+    const camposProtegidos = [
+        'alim-nombre',
+        'alim-grupo',
+        'alim-prot',
+        'alim-carb',
+        'alim-gras',
+        'alim-fibra',
+        'alim-manual'
+    ];
+
+    camposProtegidos.forEach((id) => {
+        const campo = document.getElementById(id);
+        if (!campo || campo.dataset.adminProtegido === '1') return;
+
+        const handlerProteccion = (event) => {
+            if (adminAlimentosAutorizado) return;
+
+            const permitido = solicitarAccesoAdminAlimentos();
+            if (!permitido) {
+                event.preventDefault();
+                campo.blur();
+            }
+        };
+
+        campo.addEventListener('focus', handlerProteccion);
+        campo.addEventListener('pointerdown', handlerProteccion);
+        campo.dataset.adminProtegido = '1';
+    });
+}
+
 function ajustarMacroAlimento(id, inc) {
+    if (!solicitarAccesoAdminAlimentos()) return;
+
     const el = document.getElementById(id);
     if (!el) return;
     let val = parseFloat(el.value) || 0;
@@ -966,6 +1028,8 @@ function ajustarMacroAlimento(id, inc) {
 }
 
 function recalcularAlimento() {
+    if (!adminAlimentosAutorizado) return;
+
     const prot = parseFloat(document.getElementById('alim-prot').value) || 0;
     const carb = parseFloat(document.getElementById('alim-carb').value) || 0;
     const gras = parseFloat(document.getElementById('alim-gras').value) || 0;
@@ -980,6 +1044,8 @@ function recalcularAlimento() {
 }
 
 async function guardarEnDespensa() {
+    if (!solicitarAccesoAdminAlimentos()) return;
+
     const nombre = document.getElementById('alim-nombre').value;
     if(!nombre) return alert("Por favor, escribe el nombre del alimento");
 
@@ -1009,6 +1075,8 @@ async function guardarEnDespensa() {
 }
 
 function limpiarFormAlimento() {
+    if (!solicitarAccesoAdminAlimentos()) return;
+
     const campos = ['alim-nombre', 'alim-prot', 'alim-carb', 'alim-gras', 'alim-fibra', 'alim-manual', 'alim-calc'];
     campos.forEach(id => {
         const el = document.getElementById(id);
