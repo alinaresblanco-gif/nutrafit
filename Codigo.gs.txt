@@ -881,6 +881,9 @@ const COACH_PROMPT_MAESTRO = [
   "Si hay deseo de dulce, sugiere porcion pequena de chocolate >= 70%.",
   "En comida fuera, micro_habito: elegir principal a la plancha o barbacoa antes de mirar la carta.",
   "En desmotivacion: recordar por que empezo y cuanto camino lleva.",
+  "Primero responde al sentido literal de la pregunta de la usuaria.",
+  "No repitas la misma redaccion si la pregunta cambia.",
+  "Usa evento y contexto solo como apoyo, no como respuesta unica.",
   "Para fin de semana descontrolado usa esta frase exacta en mensaje_motivador:",
   "No necesitas un finde perfecto, necesitas un finde con buenas decisiones.",
   "Devuelve SIEMPRE JSON estricto con campos:",
@@ -915,10 +918,10 @@ function procesarCoachNutrafit(ss, payload) {
   }
 
   const modelo = elegirModeloCoach(evento, payload, cfg);
-  const mensajeUsuario = construirMensajeCoach(pregunta, evento, contexto);
+  const mensajeUsuario = construirMensajeCoach(pregunta, evento, contexto, modo);
 
   try {
-    const respuestaGroq = solicitarGroqCoach(modelo, mensajeUsuario, cfg.maxTokensSalida);
+    const respuestaGroq = solicitarGroqCoach(modelo, mensajeUsuario, cfg.maxTokensSalida, modo, evento);
     const contenido = String(
       (((respuestaGroq || {}).choices || [])[0] || {}).message
         ? (((respuestaGroq || {}).choices || [])[0] || {}).message.content || ""
@@ -1055,8 +1058,11 @@ function registrarUsoCoach(ss, datos) {
 }
 
 function construirMensajeCoach(pregunta, evento, contexto) {
+  const intencion = detectarIntencionCoach(pregunta, evento);
   const safeContext = {
     evento: evento,
+    modo: contexto.modo || "",
+    intencion_detectada: intencion,
     fecha: contexto.fecha || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd"),
     vista_actual: contexto.vista_actual || "",
     objetivo: contexto.objetivo || "mejorar habitos",
@@ -1066,6 +1072,10 @@ function construirMensajeCoach(pregunta, evento, contexto) {
   };
 
   return [
+    "INSTRUCCION CRITICA:",
+    "Responde de forma especifica a la pregunta de la usuaria. Evita frases genericas repetidas.",
+    "Si la pregunta pide plan, da mini-plan. Si pide sustitutos, da sustitutos. Si pide cantidad, da cantidad orientativa.",
+    "",
     "PREGUNTA USUARIA:",
     pregunta || "Necesito recomendacion de coach para este momento.",
     "",
@@ -1074,17 +1084,22 @@ function construirMensajeCoach(pregunta, evento, contexto) {
   ].join("\n");
 }
 
-function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida) {
+function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida, modo, evento) {
   const props = PropertiesService.getScriptProperties();
   const apiKey = props.getProperty("GROQ_API_KEY");
   if (!apiKey) {
     throw new Error("Falta GROQ_API_KEY en Script Properties");
   }
 
+  const modoTxt = String(modo || "auto").toLowerCase() === "chat" ? "chat" : "auto";
+  const eventoTxt = String(evento || "").toLowerCase();
+  const temperature = (modoTxt === "chat" || eventoTxt === "pregunta_libre") ? 0.65 : 0.35;
+  const maxTokensFinal = Math.max(Number(maxTokensSalida || 240), modoTxt === "chat" ? 300 : 240);
+
   const payload = {
     model: modelo,
-    temperature: 0.3,
-    max_tokens: maxTokensSalida,
+    temperature: temperature,
+    max_tokens: maxTokensFinal,
     messages: [
       { role: "system", content: COACH_PROMPT_MAESTRO },
       { role: "user", content: mensajeUsuario }
@@ -1128,6 +1143,121 @@ function parsearRespuestaCoachJSON(texto) {
   }
 }
 
+function detectarIntencionCoach(pregunta, evento) {
+  const texto = (String(evento || "") + " " + String(pregunta || "")).toLowerCase();
+
+  if (/dulce|chocolate|antojo|ansiedad/.test(texto)) return "dulce";
+  if (/desayuno|media\s*ma[ñn]ana|merienda|cena|comida/.test(texto)) return "comidas";
+  if (/fuera|restaurante|bar|carta|pedido|take away|takeaway/.test(texto)) return "comer_fuera";
+  if (/ejercicio|entreno|entrenamiento|pasos|caminar|correr|gym|gimnasio/.test(texto)) return "ejercicio";
+  if (/agua|hidrata|hidrat/.test(texto)) return "agua";
+  if (/desmotiv|ansiosa|agotada|cansada|abandono|fracaso/.test(texto)) return "motivacion";
+  if (/finde|fin de semana|sábado|sabado|domingo/.test(texto)) return "finde";
+  if (/cr[eé]dit|pasad|exceso|compens|ajust/.test(texto)) return "creditos";
+
+  if (String(evento || "").toLowerCase() === "registro_ejercicio") return "ejercicio";
+  if (String(evento || "").toLowerCase() === "ajuste_diario") return "creditos";
+  if (String(evento || "").toLowerCase() === "abrir_app") return "inicio_dia";
+
+  return "general";
+}
+
+function construirFallbackSegunIntencion(intencion, meta) {
+  const exceso = Number(meta.exceso || 0);
+
+  if (intencion === "dulce") {
+    return {
+      accion_ahora: "Haz una pausa de 1 minuto, bebe agua y toma una porcion pequena de chocolate con al menos 70%.",
+      siguiente_paso: "Combina ese dulce con una opcion saciante (yogur natural o proteina) para frenar el rebote de hambre.",
+      micro_habito: "Antes de abrir dulce, decide por escrito la porcion exacta.",
+      mensaje_motivador: "Controlar una porcion hoy ya es progreso real."
+    };
+  }
+
+  if (intencion === "comidas") {
+    return {
+      accion_ahora: "Define tu siguiente comida con estructura simple: proteina + verdura + grasa saludable.",
+      siguiente_paso: "Si tienes hambre alta, empieza por proteina y deja el resto para cuando baje la ansiedad.",
+      micro_habito: "Elige primero la proteina y luego completa el plato.",
+      mensaje_motivador: "Una comida ordenada te recoloca el dia entero."
+    };
+  }
+
+  if (intencion === "comer_fuera") {
+    return {
+      accion_ahora: "Decide antes de mirar la carta: principal a la plancha o barbacoa.",
+      siguiente_paso: "Pide bebida sin azucar y deja guarniciones densas para el final si aun tienes hambre.",
+      micro_habito: "Regla 10 segundos: primero decides proteina, luego eliges el resto.",
+      mensaje_motivador: "Comer fuera con criterio tambien cuenta como autocuidado."
+    };
+  }
+
+  if (intencion === "ejercicio") {
+    return {
+      accion_ahora: "Haz una sesion corta util: 15-20 min de caminata rapida o fuerza basica.",
+      siguiente_paso: "Despues hidrata y toma recuperacion con proteina para reducir picoteo posterior.",
+      micro_habito: "Agenda la hora del movimiento antes de que termine el dia.",
+      mensaje_motivador: "Un bloque corto de ejercicio vale mas que esperar el momento perfecto."
+    };
+  }
+
+  if (intencion === "agua") {
+    return {
+      accion_ahora: "Bebe un vaso de agua ahora mismo.",
+      siguiente_paso: "Pon objetivo por tramos: 2 vasos antes de mediodia y 2 por la tarde.",
+      micro_habito: "Cada vez que te sientes a comer, primer gesto: 4 sorbos.",
+      mensaje_motivador: "Hidratarte bien te facilita decidir mejor en comidas."
+    };
+  }
+
+  if (intencion === "motivacion") {
+    return {
+      accion_ahora: "Recuerda por que empezaste y escribe un avance concreto de esta semana.",
+      siguiente_paso: "Elige una sola accion ganadora para hoy y cumplila al 100%.",
+      micro_habito: "Cuando aparezca el desanimo, haz 3 respiraciones y vuelve al siguiente paso pequeno.",
+      mensaje_motivador: "No necesitas hacerlo perfecto, necesitas seguir en movimiento."
+    };
+  }
+
+  if (intencion === "finde") {
+    return {
+      accion_ahora: "Elige dos comidas ancla del finde con opcion ligera ya decidida.",
+      siguiente_paso: "Ten una opcion de rescate lista para cuando aparezca improvisacion.",
+      micro_habito: "Recuerda 3 opciones de emergencia de pocos creditos: yogur natural + fruta, tortilla francesa, verdura cocinada con proteina.",
+      mensaje_motivador: "No necesitas un finde perfecto, necesitas un finde con buenas decisiones."
+    };
+  }
+
+  if (intencion === "creditos") {
+    return {
+      accion_ahora: exceso > 0
+        ? "Compensa sin castigo: mueve el cuerpo 20-30 min y simplifica la siguiente comida."
+        : "Revisa tu margen de creditos y reserva parte para la noche.",
+      siguiente_paso: exceso > 0
+        ? "Siguiente plato: proteina magra + verdura cocinada; evita sumar extras densos."
+        : "Mantiene un reparto estable para cerrar el dia en verde o amarillo.",
+      micro_habito: "Antes de cada comida, decide si esa eleccion te acerca o te aleja de tu objetivo diario.",
+      mensaje_motivador: "Ajustar hoy ya cambia el resultado del dia."
+    };
+  }
+
+  if (intencion === "inicio_dia") {
+    return {
+      accion_ahora: "Define tu foco del dia en una frase y tu siguiente comida antes de que llegue el hambre fuerte.",
+      siguiente_paso: "Empieza con una decision facil y repetible para generar inercia.",
+      micro_habito: "Prepara una opcion de respaldo para evitar improvisar.",
+      mensaje_motivador: "Dia a dia, la constancia gana a la perfeccion."
+    };
+  }
+
+  return {
+    accion_ahora: "Haz una accion en 1 minuto: agua + definir tu siguiente comida.",
+    siguiente_paso: "Prioriza una siguiente comida simple con proteina y verdura.",
+    micro_habito: "Bebe un vaso de agua ahora y decide tu siguiente comida con calma.",
+    mensaje_motivador: "Vamos juntas: una buena decision ahora vale mas que buscar perfeccion."
+  };
+}
+
 function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, contenidoRaw) {
   const disponibles = Number(contexto.creditos_disponibles);
   const consumidos = Number(contexto.creditos_consumidos);
@@ -1143,6 +1273,13 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
   const eventoTxt = String(evento || "").trim().toLowerCase();
   const textoPlano = String(respuesta.__textoPlano || "").trim();
   const contenidoPlano = String(contenidoRaw || "").trim();
+  const intencion = detectarIntencionCoach(preguntaTxt, eventoTxt);
+  const plantilla = construirFallbackSegunIntencion(intencion, {
+    exceso: exceso,
+    disponibles: disponibles,
+    consumidos: consumidos,
+    pregunta: preguntaTxt
+  });
 
   const lecturaDinamica = tieneCreditos
     ? (exceso > 0
@@ -1152,9 +1289,13 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
         : "Vas con buen margen para mantener equilibrio."))
     : "Reviso tu situacion y te doy el siguiente paso mas util ahora.";
 
+  const lecturaPregunta = preguntaTxt
+    ? "Sobre tu pregunta: " + preguntaTxt
+    : "";
+
   const lecturaBase = respuesta.lectura_rapida
     ? String(respuesta.lectura_rapida)
-    : (textoPlano || contenidoPlano || lecturaDinamica);
+    : (textoPlano || contenidoPlano || (lecturaPregunta ? (lecturaPregunta + ". " + lecturaDinamica) : lecturaDinamica));
 
   let lecturaFinal = lecturaBase;
   if (exceso > 0) {
@@ -1162,35 +1303,15 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
     lecturaFinal = "Hay un exceso en el consumo de creditos. Objetivo: " + objetivo + ", consumidos: " + consumidos + ", exceso: " + exceso + ". " + lecturaBase;
   }
 
-  let siguientePaso = String(respuesta.siguiente_paso || "Prioriza una siguiente comida simple con proteina y verdura.");
+  let siguientePaso = String(respuesta.siguiente_paso || plantilla.siguiente_paso);
   if (exceso > 0) {
     siguientePaso = "Para el siguiente paso, usa verduras cocinadas y una proteina magra. Deja crudos solo para la cena.";
   }
 
-  const preguntaLower = (eventoTxt + " " + preguntaTxt.toLowerCase());
-  const accionAhoraDefault = (eventoTxt === "registro_ejercicio")
-    ? "Toma agua ahora y elige una recuperacion rapida con proteina o alimento de despensa rico en proteinas."
-    : (preguntaLower.includes("dulce")
-      ? "Haz una pausa de 1 minuto, bebe agua y decide una opcion dulce controlada."
-      : (preguntaLower.includes("desmotiv")
-        ? "Recuerda por que empezaste este camino y un logro real que ya conseguiste."
-        : "Haz una accion en 1 minuto: agua + definir tu siguiente comida."));
-
-  const microFinde = "Recuerda 3 opciones de emergencia de pocos creditos para proximos descontrol: yogur natural + fruta, tortilla francesa, verdura cocinada con proteina.";
-
-  const siguientePasoDefault = exceso > 0
-    ? "Para el siguiente paso, usa verduras cocinadas y una proteina magra. Deja crudos solo para la cena."
-    : (preguntaLower.includes("dulce")
-      ? "Si persiste el deseo de dulce, toma una porcion pequena de chocolate con al menos 70% de pureza."
-      : "Prioriza una siguiente comida simple con proteina y verdura.");
-
-  const microHabitoDefault = preguntaLower.includes("comida fuera") || preguntaLower.includes("cena fuera")
-    ? "Tu eleccion principal sera a la plancha o barbacoa; decide eso antes de mirar la carta."
-    : (preguntaLower.includes("finde") ? microFinde : "Bebe un vaso de agua ahora y decide tu siguiente comida con calma.");
-
-  const motivadorDefault = preguntaLower.includes("finde")
-    ? "No necesitas un finde perfecto, necesitas un finde con buenas decisiones."
-    : "Vamos juntas: una buena decision ahora vale mas que buscar perfeccion.";
+  const accionAhoraDefault = plantilla.accion_ahora;
+  const siguientePasoDefault = plantilla.siguiente_paso;
+  const microHabitoDefault = plantilla.micro_habito;
+  const motivadorDefault = plantilla.mensaje_motivador;
 
   return {
     estado_dia: estadoFinal,
