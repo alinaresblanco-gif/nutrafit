@@ -891,6 +891,18 @@ const COACH_PROMPT_MAESTRO = [
   "No devuelvas texto fuera de JSON."
 ].join("\n");
 
+const COACH_PROMPT_CHAT_LIBRE = [
+  "Eres Coach NUTRAFIT, especialista en nutricion practica y habitos saludables.",
+  "Responde a la pregunta concreta de la usuaria con lenguaje claro, util y nada repetitivo.",
+  "Si la pregunta es nutricional general (ej. chia, avena, fruta, proteinas), responde con conocimiento nutricional practico.",
+  "Personaliza con el contexto del usuario cuando exista, sin inventar datos.",
+  "No diagnostiques ni sustituyas criterio medico.",
+  "Devuelve SIEMPRE JSON con campos:",
+  "respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.",
+  "respuesta_directa debe responder exactamente lo que pregunto la usuaria.",
+  "No devuelvas texto fuera de JSON."
+].join("\n");
+
 function procesarCoachNutrafit(ss, payload) {
   const usuarioId = normalizarEmail(payload.usuario_id);
   const dispositivoId = String(payload.dispositivo_id || "").trim();
@@ -918,7 +930,9 @@ function procesarCoachNutrafit(ss, payload) {
   }
 
   const modelo = elegirModeloCoach(evento, payload, cfg);
-  const mensajeUsuario = construirMensajeCoach(pregunta, evento, contexto, modo);
+  const contextoUsuario = construirContextoUsuarioCoach(ss, usuarioId);
+  const contextoFinal = Object.assign({}, contexto || {}, { perfil_usuario: contextoUsuario });
+  const mensajeUsuario = construirMensajeCoach(pregunta, evento, contextoFinal, modo);
 
   try {
     const respuestaGroq = solicitarGroqCoach(modelo, mensajeUsuario, cfg.maxTokensSalida, modo, evento);
@@ -929,7 +943,7 @@ function procesarCoachNutrafit(ss, payload) {
     ).trim();
 
     let respuesta = parsearRespuestaCoachJSON(contenido);
-    respuesta = normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, contenido);
+    respuesta = normalizarRespuestaCoach(respuesta, evento, contextoFinal, pregunta, contenido);
 
     const usage = respuestaGroq.usage || {};
     registrarUsoCoach(ss, {
@@ -955,7 +969,7 @@ function procesarCoachNutrafit(ss, payload) {
     });
   } catch (error) {
     Logger.log("Error coach_nutrafit: " + error);
-    const fallback = normalizarRespuestaCoach({}, evento, contexto, pregunta, "");
+    const fallback = normalizarRespuestaCoach({}, evento, contextoFinal, pregunta, "");
 
     registrarUsoCoach(ss, {
       usuarioId,
@@ -1057,17 +1071,95 @@ function registrarUsoCoach(ss, datos) {
   ]);
 }
 
-function construirMensajeCoach(pregunta, evento, contexto) {
+function construirContextoUsuarioCoach(ss, usuarioId) {
+  const uid = normalizarEmail(usuarioId);
+  const tz = Session.getScriptTimeZone();
+
+  const hoy = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd");
+  const resumen = {
+    fecha_hoy: hoy,
+    agua_hoy_vasos: null,
+    creditos_ultimo_total: null,
+    creditos_ultimo_fecha: "",
+    ejercicio_ultimo: null,
+    peso_ultimo: null
+  };
+
+  const hojaAgua = ss.getSheetByName("Control_Agua");
+  if (hojaAgua && hojaAgua.getLastRow() > 1) {
+    const datosAgua = hojaAgua.getDataRange().getValues();
+    let vasosHoy = 0;
+    for (let i = datosAgua.length - 1; i >= 1; i--) {
+      const fila = datosAgua[i];
+      if (normalizarEmail(fila[0]) !== uid) continue;
+      const fechaFila = String(fila[1] || "").trim();
+      if (!(fechaFila === hoy || fechaFila.indexOf(hoy) === 0)) continue;
+      const vasosRaw = String(fila[2] || "");
+      const m = vasosRaw.match(/(\d+)/);
+      if (m) vasosHoy = Math.max(vasosHoy, Number(m[1] || 0));
+    }
+    resumen.agua_hoy_vasos = vasosHoy;
+  }
+
+  const hojaCred = ss.getSheetByName("Creditos") || ss.getSheetByName("CREDITOS");
+  if (hojaCred && hojaCred.getLastRow() > 1) {
+    const datosCred = hojaCred.getDataRange().getValues();
+    for (let i = datosCred.length - 1; i >= 1; i--) {
+      const fila = datosCred[i];
+      if (normalizarEmail(fila[0]) !== uid) continue;
+      resumen.creditos_ultimo_total = Number(fila[6]);
+      resumen.creditos_ultimo_fecha = String(fila[1] || "");
+      break;
+    }
+  }
+
+  const hojaEj = ss.getSheetByName("ejercicio");
+  if (hojaEj && hojaEj.getLastRow() > 1) {
+    const datosEj = hojaEj.getDataRange().getValues();
+    for (let i = datosEj.length - 1; i >= 1; i--) {
+      const fila = datosEj[i];
+      if (normalizarEmail(fila[0]) !== uid) continue;
+      resumen.ejercicio_ultimo = {
+        fecha: fila[1] instanceof Date ? Utilities.formatDate(fila[1], tz, "yyyy-MM-dd") : String(fila[1] || ""),
+        actividad: String(fila[2] || ""),
+        tiempo_min: Number(fila[3] || 0),
+        distancia: Number(fila[5] || 0),
+        pasos: Number(fila[6] || 0)
+      };
+      break;
+    }
+  }
+
+  const hojaPeso = ss.getSheetByName("Peso");
+  if (hojaPeso && hojaPeso.getLastRow() > 1) {
+    const datosPeso = hojaPeso.getDataRange().getValues();
+    for (let i = datosPeso.length - 1; i >= 1; i--) {
+      const fila = datosPeso[i];
+      if (normalizarEmail(fila[0]) !== uid) continue;
+      resumen.peso_ultimo = {
+        fecha: String(fila[1] || ""),
+        peso: Number(fila[2] || 0),
+        diferencia: String(fila[3] || "")
+      };
+      break;
+    }
+  }
+
+  return resumen;
+}
+
+function construirMensajeCoach(pregunta, evento, contexto, modo) {
   const intencion = detectarIntencionCoach(pregunta, evento);
   const safeContext = {
     evento: evento,
-    modo: contexto.modo || "",
+    modo: modo || "",
     intencion_detectada: intencion,
     fecha: contexto.fecha || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd"),
     vista_actual: contexto.vista_actual || "",
     objetivo: contexto.objetivo || "mejorar habitos",
     creditos_disponibles: contexto.creditos_disponibles,
     creditos_consumidos: contexto.creditos_consumidos,
+    perfil_usuario: contexto.perfil_usuario || {},
     contexto_extra: contexto
   };
 
@@ -1093,15 +1185,17 @@ function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida, modo, event
 
   const modoTxt = String(modo || "auto").toLowerCase() === "chat" ? "chat" : "auto";
   const eventoTxt = String(evento || "").toLowerCase();
-  const temperature = (modoTxt === "chat" || eventoTxt === "pregunta_libre") ? 0.65 : 0.35;
+  const esChatLibre = (modoTxt === "chat" || eventoTxt === "pregunta_libre");
+  const temperature = esChatLibre ? 0.78 : 0.35;
   const maxTokensFinal = Math.max(Number(maxTokensSalida || 240), modoTxt === "chat" ? 300 : 240);
+  const promptSistema = esChatLibre ? COACH_PROMPT_CHAT_LIBRE : COACH_PROMPT_MAESTRO;
 
   const payload = {
     model: modelo,
     temperature: temperature,
     max_tokens: maxTokensFinal,
     messages: [
-      { role: "system", content: COACH_PROMPT_MAESTRO },
+      { role: "system", content: promptSistema },
       { role: "user", content: mensajeUsuario }
     ],
     response_format: { type: "json_object" }
@@ -1147,6 +1241,7 @@ function detectarIntencionCoach(pregunta, evento) {
   const texto = (String(evento || "") + " " + String(pregunta || "")).toLowerCase();
 
   if (/dulce|chocolate|antojo|ansiedad/.test(texto)) return "dulce";
+  if (/chia|ch[ií]a|semilla|omega\s*3|fibra|beneficio|vitamina|mineral|calcio|hierro/.test(texto)) return "nutricion_general";
   if (/desayuno|media\s*ma[ñn]ana|merienda|cena|comida/.test(texto)) return "comidas";
   if (/fuera|restaurante|bar|carta|pedido|take away|takeaway/.test(texto)) return "comer_fuera";
   if (/ejercicio|entreno|entrenamiento|pasos|caminar|correr|gym|gimnasio/.test(texto)) return "ejercicio";
@@ -1163,6 +1258,16 @@ function detectarIntencionCoach(pregunta, evento) {
 }
 
 function construirFallbackSegunIntencion(intencion, meta) {
+    if (intencion === "nutricion_general") {
+      return {
+        respuesta_directa: "Si, puedes comer chia. Aporta fibra, grasas saludables omega-3 de origen vegetal y ayuda a mejorar saciedad y transito intestinal.",
+        accion_ahora: "Empieza con 1 cucharada al dia (10-15 g), hidratada en yogur o agua.",
+        siguiente_paso: "Si te sienta bien, sube poco a poco hasta 20 g al dia y acompana con buena hidratacion.",
+        micro_habito: "Incluye chia en una comida fija del dia para mantener constancia.",
+        mensaje_motivador: "Pequenos cambios sostenidos generan resultados reales."
+      };
+    }
+
   const exceso = Number(meta.exceso || 0);
 
   if (intencion === "dulce") {
@@ -1251,6 +1356,7 @@ function construirFallbackSegunIntencion(intencion, meta) {
   }
 
   return {
+    respuesta_directa: "Voy a responder a tu pregunta de forma concreta y luego te propongo un siguiente paso practico.",
     accion_ahora: "Haz una accion en 1 minuto: agua + definir tu siguiente comida.",
     siguiente_paso: "Prioriza una siguiente comida simple con proteina y verdura.",
     micro_habito: "Bebe un vaso de agua ahora y decide tu siguiente comida con calma.",
@@ -1297,6 +1403,13 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
     ? String(respuesta.lectura_rapida)
     : (textoPlano || contenidoPlano || (lecturaPregunta ? (lecturaPregunta + ". " + lecturaDinamica) : lecturaDinamica));
 
+  const respuestaDirecta = String(
+    respuesta.respuesta_directa
+      || (intencion === "nutricion_general" ? (plantilla.respuesta_directa || "") : "")
+      || textoPlano
+      || ""
+  ).trim();
+
   let lecturaFinal = lecturaBase;
   if (exceso > 0) {
     const objetivo = Math.max(0, consumidos - exceso);
@@ -1314,6 +1427,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
   const motivadorDefault = plantilla.mensaje_motivador;
 
   return {
+    respuesta_directa: respuestaDirecta,
     estado_dia: estadoFinal,
     lectura_rapida: lecturaFinal,
     accion_ahora: String(respuesta.accion_ahora || accionAhoraDefault),

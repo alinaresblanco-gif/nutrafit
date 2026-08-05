@@ -4123,11 +4123,22 @@ function formatearCoachTexto(respuesta) {
     }
 
     const bloques = [];
-    if (respuesta.lectura_rapida) bloques.push('Como vas: ' + respuesta.lectura_rapida);
-    if (respuesta.accion_ahora) bloques.push('Que hacer ahora: ' + respuesta.accion_ahora);
-    if (respuesta.siguiente_paso) bloques.push('Siguiente paso: ' + respuesta.siguiente_paso);
-    if (respuesta.micro_habito) bloques.push('Micro reto del dia: ' + respuesta.micro_habito);
-    if (respuesta.mensaje_motivador) bloques.push(respuesta.mensaje_motivador);
+    const vistos = new Set();
+    const agregar = (txt) => {
+        const limpio = String(txt || '').trim();
+        if (!limpio) return;
+        const clave = limpio.toLowerCase();
+        if (vistos.has(clave)) return;
+        vistos.add(clave);
+        bloques.push(limpio);
+    };
+
+    if (respuesta.respuesta_directa) agregar('Respuesta: ' + respuesta.respuesta_directa);
+    if (respuesta.lectura_rapida) agregar('Como vas: ' + respuesta.lectura_rapida);
+    if (respuesta.accion_ahora) agregar('Que hacer ahora: ' + respuesta.accion_ahora);
+    if (respuesta.siguiente_paso) agregar('Siguiente paso: ' + respuesta.siguiente_paso);
+    if (respuesta.micro_habito) agregar('Micro reto del dia: ' + respuesta.micro_habito);
+    if (respuesta.mensaje_motivador) agregar(respuesta.mensaje_motivador);
 
     return bloques.join('\n\n');
 }
