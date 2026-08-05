@@ -926,7 +926,7 @@ function procesarCoachNutrafit(ss, payload) {
     ).trim();
 
     let respuesta = parsearRespuestaCoachJSON(contenido);
-    respuesta = normalizarRespuestaCoach(respuesta, evento, contexto);
+    respuesta = normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, contenido);
 
     const usage = respuestaGroq.usage || {};
     registrarUsoCoach(ss, {
@@ -952,7 +952,7 @@ function procesarCoachNutrafit(ss, payload) {
     });
   } catch (error) {
     Logger.log("Error coach_nutrafit: " + error);
-    const fallback = normalizarRespuestaCoach({}, evento, contexto);
+    const fallback = normalizarRespuestaCoach({}, evento, contexto, pregunta, "");
 
     registrarUsoCoach(ss, {
       usuarioId,
@@ -1122,12 +1122,13 @@ function parsearRespuestaCoachJSON(texto) {
     try {
       return JSON.parse(match[0]);
     } catch (_) {
-      return {};
+      const textoPlano = String(texto || "").trim();
+      return textoPlano ? { __textoPlano: textoPlano } : {};
     }
   }
 }
 
-function normalizarRespuestaCoach(respuesta, evento, contexto) {
+function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, contenidoRaw) {
   const disponibles = Number(contexto.creditos_disponibles);
   const consumidos = Number(contexto.creditos_consumidos);
   const tieneCreditos = !isNaN(disponibles) && !isNaN(consumidos);
@@ -1138,9 +1139,22 @@ function normalizarRespuestaCoach(respuesta, evento, contexto) {
     ? estado
     : (exceso > 0 ? "ROJO" : (tieneCreditos && disponibles <= 3 ? "AMARILLO" : "VERDE"));
 
+  const preguntaTxt = String(pregunta || "").trim();
+  const eventoTxt = String(evento || "").trim().toLowerCase();
+  const textoPlano = String(respuesta.__textoPlano || "").trim();
+  const contenidoPlano = String(contenidoRaw || "").trim();
+
+  const lecturaDinamica = tieneCreditos
+    ? (exceso > 0
+      ? "Hay un exceso en el consumo de creditos. Te ayudo a compensarlo con decisiones concretas."
+      : (disponibles <= 3
+        ? "Vas justa de creditos y estas a tiempo de cerrar bien el dia."
+        : "Vas con buen margen para mantener equilibrio."))
+    : "Reviso tu situacion y te doy el siguiente paso mas util ahora.";
+
   const lecturaBase = respuesta.lectura_rapida
     ? String(respuesta.lectura_rapida)
-    : "Vas bien, revisamos juntas tu siguiente decision para mantener el rumbo.";
+    : (textoPlano || contenidoPlano || lecturaDinamica);
 
   let lecturaFinal = lecturaBase;
   if (exceso > 0) {
@@ -1153,25 +1167,41 @@ function normalizarRespuestaCoach(respuesta, evento, contexto) {
     siguientePaso = "Para el siguiente paso, usa verduras cocinadas y una proteina magra. Deja crudos solo para la cena.";
   }
 
-  const preguntaLower = String(evento || "").toLowerCase();
-  const accionAhoraDefault = (preguntaLower === "registro_ejercicio")
+  const preguntaLower = (eventoTxt + " " + preguntaTxt.toLowerCase());
+  const accionAhoraDefault = (eventoTxt === "registro_ejercicio")
     ? "Toma agua ahora y elige una recuperacion rapida con proteina o alimento de despensa rico en proteinas."
-    : "Haz una accion en 1 minuto: agua + definir tu siguiente comida.";
+    : (preguntaLower.includes("dulce")
+      ? "Haz una pausa de 1 minuto, bebe agua y decide una opcion dulce controlada."
+      : (preguntaLower.includes("desmotiv")
+        ? "Recuerda por que empezaste este camino y un logro real que ya conseguiste."
+        : "Haz una accion en 1 minuto: agua + definir tu siguiente comida."));
 
   const microFinde = "Recuerda 3 opciones de emergencia de pocos creditos para proximos descontrol: yogur natural + fruta, tortilla francesa, verdura cocinada con proteina.";
+
+  const siguientePasoDefault = exceso > 0
+    ? "Para el siguiente paso, usa verduras cocinadas y una proteina magra. Deja crudos solo para la cena."
+    : (preguntaLower.includes("dulce")
+      ? "Si persiste el deseo de dulce, toma una porcion pequena de chocolate con al menos 70% de pureza."
+      : "Prioriza una siguiente comida simple con proteina y verdura.");
+
+  const microHabitoDefault = preguntaLower.includes("comida fuera") || preguntaLower.includes("cena fuera")
+    ? "Tu eleccion principal sera a la plancha o barbacoa; decide eso antes de mirar la carta."
+    : (preguntaLower.includes("finde") ? microFinde : "Bebe un vaso de agua ahora y decide tu siguiente comida con calma.");
+
+  const motivadorDefault = preguntaLower.includes("finde")
+    ? "No necesitas un finde perfecto, necesitas un finde con buenas decisiones."
+    : "Vamos juntas: una buena decision ahora vale mas que buscar perfeccion.";
 
   return {
     estado_dia: estadoFinal,
     lectura_rapida: lecturaFinal,
     accion_ahora: String(respuesta.accion_ahora || accionAhoraDefault),
-    siguiente_paso: siguientePaso,
+    siguiente_paso: String(respuesta.siguiente_paso || siguientePaso || siguientePasoDefault),
     ajuste_creditos: String(respuesta.ajuste_creditos || (exceso > 0
       ? "Compensa con ejercicio moderado hoy o manana y ajusta una comida, sin castigos."
       : "Mantiene el reparto equilibrado de creditos para llegar con margen a la noche.")),
-    micro_habito: String(respuesta.micro_habito || (preguntaLower.includes("finde") ? microFinde : "Bebe un vaso de agua ahora y decide tu siguiente comida con calma.")),
-    mensaje_motivador: String(respuesta.mensaje_motivador || (preguntaLower.includes("finde")
-      ? "No necesitas un finde perfecto, necesitas un finde con buenas decisiones."
-      : "Vamos juntas: una buena decision ahora vale mas que buscar perfeccion."))
+    micro_habito: String(respuesta.micro_habito || microHabitoDefault),
+    mensaje_motivador: String(respuesta.mensaje_motivador || motivadorDefault)
   };
 }
 
