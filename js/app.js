@@ -232,6 +232,12 @@ async function abrirVista(nombreVista, opciones = {}) {
         if (nombreVista === 'carrito-compra') {
             setTimeout(actualizarInterfazCompra, 100);
         }
+
+        setTimeout(() => {
+            if (typeof coachOnVistaAbierta === 'function') {
+                coachOnVistaAbierta(nombreVista);
+            }
+        }, 350);
     } catch (error) {
         console.error("Error al abrir la vista:", error);
     }
@@ -575,6 +581,10 @@ async function guardarCreditos() {
         localStorage.setItem(cacheKey, JSON.stringify([filaNueva, ...cacheActual].slice(0, 10)));
 
         cargarHistorialCreditos();
+
+        if (typeof coachRegistrarEvento === 'function') {
+            coachRegistrarEvento('registro_creditos', 'He guardado mis créditos diarios.');
+        }
     } catch (e) {
         console.error("Error guardando créditos", e);
         alert("Error al guardar: " + (e.message || e));
@@ -1827,6 +1837,10 @@ async function validarYGuardarEjercicio() {
         alert("¡Guardado!");
         reiniciarFormularioEjercicio();
         cargarHistorialEjercicios();
+
+        if (typeof coachRegistrarEvento === 'function') {
+            coachRegistrarEvento('registro_ejercicio', 'Acabo de registrar mi entrenamiento.');
+        }
     } catch (e) {
         alert("Error al guardar: " + (e.message || e));
     } finally {
@@ -2119,6 +2133,10 @@ async function compartirReceta() {
 document.addEventListener('DOMContentLoaded', () => {
     inicializarNavegacionMovil();
 
+    if (typeof inicializarCoachNutrafitUI === 'function') {
+        inicializarCoachNutrafitUI();
+    }
+
     const inputBusqueda = document.getElementById('busqueda-recetas');
     if(inputBusqueda) {
         inputBusqueda.addEventListener('input', filtrarRecetas);
@@ -2187,6 +2205,10 @@ window.onload = function() {
     // Cargar historial de semanas
     cargarHistorialSemanas();
     asegurarPapeleraEnFilasDiario();
+
+    if (typeof inicializarCoachNutrafitUI === 'function') {
+        inicializarCoachNutrafitUI();
+    }
 };
 
 document.addEventListener('input', function(event) {
@@ -2404,6 +2426,10 @@ function actualizarPuntos() {
     }
 
     actualizarPuntosPorMomento();
+
+    if (typeof coachNotificarCambioDiario === 'function') {
+        coachNotificarCambioDiario({ restante, presupuesto, consumido: sumaTotal });
+    }
 }
 
 /**
@@ -3483,4 +3509,625 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
         console.error("Error cargando semana desde historial:", error);
         alert("Error al cargar la semana desde el historial");
     }
+}
+
+/* ============================================================
+   COACH NUTRAFIT (GROQ) - PILOTO CON ON/OFF
+   ============================================================ */
+const COACH_LOCAL_ENABLED_KEY = 'nutrafit_coach_enabled';
+const COACH_LAST_OPEN_KEY = 'nutrafit_coach_last_open_msg';
+const COACH_LAST_DIARIO_KEY = 'nutrafit_coach_last_diario_msg';
+const COACH_DEFAULT_ENABLED = 'on';
+
+const coachState = {
+    initialized: false,
+    panelOpen: false,
+    lastDiarioSignature: '',
+    diarioDebounce: null,
+    lastContextoVista: ''
+};
+
+function coachEstaActivo() {
+    const valor = localStorage.getItem(COACH_LOCAL_ENABLED_KEY);
+    if (!valor) {
+        localStorage.setItem(COACH_LOCAL_ENABLED_KEY, COACH_DEFAULT_ENABLED);
+        return true;
+    }
+    return valor === 'on';
+}
+
+function coachCambiarEstado(activar) {
+    localStorage.setItem(COACH_LOCAL_ENABLED_KEY, activar ? 'on' : 'off');
+    actualizarEstadoCoachUI();
+}
+
+function actualizarEstadoCoachUI() {
+    const activo = coachEstaActivo();
+    const toggle = document.getElementById('coach-toggle-btn');
+    const badge = document.getElementById('coach-status-badge');
+    const fab = document.getElementById('coach-fab');
+
+    if (toggle) toggle.textContent = activo ? 'ON' : 'OFF';
+    if (badge) badge.textContent = activo ? 'Coach activo' : 'Coach en pausa';
+    if (badge) badge.className = activo ? 'coach-status-badge on' : 'coach-status-badge off';
+    if (fab) fab.classList.toggle('paused', !activo);
+}
+
+function inicializarCoachNutrafitUI() {
+    if (coachState.initialized) {
+        actualizarEstadoCoachUI();
+        return;
+    }
+
+    coachState.initialized = true;
+    inyectarEstilosCoach();
+    crearBotonFlotanteCoach();
+    crearPanelCoach();
+    insertarTarjetaCoachEnInicio();
+    actualizarEstadoCoachUI();
+}
+
+function inyectarEstilosCoach() {
+    if (document.getElementById('coach-nutrafit-styles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'coach-nutrafit-styles';
+    style.textContent = `
+        .coach-fab {
+            position: fixed;
+            right: 16px;
+            bottom: 18px;
+            z-index: 9998;
+            border: none;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #5a8a5a, #78a978);
+            color: #fff;
+            font-weight: 800;
+            font-size: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 10px 24px rgba(46, 74, 46, 0.35);
+            cursor: pointer;
+        }
+
+        .coach-fab.paused {
+            background: linear-gradient(135deg, #666, #888);
+        }
+
+        .coach-sheet {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #f8faf8;
+            border-radius: 22px 22px 0 0;
+            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.22);
+            transform: translateY(105%);
+            transition: transform 0.25s ease;
+            z-index: 9999;
+            max-height: 82vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .coach-sheet.open {
+            transform: translateY(0);
+        }
+
+        .coach-head {
+            padding: 12px 14px;
+            background: #78a978;
+            color: #fff;
+            border-radius: 22px 22px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .coach-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: 0.2px;
+        }
+
+        .coach-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .coach-btn-mini {
+            border: none;
+            border-radius: 10px;
+            height: 30px;
+            padding: 0 10px;
+            font-weight: 800;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .coach-status-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .coach-status-badge.off {
+            background: rgba(68, 68, 68, 0.35);
+        }
+
+        .coach-messages {
+            padding: 12px;
+            overflow-y: auto;
+            min-height: 180px;
+            max-height: 48vh;
+        }
+
+        .coach-msg {
+            border-radius: 14px;
+            padding: 10px 11px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            line-height: 1.35;
+            white-space: pre-wrap;
+        }
+
+        .coach-msg.user {
+            background: #e9f4e9;
+            color: #2f4f2f;
+        }
+
+        .coach-msg.bot {
+            background: #fff;
+            border: 1px solid #e2e8e2;
+            color: #223322;
+        }
+
+        .coach-quick-actions {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 0 12px 10px 12px;
+        }
+
+        .coach-chip {
+            border: 1px solid #bfd4bf;
+            background: #fff;
+            color: #2d5f2d;
+            border-radius: 999px;
+            padding: 7px 10px;
+            font-size: 12px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .coach-input-row {
+            display: flex;
+            gap: 8px;
+            padding: 10px 12px 14px 12px;
+            background: #fff;
+            border-top: 1px solid #e4e9e4;
+        }
+
+        .coach-input {
+            flex: 1;
+            border: 1px solid #d7e0d7;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+
+        .coach-send {
+            border: none;
+            border-radius: 12px;
+            background: #78a978;
+            color: #fff;
+            font-weight: 800;
+            padding: 0 12px;
+            min-width: 44px;
+            cursor: pointer;
+        }
+
+        .coach-card-contexto {
+            background: #ffffff;
+            border: 1px solid #dce8dc;
+            border-radius: 14px;
+            padding: 12px;
+            margin: 10px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .coach-card-contexto h4 {
+            margin: 0 0 6px 0;
+            color: #5a8a5a;
+            font-size: 13px;
+        }
+
+        .coach-card-contexto p {
+            margin: 0;
+            color: #2f3f2f;
+            font-size: 12px;
+            line-height: 1.35;
+            white-space: pre-wrap;
+        }
+    `;
+
+    document.head.appendChild(style);
+}
+
+function crearBotonFlotanteCoach() {
+    if (document.getElementById('coach-fab')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'coach-fab';
+    btn.className = 'coach-fab';
+    btn.innerHTML = '<i class="fas fa-comments"></i> COACH';
+    btn.addEventListener('click', () => {
+        alternarPanelCoach(true);
+    });
+
+    document.body.appendChild(btn);
+}
+
+function crearPanelCoach() {
+    if (document.getElementById('coach-sheet')) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'coach-sheet';
+    panel.className = 'coach-sheet';
+    panel.innerHTML = `
+        <div class="coach-head">
+            <div class="coach-title">
+                <i class="fas fa-brain"></i>
+                <span>Coach NUTRAFIT</span>
+            </div>
+            <div class="coach-controls">
+                <span id="coach-status-badge" class="coach-status-badge on">Coach activo</span>
+                <button id="coach-toggle-btn" class="coach-btn-mini" title="Activar o pausar coach">ON</button>
+                <button id="coach-close-btn" class="coach-btn-mini" title="Cerrar">X</button>
+            </div>
+        </div>
+        <div id="coach-messages" class="coach-messages"></div>
+        <div class="coach-quick-actions">
+            <button class="coach-chip" data-q="Dame mi plan rápido de hoy">Plan de hoy</button>
+            <button class="coach-chip" data-q="Tengo ansiedad por dulce, ¿qué hago ahora?">Ansiedad dulce</button>
+            <button class="coach-chip" data-q="Me he pasado de créditos, ¿cómo lo compenso?">Compensar exceso</button>
+        </div>
+        <div class="coach-input-row">
+            <input id="coach-input" class="coach-input" type="text" placeholder="Escribe tu duda..." />
+            <button id="coach-send" class="coach-send"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    `;
+
+    document.body.appendChild(panel);
+
+    const btnClose = document.getElementById('coach-close-btn');
+    if (btnClose) {
+        btnClose.addEventListener('click', () => alternarPanelCoach(false));
+    }
+
+    const btnToggle = document.getElementById('coach-toggle-btn');
+    if (btnToggle) {
+        btnToggle.addEventListener('click', () => {
+            coachCambiarEstado(!coachEstaActivo());
+            pushCoachMensajeSistema(coachEstaActivo() ? 'Coach activado.' : 'Coach pausado. Puedes reactivarlo cuando quieras.');
+        });
+    }
+
+    const sendBtn = document.getElementById('coach-send');
+    const input = document.getElementById('coach-input');
+    if (sendBtn) sendBtn.addEventListener('click', enviarMensajeCoachChat);
+    if (input) {
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                enviarMensajeCoachChat();
+            }
+        });
+    }
+
+    panel.querySelectorAll('.coach-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const pregunta = chip.dataset.q || '';
+            if (!pregunta) return;
+            enviarPreguntaCoach(pregunta);
+        });
+    });
+
+    pushCoachMensajeSistema('Tu Coach NUTRAFIT está listo. Te acompaño en decisiones rápidas y sin juicios.');
+}
+
+function alternarPanelCoach(abrir) {
+    const panel = document.getElementById('coach-sheet');
+    if (!panel) return;
+
+    if (abrir) {
+        panel.classList.add('open');
+        coachState.panelOpen = true;
+        return;
+    }
+
+    panel.classList.remove('open');
+    coachState.panelOpen = false;
+}
+
+function pushCoachMensajeSistema(texto, clase = 'bot') {
+    const cont = document.getElementById('coach-messages');
+    if (!cont) return;
+
+    const item = document.createElement('div');
+    item.className = `coach-msg ${clase}`;
+    item.textContent = texto;
+    cont.appendChild(item);
+    cont.scrollTop = cont.scrollHeight;
+}
+
+function enviarMensajeCoachChat() {
+    const input = document.getElementById('coach-input');
+    if (!input) return;
+
+    const pregunta = String(input.value || '').trim();
+    if (!pregunta) return;
+
+    input.value = '';
+    enviarPreguntaCoach(pregunta);
+}
+
+function enviarPreguntaCoach(pregunta) {
+    pushCoachMensajeSistema(pregunta, 'user');
+    coachSolicitarRespuesta({
+        evento: 'pregunta_libre',
+        pregunta,
+        modo: 'chat'
+    });
+}
+
+function insertarTarjetaCoachEnInicio() {
+    const menu = document.querySelector('#pantalla-inicio .menu');
+    if (!menu) return;
+    if (document.getElementById('coach-card-inicio')) return;
+
+    const card = document.createElement('div');
+    card.id = 'coach-card-inicio';
+    card.className = 'coach-card-contexto';
+    card.innerHTML = '<h4><i class="fas fa-sparkles"></i> Hoy contigo</h4><p id="coach-texto-inicio">Abre el coach para recibir tu plan del día.</p>';
+    menu.parentNode.insertBefore(card, menu);
+}
+
+function insertarTarjetaContextoVista(nombreVista) {
+    if (!nombreVista) return;
+
+    const cont = document.querySelector('#contenedor-vistas .contenido-scroll')
+        || document.querySelector('#contenedor-vistas .contenedor-principal')
+        || document.querySelector('#contenedor-vistas .contenido-seccion')
+        || document.querySelector('#contenedor-vistas .contenedor-principal-ejercicio');
+    if (!cont) return;
+
+    const id = 'coach-card-' + nombreVista;
+    if (document.getElementById(id)) return;
+
+    const card = document.createElement('div');
+    card.id = id;
+    card.className = 'coach-card-contexto';
+    card.innerHTML = '<h4><i class="fas fa-robot"></i> Siguiente mejor decisión</h4><p>Activa el coach para recibir recomendaciones contextuales.</p>';
+    cont.insertBefore(card, cont.firstChild);
+}
+
+function actualizarTarjetaContextoVista(nombreVista, texto) {
+    if (!nombreVista) return;
+    const card = document.getElementById('coach-card-' + nombreVista);
+    if (!card) return;
+
+    const p = card.querySelector('p');
+    if (!p) return;
+    p.textContent = texto;
+}
+
+function actualizarTarjetaInicio(texto) {
+    const p = document.getElementById('coach-texto-inicio');
+    if (p) p.textContent = texto;
+}
+
+function coachOnVistaAbierta(nombreVista) {
+    inicializarCoachNutrafitUI();
+
+    if (!coachEstaActivo()) return;
+
+    insertarTarjetaContextoVista(nombreVista);
+
+    const uid = (usuarioActivo || localStorage.getItem('nutrafit_usuario_id') || '').toLowerCase();
+    if (!uid) return;
+
+    const hoy = formatearFechaYMDLocal(new Date());
+    const keyOpen = `${COACH_LAST_OPEN_KEY}_${uid}`;
+    const ultimaFecha = localStorage.getItem(keyOpen);
+
+    if (!ultimaFecha || ultimaFecha !== hoy) {
+        localStorage.setItem(keyOpen, hoy);
+        coachSolicitarRespuesta({
+            evento: 'abrir_app',
+            pregunta: 'Acabo de abrir la app, dame mi foco del día.',
+            modo: 'auto',
+            vistaDestino: nombreVista
+        });
+        return;
+    }
+
+    if (['diario-formulario', 'ejercicio-diario', 'creditos-diarios'].includes(nombreVista)) {
+        coachSolicitarRespuesta({
+            evento: 'abrir_vista',
+            pregunta: `Dame una recomendación breve para ${nombreVista}.`,
+            modo: 'auto',
+            vistaDestino: nombreVista
+        });
+    }
+}
+
+function coachNotificarCambioDiario(payload) {
+    if (vistaActual !== 'diario-formulario') return;
+    if (!coachEstaActivo()) return;
+
+    const restante = Number(payload?.restante);
+    const consumido = Number(payload?.consumido);
+    const firma = `${restante}|${consumido}`;
+    if (firma === coachState.lastDiarioSignature) return;
+
+    coachState.lastDiarioSignature = firma;
+
+    if (coachState.diarioDebounce) clearTimeout(coachState.diarioDebounce);
+    coachState.diarioDebounce = setTimeout(() => {
+        const uid = (usuarioActivo || localStorage.getItem('nutrafit_usuario_id') || '').toLowerCase();
+        if (!uid) return;
+
+        const hoy = formatearFechaYMDLocal(new Date());
+        const key = `${COACH_LAST_DIARIO_KEY}_${uid}_${hoy}`;
+        const ultimo = Number(localStorage.getItem(key) || 0);
+        const ahora = Date.now();
+        if ((ahora - ultimo) < (1000 * 60 * 20)) return;
+
+        if (restante > 3) return;
+
+        localStorage.setItem(key, String(ahora));
+        coachSolicitarRespuesta({
+            evento: 'ajuste_diario',
+            pregunta: 'Estoy justa o pasada de créditos, ayúdame a ajustar el resto del día.',
+            modo: 'auto',
+            vistaDestino: 'diario-formulario'
+        });
+    }, 1200);
+}
+
+function coachRegistrarEvento(evento, pregunta) {
+    if (!coachEstaActivo()) return;
+
+    coachSolicitarRespuesta({
+        evento,
+        pregunta,
+        modo: 'auto',
+        vistaDestino: vistaActual || ''
+    });
+}
+
+function obtenerDatosContextoCoach(extra = {}) {
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id') || '';
+    const did = dispositivoId || localStorage.getItem('nutrafit_dispositivo_id') || '';
+
+    let creditosDisponibles = null;
+    let creditosConsumidos = null;
+
+    const restantesInput = document.getElementById('restantes-val');
+    if (restantesInput) {
+        const val = parseFloat(restantesInput.value);
+        if (!isNaN(val)) creditosDisponibles = Math.round(val);
+    }
+
+    const presupuesto = (typeof obtenerPresupuestoDiaActual === 'function') ? Number(obtenerPresupuestoDiaActual()) : null;
+    if (presupuesto !== null && creditosDisponibles !== null) {
+        creditosConsumidos = Math.round(presupuesto - creditosDisponibles);
+    }
+
+    return {
+        usuario_id: uid,
+        dispositivo_id: did,
+        vista_actual: vistaActual || '',
+        objetivo: localStorage.getItem('nutrafit_objetivo') || 'mejorar habitos',
+        fecha: formatearFechaYMDLocal(new Date()),
+        creditos_disponibles: creditosDisponibles,
+        creditos_consumidos: creditosConsumidos,
+        ...extra
+    };
+}
+
+async function coachSolicitarRespuesta({ evento, pregunta, modo = 'auto', vistaDestino = '' }) {
+    inicializarCoachNutrafitUI();
+
+    if (!coachEstaActivo()) {
+        if (modo === 'chat') {
+            pushCoachMensajeSistema('Coach en pausa. Actívalo con el interruptor ON para continuar.');
+        }
+        return;
+    }
+
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
+    const did = dispositivoId || localStorage.getItem('nutrafit_dispositivo_id');
+    if (!uid || !did) {
+        if (modo === 'chat') {
+            pushCoachMensajeSistema('Necesito sesión activa para ayudarte.');
+        }
+        return;
+    }
+
+    try {
+        const contexto = obtenerDatosContextoCoach();
+        const payload = {
+            tipo: 'coach_nutrafit',
+            usuario_id: uid,
+            dispositivo_id: did,
+            evento,
+            modo,
+            pregunta: pregunta || '',
+            contexto
+        };
+
+        const resp = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        const raw = await resp.text();
+        let data = {};
+        try {
+            data = JSON.parse(raw);
+        } catch (_) {
+            data = { status: 'error', message: raw };
+        }
+
+        if (data.status === 'disabled') {
+            pushCoachMensajeSistema('Coach pausado globalmente.');
+            return;
+        }
+
+        if (data.status === 'quota_exceeded') {
+            pushCoachMensajeSistema('Has alcanzado el límite diario del piloto. Seguimos mañana.');
+            return;
+        }
+
+        if (data.status !== 'ok') {
+            const msgError = String(data.message || 'No pude generar respuesta ahora.');
+            pushCoachMensajeSistema(msgError);
+            return;
+        }
+
+        const texto = formatearCoachTexto(data.respuesta);
+        pushCoachMensajeSistema(texto, 'bot');
+        actualizarTarjetaInicio(data.respuesta?.lectura_rapida || texto);
+
+        const vistaObjetivo = vistaDestino || vistaActual || '';
+        if (vistaObjetivo) {
+            actualizarTarjetaContextoVista(vistaObjetivo, data.respuesta?.siguiente_paso || data.respuesta?.accion_ahora || texto);
+        }
+    } catch (error) {
+        console.error('Error coach', error);
+        pushCoachMensajeSistema('No pude responder ahora. Vuelve a intentarlo en unos segundos.');
+    }
+}
+
+function formatearCoachTexto(respuesta) {
+    if (!respuesta || typeof respuesta !== 'object') {
+        return 'Estoy aquí para ayudarte con tus créditos y hábitos de hoy.';
+    }
+
+    const bloques = [];
+    if (respuesta.lectura_rapida) bloques.push('Como vas: ' + respuesta.lectura_rapida);
+    if (respuesta.accion_ahora) bloques.push('Que hacer ahora: ' + respuesta.accion_ahora);
+    if (respuesta.siguiente_paso) bloques.push('Siguiente paso: ' + respuesta.siguiente_paso);
+    if (respuesta.micro_habito) bloques.push('Micro reto del dia: ' + respuesta.micro_habito);
+    if (respuesta.mensaje_motivador) bloques.push(respuesta.mensaje_motivador);
+
+    return bloques.join('\n\n');
 }

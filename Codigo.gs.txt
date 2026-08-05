@@ -272,6 +272,10 @@ function doPost(e) {
       return solicitarAccesoNutrafit(ss, payload);
     }
 
+    if (tipo === "coach_nutrafit") {
+      return procesarCoachNutrafit(ss, payload);
+    }
+
 
     // REGISTRO DE USUARIO
     if (tipo === "registro_usuario") {
@@ -862,6 +866,313 @@ function aprobarUsuarioNutrafit(email) {
   });
 
   return textoPlano("Usuario aprobado y notificado");
+}
+
+const COACH_PROMPT_MAESTRO = [
+  "Eres Coach NUTRAFIT, coach de nutricion y habitos.",
+  "Rol principal: coach de nutricion y habitos.",
+  "Rol secundario: asistente de decisiones diarias sobre creditos y comidas.",
+  "Limite: no diagnosticas ni sustituyes medico.",
+  "Habla en tono cercano, motivador, breve y sin juicio.",
+  "No inventes datos. No recomiendes extremos.",
+  "Siempre ofrece una accion concreta inmediata.",
+  "Si hay exceso de creditos, en lectura_rapida empieza con: Hay un exceso en el consumo de creditos.",
+  "Si hay exceso, incluye creditos previstos vs consumidos y propone compensacion con ejercicio moderado.",
+  "Si hay deseo de dulce, sugiere porcion pequena de chocolate >= 70%.",
+  "En comida fuera, micro_habito: elegir principal a la plancha o barbacoa antes de mirar la carta.",
+  "En desmotivacion: recordar por que empezo y cuanto camino lleva.",
+  "Para fin de semana descontrolado usa esta frase exacta en mensaje_motivador:",
+  "No necesitas un finde perfecto, necesitas un finde con buenas decisiones.",
+  "Devuelve SIEMPRE JSON estricto con campos:",
+  "estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.",
+  "No devuelvas texto fuera de JSON."
+].join("\n");
+
+function procesarCoachNutrafit(ss, payload) {
+  const usuarioId = normalizarEmail(payload.usuario_id);
+  const dispositivoId = String(payload.dispositivo_id || "").trim();
+  const evento = String(payload.evento || "pregunta_libre").trim();
+  const modo = String(payload.modo || "auto").toLowerCase() === "chat" ? "chat" : "auto";
+  const pregunta = String(payload.pregunta || "").trim();
+  const contexto = payload.contexto && typeof payload.contexto === "object" ? payload.contexto : {};
+
+  if (!coachHabilitadoGlobal()) {
+    return finalizarJSON({ status: "disabled", message: "Coach pausado globalmente" });
+  }
+
+  if (!usuarioId || !dispositivoId || !sesionValidaNutrafit(ss, usuarioId, dispositivoId)) {
+    return finalizarJSON({ status: "error", message: "Sesion invalida" });
+  }
+
+  const cfg = obtenerConfigCoach();
+  const cuota = validarCuotaCoachDiaria(ss, usuarioId, modo, cfg);
+  if (!cuota.ok) {
+    return finalizarJSON({
+      status: "quota_exceeded",
+      message: "Limite diario del piloto alcanzado",
+      quota: cuota
+    });
+  }
+
+  const modelo = elegirModeloCoach(evento, payload, cfg);
+  const mensajeUsuario = construirMensajeCoach(pregunta, evento, contexto);
+
+  try {
+    const respuestaGroq = solicitarGroqCoach(modelo, mensajeUsuario, cfg.maxTokensSalida);
+    const contenido = String(
+      (((respuestaGroq || {}).choices || [])[0] || {}).message
+        ? (((respuestaGroq || {}).choices || [])[0] || {}).message.content || ""
+        : ""
+    ).trim();
+
+    let respuesta = parsearRespuestaCoachJSON(contenido);
+    respuesta = normalizarRespuestaCoach(respuesta, evento, contexto);
+
+    const usage = respuestaGroq.usage || {};
+    registrarUsoCoach(ss, {
+      usuarioId,
+      modo,
+      evento,
+      modelo,
+      promptTokens: Number(usage.prompt_tokens || 0),
+      completionTokens: Number(usage.completion_tokens || 0),
+      totalTokens: Number(usage.total_tokens || 0),
+      pregunta
+    });
+
+    return finalizarJSON({
+      status: "ok",
+      model: modelo,
+      respuesta,
+      quota: {
+        used: cuota.used + 1,
+        max: cuota.max,
+        mode: modo
+      }
+    });
+  } catch (error) {
+    Logger.log("Error coach_nutrafit: " + error);
+    const fallback = normalizarRespuestaCoach({}, evento, contexto);
+
+    registrarUsoCoach(ss, {
+      usuarioId,
+      modo,
+      evento,
+      modelo,
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+      pregunta
+    });
+
+    return finalizarJSON({
+      status: "ok",
+      model: modelo,
+      respuesta: fallback,
+      warning: "fallback"
+    });
+  }
+}
+
+function coachHabilitadoGlobal() {
+  const props = PropertiesService.getScriptProperties();
+  const valor = String(props.getProperty("NUTRAFIT_COACH_ENABLED") || "true").toLowerCase();
+  return !(valor === "false" || valor === "off" || valor === "0");
+}
+
+function obtenerConfigCoach() {
+  const props = PropertiesService.getScriptProperties();
+  return {
+    model8b: props.getProperty("NUTRAFIT_COACH_MODEL_PRIMARY") || "llama-3.1-8b-instant",
+    model70b: props.getProperty("NUTRAFIT_COACH_MODEL_SUMMARY") || "llama-3.3-70b-versatile",
+    maxAutoPorDia: Number(props.getProperty("NUTRAFIT_COACH_MAX_AUTO_DIA") || 4),
+    maxChatPorDia: Number(props.getProperty("NUTRAFIT_COACH_MAX_CHAT_DIA") || 4),
+    maxTokensSalida: Number(props.getProperty("NUTRAFIT_COACH_MAX_TOKENS") || 240)
+  };
+}
+
+function elegirModeloCoach(evento, payload, cfg) {
+  const usar70 = Boolean(payload.usar_modelo_70b)
+    || String(evento || "").toLowerCase() === "resumen_semanal";
+  return usar70 ? cfg.model70b : cfg.model8b;
+}
+
+function obtenerHojaUsoCoach(ss) {
+  const nombre = "coach_uso";
+  let hoja = ss.getSheetByName(nombre);
+  if (!hoja) {
+    hoja = ss.insertSheet(nombre);
+    hoja.appendRow(["timestamp", "fecha", "usuario_id", "modo", "evento", "modelo", "prompt_tokens", "completion_tokens", "total_tokens", "pregunta"]);
+  }
+
+  if (hoja.getLastRow() === 0) {
+    hoja.appendRow(["timestamp", "fecha", "usuario_id", "modo", "evento", "modelo", "prompt_tokens", "completion_tokens", "total_tokens", "pregunta"]);
+  }
+
+  return hoja;
+}
+
+function validarCuotaCoachDiaria(ss, usuarioId, modo, cfg) {
+  const hoja = obtenerHojaUsoCoach(ss);
+  const fechaHoy = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+  const max = modo === "chat" ? cfg.maxChatPorDia : cfg.maxAutoPorDia;
+
+  if (hoja.getLastRow() <= 1) {
+    return { ok: true, used: 0, max: max };
+  }
+
+  const datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, 10).getValues();
+  let usados = 0;
+  datos.forEach(fila => {
+    const fecha = String(fila[1] || "").trim();
+    const uid = normalizarEmail(fila[2] || "");
+    const m = String(fila[3] || "").trim();
+    if (fecha === fechaHoy && uid === usuarioId && m === modo) {
+      usados++;
+    }
+  });
+
+  return { ok: usados < max, used: usados, max: max };
+}
+
+function registrarUsoCoach(ss, datos) {
+  const hoja = obtenerHojaUsoCoach(ss);
+  const ahora = new Date();
+  const fecha = Utilities.formatDate(ahora, Session.getScriptTimeZone(), "yyyy-MM-dd");
+
+  hoja.appendRow([
+    Utilities.formatDate(ahora, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"),
+    fecha,
+    normalizarEmail(datos.usuarioId || ""),
+    String(datos.modo || "auto"),
+    String(datos.evento || "pregunta_libre"),
+    String(datos.modelo || ""),
+    Number(datos.promptTokens || 0),
+    Number(datos.completionTokens || 0),
+    Number(datos.totalTokens || 0),
+    String(datos.pregunta || "").substring(0, 220)
+  ]);
+}
+
+function construirMensajeCoach(pregunta, evento, contexto) {
+  const safeContext = {
+    evento: evento,
+    fecha: contexto.fecha || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd"),
+    vista_actual: contexto.vista_actual || "",
+    objetivo: contexto.objetivo || "mejorar habitos",
+    creditos_disponibles: contexto.creditos_disponibles,
+    creditos_consumidos: contexto.creditos_consumidos,
+    contexto_extra: contexto
+  };
+
+  return [
+    "PREGUNTA USUARIA:",
+    pregunta || "Necesito recomendacion de coach para este momento.",
+    "",
+    "CONTEXTO JSON:",
+    JSON.stringify(safeContext)
+  ].join("\n");
+}
+
+function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida) {
+  const props = PropertiesService.getScriptProperties();
+  const apiKey = props.getProperty("GROQ_API_KEY");
+  if (!apiKey) {
+    throw new Error("Falta GROQ_API_KEY en Script Properties");
+  }
+
+  const payload = {
+    model: modelo,
+    temperature: 0.3,
+    max_tokens: maxTokensSalida,
+    messages: [
+      { role: "system", content: COACH_PROMPT_MAESTRO },
+      { role: "user", content: mensajeUsuario }
+    ],
+    response_format: { type: "json_object" }
+  };
+
+  const response = UrlFetchApp.fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "post",
+    contentType: "application/json",
+    headers: {
+      Authorization: "Bearer " + apiKey
+    },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  });
+
+  const status = response.getResponseCode();
+  const body = response.getContentText();
+  if (status < 200 || status >= 300) {
+    throw new Error("Groq HTTP " + status + " - " + body.substring(0, 500));
+  }
+
+  return JSON.parse(body || "{}");
+}
+
+function parsearRespuestaCoachJSON(texto) {
+  if (!texto) return {};
+
+  try {
+    return JSON.parse(texto);
+  } catch (_) {
+    const match = String(texto).match(/\{[\s\S]*\}/);
+    if (!match) return {};
+    try {
+      return JSON.parse(match[0]);
+    } catch (_) {
+      return {};
+    }
+  }
+}
+
+function normalizarRespuestaCoach(respuesta, evento, contexto) {
+  const disponibles = Number(contexto.creditos_disponibles);
+  const consumidos = Number(contexto.creditos_consumidos);
+  const tieneCreditos = !isNaN(disponibles) && !isNaN(consumidos);
+  const exceso = tieneCreditos && disponibles < 0 ? Math.abs(disponibles) : 0;
+
+  const estado = String(respuesta.estado_dia || "").toUpperCase();
+  const estadoFinal = (estado === "VERDE" || estado === "AMARILLO" || estado === "ROJO")
+    ? estado
+    : (exceso > 0 ? "ROJO" : (tieneCreditos && disponibles <= 3 ? "AMARILLO" : "VERDE"));
+
+  const lecturaBase = respuesta.lectura_rapida
+    ? String(respuesta.lectura_rapida)
+    : "Vas bien, revisamos juntas tu siguiente decision para mantener el rumbo.";
+
+  let lecturaFinal = lecturaBase;
+  if (exceso > 0) {
+    const objetivo = Math.max(0, consumidos - exceso);
+    lecturaFinal = "Hay un exceso en el consumo de creditos. Objetivo: " + objetivo + ", consumidos: " + consumidos + ", exceso: " + exceso + ". " + lecturaBase;
+  }
+
+  let siguientePaso = String(respuesta.siguiente_paso || "Prioriza una siguiente comida simple con proteina y verdura.");
+  if (exceso > 0) {
+    siguientePaso = "Para el siguiente paso, usa verduras cocinadas y una proteina magra. Deja crudos solo para la cena.";
+  }
+
+  const preguntaLower = String(evento || "").toLowerCase();
+  const accionAhoraDefault = (preguntaLower === "registro_ejercicio")
+    ? "Toma agua ahora y elige una recuperacion rapida con proteina o alimento de despensa rico en proteinas."
+    : "Haz una accion en 1 minuto: agua + definir tu siguiente comida.";
+
+  const microFinde = "Recuerda 3 opciones de emergencia de pocos creditos para proximos descontrol: yogur natural + fruta, tortilla francesa, verdura cocinada con proteina.";
+
+  return {
+    estado_dia: estadoFinal,
+    lectura_rapida: lecturaFinal,
+    accion_ahora: String(respuesta.accion_ahora || accionAhoraDefault),
+    siguiente_paso: siguientePaso,
+    ajuste_creditos: String(respuesta.ajuste_creditos || (exceso > 0
+      ? "Compensa con ejercicio moderado hoy o manana y ajusta una comida, sin castigos."
+      : "Mantiene el reparto equilibrado de creditos para llegar con margen a la noche.")),
+    micro_habito: String(respuesta.micro_habito || (preguntaLower.includes("finde") ? microFinde : "Bebe un vaso de agua ahora y decide tu siguiente comida con calma.")),
+    mensaje_motivador: String(respuesta.mensaje_motivador || (preguntaLower.includes("finde")
+      ? "No necesitas un finde perfecto, necesitas un finde con buenas decisiones."
+      : "Vamos juntas: una buena decision ahora vale mas que buscar perfeccion."))
+  };
 }
 
 /**
