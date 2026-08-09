@@ -740,6 +740,14 @@ function configurarControlPesoPreciso() {
     const boostMax = Number.isFinite(boostMaxCfg)
         ? Math.max(1, boostMaxCfg)
         : 10;
+    const velocidadLentaUmbralCfg = Number(slider.dataset.slowSpeedThreshold || 0.12);
+    const velocidadLentaUmbral = Number.isFinite(velocidadLentaUmbralCfg)
+        ? Math.max(0.01, velocidadLentaUmbralCfg)
+        : 0.12;
+    const multiplicadorLentoCfg = Number(slider.dataset.slowSpeedMultiplier || 2);
+    const multiplicadorLento = Number.isFinite(multiplicadorLentoCfg)
+        ? Math.max(1, multiplicadorLentoCfg)
+        : 2;
 
     const limpiarArrastre = () => {
         // Al terminar, forzamos el valor real para evitar que quede un salto nativo del range.
@@ -772,8 +780,12 @@ function configurarControlPesoPreciso() {
         const deltaTs = Math.max(1, ahoraTs - controlPesoPreciso.ultimoTs);
         const velocidadPxMs = Math.abs(deltaX) / deltaTs;
 
+        // Duplica sensibilidad en movimientos lentos y se desvanece al llegar al umbral.
+        const ratioLento = Math.max(0, Math.min(1, (velocidadLentaUmbral - velocidadPxMs) / velocidadLentaUmbral));
+        const factorLento = 1 + (multiplicadorLento - 1) * ratioLento;
+
         // A mayor velocidad de arrastre, mayor ganancia de conversion.
-        const boost = Math.min(boostMax, 1 + Math.pow(velocidadPxMs * 4, 1.2));
+        const boost = Math.min(boostMax, (1 + Math.pow(velocidadPxMs * 4, 1.2)) * factorLento);
         const deltaKg = (deltaX * gramosBasePorPx * boost) / 1000;
         controlPesoPreciso.pesoContinuo = Math.min(
             PESO_MAX_NUTRAFIT,
