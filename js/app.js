@@ -4252,7 +4252,13 @@ function formatearCoachTexto(respuesta) {
         return 'Estoy aquí para ayudarte con tus créditos y hábitos de hoy.';
     }
 
-    const directa = String(respuesta.respuesta_directa || '').trim();
+    const limpiarTextoCoach = (txt) => String(txt || '')
+        .replace(/^\s*(respuesta_directa|respuesta|lectura[_\s]*rapida|accion[_\s]*ahora|siguiente[_\s]*paso|micro[_\s]*habito|mensaje[_\s]*motivador)\s*:\s*/gim, '')
+        .replace(/\b(lectura[_\s]*rapida|accion[_\s]*ahora|siguiente[_\s]*paso|micro[_\s]*habito|mensaje[_\s]*motivador)\s*:/gim, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+    const directa = limpiarTextoCoach(respuesta.respuesta_directa || '');
     if (directa) {
         return directa;
     }
@@ -4260,7 +4266,7 @@ function formatearCoachTexto(respuesta) {
     const bloques = [];
     const vistos = new Set();
     const agregar = (txt) => {
-        const limpio = String(txt || '').trim();
+        const limpio = limpiarTextoCoach(txt);
         if (!limpio) return;
         const clave = limpio.toLowerCase();
         if (vistos.has(clave)) return;
@@ -4268,11 +4274,11 @@ function formatearCoachTexto(respuesta) {
         bloques.push(limpio);
     };
 
-    if (respuesta.respuesta_directa) agregar('Respuesta: ' + respuesta.respuesta_directa);
-    if (respuesta.lectura_rapida) agregar('Como vas: ' + respuesta.lectura_rapida);
-    if (respuesta.accion_ahora) agregar('Que hacer ahora: ' + respuesta.accion_ahora);
+    if (respuesta.respuesta_directa) agregar(respuesta.respuesta_directa);
+    if (respuesta.lectura_rapida) agregar(respuesta.lectura_rapida);
+    if (respuesta.accion_ahora) agregar('Ahora: ' + respuesta.accion_ahora);
     if (respuesta.siguiente_paso) agregar('Siguiente paso: ' + respuesta.siguiente_paso);
-    if (respuesta.micro_habito) agregar('Micro reto del dia: ' + respuesta.micro_habito);
+    if (respuesta.micro_habito) agregar('Micro hábito: ' + respuesta.micro_habito);
     if (respuesta.mensaje_motivador) agregar(respuesta.mensaje_motivador);
 
     return bloques.join('\n\n');
