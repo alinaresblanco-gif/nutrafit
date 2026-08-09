@@ -744,10 +744,10 @@ function configurarControlPesoPreciso() {
     const velocidadLentaUmbral = Number.isFinite(velocidadLentaUmbralCfg)
         ? Math.max(0.01, velocidadLentaUmbralCfg)
         : 0.12;
-    const multiplicadorLentoCfg = Number(slider.dataset.slowSpeedMultiplier || 2);
+    const multiplicadorLentoCfg = Number(slider.dataset.slowSpeedMultiplier || 4);
     const multiplicadorLento = Number.isFinite(multiplicadorLentoCfg)
         ? Math.max(1, multiplicadorLentoCfg)
-        : 2;
+        : 4;
 
     const limpiarArrastre = () => {
         // Al terminar, forzamos el valor real para evitar que quede un salto nativo del range.
