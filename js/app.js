@@ -679,6 +679,7 @@ async function cargarHistorialCreditos() {
 const PESO_MIN_NUTRAFIT = 30;
 const PESO_MAX_NUTRAFIT = 200;
 const PESO_STEP_NUTRAFIT = 0.1;
+const PESO_SLIDER_CENTRO_NUTRAFIT = (PESO_MIN_NUTRAFIT + PESO_MAX_NUTRAFIT) / 2;
 
 function inicializarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
@@ -726,6 +727,11 @@ function sincronizarPesoDesdeEntrada(valor) {
     establecerPesoActual(valor);
 }
 
+function centrarThumbPeso(slider) {
+    if (!slider) return;
+    slider.value = PESO_SLIDER_CENTRO_NUTRAFIT.toFixed(1);
+}
+
 function configurarControlPesoPreciso() {
     const slider = document.getElementById('slider-peso');
     if (!slider || slider.dataset.nutrafitPrecisionInit === '1') return;
@@ -744,10 +750,10 @@ function configurarControlPesoPreciso() {
     const velocidadLentaUmbral = Number.isFinite(velocidadLentaUmbralCfg)
         ? Math.max(0.01, velocidadLentaUmbralCfg)
         : 0.12;
-    const multiplicadorLentoCfg = Number(slider.dataset.slowSpeedMultiplier || 4);
+    const multiplicadorLentoCfg = Number(slider.dataset.slowSpeedMultiplier || 8);
     const multiplicadorLento = Number.isFinite(multiplicadorLentoCfg)
         ? Math.max(1, multiplicadorLentoCfg)
-        : 4;
+        : 8;
 
     const limpiarArrastre = () => {
         // Al terminar, forzamos el valor real para evitar que quede un salto nativo del range.
@@ -764,7 +770,7 @@ function configurarControlPesoPreciso() {
             pointerId: event.pointerId,
             ultimoX: event.clientX,
             ultimoTs: event.timeStamp || Date.now(),
-            pesoContinuo: parseFloat(slider.value) || 75
+            pesoContinuo: parseFloat(document.getElementById('input-peso')?.value || slider.value) || 75
         };
         try {
             slider.setPointerCapture(event.pointerId);
@@ -792,8 +798,12 @@ function configurarControlPesoPreciso() {
             Math.max(PESO_MIN_NUTRAFIT, controlPesoPreciso.pesoContinuo + deltaKg)
         );
         const nuevoPeso = redondearPesoNutrafit(controlPesoPreciso.pesoContinuo);
+        const llegoAlExtremo = nuevoPeso <= PESO_MIN_NUTRAFIT || nuevoPeso >= PESO_MAX_NUTRAFIT;
 
         establecerPesoActual(nuevoPeso);
+        if (llegoAlExtremo) {
+            centrarThumbPeso(slider);
+        }
         controlPesoPreciso.ultimoX = event.clientX;
         controlPesoPreciso.ultimoTs = ahoraTs;
         event.preventDefault();
