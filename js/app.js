@@ -731,10 +731,15 @@ function configurarControlPesoPreciso() {
     if (!slider || slider.dataset.nutrafitPrecisionInit === '1') return;
     slider.dataset.nutrafitPrecisionInit = '1';
 
-    const sensibilidadConfigurada = Number(slider.dataset.pixelsPorGramo || 8);
-    const sensibilidad = Number.isFinite(sensibilidadConfigurada)
-        ? Math.max(0.001, sensibilidadConfigurada)
-        : 8;
+    // Nuevo control dinamico: lento para precision, rapido para recorrer mas.
+    const gramosBasePorPxCfg = Number(slider.dataset.gramosBasePx || 0.4);
+    const gramosBasePorPx = Number.isFinite(gramosBasePorPxCfg)
+        ? Math.max(0.01, gramosBasePorPxCfg)
+        : 0.4;
+    const boostMaxCfg = Number(slider.dataset.boostMax || 10);
+    const boostMax = Number.isFinite(boostMaxCfg)
+        ? Math.max(1, boostMaxCfg)
+        : 10;
 
     const limpiarArrastre = () => {
         // Al terminar, forzamos el valor real para evitar que quede un salto nativo del range.
@@ -749,8 +754,9 @@ function configurarControlPesoPreciso() {
         if (event.button !== 0 && event.pointerType !== 'touch') return;
         controlPesoPreciso = {
             pointerId: event.pointerId,
-            inicioX: event.clientX,
-            pesoInicial: parseFloat(slider.value) || 75
+            ultimoX: event.clientX,
+            ultimoTs: event.timeStamp || Date.now(),
+            pesoActual: parseFloat(slider.value) || 75
         };
         try {
             slider.setPointerCapture(event.pointerId);
@@ -761,11 +767,20 @@ function configurarControlPesoPreciso() {
     slider.addEventListener('pointermove', (event) => {
         if (!controlPesoPreciso || controlPesoPreciso.pointerId !== event.pointerId) return;
 
-        const deltaX = event.clientX - controlPesoPreciso.inicioX;
-        const deltaKg = deltaX / sensibilidad / 1000;
-        const nuevoPeso = redondearPesoNutrafit(controlPesoPreciso.pesoInicial + deltaKg);
+        const ahoraTs = event.timeStamp || Date.now();
+        const deltaX = event.clientX - controlPesoPreciso.ultimoX;
+        const deltaTs = Math.max(1, ahoraTs - controlPesoPreciso.ultimoTs);
+        const velocidadPxMs = Math.abs(deltaX) / deltaTs;
+
+        // A mayor velocidad de arrastre, mayor ganancia de conversion.
+        const boost = Math.min(boostMax, 1 + Math.pow(velocidadPxMs * 4, 1.2));
+        const deltaKg = (deltaX * gramosBasePorPx * boost) / 1000;
+        const nuevoPeso = redondearPesoNutrafit(controlPesoPreciso.pesoActual + deltaKg);
 
         establecerPesoActual(nuevoPeso);
+        controlPesoPreciso.pesoActual = nuevoPeso;
+        controlPesoPreciso.ultimoX = event.clientX;
+        controlPesoPreciso.ultimoTs = ahoraTs;
         event.preventDefault();
     });
 
