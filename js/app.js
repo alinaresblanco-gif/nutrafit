@@ -731,7 +731,10 @@ function configurarControlPesoPreciso() {
     if (!slider || slider.dataset.nutrafitPrecisionInit === '1') return;
     slider.dataset.nutrafitPrecisionInit = '1';
 
-    const sensibilidad = Math.max(1, Number(slider.dataset.pixelsPorGramo || 8));
+    const sensibilidadConfigurada = Number(slider.dataset.pixelsPorGramo || 8);
+    const sensibilidad = Number.isFinite(sensibilidadConfigurada)
+        ? Math.max(0.001, sensibilidadConfigurada)
+        : 8;
 
     const limpiarArrastre = () => {
         // Al terminar, forzamos el valor real para evitar que quede un salto nativo del range.
