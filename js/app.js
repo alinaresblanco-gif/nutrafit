@@ -677,7 +677,7 @@ async function cargarHistorialCreditos() {
 /* --- 4. LÓGICA DE EVOLUCIÓN DE PESO --- */
 const PESO_MIN_NUTRAFIT = 30;
 const PESO_MAX_NUTRAFIT = 200;
-const PESO_STEP_NUTRAFIT = 0.005;
+const PESO_STEP_NUTRAFIT = 0.001;
 
 function inicializarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
