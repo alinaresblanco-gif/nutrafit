@@ -675,19 +675,50 @@ async function cargarHistorialCreditos() {
 }
 
 /* --- 4. LÓGICA DE EVOLUCIÓN DE PESO --- */
+const PESO_MIN_NUTRAFIT = 30;
+const PESO_MAX_NUTRAFIT = 200;
+const PESO_STEP_NUTRAFIT = 0.05;
+
 function inicializarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
     if(inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
+    establecerPesoActual(75);
     cargarHistorialPeso();
 }
 
 function ajustarPeso(valor) {
     const input = document.getElementById('input-peso');
     if (!input) return;
-    let actual = parseFloat(input.value) || 70; 
-    let nuevoPeso = (actual + valor).toFixed(1);
-    input.value = nuevoPeso;
-    calcularIMC(nuevoPeso);
+    const actual = parseFloat(input.value) || 70;
+    const nuevoPeso = redondearPesoNutrafit(actual + valor);
+    establecerPesoActual(nuevoPeso);
+}
+
+function redondearPesoNutrafit(valor) {
+    const numero = Number.parseFloat(valor);
+    if (Number.isNaN(numero)) return 75;
+    const ajustado = Math.round(numero / PESO_STEP_NUTRAFIT) * PESO_STEP_NUTRAFIT;
+    return Number(Math.min(PESO_MAX_NUTRAFIT, Math.max(PESO_MIN_NUTRAFIT, ajustado)).toFixed(2));
+}
+
+function formatearPesoNutrafit(valor) {
+    return `${redondearPesoNutrafit(valor).toFixed(2)} kg`;
+}
+
+function establecerPesoActual(valor, recalcularIMC = true) {
+    const peso = redondearPesoNutrafit(valor);
+    const input = document.getElementById('input-peso');
+    const slider = document.getElementById('slider-peso');
+    const texto = document.getElementById('peso-valor-actual');
+
+    if (input) input.value = peso.toFixed(2);
+    if (slider) slider.value = peso.toFixed(2);
+    if (texto) texto.innerText = formatearPesoNutrafit(peso);
+    if (recalcularIMC) calcularIMC(peso);
+}
+
+function sincronizarPesoDesdeSlider(valor) {
+    establecerPesoActual(valor);
 }
 
 function calcularIMC(peso) {
@@ -725,7 +756,7 @@ async function guardarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
     if(!inputPeso || !inputPeso.value) return alert("Introduce el peso");
 
-    const pesoActual = parseFloat(inputPeso.value);
+    const pesoActual = redondearPesoNutrafit(inputPeso.value);
     const fecha = inputFecha.value;
     const tabla = document.getElementById('tabla-peso-body');
     let ultimoPeso = pesoActual;
@@ -853,7 +884,7 @@ async function cargarHistorialPeso() {
     const cacheLocal = JSON.parse(localStorage.getItem(cacheKey) || '[]');
     if (cacheLocal.length > 0) {
         pintarHistorialPeso(cuerpo, cacheLocal);
-        calcularIMC(parseFloat(cacheLocal[0][2]));
+        establecerPesoActual(cacheLocal[0][2]);
         renderizarGrafico([...cacheLocal].reverse());
     }
 
@@ -865,9 +896,11 @@ async function cargarHistorialPeso() {
 
         pintarHistorialPeso(cuerpo, datos);
         if (Array.isArray(datos) && datos.length > 0) {
-            calcularIMC(parseFloat(datos[0][2]));
+            establecerPesoActual(datos[0][2]);
             renderizarGrafico([...datos].reverse());
             localStorage.setItem(cacheKey, JSON.stringify(datos.slice(0, 15)));
+        } else if (!cacheLocal.length) {
+            establecerPesoActual(75);
         }
     } catch (e) {
         console.error("Error peso", e);
