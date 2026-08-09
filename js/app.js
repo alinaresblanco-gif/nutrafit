@@ -684,7 +684,7 @@ const PESO_SLIDER_CENTRO_NUTRAFIT = (PESO_MIN_NUTRAFIT + PESO_MAX_NUTRAFIT) / 2;
 function inicializarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
     if(inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
-    establecerPesoActual(75);
+    limpiarPesoActual();
     configurarControlPesoPreciso();
     cargarHistorialPeso();
 }
@@ -714,17 +714,25 @@ function establecerPesoActual(valor, recalcularIMC = true) {
     const slider = document.getElementById('slider-peso');
 
     if (input) input.value = peso.toFixed(2);
-    if (slider) slider.value = peso.toFixed(2);
+    if (slider) centrarThumbPeso(slider);
     if (recalcularIMC) calcularIMC(peso);
 }
 
 function sincronizarPesoDesdeSlider(valor) {
     if (controlPesoPreciso) return;
-    establecerPesoActual(valor);
+    const slider = document.getElementById('slider-peso');
+    centrarThumbPeso(slider);
 }
 
 function sincronizarPesoDesdeEntrada(valor) {
     establecerPesoActual(valor);
+}
+
+function limpiarPesoActual() {
+    const input = document.getElementById('input-peso');
+    const slider = document.getElementById('slider-peso');
+    if (input) input.value = '';
+    centrarThumbPeso(slider);
 }
 
 function centrarThumbPeso(slider) {
@@ -759,8 +767,8 @@ function configurarControlPesoPreciso() {
         // Al terminar, forzamos el valor real para evitar que quede un salto nativo del range.
         const input = document.getElementById('input-peso');
         const pesoActual = parseFloat(input && input.value ? input.value : slider.value);
-        const pesoAjustado = redondearPesoNutrafit(pesoActual);
-        slider.value = pesoAjustado.toFixed(2);
+        redondearPesoNutrafit(pesoActual);
+        centrarThumbPeso(slider);
         controlPesoPreciso = null;
     };
 
@@ -798,12 +806,9 @@ function configurarControlPesoPreciso() {
             Math.max(PESO_MIN_NUTRAFIT, controlPesoPreciso.pesoContinuo + deltaKg)
         );
         const nuevoPeso = redondearPesoNutrafit(controlPesoPreciso.pesoContinuo);
-        const llegoAlExtremo = nuevoPeso <= PESO_MIN_NUTRAFIT || nuevoPeso >= PESO_MAX_NUTRAFIT;
 
         establecerPesoActual(nuevoPeso);
-        if (llegoAlExtremo) {
-            centrarThumbPeso(slider);
-        }
+        centrarThumbPeso(slider);
         controlPesoPreciso.ultimoX = event.clientX;
         controlPesoPreciso.ultimoTs = ahoraTs;
         event.preventDefault();
@@ -972,6 +977,7 @@ async function cargarHistorialPeso() {
     if (!usuarioActivo) usuarioActivo = uid;
 
     const cacheKey = `peso_nutrafit_${uid.toLowerCase()}`;
+    limpiarPesoActual();
 
     // 1) Pintado instantáneo desde caché local
     const cacheLocal = JSON.parse(localStorage.getItem(cacheKey) || '[]');
@@ -992,8 +998,6 @@ async function cargarHistorialPeso() {
             establecerPesoActual(datos[0][2]);
             renderizarGrafico([...datos].reverse());
             localStorage.setItem(cacheKey, JSON.stringify(datos.slice(0, 15)));
-        } else if (!cacheLocal.length) {
-            establecerPesoActual(75);
         }
     } catch (e) {
         console.error("Error peso", e);
