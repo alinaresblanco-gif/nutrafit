@@ -718,6 +718,7 @@ function establecerPesoActual(valor, recalcularIMC = true) {
 }
 
 function sincronizarPesoDesdeSlider(valor) {
+    if (controlPesoPreciso) return;
     establecerPesoActual(valor);
 }
 
@@ -733,6 +734,11 @@ function configurarControlPesoPreciso() {
     const sensibilidad = Math.max(1, Number(slider.dataset.pixelsPorGramo || 8));
 
     const limpiarArrastre = () => {
+        // Al terminar, forzamos el valor real para evitar que quede un salto nativo del range.
+        const input = document.getElementById('input-peso');
+        const pesoActual = parseFloat(input && input.value ? input.value : slider.value);
+        const pesoAjustado = redondearPesoNutrafit(pesoActual);
+        slider.value = pesoAjustado.toFixed(3);
         controlPesoPreciso = null;
     };
 
