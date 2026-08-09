@@ -868,40 +868,66 @@ function aprobarUsuarioNutrafit(email) {
   return textoPlano("Usuario aprobado y notificado");
 }
 
-const COACH_PROMPT_MAESTRO = [
-  "Eres Coach NUTRAFIT, coach de nutricion y habitos.",
-  "Rol principal: coach de nutricion y habitos.",
-  "Rol secundario: asistente de decisiones diarias sobre creditos y comidas.",
-  "Limite: no diagnosticas ni sustituyes medico.",
-  "Habla en tono cercano, motivador, breve y sin juicio.",
-  "No inventes datos. No recomiendes extremos.",
-  "Siempre ofrece una accion concreta inmediata.",
-  "Si hay exceso de creditos, en lectura_rapida empieza con: Hay un exceso en el consumo de creditos.",
-  "Si hay exceso, incluye creditos previstos vs consumidos y propone compensacion con ejercicio moderado.",
-  "Si hay deseo de dulce, sugiere porcion pequena de chocolate >= 70%.",
-  "En comida fuera, micro_habito: elegir principal a la plancha o barbacoa antes de mirar la carta.",
-  "En desmotivacion: recordar por que empezo y cuanto camino lleva.",
-  "Primero responde al sentido literal de la pregunta de la usuaria.",
-  "No repitas la misma redaccion si la pregunta cambia.",
-  "Usa evento y contexto solo como apoyo, no como respuesta unica.",
-  "Para fin de semana descontrolado usa esta frase exacta en mensaje_motivador:",
-  "No necesitas un finde perfecto, necesitas un finde con buenas decisiones.",
-  "Devuelve SIEMPRE JSON estricto con campos:",
-  "estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.",
-  "No devuelvas texto fuera de JSON."
-].join("\n");
+const promptMaestroNutrafit = `Eres COACH NUTRAFIT, el asistente nutricional oficial de la app NUTRAFIT.
+Tu proposito es guiar, acompanar y educar a cada usuaria en su camino alimenticio,
+adaptandote a sus datos personales, su historial, sus creditos nutricionales y sus objetivos.
 
-const COACH_PROMPT_CHAT_LIBRE = [
-  "Eres Coach NUTRAFIT, especialista en nutricion practica y habitos saludables.",
-  "Responde a la pregunta concreta de la usuaria con lenguaje claro, util y nada repetitivo.",
-  "Si la pregunta es nutricional general (ej. chia, avena, fruta, proteinas), responde con conocimiento nutricional practico.",
-  "Personaliza con el contexto del usuario cuando exista, sin inventar datos.",
-  "No diagnostiques ni sustituyas criterio medico.",
-  "Devuelve SIEMPRE JSON con campos:",
-  "respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.",
-  "respuesta_directa debe responder exactamente lo que pregunto la usuaria.",
-  "No devuelvas texto fuera de JSON."
-].join("\n");
+TU IDENTIDAD:
+- Eres un coach profesional, calido, motivador y altamente preparado.
+- Tienes conocimientos avanzados en nutricion, habitos saludables, planificacion alimentaria y balance energetico.
+- Eres experto en interpretar datos y convertirlos en recomendaciones claras y accionables.
+- Nunca juzgas. Siempre acompanas.
+
+TU TONO:
+- Cercano, humano, empatico.
+- Motivador, positivo y realista.
+- Explicaciones claras, sin tecnicismos innecesarios.
+- Cuando la usuaria necesita profundidad, la das.
+- Cuando la usuaria quiere rapidez, respondes breve.
+
+DATOS QUE RECIBES DE NUTRAFIT (JSON):
+Incluyen altura, peso, sexo, edad, objetivo, creditos_totales, creditos_consumidos, creditos_restantes,
+preferencias, alergias, historial, menu_semana y accion.
+
+INTERPRETACION DE DATOS:
+- Usa los creditos como sistema central de recomendacion.
+- Ajusta segun objetivo: perder peso, ganar masa muscular o mantener.
+- Ten en cuenta alergias, preferencias y restricciones.
+- Si falta informacion, solicitala de forma amable.
+- Usa memoria previa de la usuaria para no repetir explicaciones y dar continuidad.
+
+PERSONALIDADES ESPECIALES (segun contexto):
+- Base: calida, motivadora y profesional.
+- Deportivo: energico, disciplinado y orientado a rendimiento.
+- Psicologia nutricional: empatico, emocional y sin culpa.
+
+COMPORTAMIENTO SEGUN accion:
+1) pregunta:
+- Responde dudas sobre alimentos, dietas, menus, sustituciones, calorias, creditos y habitos.
+- Si preguntan por un alimento, da beneficios, riesgos, encaje con objetivo y alternativas.
+2) menu_del_dia:
+- Genera desayuno, comida, cena y snacks con creditos aproximados.
+3) registrar_comida:
+- Evalua encaje con creditos y propone ajustes del resto del dia.
+4) resumen_diario:
+- Resume cumplimiento y da consejo final motivador.
+5) consejo:
+- Ofrece consejo personalizado.
+6) alerta:
+- Si hay exceso de creditos, avisa con amabilidad y propone soluciones realistas.
+
+REGLAS:
+- Usa solo datos del JSON y memoria de conversaciones guardadas.
+- Nunca inventes datos que no esten en el JSON o memoria.
+- Nunca des informacion medica avanzada.
+- Siempre ofrece alternativas saludables.
+- Ajusta profundidad segun complejidad de pregunta.
+- No repitas bloques fijos si la pregunta cambia.
+
+FORMATO OBLIGATORIO:
+Devuelve SIEMPRE JSON valido con estos campos:
+respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
+No devuelvas texto fuera de JSON.`;
 
 function procesarCoachNutrafit(ss, payload) {
   const usuarioId = normalizarEmail(payload.usuario_id);
@@ -930,8 +956,14 @@ function procesarCoachNutrafit(ss, payload) {
   }
 
   const modelo = elegirModeloCoach(evento, payload, cfg);
+  const accionNutrafit = mapearEventoAAccionNutrafit(evento, payload);
+  const memoriaUsuario = obtenerMemoriaCoachUsuario(ss, usuarioId, 8);
   const contextoUsuario = construirContextoUsuarioCoach(ss, usuarioId);
-  const contextoFinal = Object.assign({}, contexto || {}, { perfil_usuario: contextoUsuario });
+  const contextoFinal = Object.assign({}, contexto || {}, {
+    perfil_usuario: contextoUsuario,
+    accion_nutrafit: accionNutrafit,
+    memoria_usuario: memoriaUsuario
+  });
   const mensajeUsuario = construirMensajeCoach(pregunta, evento, contextoFinal, modo);
 
   try {
@@ -944,6 +976,14 @@ function procesarCoachNutrafit(ss, payload) {
 
     let respuesta = parsearRespuestaCoachJSON(contenido);
     respuesta = normalizarRespuestaCoach(respuesta, evento, contextoFinal, pregunta, contenido);
+
+    registrarMemoriaCoachUsuario(ss, {
+      usuarioId: usuarioId,
+      pregunta: pregunta,
+      respuestaDirecta: String(respuesta.respuesta_directa || "").substring(0, 300),
+      accion: accionNutrafit,
+      intencion: detectarIntencionCoach(pregunta, evento)
+    });
 
     const usage = respuestaGroq.usage || {};
     registrarUsoCoach(ss, {
@@ -970,6 +1010,14 @@ function procesarCoachNutrafit(ss, payload) {
   } catch (error) {
     Logger.log("Error coach_nutrafit: " + error);
     const fallback = normalizarRespuestaCoach({}, evento, contextoFinal, pregunta, "");
+
+    registrarMemoriaCoachUsuario(ss, {
+      usuarioId: usuarioId,
+      pregunta: pregunta,
+      respuestaDirecta: String(fallback.respuesta_directa || "").substring(0, 300),
+      accion: accionNutrafit,
+      intencion: detectarIntencionCoach(pregunta, evento)
+    });
 
     registrarUsoCoach(ss, {
       usuarioId,
@@ -1071,6 +1119,72 @@ function registrarUsoCoach(ss, datos) {
   ]);
 }
 
+function mapearEventoAAccionNutrafit(evento, payload) {
+  const accionPayload = String(payload.accion || "").trim().toLowerCase();
+  if (accionPayload) return accionPayload;
+
+  const evt = String(evento || "").trim().toLowerCase();
+  if (evt === "pregunta_libre") return "pregunta";
+  if (evt === "ajuste_diario") return "alerta";
+  if (evt === "abrir_app" || evt === "abrir_vista") return "consejo";
+  if (evt === "registro_ejercicio") return "consejo";
+  return "pregunta";
+}
+
+function obtenerHojaMemoriaCoach(ss) {
+  const nombre = "coach_memoria";
+  let hoja = ss.getSheetByName(nombre);
+  if (!hoja) {
+    hoja = ss.insertSheet(nombre);
+    hoja.appendRow(["timestamp", "fecha", "usuario_id", "accion", "intencion", "pregunta", "respuesta_directa"]);
+  }
+  if (hoja.getLastRow() === 0) {
+    hoja.appendRow(["timestamp", "fecha", "usuario_id", "accion", "intencion", "pregunta", "respuesta_directa"]);
+  }
+  return hoja;
+}
+
+function registrarMemoriaCoachUsuario(ss, datos) {
+  const hoja = obtenerHojaMemoriaCoach(ss);
+  const ahora = new Date();
+  const tz = Session.getScriptTimeZone();
+
+  hoja.appendRow([
+    Utilities.formatDate(ahora, tz, "yyyy-MM-dd HH:mm:ss"),
+    Utilities.formatDate(ahora, tz, "yyyy-MM-dd"),
+    normalizarEmail(datos.usuarioId || ""),
+    String(datos.accion || "pregunta"),
+    String(datos.intencion || "general"),
+    String(datos.pregunta || "").substring(0, 300),
+    String(datos.respuestaDirecta || "").substring(0, 500)
+  ]);
+}
+
+function obtenerMemoriaCoachUsuario(ss, usuarioId, limite) {
+  const hoja = obtenerHojaMemoriaCoach(ss);
+  if (hoja.getLastRow() <= 1) return [];
+
+  const uid = normalizarEmail(usuarioId);
+  const max = Math.max(1, Number(limite || 6));
+  const datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, 7).getValues();
+  const filtrados = [];
+
+  for (let i = datos.length - 1; i >= 0; i--) {
+    const fila = datos[i];
+    if (normalizarEmail(fila[2]) !== uid) continue;
+    filtrados.push({
+      fecha: String(fila[1] || ""),
+      accion: String(fila[3] || ""),
+      intencion: String(fila[4] || ""),
+      pregunta: String(fila[5] || ""),
+      respuesta: String(fila[6] || "")
+    });
+    if (filtrados.length >= max) break;
+  }
+
+  return filtrados.reverse();
+}
+
 function construirContextoUsuarioCoach(ss, usuarioId) {
   const uid = normalizarEmail(usuarioId);
   const tz = Session.getScriptTimeZone();
@@ -1152,6 +1266,7 @@ function construirMensajeCoach(pregunta, evento, contexto, modo) {
   const intencion = detectarIntencionCoach(pregunta, evento);
   const safeContext = {
     evento: evento,
+    accion: contexto.accion_nutrafit || "pregunta",
     modo: modo || "",
     intencion_detectada: intencion,
     fecha: contexto.fecha || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd"),
@@ -1167,6 +1282,7 @@ function construirMensajeCoach(pregunta, evento, contexto, modo) {
     "INSTRUCCION CRITICA:",
     "Responde de forma especifica a la pregunta de la usuaria. Evita frases genericas repetidas.",
     "Si la pregunta pide plan, da mini-plan. Si pide sustitutos, da sustitutos. Si pide cantidad, da cantidad orientativa.",
+    "Si hay memoria de consultas previas, usala para dar continuidad y evitar repetir exactamente la misma respuesta.",
     "",
     "PREGUNTA USUARIA:",
     pregunta || "Necesito recomendacion de coach para este momento.",
@@ -1186,16 +1302,15 @@ function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida, modo, event
   const modoTxt = String(modo || "auto").toLowerCase() === "chat" ? "chat" : "auto";
   const eventoTxt = String(evento || "").toLowerCase();
   const esChatLibre = (modoTxt === "chat" || eventoTxt === "pregunta_libre");
-  const temperature = esChatLibre ? 0.78 : 0.35;
+  const temperature = esChatLibre ? 0.8 : 0.45;
   const maxTokensFinal = Math.max(Number(maxTokensSalida || 240), modoTxt === "chat" ? 300 : 240);
-  const promptSistema = esChatLibre ? COACH_PROMPT_CHAT_LIBRE : COACH_PROMPT_MAESTRO;
 
   const payload = {
     model: modelo,
     temperature: temperature,
     max_tokens: maxTokensFinal,
     messages: [
-      { role: "system", content: promptSistema },
+      { role: "system", content: promptMaestroNutrafit },
       { role: "user", content: mensajeUsuario }
     ],
     response_format: { type: "json_object" }
@@ -1258,15 +1373,15 @@ function detectarIntencionCoach(pregunta, evento) {
 }
 
 function construirFallbackSegunIntencion(intencion, meta) {
-    if (intencion === "nutricion_general") {
-      return {
-        respuesta_directa: "Si, puedes comer chia. Aporta fibra, grasas saludables omega-3 de origen vegetal y ayuda a mejorar saciedad y transito intestinal.",
-        accion_ahora: "Empieza con 1 cucharada al dia (10-15 g), hidratada en yogur o agua.",
-        siguiente_paso: "Si te sienta bien, sube poco a poco hasta 20 g al dia y acompana con buena hidratacion.",
-        micro_habito: "Incluye chia en una comida fija del dia para mantener constancia.",
-        mensaje_motivador: "Pequenos cambios sostenidos generan resultados reales."
-      };
-    }
+  if (intencion === "nutricion_general") {
+    return {
+      respuesta_directa: "Si, ese alimento puede encajar. Lo ideal es ajustar la cantidad a tus creditos restantes, objetivo y tolerancia.",
+      accion_ahora: "Empieza con una porcion moderada y acompana con proteina o fibra para mayor saciedad.",
+      siguiente_paso: "Si te sienta bien y encaja en tus creditos, mantenlo 3-4 dias y revisa sensaciones de hambre y energia.",
+      micro_habito: "Antes de elegir cantidad, revisa tus creditos restantes del dia.",
+      mensaje_motivador: "Lo estas haciendo bien: decidir con criterio te acerca a tu objetivo."
+    };
+  }
 
   const exceso = Number(meta.exceso || 0);
 
