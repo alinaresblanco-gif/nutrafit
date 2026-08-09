@@ -702,22 +702,24 @@ function redondearPesoNutrafit(valor) {
 }
 
 function formatearPesoNutrafit(valor) {
-    return `${redondearPesoNutrafit(valor).toFixed(3)} kg`;
+    return `${redondearPesoNutrafit(valor).toFixed(2)} kg`;
 }
 
 function establecerPesoActual(valor, recalcularIMC = true) {
     const peso = redondearPesoNutrafit(valor);
     const input = document.getElementById('input-peso');
     const slider = document.getElementById('slider-peso');
-    const texto = document.getElementById('peso-valor-actual');
 
-    if (input) input.value = peso.toFixed(3);
+    if (input) input.value = peso.toFixed(2);
     if (slider) slider.value = peso.toFixed(3);
-    if (texto) texto.innerText = formatearPesoNutrafit(peso);
     if (recalcularIMC) calcularIMC(peso);
 }
 
 function sincronizarPesoDesdeSlider(valor) {
+    establecerPesoActual(valor);
+}
+
+function sincronizarPesoDesdeEntrada(valor) {
     establecerPesoActual(valor);
 }
 
