@@ -732,10 +732,10 @@ function configurarControlPesoPreciso() {
     slider.dataset.nutrafitPrecisionInit = '1';
 
     // Nuevo control dinamico: lento para precision, rapido para recorrer mas.
-    const gramosBasePorPxCfg = Number(slider.dataset.gramosBasePx || 1);
+    const gramosBasePorPxCfg = Number(slider.dataset.gramosBasePx || 3);
     const gramosBasePorPx = Number.isFinite(gramosBasePorPxCfg)
         ? Math.max(0.01, gramosBasePorPxCfg)
-        : 1;
+        : 3;
     const boostMaxCfg = Number(slider.dataset.boostMax || 10);
     const boostMax = Number.isFinite(boostMaxCfg)
         ? Math.max(1, boostMaxCfg)
