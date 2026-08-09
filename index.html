@@ -118,7 +118,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <script>
-        window.APP_VERSION = '20260603-5';
+        window.APP_VERSION = '20260809-1';
     </script>
     <script id="app-js" defer></script>
     <script>
@@ -245,17 +245,52 @@
         }
     }
 
+    async function leerJsonBackend(res) {
+        const raw = await res.text();
+        try {
+            return JSON.parse(raw);
+        } catch (_) {
+            const m = String(raw || '').match(/\{[\s\S]*\}/);
+            if (m && m[0]) {
+                try {
+                    return JSON.parse(m[0]);
+                } catch (_) {}
+            }
+            return { status: 'error', error: 'respuesta_invalida', raw };
+        }
+    }
+
+    async function postBackend(payload) {
+        let res;
+        try {
+            res = await fetch(URL_GOOGLE_SCRIPT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                cache: 'no-store',
+                body: JSON.stringify(payload)
+            });
+        } catch (_) {
+            throw new Error('conexion_fallida');
+        }
+
+        const data = await leerJsonBackend(res);
+        if (!res.ok) {
+            const detalle = String(data?.message || data?.error || '').trim();
+            throw new Error(detalle || ('HTTP ' + res.status));
+        }
+        if (!data || typeof data !== 'object') {
+            throw new Error('respuesta_invalida');
+        }
+        return data;
+    }
+
     async function consultarAccesoEmail() {
         const correo = document.getElementById('input-correo').value.trim().toLowerCase();
         const did = generarDispositivoId();
         if (!correo) return mostrarModalUsuario('email', 'Introduce tu correo para continuar.');
 
         try {
-            const res = await fetch(URL_GOOGLE_SCRIPT, {
-                method: 'POST',
-                body: JSON.stringify({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did })
-            });
-            const data = await res.json();
+            const data = await postBackend({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did });
 
             if (data.status === 'activo') {
                 localStorage.setItem('nutrafit_usuario_id', correo);
@@ -279,7 +314,12 @@
             }
         } catch (error) {
             console.error(error);
-            mostrarModalUsuario('email', 'Error de conexión o respuesta inválida del servidor.');
+            const msg = String(error?.message || '');
+            if (msg === 'conexion_fallida') {
+                mostrarModalUsuario('email', 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.');
+            } else {
+                mostrarModalUsuario('email', 'Respuesta inválida del servidor. Vuelve a intentarlo en unos segundos.');
+            }
         }
     }
 
@@ -290,11 +330,7 @@
         if (!nombre) return mostrarModalUsuario('registro', 'Escribe tu nombre para enviar la solicitud.');
 
         try {
-            const res = await fetch(URL_GOOGLE_SCRIPT, {
-                method: 'POST',
-                body: JSON.stringify({ tipo: 'solicitar_acceso', email: correo, nombre: nombre })
-            });
-            const data = await res.json();
+            const data = await postBackend({ tipo: 'solicitar_acceso', email: correo, nombre: nombre });
 
             if (data.status === 'pendiente') {
                 mostrarModalUsuario('pendiente', 'Tu solicitud está siendo revisada. Recibirás un correo cuando el administrador la apruebe.');
@@ -310,7 +346,12 @@
             }
         } catch (error) {
             console.error(error);
-            mostrarModalUsuario('email', 'No se pudo enviar la solicitud.');
+            const msg = String(error?.message || '');
+            if (msg === 'conexion_fallida') {
+                mostrarModalUsuario('email', 'No se pudo conectar con el servidor. Inténtalo de nuevo.');
+            } else {
+                mostrarModalUsuario('email', 'No se pudo enviar la solicitud. El servidor devolvió una respuesta no válida.');
+            }
         }
     }
 
@@ -320,11 +361,7 @@
         if (!correo) return mostrarModalUsuario('email', 'Introduce tu correo.');
 
         try {
-            const res = await fetch(URL_GOOGLE_SCRIPT, {
-                method: 'POST',
-                body: JSON.stringify({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did })
-            });
-            const data = await res.json();
+            const data = await postBackend({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did });
 
             if (data.status === 'activo') {
                 localStorage.setItem('nutrafit_usuario_id', correo);
@@ -343,17 +380,26 @@
             }
         } catch (error) {
             console.error(error);
-            mostrarModalUsuario('email', 'No se pudo comprobar el acceso.');
+            const msg = String(error?.message || '');
+            if (msg === 'conexion_fallida') {
+                mostrarModalUsuario('email', 'No hay conexión con el servidor. Inténtalo de nuevo.');
+            } else {
+                mostrarModalUsuario('email', 'No se pudo comprobar el acceso por respuesta inválida del servidor.');
+            }
         }
     }
 
     async function loginUsuarioAuto(correo) {
         const did = generarDispositivoId();
-        const res = await fetch(URL_GOOGLE_SCRIPT, {
-            method: 'POST',
-            body: JSON.stringify({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did })
-        });
-        const data = await res.json();
+        let data;
+        try {
+            data = await postBackend({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did });
+        } catch (error) {
+            console.error(error);
+            mostrarModalUsuario('email', 'No se pudo validar tu sesión automáticamente.');
+            document.getElementById('pantalla-inicio').style.display = 'none';
+            return;
+        }
 
         // Comprobar si el usuario ya está en una vista para no interrumpir su navegación.
         const enVista = () => document.getElementById('contenedor-vistas')?.style.display !== 'none';
