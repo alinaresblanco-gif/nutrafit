@@ -4252,6 +4252,11 @@ function formatearCoachTexto(respuesta) {
         return 'Estoy aquí para ayudarte con tus créditos y hábitos de hoy.';
     }
 
+    const directa = String(respuesta.respuesta_directa || '').trim();
+    if (directa) {
+        return directa;
+    }
+
     const bloques = [];
     const vistos = new Set();
     const agregar = (txt) => {
