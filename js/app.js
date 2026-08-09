@@ -678,7 +678,7 @@ async function cargarHistorialCreditos() {
 /* --- 4. LÓGICA DE EVOLUCIÓN DE PESO --- */
 const PESO_MIN_NUTRAFIT = 30;
 const PESO_MAX_NUTRAFIT = 200;
-const PESO_STEP_NUTRAFIT = 0.001;
+const PESO_STEP_NUTRAFIT = 0.1;
 
 function inicializarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
@@ -700,7 +700,7 @@ function redondearPesoNutrafit(valor) {
     const numero = Number.parseFloat(valor);
     if (Number.isNaN(numero)) return 75;
     const ajustado = Math.round(numero / PESO_STEP_NUTRAFIT) * PESO_STEP_NUTRAFIT;
-    return Number(Math.min(PESO_MAX_NUTRAFIT, Math.max(PESO_MIN_NUTRAFIT, ajustado)).toFixed(3));
+    return Number(Math.min(PESO_MAX_NUTRAFIT, Math.max(PESO_MIN_NUTRAFIT, ajustado)).toFixed(2));
 }
 
 function formatearPesoNutrafit(valor) {
@@ -713,7 +713,7 @@ function establecerPesoActual(valor, recalcularIMC = true) {
     const slider = document.getElementById('slider-peso');
 
     if (input) input.value = peso.toFixed(2);
-    if (slider) slider.value = peso.toFixed(3);
+    if (slider) slider.value = peso.toFixed(2);
     if (recalcularIMC) calcularIMC(peso);
 }
 
@@ -746,7 +746,7 @@ function configurarControlPesoPreciso() {
         const input = document.getElementById('input-peso');
         const pesoActual = parseFloat(input && input.value ? input.value : slider.value);
         const pesoAjustado = redondearPesoNutrafit(pesoActual);
-        slider.value = pesoAjustado.toFixed(3);
+        slider.value = pesoAjustado.toFixed(2);
         controlPesoPreciso = null;
     };
 
@@ -756,7 +756,7 @@ function configurarControlPesoPreciso() {
             pointerId: event.pointerId,
             ultimoX: event.clientX,
             ultimoTs: event.timeStamp || Date.now(),
-            pesoActual: parseFloat(slider.value) || 75
+            pesoContinuo: parseFloat(slider.value) || 75
         };
         try {
             slider.setPointerCapture(event.pointerId);
@@ -775,10 +775,13 @@ function configurarControlPesoPreciso() {
         // A mayor velocidad de arrastre, mayor ganancia de conversion.
         const boost = Math.min(boostMax, 1 + Math.pow(velocidadPxMs * 4, 1.2));
         const deltaKg = (deltaX * gramosBasePorPx * boost) / 1000;
-        const nuevoPeso = redondearPesoNutrafit(controlPesoPreciso.pesoActual + deltaKg);
+        controlPesoPreciso.pesoContinuo = Math.min(
+            PESO_MAX_NUTRAFIT,
+            Math.max(PESO_MIN_NUTRAFIT, controlPesoPreciso.pesoContinuo + deltaKg)
+        );
+        const nuevoPeso = redondearPesoNutrafit(controlPesoPreciso.pesoContinuo);
 
         establecerPesoActual(nuevoPeso);
-        controlPesoPreciso.pesoActual = nuevoPeso;
         controlPesoPreciso.ultimoX = event.clientX;
         controlPesoPreciso.ultimoTs = ahoraTs;
         event.preventDefault();
