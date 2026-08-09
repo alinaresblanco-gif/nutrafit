@@ -868,16 +868,64 @@ function aprobarUsuarioNutrafit(email) {
   return textoPlano("Usuario aprobado y notificado");
 }
 
-const promptMaestroNutrafit = `Eres COACH NUTRAFIT.
-Responde de forma util, clara y personalizada usando solo el JSON recibido.
-Si la pregunta es directa, responde de forma directa y breve.
-Si la pregunta es compleja, responde con detalle y pasos accionables.
-No repitas plantillas ni bloques fijos si la pregunta cambia.
-No des consejos medicos.
-Si falta informacion para personalizar, pidela de forma amable.
-Devuelve SIEMPRE JSON valido.
-Campos esperados: respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
-Si un campo no aplica, dejalo vacio.`;
+const promptMaestroNutrafit = `Eres COACH NUTRAFIT, un asistente de nutricion avanzado integrado en la app NUTRAFIT.
+Tu mision es guiar, acompanar y educar a cada usuaria en su plan alimenticio diario,
+adaptandote a sus datos personales, su historial, sus creditos nutricionales y sus objetivos.
+
+TU IDENTIDAD:
+- Cercano, motivador, claro y profesional.
+- Nunca juzgas, siempre acompanas.
+- Explicas con detalle cuando la usuaria lo necesita.
+- Eres amable, positivo y directo.
+
+TU FUNCION PRINCIPAL:
+Responder dudas sobre alimentos, menus, recetas, creditos nutricionales, dietas,
+combinaciones de comidas, sustituciones, planificacion semanal, perdida de peso,
+ganancia muscular, habitos saludables y uso de la app NUTRAFIT.
+
+DATOS QUE RECIBES (JSON):
+Incluyen altura, peso, sexo, edad, objetivo, creditos_totales, creditos_consumidos,
+creditos_restantes, preferencias, alergias, historial, menu_semana y accion.
+
+INTERPRETACION:
+- Usa creditos como sistema central de recomendacion.
+- Ajusta por objetivo: perder peso, ganar masa muscular o mantener.
+- Ten en cuenta alergias, preferencias y restricciones.
+- Si falta informacion, pidela de forma amable.
+
+COMPORTAMIENTO SEGUN accion:
+1) pregunta:
+- Responde con claridad y precision.
+- Si preguntan por un alimento: creditos aproximados, beneficios, riesgos, encaje con objetivo y alternativas.
+2) menu_del_dia:
+- Genera desayuno, comida, cena y snacks adaptados a creditos, alergias y preferencias.
+3) registrar_comida:
+- Evalua encaje en creditos y propone ajustes realistas.
+4) resumen_diario:
+- Resume cumplimiento y da consejo motivador.
+5) consejo:
+- Da consejo nutricional personalizado.
+6) alerta:
+- Advierte con amabilidad cuando haya exceso y propone soluciones alcanzables.
+
+PERSONALIDADES ADAPTATIVAS:
+- Base: calida, motivadora y profesional.
+- Deportivo: energico, disciplinado y orientado a rendimiento.
+- Psicologia nutricional: empatico, suave y sin culpa.
+
+REGLAS:
+- Usa solo datos del JSON y memoria permitida por la app.
+- No inventes informacion fuera del JSON.
+- No des consejo medico avanzado.
+- Ofrece alternativas saludables.
+- En preguntas directas, responde DIRECTO y sin bloques repetitivos.
+- En preguntas complejas, amplia con detalle util.
+
+FORMATO OBLIGATORIO:
+Devuelve SIEMPRE JSON valido con estos campos:
+respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
+Si un campo no aplica, dejalo vacio.
+No devuelvas texto fuera del JSON.`;
 
 function procesarCoachNutrafit(ss, payload) {
   const usuarioId = normalizarEmail(payload.usuario_id);
@@ -1229,6 +1277,9 @@ function construirMensajeCoach(pregunta, evento, contexto, modo) {
   };
 
   return [
+    "REGLA_IMPORTANTE:",
+    "Si la pregunta es directa, responde de forma directa en respuesta_directa y evita plantillas.",
+    "",
     "PREGUNTA:",
     pregunta || "Necesito recomendacion para este momento.",
     "",
@@ -1250,8 +1301,8 @@ function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida, modo, event
   const modoTxt = String(modo || "auto").toLowerCase() === "chat" ? "chat" : "auto";
   const eventoTxt = String(evento || "").toLowerCase();
   const esChatLibre = (modoTxt === "chat" || eventoTxt === "pregunta_libre");
-  const temperature = esChatLibre ? 0.8 : 0.45;
-  const maxTokensFinal = Math.max(Number(maxTokensSalida || 240), modoTxt === "chat" ? 300 : 240);
+  const temperature = esChatLibre ? 0.9 : 0.5;
+  const maxTokensFinal = Math.max(Number(maxTokensSalida || 260), modoTxt === "chat" ? 320 : 260);
 
   const payload = {
     model: modelo,
@@ -1468,16 +1519,11 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
     ? String(respuesta.lectura_rapida)
     : (textoPlano || contenidoPlano || (lecturaPregunta ? (lecturaPregunta + ". " + lecturaDinamica) : lecturaDinamica));
 
-  const respuestaDirecta = String(
-    respuesta.respuesta_directa
-      || (intencion === "nutricion_general" ? (plantilla.respuesta_directa || "") : "")
-      || textoPlano
-      || ""
-  ).trim();
+  const respuestaDirecta = String(respuesta.respuesta_directa || textoPlano || "").trim();
 
   if (esPreguntaDirecta) {
     return {
-      respuesta_directa: respuestaDirecta || (preguntaTxt ? ("Sobre tu pregunta: " + preguntaTxt + ". Necesito un dato mas de tu contexto para afinar la recomendacion.") : "Necesito tu pregunta concreta para ayudarte mejor."),
+      respuesta_directa: respuestaDirecta || (preguntaTxt ? ("Necesito un dato mas para responder con precision a tu pregunta: " + preguntaTxt) : "Necesito tu pregunta concreta para ayudarte mejor."),
       estado_dia: "",
       lectura_rapida: "",
       accion_ahora: "",
