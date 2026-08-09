@@ -10,6 +10,7 @@ let vasosTotalesDia = 0;
 const objetivoDiario = 8;
 let graficoPesoInstancia = null;
 let temporizadorReinicioAgua = null;
+let controlPesoPreciso = null;
 // Usuario activo y dispositivo
 let usuarioActivo = localStorage.getItem('nutrafit_usuario_id') || null;
 let dispositivoId = localStorage.getItem('nutrafit_dispositivo_id') || null;
@@ -683,6 +684,7 @@ function inicializarPeso() {
     const inputFecha = document.getElementById('fecha-peso');
     if(inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
     establecerPesoActual(75);
+    configurarControlPesoPreciso();
     cargarHistorialPeso();
 }
 
@@ -721,6 +723,46 @@ function sincronizarPesoDesdeSlider(valor) {
 
 function sincronizarPesoDesdeEntrada(valor) {
     establecerPesoActual(valor);
+}
+
+function configurarControlPesoPreciso() {
+    const slider = document.getElementById('slider-peso');
+    if (!slider || slider.dataset.nutrafitPrecisionInit === '1') return;
+    slider.dataset.nutrafitPrecisionInit = '1';
+
+    const sensibilidad = Math.max(1, Number(slider.dataset.pixelsPorGramo || 8));
+
+    const limpiarArrastre = () => {
+        controlPesoPreciso = null;
+    };
+
+    slider.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0 && event.pointerType !== 'touch') return;
+        controlPesoPreciso = {
+            pointerId: event.pointerId,
+            inicioX: event.clientX,
+            pesoInicial: parseFloat(slider.value) || 75
+        };
+        try {
+            slider.setPointerCapture(event.pointerId);
+        } catch (_) {}
+        event.preventDefault();
+    });
+
+    slider.addEventListener('pointermove', (event) => {
+        if (!controlPesoPreciso || controlPesoPreciso.pointerId !== event.pointerId) return;
+
+        const deltaX = event.clientX - controlPesoPreciso.inicioX;
+        const deltaKg = deltaX / sensibilidad / 1000;
+        const nuevoPeso = redondearPesoNutrafit(controlPesoPreciso.pesoInicial + deltaKg);
+
+        establecerPesoActual(nuevoPeso);
+        event.preventDefault();
+    });
+
+    slider.addEventListener('pointerup', limpiarArrastre);
+    slider.addEventListener('pointercancel', limpiarArrastre);
+    slider.addEventListener('lostpointercapture', limpiarArrastre);
 }
 
 function calcularIMC(peso) {
