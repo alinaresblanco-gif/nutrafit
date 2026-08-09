@@ -698,11 +698,11 @@ function redondearPesoNutrafit(valor) {
     const numero = Number.parseFloat(valor);
     if (Number.isNaN(numero)) return 75;
     const ajustado = Math.round(numero / PESO_STEP_NUTRAFIT) * PESO_STEP_NUTRAFIT;
-    return Number(Math.min(PESO_MAX_NUTRAFIT, Math.max(PESO_MIN_NUTRAFIT, ajustado)).toFixed(2));
+    return Number(Math.min(PESO_MAX_NUTRAFIT, Math.max(PESO_MIN_NUTRAFIT, ajustado)).toFixed(3));
 }
 
 function formatearPesoNutrafit(valor) {
-    return `${redondearPesoNutrafit(valor).toFixed(2)} kg`;
+    return `${redondearPesoNutrafit(valor).toFixed(3)} kg`;
 }
 
 function establecerPesoActual(valor, recalcularIMC = true) {
@@ -711,8 +711,8 @@ function establecerPesoActual(valor, recalcularIMC = true) {
     const slider = document.getElementById('slider-peso');
     const texto = document.getElementById('peso-valor-actual');
 
-    if (input) input.value = peso.toFixed(2);
-    if (slider) slider.value = peso.toFixed(2);
+    if (input) input.value = peso.toFixed(3);
+    if (slider) slider.value = peso.toFixed(3);
     if (texto) texto.innerText = formatearPesoNutrafit(peso);
     if (recalcularIMC) calcularIMC(peso);
 }
