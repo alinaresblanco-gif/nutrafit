@@ -3724,14 +3724,13 @@ function inyectarEstilosCoach() {
         }
 
         .coach-fab.en-tarjeta {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            bottom: auto;
-            width: 86px;
-            height: 86px;
+            position: static;
+            width: 82px;
+            height: 82px;
             z-index: 2;
             box-shadow: 0 8px 18px rgba(46, 74, 46, 0.28);
+            flex: 0 0 auto;
+            align-self: flex-start;
         }
 
         .coach-fab:hover {
@@ -3764,10 +3763,8 @@ function inyectarEstilosCoach() {
             }
 
             .coach-fab.en-tarjeta {
-                right: 6px;
-                top: 8px;
-                width: 74px;
-                height: 74px;
+                width: 68px;
+                height: 68px;
             }
         }
 
@@ -3921,8 +3918,22 @@ function inyectarEstilosCoach() {
         }
 
         .coach-card-contexto.coach-inicio {
-            position: relative;
-            padding-right: 96px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .coach-inicio-texto {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .coach-inicio-slot {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
         }
 
         .coach-card-contexto h4 {
@@ -3960,9 +3971,17 @@ function colocarBotonCoachEnTarjetaInicio() {
     var card = document.getElementById('coach-card-inicio');
     if (!btn || !card) return;
 
+    var slot = document.getElementById('coach-inicio-slot');
+    if (!slot) {
+        slot = document.createElement('div');
+        slot.id = 'coach-inicio-slot';
+        slot.className = 'coach-inicio-slot';
+        card.appendChild(slot);
+    }
+
     btn.classList.add('en-tarjeta');
-    if (btn.parentNode !== card) {
-        card.appendChild(btn);
+    if (btn.parentNode !== slot) {
+        slot.appendChild(btn);
     }
 }
 
@@ -4102,12 +4121,15 @@ function enviarPreguntaCoach(pregunta) {
 function insertarTarjetaCoachEnInicio() {
     const menu = document.querySelector('#pantalla-inicio .menu');
     if (!menu) return;
-    if (document.getElementById('coach-card-inicio')) return;
+    if (document.getElementById('coach-card-inicio')) {
+        colocarBotonCoachEnTarjetaInicio();
+        return;
+    }
 
     const card = document.createElement('div');
     card.id = 'coach-card-inicio';
     card.className = 'coach-card-contexto coach-inicio';
-    card.innerHTML = '<h4><i class="fas fa-sparkles"></i> Hoy contigo</h4><p id="coach-texto-inicio">Abre el coach para recibir tu plan del día.</p>';
+    card.innerHTML = '<div class="coach-inicio-texto"><h4><i class="fas fa-sparkles"></i> Hoy contigo</h4><p id="coach-texto-inicio">Abre el coach para recibir tu plan del día.</p></div><div id="coach-inicio-slot" class="coach-inicio-slot"></div>';
     menu.parentNode.insertBefore(card, menu);
     colocarBotonCoachEnTarjetaInicio();
 }
