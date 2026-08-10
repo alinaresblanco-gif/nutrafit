@@ -930,6 +930,21 @@ respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, aju
 Si un campo no aplica, dejalo vacio.
 No devuelvas texto fuera del JSON.`;
 
+const promptFactualNutrafit = `Eres COACH NUTRAFIT en modo FACTUAL.
+Tu tarea es responder preguntas de nutricion/alimentos con precision, claridad y utilidad practica.
+
+REGLAS FACTUALES:
+- Prioriza consenso general de fuentes publicas confiables incluidas en CONTEXTO_JSON.fuentes_web.
+- Si hay desacuerdo entre fuentes, dilo explicitamente y da la opcion mas prudente.
+- Si la pregunta no tiene evidencia clara, reconoce limites y pide dato adicional concreto.
+- No uses tono de plantilla. No uses encabezados tipo "Lectura rapida" o "Accion ahora".
+- Responde en espanol claro para una persona no tecnica.
+
+SALIDA OBLIGATORIA:
+Devuelve solo JSON valido con campos:
+respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
+En modo factual, rellena respuesta_directa con la respuesta completa y deja vacios los demas campos si no aplican.`;
+
 function procesarCoachNutrafit(ss, payload) {
   const usuarioId = normalizarEmail(payload.usuario_id);
   const dispositivoId = String(payload.dispositivo_id || "").trim();
@@ -959,23 +974,34 @@ function procesarCoachNutrafit(ss, payload) {
   const modelo = elegirModeloCoach(evento, payload, cfg);
   const accionNutrafit = mapearEventoAAccionNutrafit(evento, payload);
   const intencionDetectada = detectarIntencionCoach(pregunta, evento);
+  const rutaRespuesta = clasificarRutaRespuestaCoach(pregunta, evento, modo, intencionDetectada);
   const memoriaUsuario = obtenerMemoriaCoachUsuario(ss, usuarioId, 8);
   const contextoUsuario = construirContextoUsuarioCoach(ss, usuarioId);
   const contextoWeb = preguntaRequiereBusquedaWebNutricion(pregunta, evento, modo, intencionDetectada)
     ? obtenerContextoWebNutricion(pregunta)
     : { resumen: "", fuentes: [] };
+  const resumenUsuario = construirResumenUsuarioNutrafitParaCoach(contextoUsuario, contexto || {});
   const contextoFinal = Object.assign({}, contexto || {}, {
     perfil_usuario: contextoUsuario,
     accion_nutrafit: accionNutrafit,
     memoria_usuario: memoriaUsuario,
     intencion_detectada: intencionDetectada,
+    ruta_respuesta: rutaRespuesta,
+    resumen_usuario_nutrafit: resumenUsuario,
     resumen_web: contextoWeb.resumen,
     fuentes_web: contextoWeb.fuentes
   });
-  const mensajeUsuario = construirMensajeCoach(pregunta, evento, contextoFinal, modo);
+  const mensajeUsuario = (rutaRespuesta === "factual")
+    ? construirMensajeCoachFactual(pregunta, evento, contextoFinal, modo)
+    : construirMensajeCoach(pregunta, evento, contextoFinal, modo);
+  const promptSistema = rutaRespuesta === "factual" ? promptFactualNutrafit : promptMaestroNutrafit;
+  const tempOverride = rutaRespuesta === "factual" ? 0.25 : null;
 
   try {
-    const respuestaGroq = solicitarGroqCoach(modelo, mensajeUsuario, cfg.maxTokensSalida, modo, evento);
+    const respuestaGroq = solicitarGroqCoach(modelo, mensajeUsuario, cfg.maxTokensSalida, modo, evento, {
+      systemPrompt: promptSistema,
+      temperature: tempOverride
+    });
     const contenido = String(
       (((respuestaGroq || {}).choices || [])[0] || {}).message
         ? (((respuestaGroq || {}).choices || [])[0] || {}).message.content || ""
@@ -1303,7 +1329,84 @@ function construirMensajeCoach(pregunta, evento, contexto, modo) {
   ].join("\n");
 }
 
-function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida, modo, evento) {
+function clasificarRutaRespuestaCoach(pregunta, evento, modo, intencion) {
+  const preguntaTxt = String(pregunta || "").trim().toLowerCase();
+  const eventoTxt = String(evento || "").trim().toLowerCase();
+  const modoTxt = String(modo || "").trim().toLowerCase();
+  const intencionTxt = String(intencion || "").trim().toLowerCase();
+
+  if (!(eventoTxt === "pregunta_libre" || modoTxt === "chat")) return "coaching";
+  if (intencionTxt === "plan_hoy" || intencionTxt === "motivacion") return "coaching";
+
+  if (/que es|beneficio|beneficios|riesgo|riesgos|caloria|calorias|proteina|hidrato|fibra|vitamina|mineral|omega|indice glucemico|colesterol|trigliceridos|apto|contraindic/.test(preguntaTxt)) {
+    return "factual";
+  }
+
+  if (["nutricion_general", "comidas", "comer_fuera", "general"].indexOf(intencionTxt) >= 0) {
+    return "factual";
+  }
+
+  return "coaching";
+}
+
+function construirResumenUsuarioNutrafitParaCoach(perfil, contexto) {
+  const p = perfil || {};
+  const c = contexto || {};
+
+  const partes = [];
+  if (p.creditos_ultimo_total !== null && p.creditos_ultimo_total !== undefined && !isNaN(Number(p.creditos_ultimo_total))) {
+    partes.push("Ultimo total de creditos registrado: " + Number(p.creditos_ultimo_total));
+  }
+  if (c.creditos_consumidos !== null && c.creditos_consumidos !== undefined && !isNaN(Number(c.creditos_consumidos))) {
+    partes.push("Creditos consumidos hoy: " + Number(c.creditos_consumidos));
+  }
+  if (c.creditos_disponibles !== null && c.creditos_disponibles !== undefined && !isNaN(Number(c.creditos_disponibles))) {
+    partes.push("Creditos disponibles hoy: " + Number(c.creditos_disponibles));
+  }
+  if (p.agua_hoy_vasos !== null && p.agua_hoy_vasos !== undefined && !isNaN(Number(p.agua_hoy_vasos))) {
+    partes.push("Agua hoy: " + Number(p.agua_hoy_vasos) + " vasos.");
+  }
+  if (p.ejercicio_ultimo && p.ejercicio_ultimo.actividad) {
+    partes.push("Ultimo ejercicio: " + String(p.ejercicio_ultimo.actividad) + " (" + Number(p.ejercicio_ultimo.tiempo_min || 0) + " min).");
+  }
+  if (p.peso_ultimo && p.peso_ultimo.peso) {
+    partes.push("Ultimo peso registrado: " + Number(p.peso_ultimo.peso) + " kg.");
+  }
+
+  return partes.join(" ");
+}
+
+function construirMensajeCoachFactual(pregunta, evento, contexto, modo) {
+  const fuentes = Array.isArray(contexto.fuentes_web) ? contexto.fuentes_web : [];
+  const resumenWeb = String(contexto.resumen_web || "");
+  const resumenUsuario = String(contexto.resumen_usuario_nutrafit || "");
+
+  return [
+    "MODO_FACTUAL_ACTIVO:",
+    "Responde a la pregunta con base en consenso de fuentes y con aplicacion practica al usuario.",
+    "No uses plantilla de coach.",
+    "",
+    "PREGUNTA_USUARIO:",
+    pregunta || "Sin pregunta",
+    "",
+    "EVENTO:",
+    String(evento || "pregunta_libre"),
+    "",
+    "MODO:",
+    String(modo || "chat"),
+    "",
+    "RESUMEN_USUARIO_NUTRAFIT:",
+    resumenUsuario || "Sin datos adicionales del usuario.",
+    "",
+    "RESUMEN_WEB:",
+    resumenWeb || "Sin contexto web adicional.",
+    "",
+    "FUENTES_WEB:",
+    fuentes.length ? fuentes.join("\n- ") : "Sin fuentes disponibles"
+  ].join("\n");
+}
+
+function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida, modo, evento, opciones) {
   const props = PropertiesService.getScriptProperties();
   const apiKey = props.getProperty("GROQ_API_KEY");
   if (!apiKey) {
@@ -1313,15 +1416,17 @@ function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida, modo, event
   const modoTxt = String(modo || "auto").toLowerCase() === "chat" ? "chat" : "auto";
   const eventoTxt = String(evento || "").toLowerCase();
   const esChatLibre = (modoTxt === "chat" || eventoTxt === "pregunta_libre");
-  const temperature = esChatLibre ? 0.9 : 0.5;
+  const temperaturaBase = esChatLibre ? 0.9 : 0.5;
+  const temperature = (opciones && typeof opciones.temperature === "number") ? Number(opciones.temperature) : temperaturaBase;
   const maxTokensFinal = Math.max(Number(maxTokensSalida || 260), modoTxt === "chat" ? 320 : 260);
+  const systemPrompt = String((opciones && opciones.systemPrompt) || promptMaestroNutrafit);
 
   const payload = {
     model: modelo,
     temperature: temperature,
     max_tokens: maxTokensFinal,
     messages: [
-      { role: "system", content: promptMaestroNutrafit },
+      { role: "system", content: systemPrompt },
       { role: "user", content: mensajeUsuario }
     ],
     response_format: { type: "json_object" }
@@ -1564,6 +1669,8 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
   const intencion = detectarIntencionCoach(preguntaTxt, eventoTxt);
   const modoTxt = String(modo || "auto").toLowerCase() === "chat" ? "chat" : "auto";
   const esPreguntaDirecta = (modoTxt === "chat" || eventoTxt === "pregunta_libre");
+  const rutaRespuesta = String(contexto.ruta_respuesta || "coaching").toLowerCase();
+  const esRutaFactual = rutaRespuesta === "factual";
   const plantilla = construirFallbackSegunIntencion(intencion, {
     exceso: exceso,
     disponibles: disponibles,
@@ -1589,6 +1696,28 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
 
   const respuestaDirectaRaw = String(respuesta.respuesta_directa || textoPlano || "").trim();
   let respuestaDirecta = limpiarRespuestaDirectaCoach(respuestaDirectaRaw);
+
+  if (esRutaFactual) {
+    const fuentes = Array.isArray(contexto.fuentes_web) ? contexto.fuentes_web.filter(Boolean).slice(0, 3) : [];
+    const baseFactual = respuestaDirecta
+      || limpiarRespuestaDirectaCoach(textoPlano)
+      || (preguntaTxt ? ("No tengo evidencia suficiente para responder con precision a: " + preguntaTxt + ". Dame mas contexto (cantidad, frecuencia y objetivo).") : "Necesito tu pregunta concreta para ayudarte mejor.");
+
+    const bloqueFuentes = fuentes.length
+      ? ("\n\nFuentes consultadas:\n- " + fuentes.join("\n- "))
+      : "\n\nNota: respuesta basada en consenso general, sin fuentes web adicionales disponibles en este momento.";
+
+    return {
+      respuesta_directa: baseFactual + bloqueFuentes,
+      estado_dia: "",
+      lectura_rapida: "",
+      accion_ahora: "",
+      siguiente_paso: "",
+      ajuste_creditos: "",
+      micro_habito: "",
+      mensaje_motivador: ""
+    };
+  }
 
   if (intencion === "plan_hoy" && (!respuestaDirecta || esPlantillaAntiguaCoach(respuestaDirecta) || respuestaDirecta.length < 90)) {
     respuestaDirecta = construirPlanHoyDirectoCoach(contexto);
@@ -1651,8 +1780,18 @@ function sanitizeCampo(valor) {
   return valor;
 }
 
+const FUENTES_NUTRICION_CONFIABLES = [
+  { nombre: "Wikipedia ES", dominio: "wikipedia.org", url: "https://es.wikipedia.org" },
+  { nombre: "NIH ODS", dominio: "ods.od.nih.gov", url: "https://ods.od.nih.gov" },
+  { nombre: "MedlinePlus", dominio: "medlineplus.gov", url: "https://medlineplus.gov" },
+  { nombre: "WHO", dominio: "who.int", url: "https://www.who.int" },
+  { nombre: "Mayo Clinic", dominio: "mayoclinic.org", url: "https://www.mayoclinic.org" },
+  { nombre: "Harvard Nutrition Source", dominio: "hsph.harvard.edu", url: "https://www.hsph.harvard.edu/nutritionsource" }
+];
+
 function preguntaRequiereBusquedaWebNutricion(pregunta, evento, modo, intencion) {
   const preguntaTxt = String(pregunta || "").trim();
+  const preguntaLower = preguntaTxt.toLowerCase();
   const eventoTxt = String(evento || "").toLowerCase();
   const modoTxt = String(modo || "").toLowerCase();
   const intencionTxt = String(intencion || "");
@@ -1662,13 +1801,87 @@ function preguntaRequiereBusquedaWebNutricion(pregunta, evento, modo, intencion)
   const esChatPregunta = (eventoTxt === "pregunta_libre") || (modoTxt === "chat");
   if (!esChatPregunta) return false;
 
+  const esPreguntaPersonalNutrafit = /\b(mi|mis)\b/.test(preguntaLower)
+    && /creditos|agua|peso|progreso|historial|registro|diario/.test(preguntaLower);
+  if (esPreguntaPersonalNutrafit) return false;
+
   if (intencionTxt === "plan_hoy") return false;
 
   if (["nutricion_general", "comidas", "comer_fuera", "creditos", "general"].indexOf(intencionTxt) >= 0) {
     return true;
   }
 
-  return /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|salud/.test(preguntaTxt.toLowerCase());
+  return /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|salud/.test(preguntaLower);
+}
+
+function dominioPermitidoNutricion(url) {
+  const texto = String(url || "").toLowerCase();
+  if (!texto) return false;
+  for (let i = 0; i < FUENTES_NUTRICION_CONFIABLES.length; i++) {
+    const dominio = FUENTES_NUTRICION_CONFIABLES[i].dominio;
+    if (texto.indexOf(dominio) >= 0) return true;
+  }
+  return false;
+}
+
+function limpiarHtmlATextoNutricion(html) {
+  return String(html || "")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, "\"")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extraerDescripcionDesdeHtmlNutricion(html) {
+  const raw = String(html || "");
+  const m1 = raw.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["'][^>]*>/i);
+  if (m1 && m1[1]) return limpiarHtmlATextoNutricion(m1[1]);
+  const m2 = raw.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["'][^>]*>/i);
+  if (m2 && m2[1]) return limpiarHtmlATextoNutricion(m2[1]);
+
+  const txt = limpiarHtmlATextoNutricion(raw);
+  if (txt.length > 260) return txt.substring(0, 260).trim() + "...";
+  return txt;
+}
+
+function extraerEnlacesConfiablesDuckDuckGo(consulta, maxResultados) {
+  const consultaBase = String(consulta || "").trim();
+  if (!consultaBase) return [];
+
+  const dominios = FUENTES_NUTRICION_CONFIABLES.map(f => "site:" + f.dominio).join(" OR ");
+  const q = consultaBase + " nutricion " + dominios;
+  const url = "https://duckduckgo.com/html/?q=" + encodeURIComponent(q);
+  const enlaces = [];
+  const vistos = {};
+
+  try {
+    const resp = UrlFetchApp.fetch(url, { method: "get", muteHttpExceptions: true });
+    if (resp.getResponseCode() < 200 || resp.getResponseCode() >= 300) return [];
+
+    const html = resp.getContentText() || "";
+    const rgx = /<a[^>]+class=["'][^"']*result__a[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>/gi;
+    let m;
+    while ((m = rgx.exec(html)) !== null && enlaces.length < Math.max(1, Number(maxResultados || 3))) {
+      let href = String(m[1] || "").trim();
+      if (!href) continue;
+
+      const uddg = href.match(/[?&]uddg=([^&]+)/i);
+      if (uddg && uddg[1]) href = decodeURIComponent(uddg[1]);
+      if (!/^https?:\/\//i.test(href)) continue;
+      if (!dominioPermitidoNutricion(href)) continue;
+
+      const clave = href.toLowerCase();
+      if (vistos[clave]) continue;
+      vistos[clave] = true;
+      enlaces.push(href);
+    }
+  } catch (_) {}
+
+  return enlaces;
 }
 
 function obtenerContextoWebNutricion(pregunta) {
@@ -1690,32 +1903,6 @@ function obtenerContextoWebNutricion(pregunta) {
     const item = link ? (limpio + " (" + link + ")") : limpio;
     fuentes.push(item);
   }
-
-  try {
-    const urlDuck = "https://api.duckduckgo.com/?q=" + encodeURIComponent(consulta + " nutricion") + "&format=json&no_html=1&skip_disambig=1";
-    const respDuck = UrlFetchApp.fetch(urlDuck, {
-      method: "get",
-      muteHttpExceptions: true
-    });
-
-    if (respDuck.getResponseCode() >= 200 && respDuck.getResponseCode() < 300) {
-      const dataDuck = JSON.parse(respDuck.getContentText() || "{}");
-      agregarFuente(dataDuck.AbstractText, dataDuck.AbstractURL);
-
-      const relacionados = Array.isArray(dataDuck.RelatedTopics) ? dataDuck.RelatedTopics : [];
-      for (let i = 0; i < relacionados.length && fuentes.length < 2; i++) {
-        const topic = relacionados[i];
-        if (topic && topic.Text) {
-          agregarFuente(topic.Text, topic.FirstURL || "");
-        } else if (topic && Array.isArray(topic.Topics)) {
-          for (let j = 0; j < topic.Topics.length && fuentes.length < 2; j++) {
-            const sub = topic.Topics[j];
-            agregarFuente(sub && sub.Text, sub && sub.FirstURL ? sub.FirstURL : "");
-          }
-        }
-      }
-    }
-  } catch (_) {}
 
   try {
     const urlWiki = "https://es.wikipedia.org/w/api.php?action=opensearch&search=" + encodeURIComponent(consulta + " nutricion") + "&limit=3&namespace=0&format=json";
@@ -1752,9 +1939,28 @@ function obtenerContextoWebNutricion(pregunta) {
     }
   } catch (_) {}
 
+  try {
+    const enlaces = extraerEnlacesConfiablesDuckDuckGo(consulta, 3);
+    for (let i = 0; i < enlaces.length && fuentes.length < 6; i++) {
+      const enlace = enlaces[i];
+      try {
+        const resp = UrlFetchApp.fetch(enlace, {
+          method: "get",
+          muteHttpExceptions: true,
+          followRedirects: true
+        });
+        if (resp.getResponseCode() < 200 || resp.getResponseCode() >= 300) continue;
+        const descripcion = extraerDescripcionDesdeHtmlNutricion(resp.getContentText() || "");
+        agregarFuente(descripcion, enlace);
+      } catch (_) {
+        continue;
+      }
+    }
+  } catch (_) {}
+
   const fuentesFinal = fuentes.slice(0, 4);
   const resumen = fuentesFinal.length
-    ? ("Contexto web encontrado: " + fuentesFinal.length + " fuente(s). Usa consenso general y evita afirmaciones medicas tajantes.")
+    ? ("Contexto web encontrado en fuentes nutricionales confiables: " + fuentesFinal.length + " fuente(s). Usa consenso general y evita afirmaciones medicas tajantes.")
     : "Sin fuentes web disponibles en este momento. Responde con prudencia y pide precision si falta contexto.";
 
   return { resumen: resumen, fuentes: fuentesFinal };

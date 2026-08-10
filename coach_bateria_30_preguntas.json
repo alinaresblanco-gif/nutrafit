@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "descripcion": "Bateria de pruebas para validar respuestas del Coach Nutrafit. Rellena respuesta_esperada con tu criterio.",
+  "instrucciones": [
+    "No rellenar con respuesta generada por IA.",
+    "Escribe la respuesta exacta que consideras correcta o aceptable.",
+    "Usa esta bateria para comparar calidad real del coach."
+  ],
+  "casos": [
+    { "id": 1, "categoria": "nutricion_general", "pregunta": "Que beneficios tiene la chia y cuanta cantidad diaria recomiendas?", "respuesta_esperada": "" },
+    { "id": 2, "categoria": "nutricion_general", "pregunta": "El aguacate engorda o puede ayudarme a perder peso?", "respuesta_esperada": "" },
+    { "id": 3, "categoria": "nutricion_general", "pregunta": "Es mejor pan integral o pan blanco para controlar hambre?", "respuesta_esperada": "" },
+    { "id": 4, "categoria": "nutricion_general", "pregunta": "Que diferencia hay entre azucar, miel y edulcorantes?", "respuesta_esperada": "" },
+    { "id": 5, "categoria": "nutricion_general", "pregunta": "La fruta por la noche es mala?", "respuesta_esperada": "" },
+    { "id": 6, "categoria": "nutricion_general", "pregunta": "Cuanta proteina necesito al dia si quiero perder grasa y mantener musculo?", "respuesta_esperada": "" },
+    { "id": 7, "categoria": "nutricion_general", "pregunta": "Los yogures proteicos son mejores que el yogur natural normal?", "respuesta_esperada": "" },
+    { "id": 8, "categoria": "nutricion_general", "pregunta": "Que snack me recomiendas para evitar picoteo por ansiedad?", "respuesta_esperada": "" },
+    { "id": 9, "categoria": "nutricion_general", "pregunta": "Es cierto que el ayuno intermitente funciona para todo el mundo?", "respuesta_esperada": "" },
+    { "id": 10, "categoria": "nutricion_general", "pregunta": "Que opinas de la leche sin lactosa frente a bebida vegetal?", "respuesta_esperada": "" },
+
+    { "id": 11, "categoria": "planificacion", "pregunta": "Dame un plan de hoy si tengo poco tiempo para cocinar.", "respuesta_esperada": "" },
+    { "id": 12, "categoria": "planificacion", "pregunta": "Como organizo un dia de comidas si entreno por la tarde?", "respuesta_esperada": "" },
+    { "id": 13, "categoria": "planificacion", "pregunta": "Que desayuno me da saciedad hasta mediodia?", "respuesta_esperada": "" },
+    { "id": 14, "categoria": "planificacion", "pregunta": "Que cena ligera me ayuda a no acostarme con hambre?", "respuesta_esperada": "" },
+    { "id": 15, "categoria": "planificacion", "pregunta": "Si me paso en la comida, como compenso el resto del dia sin castigarme?", "respuesta_esperada": "" },
+
+    { "id": 16, "categoria": "alimentos", "pregunta": "Patata cocida o arroz: cual es mejor para control de apetito?", "respuesta_esperada": "" },
+    { "id": 17, "categoria": "alimentos", "pregunta": "El platano antes de entrenar es buena idea?", "respuesta_esperada": "" },
+    { "id": 18, "categoria": "alimentos", "pregunta": "Que queso es mas recomendable si quiero bajar calorias?", "respuesta_esperada": "" },
+    { "id": 19, "categoria": "alimentos", "pregunta": "Legumbres de bote: son buena opcion o pierden calidad?", "respuesta_esperada": "" },
+    { "id": 20, "categoria": "alimentos", "pregunta": "Atun en lata: cual elegir y cuantas veces por semana?", "respuesta_esperada": "" },
+
+    { "id": 21, "categoria": "nutrafit_usuario", "pregunta": "Con mis creditos de hoy, como deberia repartir desayuno, comida y cena?", "respuesta_esperada": "" },
+    { "id": 22, "categoria": "nutrafit_usuario", "pregunta": "Con mi historial de esta semana, que error repito mas?", "respuesta_esperada": "" },
+    { "id": 23, "categoria": "nutrafit_usuario", "pregunta": "Segun mis datos de agua, estoy hidratandome bien?", "respuesta_esperada": "" },
+    { "id": 24, "categoria": "nutrafit_usuario", "pregunta": "Que ajuste me recomiendas hoy segun mi progreso de peso?", "respuesta_esperada": "" },
+    { "id": 25, "categoria": "nutrafit_usuario", "pregunta": "Que menu rapido me encaja con mis creditos restantes?", "respuesta_esperada": "" },
+
+    { "id": 26, "categoria": "comer_fuera", "pregunta": "Voy a comer fuera, que pido para no disparar creditos?", "respuesta_esperada": "" },
+    { "id": 27, "categoria": "comer_fuera", "pregunta": "En una pizzeria, cual seria la opcion menos perjudicial?", "respuesta_esperada": "" },
+    { "id": 28, "categoria": "comer_fuera", "pregunta": "Si voy de tapas, como elijo mejor sin quedarme con hambre?", "respuesta_esperada": "" },
+
+    { "id": 29, "categoria": "comportamiento", "pregunta": "Tengo ansiedad por dulce por la tarde, que hago en 10 minutos?", "respuesta_esperada": "" },
+    { "id": 30, "categoria": "comportamiento", "pregunta": "Como evito abandonar cuando tengo una semana mala?", "respuesta_esperada": "" }
+  ]
+}
