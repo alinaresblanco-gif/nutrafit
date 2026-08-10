@@ -3729,8 +3729,8 @@ function inyectarEstilosCoach() {
 
         .coach-fab.en-tarjeta {
             position: static;
-            width: 82px;
-            height: 82px;
+            width: 164px;
+            height: 164px;
             z-index: 2;
             box-shadow: none !important;
             flex: 0 0 auto;
@@ -3774,8 +3774,8 @@ function inyectarEstilosCoach() {
             }
 
             .coach-fab.en-tarjeta {
-                width: 68px;
-                height: 68px;
+                width: 136px;
+                height: 136px;
             }
         }
 
