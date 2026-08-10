@@ -1072,6 +1072,128 @@ const CATALOGO_ALIMENTOS_COACH = [
   { nombre: "leche", aliases: ["leche", "leche sin lactosa", "bebida vegetal"], categoria: "lacteo", propiedades: ["perfil variable segun tipo"], beneficios: ["puede ayudar a cubrir proteina o calcio segun eleccion"], precauciones: ["comparar azucares y proteina"], porcion_referencia: "1 vaso" }
 ];
 
+const HOJA_BASE_ALIMENTOS_COACH = "base_alimentos_coach";
+const CABECERA_BASE_ALIMENTOS_COACH = [
+  "nombre_canonico",
+  "aliases",
+  "categoria",
+  "propiedades",
+  "beneficios",
+  "precauciones",
+  "porcion_orientativa",
+  "fuentes",
+  "prioridad"
+];
+
+function serializarListaCoach_(valor) {
+  if (!Array.isArray(valor) || !valor.length) return "";
+  return valor
+    .map(function(item) { return String(item || "").trim(); })
+    .filter(function(item) { return item.length > 0; })
+    .join(" | ");
+}
+
+function parsearListaCoach_(valor) {
+  var txt = String(valor || "").trim();
+  if (!txt) return [];
+
+  var partes = txt.indexOf("|") >= 0 ? txt.split("|") : txt.split(/[;,]/);
+  return partes
+    .map(function(item) { return String(item || "").trim(); })
+    .filter(function(item) { return item.length > 0; });
+}
+
+function asegurarHojaBaseAlimentosCoach_(ss) {
+  var hoja = ss.getSheetByName(HOJA_BASE_ALIMENTOS_COACH);
+  if (!hoja) {
+    hoja = ss.insertSheet(HOJA_BASE_ALIMENTOS_COACH);
+  }
+
+  if (hoja.getLastRow() === 0) {
+    hoja.appendRow(CABECERA_BASE_ALIMENTOS_COACH);
+  } else {
+    var cabActual = hoja.getRange(1, 1, 1, CABECERA_BASE_ALIMENTOS_COACH.length).getValues()[0];
+    var cabActualNorm = cabActual.map(function(v) { return normalizarClaveAlimentoCoach(v); });
+    var cabEsperadaNorm = CABECERA_BASE_ALIMENTOS_COACH.map(function(v) { return normalizarClaveAlimentoCoach(v); });
+    if (cabActualNorm.join("|") !== cabEsperadaNorm.join("|")) {
+      hoja.getRange(1, 1, 1, CABECERA_BASE_ALIMENTOS_COACH.length).setValues([CABECERA_BASE_ALIMENTOS_COACH]);
+    }
+  }
+
+  if (hoja.getLastRow() <= 1) {
+    sembrarBaseAlimentosCoachDesdeCatalogo_(hoja);
+  }
+
+  return hoja;
+}
+
+function sembrarBaseAlimentosCoachDesdeCatalogo_(hoja) {
+  if (!hoja || !Array.isArray(CATALOGO_ALIMENTOS_COACH) || !CATALOGO_ALIMENTOS_COACH.length) return;
+
+  var filas = CATALOGO_ALIMENTOS_COACH.map(function(item, idx) {
+    return [
+      String(item.nombre || "").trim(),
+      serializarListaCoach_(item.aliases),
+      String(item.categoria || "").trim(),
+      serializarListaCoach_(item.propiedades),
+      serializarListaCoach_(item.beneficios),
+      serializarListaCoach_(item.precauciones),
+      String(item.porcion_referencia || "").trim(),
+      serializarListaCoach_(item.fuentes),
+      idx + 1
+    ];
+  }).filter(function(fila) {
+    return String(fila[0] || "").trim().length > 0;
+  });
+
+  if (!filas.length) return;
+
+  hoja.getRange(2, 1, filas.length, CABECERA_BASE_ALIMENTOS_COACH.length).setValues(filas);
+}
+
+function mapearFilaBaseAlimentosCoach_(fila) {
+  var nombre = String(fila[0] || "").trim();
+  if (!nombre) return null;
+
+  var aliases = parsearListaCoach_(fila[1]);
+  if (!aliases.length) aliases = [nombre];
+
+  var prioridad = Number(fila[8] || 9999);
+  if (isNaN(prioridad)) prioridad = 9999;
+
+  return {
+    nombre: nombre,
+    aliases: aliases,
+    categoria: String(fila[2] || "").trim(),
+    propiedades: parsearListaCoach_(fila[3]),
+    beneficios: parsearListaCoach_(fila[4]),
+    precauciones: parsearListaCoach_(fila[5]),
+    porcion_referencia: String(fila[6] || "").trim(),
+    fuentes: parsearListaCoach_(fila[7]),
+    prioridad: prioridad
+  };
+}
+
+function obtenerCatalogoAlimentosCoach(ss) {
+  try {
+    var hoja = asegurarHojaBaseAlimentosCoach_(ss);
+    if (!hoja || hoja.getLastRow() <= 1) return CATALOGO_ALIMENTOS_COACH;
+
+    var data = hoja.getRange(2, 1, hoja.getLastRow() - 1, CABECERA_BASE_ALIMENTOS_COACH.length).getValues();
+    var items = data
+      .map(mapearFilaBaseAlimentosCoach_)
+      .filter(function(item) { return item !== null; })
+      .sort(function(a, b) {
+        return Number(a.prioridad || 9999) - Number(b.prioridad || 9999);
+      });
+
+    return items.length ? items : CATALOGO_ALIMENTOS_COACH;
+  } catch (e) {
+    Logger.log("Error obtenerCatalogoAlimentosCoach: " + e.toString());
+    return CATALOGO_ALIMENTOS_COACH;
+  }
+}
+
 function procesarCoachNutrafit(ss, payload) {
   const usuarioId = normalizarEmail(payload.usuario_id);
   const dispositivoId = String(payload.dispositivo_id || "").trim();
@@ -1777,13 +1899,13 @@ function obtenerRegistrosAlimentosNutrafit(ss) {
   }).filter(function(item) { return item !== null; });
 }
 
-function buscarAlimentoCatalogoCoach(nombreDetectado) {
+function buscarAlimentoCatalogoCoach(nombreDetectado, catalogo) {
   var clave = normalizarClaveAlimentoCoach(nombreDetectado);
   if (!clave) return null;
 
   var mejor = null;
   var mejorLongitud = -1;
-  CATALOGO_ALIMENTOS_COACH.forEach(function(item) {
+  (Array.isArray(catalogo) ? catalogo : CATALOGO_ALIMENTOS_COACH).forEach(function(item) {
     var aliases = Array.isArray(item.aliases) ? item.aliases : [item.nombre];
     aliases.forEach(function(alias) {
       var aliasClave = normalizarClaveAlimentoCoach(alias);
@@ -1803,12 +1925,13 @@ function buscarAlimentoCatalogoCoach(nombreDetectado) {
 function detectarAlimentoPreguntaCoach(ss, pregunta) {
   var texto = normalizarClaveAlimentoCoach(pregunta);
   if (!texto) return { detectado: "", oficial: null, catalogo: null };
+  var catalogoCoach = obtenerCatalogoAlimentosCoach(ss);
 
   var mejorNombre = "";
   var mejorLongitud = -1;
   var mejorCatalogo = null;
 
-  CATALOGO_ALIMENTOS_COACH.forEach(function(item) {
+  catalogoCoach.forEach(function(item) {
     var aliases = Array.isArray(item.aliases) ? item.aliases : [item.nombre];
     aliases.forEach(function(alias) {
       var aliasClave = normalizarClaveAlimentoCoach(alias);
@@ -1831,7 +1954,7 @@ function detectarAlimentoPreguntaCoach(ss, pregunta) {
   });
 
   if (!mejorCatalogo && mejorNombre) {
-    mejorCatalogo = buscarAlimentoCatalogoCoach(mejorNombre);
+    mejorCatalogo = buscarAlimentoCatalogoCoach(mejorNombre, catalogoCoach);
   }
 
   return {
