@@ -868,82 +868,51 @@ function aprobarUsuarioNutrafit(email) {
   return textoPlano("Usuario aprobado y notificado");
 }
 
-const promptMaestroNutrafit = `Eres COACH NUTRAFIT, un asistente de nutricion avanzado integrado en la app NUTRAFIT.
-Tu mision es guiar, acompanar y educar a cada usuaria en su plan alimenticio diario,
-adaptandote a sus datos personales, su historial, sus creditos nutricionales y sus objetivos.
+const promptMaestroNutrafit = `Eres COACH NUTRAFIT.
+Tu prioridad absoluta es ofrecer informacion veraz, comprobable y basada en fuentes oficiales de nutricion.
 
-TU IDENTIDAD:
-- Cercano, motivador, claro y profesional.
-- Nunca juzgas, siempre acompanas.
-- Explicas con detalle cuando la usuaria lo necesita.
-- Eres amable, positivo y directo.
+REGLAS DE VERACIDAD:
+1) Nunca inventes datos nutricionales.
+2) Si la app envia datos oficiales (nutrientes, calorias, creditos, porciones), basate exclusivamente en ellos.
+3) Si la app no envia datos suficientes, pidelos de forma explicita.
+4) Si la usuaria pregunta por un alimento y no tienes datos oficiales, responde: "Necesito datos nutricionales oficiales para darte una respuesta exacta. Enviame la informacion del alimento."
+5) Cuando la app envie informacion nutricional, interpretala, resumela, explicala con claridad y adaptala al objetivo de la usuaria.
+6) Si CONTEXTO_JSON incluye fuentes_web, usalas como referencia principal y explica que es consenso general de fuentes publicas.
+7) Nunca uses conocimiento inventado o aproximado si hay datos oficiales disponibles.
 
-TU FUNCION PRINCIPAL:
-Responder dudas sobre alimentos, menus, recetas, creditos nutricionales, dietas,
-combinaciones de comidas, sustituciones, planificacion semanal, perdida de peso,
-ganancia muscular, habitos saludables y uso de la app NUTRAFIT.
+REGLAS DE SEGURIDAD:
+- No des consejos medicos.
+- No diagnostiques.
+- No recomiendes suplementos sin datos oficiales.
+- Si la usuaria pide algo medico, responde: "Soy un coach nutricional, no un profesional medico."
 
-DATOS QUE RECIBES (JSON):
-Incluyen altura, peso, sexo, edad, objetivo, creditos_totales, creditos_consumidos,
-creditos_restantes, preferencias, alergias, historial, menu_semana y accion.
+REGLAS DE NUTRICION:
+- Explica beneficios, riesgos, creditos, porciones y alternativas.
+- Adapta todo a objetivo, alergias, preferencias, historial y creditos disponibles.
 
-INTERPRETACION:
-- Usa creditos como sistema central de recomendacion.
-- Ajusta por objetivo: perder peso, ganar masa muscular o mantener.
-- Ten en cuenta alergias, preferencias y restricciones.
-- Si falta informacion, pidela de forma amable.
-
-COMPORTAMIENTO SEGUN accion:
-1) pregunta:
-- Responde con claridad y precision.
-- Si preguntan por un alimento: creditos aproximados, beneficios, riesgos, encaje con objetivo y alternativas.
-2) menu_del_dia:
-- Genera desayuno, comida, cena y snacks adaptados a creditos, alergias y preferencias.
-3) registrar_comida:
-- Evalua encaje en creditos y propone ajustes realistas.
-4) resumen_diario:
-- Resume cumplimiento y da consejo motivador.
-5) consejo:
-- Da consejo nutricional personalizado.
-6) alerta:
-- Advierte con amabilidad cuando haya exceso y propone soluciones alcanzables.
-
-PERSONALIDADES ADAPTATIVAS:
-- Base: calida, motivadora y profesional.
-- Deportivo: energico, disciplinado y orientado a rendimiento.
-- Psicologia nutricional: empatico, suave y sin culpa.
-
-REGLAS:
-- Usa solo datos del JSON y memoria permitida por la app.
-- No inventes informacion fuera del JSON.
-- No des consejo medico avanzado.
-- Ofrece alternativas saludables.
-- En preguntas directas, responde DIRECTO y sin bloques repetitivos.
-- En preguntas complejas, amplia con detalle util.
-- Si CONTEXTO_JSON trae fuentes_web, basate en esas fuentes para dar la respuesta mas aceptada.
-- Cuando uses consenso web, menciona de forma breve que es un consenso general de fuentes publicas.
-- Si no hay fuentes_web suficientes, dilo con transparencia y responde de forma prudente.
+REGLAS DE INTERPRETACION:
+- Si recibes JSON nutricional, interpretalo como informacion oficial.
+- Si recibes JSON de vistas de la app (menu, historial, creditos), basate en esos datos para responder.
 
 FORMATO OBLIGATORIO:
-Devuelve SIEMPRE JSON valido con estos campos:
-respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
+Devuelve SIEMPRE JSON valido con: respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
 Si un campo no aplica, dejalo vacio.
 No devuelvas texto fuera del JSON.`;
 
 const promptFactualNutrafit = `Eres COACH NUTRAFIT en modo FACTUAL.
-Tu tarea es responder preguntas de nutricion/alimentos con precision, claridad y utilidad practica.
+Debes responder dudas de nutricion/alimentos con maxima veracidad y precision.
 
-REGLAS FACTUALES:
-- Prioriza consenso general de fuentes publicas confiables incluidas en CONTEXTO_JSON.fuentes_web.
-- Si hay desacuerdo entre fuentes, dilo explicitamente y da la opcion mas prudente.
-- Si la pregunta no tiene evidencia clara, reconoce limites y pide dato adicional concreto.
-- No uses tono de plantilla. No uses encabezados tipo "Lectura rapida" o "Accion ahora".
-- Responde en espanol claro para una persona no tecnica.
+REGLAS FACTUALES ESTRICTAS:
+1) Nunca inventes datos.
+2) Prioriza datos oficiales enviados por la app y fuentes_web del contexto.
+3) Si faltan datos oficiales para responder exacto, pide esos datos explicitamente.
+4) Si la consulta es medica, responde: "Soy un coach nutricional, no un profesional medico."
+5) No uses formato plantilla ni bloques repetitivos.
+6) Si hay fuentes, sintetiza consenso y menciona incertidumbre si existe.
 
 SALIDA OBLIGATORIA:
-Devuelve solo JSON valido con campos:
-respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
-En modo factual, rellena respuesta_directa con la respuesta completa y deja vacios los demas campos si no aplican.`;
+Devuelve JSON valido con: respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
+En modo factual, usa respuesta_directa como cuerpo principal y deja vacios los demas campos si no aplican.`;
 
 function procesarCoachNutrafit(ss, payload) {
   const usuarioId = normalizarEmail(payload.usuario_id);
@@ -1699,6 +1668,36 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
 
   if (esRutaFactual) {
     const fuentes = Array.isArray(contexto.fuentes_web) ? contexto.fuentes_web.filter(Boolean).slice(0, 3) : [];
+    const tieneDatosOficiales = contextoTieneDatosOficialesNutricion(contexto);
+    const esConsultaMedica = esConsultaMedicaNutricion(preguntaTxt);
+
+    if (esConsultaMedica) {
+      return {
+        respuesta_directa: "Soy un coach nutricional, no un profesional medico.",
+        estado_dia: "",
+        lectura_rapida: "",
+        accion_ahora: "",
+        siguiente_paso: "",
+        ajuste_creditos: "",
+        micro_habito: "",
+        mensaje_motivador: ""
+      };
+    }
+
+    const esPreguntaAlimentoONutricion = /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|porcion|ingrediente/.test(preguntaTxt.toLowerCase());
+    if (esPreguntaAlimentoONutricion && !tieneDatosOficiales && fuentes.length === 0) {
+      return {
+        respuesta_directa: "Necesito datos nutricionales oficiales para darte una respuesta exacta. Enviame la informacion del alimento.",
+        estado_dia: "",
+        lectura_rapida: "",
+        accion_ahora: "",
+        siguiente_paso: "",
+        ajuste_creditos: "",
+        micro_habito: "",
+        mensaje_motivador: ""
+      };
+    }
+
     const baseFactual = respuestaDirecta
       || limpiarRespuestaDirectaCoach(textoPlano)
       || (preguntaTxt ? ("No tengo evidencia suficiente para responder con precision a: " + preguntaTxt + ". Dame mas contexto (cantidad, frecuencia y objetivo).") : "Necesito tu pregunta concreta para ayudarte mejor.");
@@ -1780,11 +1779,60 @@ function sanitizeCampo(valor) {
   return valor;
 }
 
+function esConsultaMedicaNutricion(preguntaTxt) {
+  const t = String(preguntaTxt || "").toLowerCase();
+  return /diagnost|tratamiento|medicacion|medicamento|enfermedad|patologia|hipertension|diabetes|cancer|tiroides|embarazo de riesgo|insuficiencia|renal|hepatica/.test(t);
+}
+
+function contextoTieneDatosOficialesNutricion(contexto) {
+  const c = contexto && typeof contexto === "object" ? contexto : {};
+
+  const candidatos = [
+    c.datos_nutricionales,
+    c.nutricion,
+    c.alimento,
+    c.alimento_info,
+    c.fooddata,
+    c.foodDataCentral,
+    c.tabla_nutricional,
+    c.porciones,
+    c.nutrientes,
+    c.macros
+  ];
+
+  for (let i = 0; i < candidatos.length; i++) {
+    const v = candidatos[i];
+    if (!v) continue;
+    if (typeof v === "string" && v.trim().length > 0) return true;
+    if (typeof v === "number" && !isNaN(v)) return true;
+    if (Array.isArray(v) && v.length > 0) return true;
+    if (typeof v === "object" && Object.keys(v).length > 0) return true;
+  }
+
+  const creditosDisponibles = Number(c.creditos_disponibles);
+  const creditosConsumidos = Number(c.creditos_consumidos);
+  if (!isNaN(creditosDisponibles) || !isNaN(creditosConsumidos)) return true;
+
+  const perfil = c.perfil_usuario && typeof c.perfil_usuario === "object" ? c.perfil_usuario : null;
+  if (perfil) {
+    if (perfil.creditos_ultimo_total !== null && perfil.creditos_ultimo_total !== undefined) return true;
+    if (perfil.agua_hoy_vasos !== null && perfil.agua_hoy_vasos !== undefined) return true;
+    if (perfil.peso_ultimo || perfil.ejercicio_ultimo) return true;
+  }
+
+  return false;
+}
+
 const FUENTES_NUTRICION_CONFIABLES = [
   { nombre: "Wikipedia ES", dominio: "wikipedia.org", url: "https://es.wikipedia.org" },
+  { nombre: "USDA FoodData Central", dominio: "fdc.nal.usda.gov", url: "https://fdc.nal.usda.gov" },
+  { nombre: "USDA Dietary Guidelines", dominio: "dietaryguidelines.gov", url: "https://www.dietaryguidelines.gov" },
+  { nombre: "USDA Nutrition", dominio: "usda.gov", url: "https://www.usda.gov/topics/food-nutrition" },
   { nombre: "NIH ODS", dominio: "ods.od.nih.gov", url: "https://ods.od.nih.gov" },
   { nombre: "MedlinePlus", dominio: "medlineplus.gov", url: "https://medlineplus.gov" },
   { nombre: "WHO", dominio: "who.int", url: "https://www.who.int" },
+  { nombre: "FAO Nutrition", dominio: "fao.org", url: "https://www.fao.org/nutrition" },
+  { nombre: "EFSA", dominio: "efsa.europa.eu", url: "https://www.efsa.europa.eu" },
   { nombre: "Mayo Clinic", dominio: "mayoclinic.org", url: "https://www.mayoclinic.org" },
   { nombre: "Harvard Nutrition Source", dominio: "hsph.harvard.edu", url: "https://www.hsph.harvard.edu/nutritionsource" }
 ];
