@@ -3708,19 +3708,23 @@ function inyectarEstilosCoach() {
             right: 16px;
             bottom: 18px;
             z-index: 9998;
-            border: none;
-            border-radius: 16px;
-            background: transparent;
+            border: none !important;
+            border-radius: 0;
+            background: transparent !important;
             padding: 0;
             width: clamp(72px, 17vw, 110px);
             height: clamp(72px, 17vw, 110px);
-            box-shadow: 0 10px 24px rgba(46, 74, 46, 0.35);
+            box-shadow: none !important;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            transition: transform 0.2s ease, filter 0.2s ease;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .coach-fab.en-tarjeta {
@@ -3728,18 +3732,25 @@ function inyectarEstilosCoach() {
             width: 82px;
             height: 82px;
             z-index: 2;
-            box-shadow: 0 8px 18px rgba(46, 74, 46, 0.28);
+            box-shadow: none !important;
             flex: 0 0 auto;
             align-self: flex-start;
         }
 
         .coach-fab:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 28px rgba(46, 74, 46, 0.42);
+            transform: translateY(-1px);
+            box-shadow: none !important;
         }
 
         .coach-fab:active {
             transform: translateY(0);
+            box-shadow: none !important;
+        }
+
+        .coach-fab:focus,
+        .coach-fab:focus-visible {
+            outline: none;
+            box-shadow: none !important;
         }
 
         .coach-fab img {
