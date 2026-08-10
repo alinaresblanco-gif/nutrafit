@@ -3723,6 +3723,17 @@ function inyectarEstilosCoach() {
             transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
         }
 
+        .coach-fab.en-tarjeta {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            bottom: auto;
+            width: 86px;
+            height: 86px;
+            z-index: 2;
+            box-shadow: 0 8px 18px rgba(46, 74, 46, 0.28);
+        }
+
         .coach-fab:hover {
             transform: translateY(-2px);
             box-shadow: 0 14px 28px rgba(46, 74, 46, 0.42);
@@ -3750,6 +3761,13 @@ function inyectarEstilosCoach() {
                 bottom: 14px;
                 width: 72px;
                 height: 72px;
+            }
+
+            .coach-fab.en-tarjeta {
+                right: 6px;
+                top: 8px;
+                width: 74px;
+                height: 74px;
             }
         }
 
@@ -3902,6 +3920,11 @@ function inyectarEstilosCoach() {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         }
 
+        .coach-card-contexto.coach-inicio {
+            position: relative;
+            padding-right: 96px;
+        }
+
         .coach-card-contexto h4 {
             margin: 0 0 6px 0;
             color: #5a8a5a;
@@ -3932,10 +3955,22 @@ function renderizarImagenCoachFab(btn) {
     btn.innerHTML = '<img src="' + src + '" alt="Coach" loading="eager" decoding="async">';
 }
 
+function colocarBotonCoachEnTarjetaInicio() {
+    var btn = document.getElementById('coach-fab');
+    var card = document.getElementById('coach-card-inicio');
+    if (!btn || !card) return;
+
+    btn.classList.add('en-tarjeta');
+    if (btn.parentNode !== card) {
+        card.appendChild(btn);
+    }
+}
+
 function crearBotonFlotanteCoach() {
     const existente = document.getElementById('coach-fab');
     if (existente) {
         renderizarImagenCoachFab(existente);
+        colocarBotonCoachEnTarjetaInicio();
         return;
     }
 
@@ -3948,6 +3983,7 @@ function crearBotonFlotanteCoach() {
     });
 
     document.body.appendChild(btn);
+    colocarBotonCoachEnTarjetaInicio();
 }
 
 function crearPanelCoach() {
@@ -4070,9 +4106,10 @@ function insertarTarjetaCoachEnInicio() {
 
     const card = document.createElement('div');
     card.id = 'coach-card-inicio';
-    card.className = 'coach-card-contexto';
+    card.className = 'coach-card-contexto coach-inicio';
     card.innerHTML = '<h4><i class="fas fa-sparkles"></i> Hoy contigo</h4><p id="coach-texto-inicio">Abre el coach para recibir tu plan del día.</p>';
     menu.parentNode.insertBefore(card, menu);
+    colocarBotonCoachEnTarjetaInicio();
 }
 
 function insertarTarjetaContextoVista(nombreVista) {
