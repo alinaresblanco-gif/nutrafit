@@ -877,7 +877,7 @@ REGLAS DE VERACIDAD:
 3) Si la app no envia datos suficientes, pidelos de forma explicita.
 4) Si la usuaria pregunta por un alimento y no tienes datos oficiales, responde: "Necesito datos nutricionales oficiales para darte una respuesta exacta. Enviame la informacion del alimento."
 5) Cuando la app envie informacion nutricional, interpretala, resumela, explicala con claridad y adaptala al objetivo de la usuaria.
-6) Si CONTEXTO_JSON incluye fuentes_web, usalas como referencia principal y explica que es consenso general de fuentes publicas.
+6) Si CONTEXTO_JSON incluye fuentes_web, usalas como referencia interna de contraste, sin listarlas ni citarlas explicitamente en la respuesta final.
 7) Nunca uses conocimiento inventado o aproximado si hay datos oficiales disponibles.
 
 REGLAS DE SEGURIDAD:
@@ -908,7 +908,7 @@ REGLAS FACTUALES ESTRICTAS:
 3) Si faltan datos oficiales para responder exacto, pide esos datos explicitamente.
 4) Si la consulta es medica, responde: "Soy un coach nutricional, no un profesional medico."
 5) No uses formato plantilla ni bloques repetitivos.
-6) Si hay fuentes, sintetiza consenso y menciona incertidumbre si existe.
+6) Si hay fuentes, sintetiza consenso y menciona incertidumbre si existe, pero nunca muestres ni enumeres fuentes al usuario.
 
 SALIDA OBLIGATORIA:
 Devuelve JSON valido con: respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
@@ -2248,6 +2248,36 @@ function construirFallbackSegunIntencion(intencion, meta) {
   };
 }
 
+function construirRespuestaDirectaDesdeCatalogoAlimento(contexto, preguntaTxt) {
+  var catalogo = contexto && contexto.alimento_catalogo ? contexto.alimento_catalogo : null;
+  if (!catalogo || !catalogo.nombre) return "";
+
+  var beneficios = Array.isArray(catalogo.beneficios) ? catalogo.beneficios.filter(Boolean) : [];
+  var propiedades = Array.isArray(catalogo.propiedades) ? catalogo.propiedades.filter(Boolean) : [];
+  var precauciones = Array.isArray(catalogo.precauciones) ? catalogo.precauciones.filter(Boolean) : [];
+  var porcion = String(catalogo.porcion_referencia || "").trim();
+
+  var partes = [];
+  partes.push("Sobre " + String(catalogo.nombre) + ":");
+
+  if (beneficios.length) {
+    partes.push("Beneficios principales: " + beneficios.slice(0, 3).join(", ") + ".");
+  } else if (propiedades.length) {
+    partes.push("Aporta: " + propiedades.slice(0, 3).join(", ") + ".");
+  }
+
+  if (porcion) {
+    partes.push("Porcion orientativa: " + porcion + ".");
+  }
+
+  if (precauciones.length) {
+    partes.push("Precaucion: " + precauciones[0] + ".");
+  }
+
+  partes.push("Si quieres, te digo como encajarlo hoy en tus creditos y en que comida te conviene mas.");
+  return partes.join(" ");
+}
+
 function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, contenidoRaw, modo) {
   const disponibles = Number(contexto.creditos_disponibles);
   const consumidos = Number(contexto.creditos_consumidos);
@@ -2298,6 +2328,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
     const fuentes = Array.isArray(contexto.fuentes_web) ? contexto.fuentes_web.filter(Boolean).slice(0, 3) : [];
     const tieneDatosOficiales = contextoTieneDatosOficialesNutricion(contexto);
     const esConsultaMedica = esConsultaMedicaNutricion(preguntaTxt);
+    const respuestaCatalogo = construirRespuestaDirectaDesdeCatalogoAlimento(contexto, preguntaTxt);
 
     if (esConsultaMedica) {
       return {
@@ -2313,7 +2344,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
     }
 
     const esPreguntaAlimentoONutricion = /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|porcion|ingrediente/.test(preguntaTxt.toLowerCase());
-    if (esPreguntaAlimentoONutricion && !tieneDatosOficiales && fuentes.length === 0) {
+    if (esPreguntaAlimentoONutricion && !tieneDatosOficiales && fuentes.length === 0 && !respuestaCatalogo) {
       return {
         respuesta_directa: "Necesito datos nutricionales oficiales para darte una respuesta exacta. Enviame la informacion del alimento.",
         estado_dia: "",
@@ -2327,15 +2358,12 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
     }
 
     const baseFactual = respuestaDirecta
+      || respuestaCatalogo
       || limpiarRespuestaDirectaCoach(textoPlano)
       || (preguntaTxt ? ("No tengo evidencia suficiente para responder con precision a: " + preguntaTxt + ". Dame mas contexto (cantidad, frecuencia y objetivo).") : "Necesito tu pregunta concreta para ayudarte mejor.");
 
-    const bloqueFuentes = fuentes.length
-      ? ("\n\nFuentes consultadas:\n- " + fuentes.join("\n- "))
-      : "\n\nNota: respuesta basada en consenso general, sin fuentes web adicionales disponibles en este momento.";
-
     return {
-      respuesta_directa: baseFactual + bloqueFuentes,
+      respuesta_directa: baseFactual,
       estado_dia: "",
       lectura_rapida: "",
       accion_ahora: "",
