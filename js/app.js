@@ -3729,8 +3729,8 @@ function inyectarEstilosCoach() {
 
         .coach-fab.en-tarjeta {
             position: static;
-            width: 180px !important;
-            height: 180px !important;
+            width: 126px !important;
+            height: 126px !important;
             z-index: 2;
             box-shadow: none !important;
             flex: 0 0 auto;
@@ -3738,8 +3738,8 @@ function inyectarEstilosCoach() {
         }
 
         .coach-fab.en-tarjeta img {
-            width: 170%;
-            height: 170%;
+            width: 120%;
+            height: 120%;
             object-fit: cover;
             transform: translateY(1px);
         }
@@ -3781,13 +3781,13 @@ function inyectarEstilosCoach() {
             }
 
             .coach-fab.en-tarjeta {
-                width: 148px !important;
-                height: 148px !important;
+                width: 104px !important;
+                height: 104px !important;
             }
 
             .coach-fab.en-tarjeta img {
-                width: 165%;
-                height: 165%;
+                width: 118%;
+                height: 118%;
             }
         }
 
