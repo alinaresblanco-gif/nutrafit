@@ -1040,6 +1040,13 @@ const MAPA_CATEGORIAS_INTENCION_COACH = {
 
 const BASE_OFICIAL_COACH_NUTRAFIT = [
   {
+    id: "hidratos_orientativos",
+    categorias: ["nutricion_general", "comidas", "ejercicio"],
+    etiquetas: ["hidratos", "carbohidratos", "cantidad diaria", "energia", "entrenamiento"],
+    contenido: "La cantidad de hidratos puede ajustarse por objetivo y actividad: en orientacion general, menor actividad suele encajar con rangos mas bajos y entrenamientos frecuentes con rangos mas altos. Como referencia practica, puede usarse un rango aproximado de 2 a 5 g/kg/dia y ajustar segun rendimiento, hambre y evolucion.",
+    fuentes: ["USDA", "WHO", "ACSM"]
+  },
+  {
     id: "proteina_perdida_grasa",
     categorias: ["nutricion_general", "ejercicio"],
     etiquetas: ["proteina", "musculo", "masa muscular", "perder grasa", "entreno", "recuperacion"],
@@ -2427,6 +2434,52 @@ function construirRespuestaDirectaDesdeCatalogoAlimento(contexto, preguntaTxt) {
   return partes.join(" ");
 }
 
+function construirRespuestaDesdeBaseOficialCoach(contexto) {
+  var items = contexto && Array.isArray(contexto.base_oficial_coach) ? contexto.base_oficial_coach : [];
+  if (!items.length) return "";
+
+  var frases = items
+    .map(function(item) { return String((item && item.contenido) || "").trim(); })
+    .filter(function(txt) { return txt.length > 0; })
+    .slice(0, 2);
+
+  if (!frases.length) return "";
+
+  var base = frases.join(" ").replace(/\s+/g, " ").trim();
+  if (base.length > 420) {
+    base = base.substring(0, 420).trim() + "...";
+  }
+
+  return "Orientacion general basada en consenso: " + base + " Si quieres, la adapto a tu caso con tu peso, objetivo y actividad de hoy.";
+}
+
+function construirRespuestaFactualGeneralCoach(preguntaTxt, contexto) {
+  var t = normalizarTextoCoachComparable(preguntaTxt || "");
+  if (!t) return "";
+
+  var tieneHidratos = /\bhidratos\b|\bhidrato\b|\bcarbohidratos\b|\bcarbohidrato\b|\bcarbos\b/.test(t);
+  var pideCantidad = /\bcuanto\b|\bcuantos\b|\bcuanta\b|\bcantidad\b|\bdia\b|\bhoy\b/.test(t);
+
+  if (tieneHidratos && pideCantidad) {
+    var creditosDisp = Number(contexto && contexto.creditos_disponibles);
+    var guiaCreditos = !isNaN(creditosDisp)
+      ? (" Con tus creditos disponibles actuales (" + creditosDisp + "), conviene moverte en la parte baja o media del rango segun hambre y entrenamiento.")
+      : "";
+
+    return "Como orientacion general, los hidratos se pueden ajustar por peso y actividad: 2-3 g/kg/dia si buscas control estricto o poca actividad, 3-5 g/kg/dia si entrenas de forma regular, y hasta 5-7 g/kg/dia en cargas altas. Para perder grasa sin perder rendimiento suele funcionar empezar en 2-4 g/kg/dia y ajustar segun energia, hambre y progreso." + guiaCreditos + " Si me das peso, objetivo y si entrenas hoy, te doy un rango cerrado para tu caso.";
+  }
+
+  if (/\bproteina\b|\bproteinas\b/.test(t) && /\bcuanto\b|\bcuanta\b|\bcantidad\b|\bdia\b|\bhoy\b/.test(t)) {
+    return "Como referencia general para adultos activos, la proteina suele moverse en torno a 1,2-2,0 g/kg/dia; en perdida de grasa con entrenamiento suele usarse la parte alta del rango. Si me das tu peso, te lo paso a gramos exactos para hoy.";
+  }
+
+  if (/\bgrasa\b|\bgrasas\b/.test(t) && /\bcuanto\b|\bcuanta\b|\bcantidad\b|\bdia\b|\bhoy\b/.test(t)) {
+    return "Como orientacion general, una franja util de grasas suele estar alrededor de 0,6-1,0 g/kg/dia, priorizando grasas insaturadas y ajustando segun saciedad y adherencia. Si me das tu peso y objetivo, te calculo rango para hoy.";
+  }
+
+  return "";
+}
+
 function construirRespuestaCanonicaChiaCoach(preguntaTxt) {
   var t = normalizarTextoCoachComparable(preguntaTxt || "");
   if (!t) return "";
@@ -2488,6 +2541,8 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
     const respuestaCatalogo = construirRespuestaDirectaDesdeCatalogoAlimento(contexto, preguntaTxt);
     const respuestaChiaCanonica = construirRespuestaCanonicaChiaCoach(preguntaTxt);
     const respuestaMiniTest = obtenerRespuestaMiniTestCoach(preguntaTxt);
+    const respuestaGeneralFactual = construirRespuestaFactualGeneralCoach(preguntaTxt, contexto);
+    const respuestaBaseOficial = construirRespuestaDesdeBaseOficialCoach(contexto);
 
     if (esConsultaMedica) {
       return {
@@ -2503,7 +2558,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
     }
 
     const esPreguntaAlimentoONutricion = /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|porcion|ingrediente/.test(preguntaTxt.toLowerCase());
-    if (esPreguntaAlimentoONutricion && !tieneDatosOficiales && fuentes.length === 0 && !respuestaCatalogo) {
+    if (esPreguntaAlimentoONutricion && !tieneDatosOficiales && fuentes.length === 0 && !respuestaCatalogo && !respuestaGeneralFactual && !respuestaBaseOficial) {
       return {
         respuesta_directa: "Necesito datos nutricionales oficiales para darte una respuesta exacta. Enviame la informacion del alimento.",
         estado_dia: "",
@@ -2518,8 +2573,12 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
 
     const baseFactual = respuestaDirecta
       || respuestaCatalogo
+      || respuestaGeneralFactual
+      || respuestaBaseOficial
       || limpiarRespuestaDirectaCoach(textoPlano)
-      || (preguntaTxt ? ("No tengo evidencia suficiente para responder con precision a: " + preguntaTxt + ". Dame mas contexto (cantidad, frecuencia y objetivo).") : "Necesito tu pregunta concreta para ayudarte mejor.");
+      || (preguntaTxt
+        ? ("Con la informacion disponible, te doy una orientacion general: empieza con una opcion moderada y ajusta por objetivo, tolerancia y actividad de hoy. Si me compartes cantidad, frecuencia, peso y objetivo, te lo cierro con un rango mas preciso para tu caso.")
+        : "Dime tu pregunta concreta y te doy una orientacion practica con el mejor rango posible.");
 
     const respuestaFactualFinal = respuestaChiaCanonica
       || (respuestaMiniTest ? String(respuestaMiniTest.respuesta || "") : "")
@@ -2731,27 +2790,90 @@ function ejecutarMiniTestCoach(ss, payload) {
 }
 
 const FUENTES_NUTRICION_CONFIABLES = [
-  { nombre: "Wikipedia ES", dominio: "wikipedia.org", url: "https://es.wikipedia.org" },
-  { nombre: "USDA FoodData Central", dominio: "fdc.nal.usda.gov", url: "https://fdc.nal.usda.gov" },
-  { nombre: "USDA Dietary Guidelines", dominio: "dietaryguidelines.gov", url: "https://www.dietaryguidelines.gov" },
-  { nombre: "MyPlate", dominio: "myplate.gov", url: "https://www.myplate.gov" },
-  { nombre: "USDA Nutrition", dominio: "usda.gov", url: "https://www.usda.gov/topics/food-nutrition" },
-  { nombre: "NIH ODS", dominio: "ods.od.nih.gov", url: "https://ods.od.nih.gov" },
-  { nombre: "MedlinePlus", dominio: "medlineplus.gov", url: "https://medlineplus.gov" },
-  { nombre: "WHO", dominio: "who.int", url: "https://www.who.int" },
-  { nombre: "FAO Nutrition", dominio: "fao.org", url: "https://www.fao.org/nutrition" },
-  { nombre: "EFSA", dominio: "efsa.europa.eu", url: "https://www.efsa.europa.eu" },
-  { nombre: "CDC Physical Activity", dominio: "cdc.gov", url: "https://www.cdc.gov/physical-activity-basics/about/" },
-  { nombre: "Office of Disease Prevention and Health Promotion", dominio: "health.gov", url: "https://health.gov" },
-  { nombre: "Move Your Way", dominio: "health.gov", url: "https://odphp.health.gov/moveyourway" },
-  { nombre: "ACSM", dominio: "acsm.org", url: "https://acsm.org" },
-  { nombre: "American Heart Association", dominio: "heart.org", url: "https://www.heart.org" },
-  { nombre: "NHS Exercise", dominio: "nhs.uk", url: "https://www.nhs.uk/live-well/exercise/" },
-  { nombre: "NIDDK Activity", dominio: "niddk.nih.gov", url: "https://www.niddk.nih.gov/health-information/weight-management/tips-get-active" },
-  { nombre: "WomensHealth Activity", dominio: "womenshealth.gov", url: "https://womenshealth.gov/getting-active" },
-  { nombre: "Mayo Clinic", dominio: "mayoclinic.org", url: "https://www.mayoclinic.org" },
-  { nombre: "Harvard Nutrition Source", dominio: "hsph.harvard.edu", url: "https://www.hsph.harvard.edu/nutritionsource" }
+  { nombre: "WHO", dominio: "who.int", url: "https://www.who.int", temas: ["salud_general", "nutricion", "actividad", "sueno", "salud_mental"] },
+  { nombre: "FAO Nutrition", dominio: "fao.org", url: "https://www.fao.org/nutrition", temas: ["nutricion", "seguridad_alimentaria"] },
+  { nombre: "EFSA", dominio: "efsa.europa.eu", url: "https://www.efsa.europa.eu", temas: ["nutricion", "seguridad_alimentaria"] },
+  { nombre: "AESAN", dominio: "aesan.gob.es", url: "https://www.aesan.gob.es", temas: ["nutricion", "seguridad_alimentaria"] },
+  { nombre: "USDA FoodData Central", dominio: "fdc.nal.usda.gov", url: "https://fdc.nal.usda.gov", temas: ["nutricion"] },
+  { nombre: "USDA Dietary Guidelines", dominio: "dietaryguidelines.gov", url: "https://www.dietaryguidelines.gov", temas: ["nutricion"] },
+  { nombre: "MyPlate", dominio: "myplate.gov", url: "https://www.myplate.gov", temas: ["nutricion"] },
+  { nombre: "USDA Nutrition", dominio: "usda.gov", url: "https://www.usda.gov/topics/food-nutrition", temas: ["nutricion"] },
+  { nombre: "NIH", dominio: "nih.gov", url: "https://www.nih.gov", temas: ["salud_general", "nutricion"] },
+  { nombre: "NIH ODS", dominio: "ods.od.nih.gov", url: "https://ods.od.nih.gov", temas: ["nutricion", "suplementos"] },
+  { nombre: "NIDDK", dominio: "niddk.nih.gov", url: "https://www.niddk.nih.gov", temas: ["nutricion", "metabolica"] },
+  { nombre: "NHLBI", dominio: "nhlbi.nih.gov", url: "https://www.nhlbi.nih.gov", temas: ["salud_general", "cardio"] },
+  { nombre: "NIMH", dominio: "nimh.nih.gov", url: "https://www.nimh.nih.gov", temas: ["salud_mental"] },
+  { nombre: "MedlinePlus", dominio: "medlineplus.gov", url: "https://medlineplus.gov", temas: ["salud_general", "nutricion", "salud_mental", "sueno"] },
+  { nombre: "CDC", dominio: "cdc.gov", url: "https://www.cdc.gov", temas: ["salud_general", "actividad", "sueno"] },
+  { nombre: "Health.gov", dominio: "health.gov", url: "https://health.gov", temas: ["actividad", "nutricion"] },
+  { nombre: "ACSM", dominio: "acsm.org", url: "https://acsm.org", temas: ["actividad", "deporte"] },
+  { nombre: "American Heart Association", dominio: "heart.org", url: "https://www.heart.org", temas: ["cardio", "actividad"] },
+  { nombre: "NHS", dominio: "nhs.uk", url: "https://www.nhs.uk", temas: ["salud_general", "actividad", "sueno", "salud_mental"] },
+  { nombre: "NICE", dominio: "nice.org.uk", url: "https://www.nice.org.uk", temas: ["salud_general", "guias"] },
+  { nombre: "WomensHealth", dominio: "womenshealth.gov", url: "https://womenshealth.gov", temas: ["mujer", "salud_general"] },
+  { nombre: "Mayo Clinic", dominio: "mayoclinic.org", url: "https://www.mayoclinic.org", temas: ["salud_general", "nutricion", "actividad", "sueno"] },
+  { nombre: "Harvard Nutrition Source", dominio: "hsph.harvard.edu", url: "https://www.hsph.harvard.edu/nutritionsource", temas: ["nutricion"] },
+  { nombre: "Academy of Nutrition and Dietetics", dominio: "eatright.org", url: "https://www.eatright.org", temas: ["nutricion"] },
+  { nombre: "APA", dominio: "apa.org", url: "https://www.apa.org", temas: ["salud_mental"] },
+  { nombre: "PubMed", dominio: "pubmed.ncbi.nlm.nih.gov", url: "https://pubmed.ncbi.nlm.nih.gov", temas: ["evidencia"] },
+  { nombre: "Wikipedia ES", dominio: "wikipedia.org", url: "https://es.wikipedia.org", temas: ["referencia_general"] }
 ];
+
+function obtenerTemasConsultaCoach(intencion, pregunta) {
+  var temas = {};
+  var intent = String(intencion || "general").toLowerCase();
+  var t = normalizarTextoCoachComparable(pregunta || "");
+
+  function addTema(nombre) {
+    if (!nombre) return;
+    temas[String(nombre)] = true;
+  }
+
+  addTema("salud_general");
+
+  if (intent === "nutricion_general" || intent === "comidas" || intent === "comer_fuera" || intent === "creditos") addTema("nutricion");
+  if (intent === "ejercicio") addTema("actividad");
+  if (intent === "agua") addTema("salud_general");
+
+  if (/hidrato|carbo|proteina|grasa|fibra|vitamina|mineral|alimento|comida|peso|caloria|omega/.test(t)) addTema("nutricion");
+  if (/entreno|entrenamiento|cardio|fuerza|pasos|correr|caminar|deporte|gimnasio/.test(t)) addTema("actividad");
+  if (/ansiedad|estres|depresion|animo|motivacion|mental|emocional/.test(t)) addTema("salud_mental");
+  if (/sueno|dormir|insomnio|descanso/.test(t)) addTema("sueno");
+  if (/menopaus|embarazo|regla|menstru|mujer/.test(t)) addTema("mujer");
+  if (/suplement|creatina|proteina en polvo|vitamina/.test(t)) addTema("suplementos");
+
+  return Object.keys(temas);
+}
+
+function obtenerDominiosConfiablesCoach(intencion, pregunta, maxDominios) {
+  var temas = obtenerTemasConsultaCoach(intencion, pregunta);
+  var max = Math.max(6, Number(maxDominios || 12));
+  var vistos = {};
+  var dominios = [];
+
+  FUENTES_NUTRICION_CONFIABLES.forEach(function(f) {
+    var dominio = String((f && f.dominio) || "").trim().toLowerCase();
+    if (!dominio || vistos[dominio]) return;
+
+    var tags = Array.isArray(f.temas) ? f.temas : [];
+    var matchTema = tags.some(function(tag) { return temas.indexOf(String(tag)) >= 0; });
+    if (!matchTema) return;
+
+    vistos[dominio] = true;
+    dominios.push(dominio);
+  });
+
+  if (!dominios.length) {
+    FUENTES_NUTRICION_CONFIABLES.forEach(function(f) {
+      var dominio = String((f && f.dominio) || "").trim().toLowerCase();
+      if (!dominio || vistos[dominio]) return;
+      vistos[dominio] = true;
+      dominios.push(dominio);
+    });
+  }
+
+  return dominios.slice(0, max);
+}
 
 function preguntaRequiereBusquedaWebNutricion(pregunta, evento, modo, intencion) {
   const preguntaTxt = String(pregunta || "").trim();
@@ -2775,7 +2897,7 @@ function preguntaRequiereBusquedaWebNutricion(pregunta, evento, modo, intencion)
     return true;
   }
 
-  return /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|salud|deporte|deportivo|entreno|entrenamiento|gym|gimnasio|correr|carrera|fuerza|musculo|masa muscular|recuperacion|hidratacion|electrolitos|cardio|resistencia/.test(preguntaLower);
+  return /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|salud|deporte|deportivo|entreno|entrenamiento|gym|gimnasio|correr|carrera|fuerza|musculo|masa muscular|recuperacion|hidratacion|electrolitos|cardio|resistencia|sueno|insomnio|descanso|ansiedad|estres|animo|motivacion|habitos|menopaus|embarazo/.test(preguntaLower);
 }
 
 function construirConsultaWebCoach(consulta, intencion) {
@@ -2795,7 +2917,7 @@ function construirConsultaWebCoach(consulta, intencion) {
     return base + " alimentacion saludable nutricion";
   }
 
-  return base + " nutricion alimentacion salud";
+  return base + " salud basada en evidencia";
 }
 
 function dominioPermitidoNutricion(url) {
@@ -2836,7 +2958,9 @@ function extraerEnlacesConfiablesDuckDuckGo(consulta, maxResultados, intencion) 
   const consultaBase = String(consulta || "").trim();
   if (!consultaBase) return [];
 
-  const dominios = FUENTES_NUTRICION_CONFIABLES.map(f => "site:" + f.dominio).join(" OR ");
+  const dominiosLista = obtenerDominiosConfiablesCoach(intencion, consultaBase, 12);
+  const dominios = dominiosLista.map(function(dominio) { return "site:" + dominio; }).join(" OR ");
+  if (!dominios) return [];
   const q = construirConsultaWebCoach(consultaBase, intencion) + " " + dominios;
   const url = "https://duckduckgo.com/html/?q=" + encodeURIComponent(q);
   const enlaces = [];
