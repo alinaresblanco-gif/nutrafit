@@ -961,6 +961,117 @@ const MAPA_CATEGORIAS_INTENCION_COACH = {
   general: ["nutricion_general", "alimentos"]
 };
 
+const BASE_OFICIAL_COACH_NUTRAFIT = [
+  {
+    id: "proteina_perdida_grasa",
+    categorias: ["nutricion_general", "ejercicio"],
+    etiquetas: ["proteina", "musculo", "masa muscular", "perder grasa", "entreno", "recuperacion"],
+    contenido: "La evidencia general en adultos activos suele situar la ingesta de proteina en torno a 1,2-2,0 g/kg/dia segun objetivo, nivel de entrenamiento y contexto energetico. En perdida de grasa con preservacion muscular, suele usarse la banda alta del rango.",
+    fuentes: ["NIH", "USDA", "ACSM"]
+  },
+  {
+    id: "fibra_saciedad",
+    categorias: ["nutricion_general", "alimentos", "comidas"],
+    etiquetas: ["fibra", "saciedad", "hambre", "pan integral", "fruta", "legumbres"],
+    contenido: "Los alimentos ricos en fibra suelen mejorar saciedad, enlentecer la digestion y ayudar al control del apetito. Integral, legumbres, fruta entera y verduras suelen ser mejores elecciones que opciones refinadas cuando el objetivo es controlar hambre.",
+    fuentes: ["WHO", "FAO", "Harvard Nutrition Source"]
+  },
+  {
+    id: "hidratacion_general",
+    categorias: ["agua", "ejercicio"],
+    etiquetas: ["agua", "hidratacion", "sudar", "entrenar", "electrolitos"],
+    contenido: "La hidratacion debe repartirse a lo largo del dia y aumentar con calor, sudoracion y ejercicio. En sesiones largas o con mucha sudoracion puede ser util considerar sodio y otros electrolitos, especialmente si hay perdidas importantes.",
+    fuentes: ["CDC", "MedlinePlus", "ACSM"]
+  },
+  {
+    id: "preentreno_basico",
+    categorias: ["ejercicio", "comidas", "alimentos"],
+    etiquetas: ["preentreno", "antes de entrenar", "platano", "carbohidratos", "energia"],
+    contenido: "Antes del entrenamiento suele funcionar una comida o snack facil de digerir, con carbohidrato util y, segun tiempo disponible, algo de proteina. Platano, yogur, tostada o avena pueden encajar si se ajustan cantidad y tolerancia.",
+    fuentes: ["ACSM", "Mayo Clinic", "MedlinePlus"]
+  },
+  {
+    id: "postentreno_recuperacion",
+    categorias: ["ejercicio", "comidas"],
+    etiquetas: ["postentreno", "recuperacion", "cena despues de entrenar", "proteina"],
+    contenido: "Despues del entrenamiento suele interesar rehidratar, asegurar proteina suficiente y, si el esfuerzo lo requiere, incluir carbohidratos para reponer. La prioridad practica es una comida tolerable, suficiente y facil de sostener en rutina.",
+    fuentes: ["ACSM", "USDA", "NIH"]
+  },
+  {
+    id: "legumbres_conserva",
+    categorias: ["alimentos", "nutricion_general"],
+    etiquetas: ["legumbres", "bote", "conserva", "sal", "calidad"],
+    contenido: "Las legumbres en conserva mantienen buen valor nutricional y pueden formar parte de una alimentacion saludable. Aclararlas ayuda a reducir parte del sodio superficial cuando el producto lo contiene.",
+    fuentes: ["USDA", "MedlinePlus"]
+  },
+  {
+    id: "fruta_noche",
+    categorias: ["alimentos", "nutricion_general"],
+    etiquetas: ["fruta", "noche", "engorda", "hora de comer"],
+    contenido: "No hay una base solida para afirmar que la fruta sea mala solo por la noche. Lo relevante suele ser el conjunto de la dieta, la cantidad, la tolerancia individual y el objetivo global.",
+    fuentes: ["WHO", "Harvard Nutrition Source", "MedlinePlus"]
+  },
+  {
+    id: "comer_fuera_criterio",
+    categorias: ["comer_fuera", "planificacion"],
+    etiquetas: ["restaurante", "tapas", "pizzeria", "comer fuera"],
+    contenido: "Comer fuera suele encajar mejor cuando se priorizan proteinas magras, verduras, cocciones simples y control de extras como salsas, fritos, masas gruesas y bebidas azucaradas.",
+    fuentes: ["USDA", "MyPlate", "Mayo Clinic"]
+  },
+  {
+    id: "fuerza_y_salud",
+    categorias: ["ejercicio"],
+    etiquetas: ["fuerza", "pesas", "musculo", "resistencia"],
+    contenido: "El entrenamiento de fuerza ayuda a mantener masa muscular, funcionalidad y salud metabolica. Progresar de forma gradual y tecnica segura suele ser mas util que subir volumen demasiado rapido.",
+    fuentes: ["CDC", "ACSM", "NHS"]
+  },
+  {
+    id: "cardio_recomendacion",
+    categorias: ["ejercicio"],
+    etiquetas: ["cardio", "caminar", "correr", "resistencia", "actividad fisica"],
+    contenido: "La actividad aerobica regular mejora salud cardiovascular y gasto energetico. Para muchas personas, caminar rapido de forma constante es una base sostenible sobre la que luego aumentar tiempo o intensidad.",
+    fuentes: ["CDC", "heart.org", "MedlinePlus"]
+  },
+  {
+    id: "suplementos_prudencia",
+    categorias: ["nutricion_general", "ejercicio"],
+    etiquetas: ["suplemento", "creatina", "proteina en polvo", "preworkout"],
+    contenido: "Los suplementos no deben recomendarse de forma automatica. Primero conviene revisar alimentacion, objetivo, tolerancia y datos fiables del producto. Si faltan datos oficiales, la recomendacion debe ser prudente.",
+    fuentes: ["NIH ODS", "MedlinePlus"]
+  },
+  {
+    id: "ansiedad_dulce_estrategia",
+    categorias: ["comportamiento", "nutricion_general"],
+    etiquetas: ["ansiedad", "dulce", "antojo", "hambre emocional"],
+    contenido: "Cuando aparece antojo intenso, suelen ayudar acciones breves que reduzcan impulsividad: pausar, beber agua, caminar un poco y tomar una opcion con proteina o fibra antes de decidir si aun quieres el dulce.",
+    fuentes: ["MedlinePlus", "Mayo Clinic"]
+  }
+];
+
+const CATALOGO_ALIMENTOS_COACH = [
+  { nombre: "chia", aliases: ["chia", "semillas de chia"], categoria: "semillas", propiedades: ["fibra", "omega-3 vegetal", "saciedad"], beneficios: ["apoya saciedad", "puede ayudar al transito intestinal"], precauciones: ["subir cantidad poco a poco"], porcion_referencia: "1-2 cucharadas" },
+  { nombre: "aguacate", aliases: ["aguacate", "avocado"], categoria: "fruta grasa", propiedades: ["grasa monoinsaturada", "fibra", "alta saciedad"], beneficios: ["puede ayudar al control del apetito"], precauciones: ["medir cantidad"], porcion_referencia: "1/4 a 1/2 unidad" },
+  { nombre: "platano", aliases: ["platano", "banana", "banano"], categoria: "fruta", propiedades: ["carbohidrato util", "potasio", "facil digestibilidad"], beneficios: ["encaja bien antes de entrenar"], precauciones: ["ajustar racion a creditos y tolerancia"], porcion_referencia: "1 unidad" },
+  { nombre: "arroz", aliases: ["arroz", "arroz blanco", "arroz integral"], categoria: "cereal", propiedades: ["carbohidrato", "versatil"], beneficios: ["util para energia y recuperacion"], precauciones: ["controlar racion"], porcion_referencia: "1 taza cocida" },
+  { nombre: "patata", aliases: ["patata", "papa", "patata cocida", "papa cocida"], categoria: "tuberculo", propiedades: ["saciedad alta", "carbohidrato util"], beneficios: ["puede controlar mejor el apetito que otros almidones segun preparacion"], precauciones: ["evitar abusar de frituras"], porcion_referencia: "150-200 g cocida" },
+  { nombre: "huevo", aliases: ["huevo", "huevos"], categoria: "proteina", propiedades: ["proteina completa", "muy saciante"], beneficios: ["ayuda a cubrir proteina diaria"], precauciones: ["vigilar el conjunto de la preparacion"], porcion_referencia: "2 unidades" },
+  { nombre: "yogur natural", aliases: ["yogur", "yogurt", "yogur natural", "yogur proteico", "yogurt proteico"], categoria: "lacteo", propiedades: ["proteina", "uso facil"], beneficios: ["util en desayunos y snacks"], precauciones: ["revisar azucares anadidos"], porcion_referencia: "125-200 g" },
+  { nombre: "avena", aliases: ["avena", "copos de avena", "porridge"], categoria: "cereal", propiedades: ["fibra", "carbohidrato de liberacion gradual"], beneficios: ["mejora saciedad"], precauciones: ["medir racion"], porcion_referencia: "30-50 g en seco" },
+  { nombre: "pan integral", aliases: ["pan integral", "tostada integral"], categoria: "cereal", propiedades: ["mas fibra que el pan blanco"], beneficios: ["puede ayudar a controlar hambre"], precauciones: ["confirmar que sea realmente integral"], porcion_referencia: "1-2 rebanadas" },
+  { nombre: "legumbres", aliases: ["legumbres", "lentejas", "garbanzos", "alubias", "frijoles"], categoria: "legumbre", propiedades: ["fibra", "proteina vegetal", "saciedad alta"], beneficios: ["mejoran calidad global de la dieta"], precauciones: ["aclarar conservas si tienen mucha sal"], porcion_referencia: "1/2 a 1 taza cocida" },
+  { nombre: "atun", aliases: ["atun", "atún", "atun en lata", "atún en lata"], categoria: "pescado", propiedades: ["proteina alta", "practico"], beneficios: ["util para menus rapidos"], precauciones: ["vigilar formato y frecuencia"], porcion_referencia: "1 lata escurrida" },
+  { nombre: "salmon", aliases: ["salmon", "salmón"], categoria: "pescado", propiedades: ["proteina", "grasa saludable"], beneficios: ["util para salud cardiovascular y saciedad"], precauciones: ["aporta mas energia que pescados blancos"], porcion_referencia: "120-150 g" },
+  { nombre: "pollo", aliases: ["pollo", "pechuga de pollo"], categoria: "proteina", propiedades: ["proteina magra"], beneficios: ["facil de incluir en menus de control"], precauciones: ["cambia mucho con salsas y frituras"], porcion_referencia: "120-150 g" },
+  { nombre: "queso fresco", aliases: ["queso fresco", "cottage", "queso fresco batido"], categoria: "lacteo", propiedades: ["proteina", "menos grasa que quesos curados"], beneficios: ["encaja bien si buscas bajar calorias"], precauciones: ["vigilar sal"], porcion_referencia: "100-150 g" },
+  { nombre: "frutos secos", aliases: ["frutos secos", "nueces", "almendras", "anacardos", "cacahuetes"], categoria: "grasa saludable", propiedades: ["grasas insaturadas", "saciedad"], beneficios: ["utiles en porciones pequenas"], precauciones: ["medir cantidad"], porcion_referencia: "20-30 g" },
+  { nombre: "brocoli", aliases: ["brocoli", "brócoli"], categoria: "verdura", propiedades: ["fibra", "baja densidad energetica"], beneficios: ["aporta volumen al plato"], precauciones: ["ajustar si hincha"], porcion_referencia: "1 taza cocinada" },
+  { nombre: "manzana", aliases: ["manzana"], categoria: "fruta", propiedades: ["fibra", "saciedad"], beneficios: ["snack simple y portable"], precauciones: ["mejor entera que en zumo"], porcion_referencia: "1 unidad" },
+  { nombre: "pasta", aliases: ["pasta", "macarrones", "espaguetis"], categoria: "cereal", propiedades: ["carbohidrato util"], beneficios: ["puede encajar bien alrededor del entrenamiento"], precauciones: ["controlar racion y salsas"], porcion_referencia: "60-80 g en seco" },
+  { nombre: "hummus", aliases: ["hummus", "humus"], categoria: "legumbre", propiedades: ["mezcla de legumbre y grasa"], beneficios: ["util con verduras o tostadas"], precauciones: ["vigilar cantidad"], porcion_referencia: "2-4 cucharadas" },
+  { nombre: "chocolate negro", aliases: ["chocolate", "chocolate negro", "chocolate 70"], categoria: "dulce", propiedades: ["muy palatable", "denso en energia"], beneficios: ["puede ayudar a gestionar antojo si la porcion esta definida"], precauciones: ["controlar porcion"], porcion_referencia: "10-20 g" },
+  { nombre: "leche", aliases: ["leche", "leche sin lactosa", "bebida vegetal"], categoria: "lacteo", propiedades: ["perfil variable segun tipo"], beneficios: ["puede ayudar a cubrir proteina o calcio segun eleccion"], precauciones: ["comparar azucares y proteina"], porcion_referencia: "1 vaso" }
+];
+
 function procesarCoachNutrafit(ss, payload) {
   const usuarioId = normalizarEmail(payload.usuario_id);
   const dispositivoId = String(payload.dispositivo_id || "").trim();
@@ -993,8 +1104,10 @@ function procesarCoachNutrafit(ss, payload) {
   const rutaRespuesta = clasificarRutaRespuestaCoach(pregunta, evento, modo, intencionDetectada);
   const memoriaUsuario = obtenerMemoriaCoachUsuario(ss, usuarioId, 8);
   const contextoUsuario = construirContextoUsuarioCoach(ss, usuarioId);
+  const contextoBaseOficial = obtenerContextoBaseOficialCoach(pregunta, intencionDetectada, rutaRespuesta, 4);
+  const contextoAlimento = obtenerContextoAlimentoCoach(ss, pregunta);
   const contextoWeb = preguntaRequiereBusquedaWebNutricion(pregunta, evento, modo, intencionDetectada)
-    ? obtenerContextoWebNutricion(pregunta)
+    ? obtenerContextoWebNutricion(pregunta, intencionDetectada)
     : { resumen: "", fuentes: [] };
   const resumenUsuario = construirResumenUsuarioNutrafitParaCoach(contextoUsuario, contexto || {});
   const ejemplosCalibracion = seleccionarEjemplosCalibracionCoach(pregunta, intencionDetectada, rutaRespuesta, 3);
@@ -1006,6 +1119,12 @@ function procesarCoachNutrafit(ss, payload) {
     ruta_respuesta: rutaRespuesta,
     resumen_usuario_nutrafit: resumenUsuario,
     ejemplos_calibracion: ejemplosCalibracion,
+    base_oficial_coach: contextoBaseOficial.items,
+    resumen_base_oficial: contextoBaseOficial.resumen,
+    alimento_detectado: contextoAlimento.detectado,
+    alimento_oficial: contextoAlimento.oficial,
+    alimento_catalogo: contextoAlimento.catalogo,
+    resumen_alimento: contextoAlimento.resumen,
     resumen_web: contextoWeb.resumen,
     fuentes_web: contextoWeb.fuentes
   });
@@ -1317,6 +1436,8 @@ function construirContextoUsuarioCoach(ss, usuarioId) {
 function construirMensajeCoach(pregunta, evento, contexto, modo) {
   const intencion = detectarIntencionCoach(pregunta, evento);
   const ejemplos = Array.isArray(contexto.ejemplos_calibracion) ? contexto.ejemplos_calibracion : [];
+  const baseOficial = Array.isArray(contexto.base_oficial_coach) ? contexto.base_oficial_coach : [];
+  const resumenAlimento = String(contexto.resumen_alimento || "");
   const safeContext = {
     evento: evento,
     accion: contexto.accion_nutrafit || "pregunta",
@@ -1344,6 +1465,12 @@ function construirMensajeCoach(pregunta, evento, contexto, modo) {
     "MODO:",
     modo || "auto",
     "",
+    "ALIMENTO_CONTEXT:",
+    resumenAlimento || "Sin alimento concreto detectado.",
+    "",
+    "BASE_OFICIAL_COACH:",
+    formatearBaseOficialCoach(baseOficial),
+    "",
     "EJEMPLOS_CALIBRACION:",
     formatearEjemplosCalibracionCoach(ejemplos),
     "",
@@ -1361,11 +1488,11 @@ function clasificarRutaRespuestaCoach(pregunta, evento, modo, intencion) {
   if (!(eventoTxt === "pregunta_libre" || modoTxt === "chat")) return "coaching";
   if (intencionTxt === "plan_hoy" || intencionTxt === "motivacion") return "coaching";
 
-  if (/que es|beneficio|beneficios|riesgo|riesgos|caloria|calorias|proteina|hidrato|fibra|vitamina|mineral|omega|indice glucemico|colesterol|trigliceridos|apto|contraindic/.test(preguntaTxt)) {
+  if (/que es|beneficio|beneficios|riesgo|riesgos|caloria|calorias|proteina|hidrato|fibra|vitamina|mineral|omega|indice glucemico|colesterol|trigliceridos|apto|contraindic|preentreno|postentreno|recuperacion|masa muscular|fuerza|resistencia|cardio|series|repeticiones|pasos|hidratacion|electrolitos/.test(preguntaTxt)) {
     return "factual";
   }
 
-  if (["nutricion_general", "comidas", "comer_fuera", "general"].indexOf(intencionTxt) >= 0) {
+  if (["nutricion_general", "comidas", "comer_fuera", "general", "ejercicio", "agua"].indexOf(intencionTxt) >= 0) {
     return "factual";
   }
 
@@ -1404,12 +1531,15 @@ function construirMensajeCoachFactual(pregunta, evento, contexto, modo) {
   const resumenWeb = String(contexto.resumen_web || "");
   const resumenUsuario = String(contexto.resumen_usuario_nutrafit || "");
   const ejemplos = Array.isArray(contexto.ejemplos_calibracion) ? contexto.ejemplos_calibracion : [];
+  const baseOficial = Array.isArray(contexto.base_oficial_coach) ? contexto.base_oficial_coach : [];
+  const resumenAlimento = String(contexto.resumen_alimento || "");
 
   return [
     "MODO_FACTUAL_ACTIVO:",
     "Responde a la pregunta con base en consenso de fuentes y con aplicacion practica al usuario.",
     "No uses plantilla de coach.",
     "Usa EJEMPLOS_CALIBRACION como referencia de concrecion y estructura, no como texto a copiar.",
+    "Prioriza BASE_OFICIAL_COACH cuando aporte contexto util y consistente con la pregunta.",
     "",
     "PREGUNTA_USUARIO:",
     pregunta || "Sin pregunta",
@@ -1425,6 +1555,12 @@ function construirMensajeCoachFactual(pregunta, evento, contexto, modo) {
     "",
     "RESUMEN_WEB:",
     resumenWeb || "Sin contexto web adicional.",
+    "",
+    "ALIMENTO_CONTEXT:",
+    resumenAlimento || "Sin alimento concreto detectado.",
+    "",
+    "BASE_OFICIAL_COACH:",
+    formatearBaseOficialCoach(baseOficial),
     "",
     "EJEMPLOS_CALIBRACION:",
     formatearEjemplosCalibracionCoach(ejemplos),
@@ -1514,6 +1650,234 @@ function formatearEjemplosCalibracionCoach(ejemplos) {
       "  Respuesta esperada modelo: " + String(item.respuesta_esperada || "")
     ].join("\n");
   }).join("\n");
+}
+
+function puntuarBaseOficialCoach(item, tokensPregunta, intencion, rutaRespuesta) {
+  let score = 0;
+  const cats = Array.isArray(item.categorias) ? item.categorias : [];
+  const tags = Array.isArray(item.etiquetas) ? item.etiquetas : [];
+  const contenido = String(item.contenido || "");
+  const tokenSet = {};
+
+  tokenizarCoachComparable(tags.join(" ") + " " + contenido).forEach(function(token) {
+    tokenSet[token] = true;
+  });
+
+  if (cats.indexOf(String(intencion || "general")) >= 0) score += 8;
+  if (String(rutaRespuesta || "").toLowerCase() === "factual" && (cats.indexOf("nutricion_general") >= 0 || cats.indexOf("ejercicio") >= 0 || cats.indexOf("alimentos") >= 0)) {
+    score += 2;
+  }
+
+  tokensPregunta.forEach(function(token) {
+    if (tokenSet[token]) score += 3;
+  });
+
+  return score;
+}
+
+function obtenerContextoBaseOficialCoach(pregunta, intencion, rutaRespuesta, limite) {
+  const tokensPregunta = tokenizarCoachComparable(pregunta);
+  const max = Math.max(1, Number(limite || 4));
+  const items = BASE_OFICIAL_COACH_NUTRAFIT
+    .map(function(item) {
+      return {
+        item: item,
+        score: puntuarBaseOficialCoach(item, tokensPregunta, intencion, rutaRespuesta)
+      };
+    })
+    .sort(function(a, b) { return b.score - a.score; })
+    .filter(function(entry, idx) {
+      return entry.score > 0 || idx < max;
+    })
+    .slice(0, max)
+    .map(function(entry) {
+      return {
+        id: entry.item.id,
+        categorias: entry.item.categorias,
+        etiquetas: entry.item.etiquetas,
+        contenido: entry.item.contenido,
+        fuentes: entry.item.fuentes
+      };
+    });
+
+  const resumen = items.length
+    ? ("Base oficial interna encontrada: " + items.length + " ficha(s) curadas para esta consulta.")
+    : "Sin fichas internas relevantes para esta consulta.";
+
+  return { resumen: resumen, items: items };
+}
+
+function formatearBaseOficialCoach(items) {
+  const lista = Array.isArray(items) ? items : [];
+  if (!lista.length) return "Sin fichas oficiales internas.";
+
+  return lista.map(function(item) {
+    return [
+      "- Id: " + String(item.id || ""),
+      "  Categorias: " + (Array.isArray(item.categorias) ? item.categorias.join(", ") : ""),
+      "  Etiquetas: " + (Array.isArray(item.etiquetas) ? item.etiquetas.join(", ") : ""),
+      "  Contenido: " + String(item.contenido || ""),
+      "  Fuentes: " + (Array.isArray(item.fuentes) ? item.fuentes.join(", ") : "")
+    ].join("\n");
+  }).join("\n");
+}
+
+function obtenerHojaAlimentosNutrafit(ss) {
+  return ss.getSheetByName("Alimentos") || ss.getSheetByName("alimentos") || ss.getSheetByName("ALIMENTOS");
+}
+
+function normalizarClaveAlimentoCoach(texto) {
+  return normalizarTextoCoachComparable(texto || "");
+}
+
+function obtenerRegistrosAlimentosNutrafit(ss) {
+  const hoja = obtenerHojaAlimentosNutrafit(ss);
+  if (!hoja || hoja.getLastRow() <= 1) return [];
+
+  const data = hoja.getDataRange().getValues();
+  const headersRaw = data[0].map(function(v) { return String(v || "").trim(); });
+  const headersNorm = headersRaw.map(function(v) { return normalizarClaveAlimentoCoach(v); });
+  const body = data.slice(1);
+
+  function idx() {
+    for (var a = 0; a < arguments.length; a++) {
+      var pos = headersNorm.indexOf(normalizarClaveAlimentoCoach(arguments[a]));
+      if (pos >= 0) return pos;
+    }
+    return -1;
+  }
+
+  var idxNombre = idx("nombre", "alimento");
+  var idxGrupo = idx("grupo", "categoria");
+  var idxProt = idx("proteinas", "proteina");
+  var idxCarb = idx("carbohidratos", "hidratos");
+  var idxGrasa = idx("grasas", "grasa");
+  var idxFibra = idx("fibra");
+  var idxManual = idx("manual");
+  var idxCalculado = idx("calculado");
+  var idxNeto = idx("neto", "netos", "puntos", "creditos");
+
+  if (idxNombre === -1) idxNombre = 0;
+
+  return body.map(function(fila) {
+    var nombre = String(fila[idxNombre] || "").trim();
+    if (!nombre) return null;
+    return {
+      nombre: nombre,
+      clave: normalizarClaveAlimentoCoach(nombre),
+      grupo: idxGrupo >= 0 ? String(fila[idxGrupo] || "").trim() : "",
+      proteinas: idxProt >= 0 ? Number(fila[idxProt] || 0) : null,
+      carbohidratos: idxCarb >= 0 ? Number(fila[idxCarb] || 0) : null,
+      grasas: idxGrasa >= 0 ? Number(fila[idxGrasa] || 0) : null,
+      fibra: idxFibra >= 0 ? Number(fila[idxFibra] || 0) : null,
+      manual: idxManual >= 0 ? Number(fila[idxManual] || 0) : null,
+      calculado: idxCalculado >= 0 ? Number(fila[idxCalculado] || 0) : null,
+      neto: idxNeto >= 0 ? Number(fila[idxNeto] || 0) : null
+    };
+  }).filter(function(item) { return item !== null; });
+}
+
+function buscarAlimentoCatalogoCoach(nombreDetectado) {
+  var clave = normalizarClaveAlimentoCoach(nombreDetectado);
+  if (!clave) return null;
+
+  var mejor = null;
+  var mejorLongitud = -1;
+  CATALOGO_ALIMENTOS_COACH.forEach(function(item) {
+    var aliases = Array.isArray(item.aliases) ? item.aliases : [item.nombre];
+    aliases.forEach(function(alias) {
+      var aliasClave = normalizarClaveAlimentoCoach(alias);
+      if (!aliasClave) return;
+      if (clave === aliasClave || clave.indexOf(aliasClave) >= 0 || aliasClave.indexOf(clave) >= 0) {
+        if (aliasClave.length > mejorLongitud) {
+          mejor = item;
+          mejorLongitud = aliasClave.length;
+        }
+      }
+    });
+  });
+
+  return mejor;
+}
+
+function detectarAlimentoPreguntaCoach(ss, pregunta) {
+  var texto = normalizarClaveAlimentoCoach(pregunta);
+  if (!texto) return { detectado: "", oficial: null, catalogo: null };
+
+  var mejorNombre = "";
+  var mejorLongitud = -1;
+  var mejorCatalogo = null;
+
+  CATALOGO_ALIMENTOS_COACH.forEach(function(item) {
+    var aliases = Array.isArray(item.aliases) ? item.aliases : [item.nombre];
+    aliases.forEach(function(alias) {
+      var aliasClave = normalizarClaveAlimentoCoach(alias);
+      if (!aliasClave) return;
+      if (texto.indexOf(aliasClave) >= 0 && aliasClave.length > mejorLongitud) {
+        mejorNombre = item.nombre;
+        mejorLongitud = aliasClave.length;
+        mejorCatalogo = item;
+      }
+    });
+  });
+
+  var mejorOficial = null;
+  obtenerRegistrosAlimentosNutrafit(ss).forEach(function(item) {
+    if (item.clave && texto.indexOf(item.clave) >= 0 && item.clave.length > mejorLongitud) {
+      mejorNombre = item.nombre;
+      mejorLongitud = item.clave.length;
+      mejorOficial = item;
+    }
+  });
+
+  if (!mejorCatalogo && mejorNombre) {
+    mejorCatalogo = buscarAlimentoCatalogoCoach(mejorNombre);
+  }
+
+  return {
+    detectado: mejorNombre,
+    oficial: mejorOficial,
+    catalogo: mejorCatalogo
+  };
+}
+
+function resumirAlimentoOficialCoach(item) {
+  if (!item) return "";
+  var partes = ["Alimento detectado: " + String(item.nombre || "") + "."];
+  if (item.grupo) partes.push("Grupo: " + item.grupo + ".");
+  if (item.proteinas !== null && !isNaN(item.proteinas)) partes.push("Proteinas: " + item.proteinas + ".");
+  if (item.carbohidratos !== null && !isNaN(item.carbohidratos)) partes.push("Carbohidratos: " + item.carbohidratos + ".");
+  if (item.grasas !== null && !isNaN(item.grasas)) partes.push("Grasas: " + item.grasas + ".");
+  if (item.fibra !== null && !isNaN(item.fibra)) partes.push("Fibra: " + item.fibra + ".");
+  if (item.neto !== null && !isNaN(item.neto)) partes.push("Creditos o netos: " + item.neto + ".");
+  return partes.join(" ");
+}
+
+function resumirAlimentoCatalogoCoach(item) {
+  if (!item) return "";
+  return [
+    "Alimento de catalogo: " + String(item.nombre || "") + ".",
+    item.categoria ? ("Categoria: " + item.categoria + ".") : "",
+    Array.isArray(item.propiedades) && item.propiedades.length ? ("Propiedades: " + item.propiedades.join(", ") + ".") : "",
+    Array.isArray(item.beneficios) && item.beneficios.length ? ("Beneficios: " + item.beneficios.join(", ") + ".") : "",
+    Array.isArray(item.precauciones) && item.precauciones.length ? ("Precauciones: " + item.precauciones.join(", ") + ".") : "",
+    item.porcion_referencia ? ("Porcion orientativa: " + item.porcion_referencia + ".") : ""
+  ].filter(Boolean).join(" ");
+}
+
+function obtenerContextoAlimentoCoach(ss, pregunta) {
+  var info = detectarAlimentoPreguntaCoach(ss, pregunta);
+  var resumen = [
+    resumirAlimentoOficialCoach(info.oficial),
+    resumirAlimentoCatalogoCoach(info.catalogo)
+  ].filter(Boolean).join(" ");
+
+  return {
+    detectado: info.detectado || "",
+    oficial: info.oficial,
+    catalogo: info.catalogo,
+    resumen: resumen || "Sin alimento detectado de forma fiable en la pregunta."
+  };
 }
 
 function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida, modo, evento, opciones) {
@@ -1938,7 +2302,10 @@ function contextoTieneDatosOficialesNutricion(contexto) {
     c.tabla_nutricional,
     c.porciones,
     c.nutrientes,
-    c.macros
+    c.macros,
+    c.alimento_oficial,
+    c.alimento_encontrado,
+    c.resumen_alimento
   ];
 
   for (let i = 0; i < candidatos.length; i++) {
@@ -1968,12 +2335,21 @@ const FUENTES_NUTRICION_CONFIABLES = [
   { nombre: "Wikipedia ES", dominio: "wikipedia.org", url: "https://es.wikipedia.org" },
   { nombre: "USDA FoodData Central", dominio: "fdc.nal.usda.gov", url: "https://fdc.nal.usda.gov" },
   { nombre: "USDA Dietary Guidelines", dominio: "dietaryguidelines.gov", url: "https://www.dietaryguidelines.gov" },
+  { nombre: "MyPlate", dominio: "myplate.gov", url: "https://www.myplate.gov" },
   { nombre: "USDA Nutrition", dominio: "usda.gov", url: "https://www.usda.gov/topics/food-nutrition" },
   { nombre: "NIH ODS", dominio: "ods.od.nih.gov", url: "https://ods.od.nih.gov" },
   { nombre: "MedlinePlus", dominio: "medlineplus.gov", url: "https://medlineplus.gov" },
   { nombre: "WHO", dominio: "who.int", url: "https://www.who.int" },
   { nombre: "FAO Nutrition", dominio: "fao.org", url: "https://www.fao.org/nutrition" },
   { nombre: "EFSA", dominio: "efsa.europa.eu", url: "https://www.efsa.europa.eu" },
+  { nombre: "CDC Physical Activity", dominio: "cdc.gov", url: "https://www.cdc.gov/physical-activity-basics/about/" },
+  { nombre: "Office of Disease Prevention and Health Promotion", dominio: "health.gov", url: "https://health.gov" },
+  { nombre: "Move Your Way", dominio: "health.gov", url: "https://odphp.health.gov/moveyourway" },
+  { nombre: "ACSM", dominio: "acsm.org", url: "https://acsm.org" },
+  { nombre: "American Heart Association", dominio: "heart.org", url: "https://www.heart.org" },
+  { nombre: "NHS Exercise", dominio: "nhs.uk", url: "https://www.nhs.uk/live-well/exercise/" },
+  { nombre: "NIDDK Activity", dominio: "niddk.nih.gov", url: "https://www.niddk.nih.gov/health-information/weight-management/tips-get-active" },
+  { nombre: "WomensHealth Activity", dominio: "womenshealth.gov", url: "https://womenshealth.gov/getting-active" },
   { nombre: "Mayo Clinic", dominio: "mayoclinic.org", url: "https://www.mayoclinic.org" },
   { nombre: "Harvard Nutrition Source", dominio: "hsph.harvard.edu", url: "https://www.hsph.harvard.edu/nutritionsource" }
 ];
@@ -1996,11 +2372,31 @@ function preguntaRequiereBusquedaWebNutricion(pregunta, evento, modo, intencion)
 
   if (intencionTxt === "plan_hoy") return false;
 
-  if (["nutricion_general", "comidas", "comer_fuera", "creditos", "general"].indexOf(intencionTxt) >= 0) {
+  if (["nutricion_general", "comidas", "comer_fuera", "creditos", "general", "ejercicio", "agua"].indexOf(intencionTxt) >= 0) {
     return true;
   }
 
-  return /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|salud/.test(preguntaLower);
+  return /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|salud|deporte|deportivo|entreno|entrenamiento|gym|gimnasio|correr|carrera|fuerza|musculo|masa muscular|recuperacion|hidratacion|electrolitos|cardio|resistencia/.test(preguntaLower);
+}
+
+function construirConsultaWebCoach(consulta, intencion) {
+  const base = String(consulta || "").trim();
+  const intent = String(intencion || "general").toLowerCase();
+  if (!base) return "";
+
+  if (intent === "ejercicio") {
+    return base + " ejercicio rendimiento deportivo actividad fisica";
+  }
+
+  if (intent === "agua") {
+    return base + " hidratacion ejercicio salud";
+  }
+
+  if (intent === "comer_fuera") {
+    return base + " alimentacion saludable nutricion";
+  }
+
+  return base + " nutricion alimentacion salud";
 }
 
 function dominioPermitidoNutricion(url) {
@@ -2037,12 +2433,12 @@ function extraerDescripcionDesdeHtmlNutricion(html) {
   return txt;
 }
 
-function extraerEnlacesConfiablesDuckDuckGo(consulta, maxResultados) {
+function extraerEnlacesConfiablesDuckDuckGo(consulta, maxResultados, intencion) {
   const consultaBase = String(consulta || "").trim();
   if (!consultaBase) return [];
 
   const dominios = FUENTES_NUTRICION_CONFIABLES.map(f => "site:" + f.dominio).join(" OR ");
-  const q = consultaBase + " nutricion " + dominios;
+  const q = construirConsultaWebCoach(consultaBase, intencion) + " " + dominios;
   const url = "https://duckduckgo.com/html/?q=" + encodeURIComponent(q);
   const enlaces = [];
   const vistos = {};
@@ -2073,9 +2469,10 @@ function extraerEnlacesConfiablesDuckDuckGo(consulta, maxResultados) {
   return enlaces;
 }
 
-function obtenerContextoWebNutricion(pregunta) {
+function obtenerContextoWebNutricion(pregunta, intencion) {
   const consulta = String(pregunta || "").trim();
   if (!consulta) return { resumen: "", fuentes: [] };
+  const queryCoach = construirConsultaWebCoach(consulta, intencion);
 
   const fuentes = [];
   const vistos = {};
@@ -2094,7 +2491,7 @@ function obtenerContextoWebNutricion(pregunta) {
   }
 
   try {
-    const urlWiki = "https://es.wikipedia.org/w/api.php?action=opensearch&search=" + encodeURIComponent(consulta + " nutricion") + "&limit=3&namespace=0&format=json";
+    const urlWiki = "https://es.wikipedia.org/w/api.php?action=opensearch&search=" + encodeURIComponent(queryCoach) + "&limit=3&namespace=0&format=json";
     const respWiki = UrlFetchApp.fetch(urlWiki, {
       method: "get",
       muteHttpExceptions: true
@@ -2129,7 +2526,7 @@ function obtenerContextoWebNutricion(pregunta) {
   } catch (_) {}
 
   try {
-    const enlaces = extraerEnlacesConfiablesDuckDuckGo(consulta, 3);
+    const enlaces = extraerEnlacesConfiablesDuckDuckGo(consulta, 4, intencion);
     for (let i = 0; i < enlaces.length && fuentes.length < 6; i++) {
       const enlace = enlaces[i];
       try {
