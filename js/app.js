@@ -3920,16 +3920,29 @@ function inyectarEstilosCoach() {
     document.head.appendChild(style);
 }
 
+function renderizarImagenCoachFab(btn) {
+    if (!btn) return;
+
+    const version = (typeof window !== 'undefined' && window.APP_VERSION) ? String(window.APP_VERSION) : String(Date.now());
+    const src = 'IMAGENES/coach.png?v=' + encodeURIComponent(version);
+
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Abrir chat del coach');
+    btn.title = 'Abrir chat del coach';
+    btn.innerHTML = '<img src="' + src + '" alt="Coach" loading="eager" decoding="async">';
+}
+
 function crearBotonFlotanteCoach() {
-    if (document.getElementById('coach-fab')) return;
+    const existente = document.getElementById('coach-fab');
+    if (existente) {
+        renderizarImagenCoachFab(existente);
+        return;
+    }
 
     const btn = document.createElement('button');
     btn.id = 'coach-fab';
     btn.className = 'coach-fab';
-    btn.type = 'button';
-    btn.setAttribute('aria-label', 'Abrir chat del coach');
-    btn.title = 'Abrir chat del coach';
-    btn.innerHTML = '<img src="IMAGENES/coach.png" alt="Coach" loading="eager" decoding="async">';
+    renderizarImagenCoachFab(btn);
     btn.addEventListener('click', () => {
         alternarPanelCoach(true);
     });
