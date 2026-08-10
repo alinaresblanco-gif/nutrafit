@@ -914,6 +914,53 @@ SALIDA OBLIGATORIA:
 Devuelve JSON valido con: respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
 En modo factual, usa respuesta_directa como cuerpo principal y deja vacios los demas campos si no aplican.`;
 
+const COACH_BATERIA_CALIBRACION = [
+  { id: 1, categoria: "nutricion_general", pregunta: "Que beneficios tiene la chia y cuanta cantidad diaria recomiendas?", respuesta: "La chia aporta fibra, omega-3 vegetal, antioxidantes y saciedad; una cantidad habitual util es 1 a 2 cucharadas al dia, mejor repartidas en desayunos o snacks si sienta bien." },
+  { id: 2, categoria: "nutricion_general", pregunta: "El aguacate engorda o puede ayudarme a perder peso?", respuesta: "El aguacate no engorda por si mismo; puede ayudar a perder peso si se usa en cantidad moderada porque sus grasas saludables aportan saciedad y estabilidad de energia." },
+  { id: 3, categoria: "nutricion_general", pregunta: "Es mejor pan integral o pan blanco para controlar hambre?", respuesta: "El pan integral suele controlar mejor el hambre por su fibra y digestion mas lenta; el pan blanco se absorbe mas rapido y suele dar menos saciedad sostenida." },
+  { id: 4, categoria: "nutricion_general", pregunta: "Que diferencia hay entre azucar, miel y edulcorantes?", respuesta: "Azucar y miel siguen aportando azucares; la miel tiene matices pero no deja de ser azucar. Los edulcorantes endulzan sin calorias, aunque conviene usarlos con moderacion." },
+  { id: 5, categoria: "nutricion_general", pregunta: "La fruta por la noche es mala?", respuesta: "La fruta por la noche no es mala ni engorda mas por la hora; importa el conjunto del dia, la cantidad y como encaja en tus creditos." },
+  { id: 6, categoria: "nutricion_general", pregunta: "Cuanta proteina necesito al dia si quiero perder grasa y mantener musculo?", respuesta: "Para perder grasa y mantener musculo suele moverse entre 1,6 y 2 g por kilo de peso al dia, ajustando segun contexto personal y tolerancia." },
+  { id: 7, categoria: "nutricion_general", pregunta: "Los yogures proteicos son mejores que el yogur natural normal?", respuesta: "No son necesariamente mejores, pero pueden encajar mejor si buscas mas saciedad y mas proteina; el yogur natural sin azucar sigue siendo una opcion valida." },
+  { id: 8, categoria: "nutricion_general", pregunta: "Que snack me recomiendas para evitar picoteo por ansiedad?", respuesta: "Funciona mejor un snack con proteina y fibra, por ejemplo yogur natural con fruta, frutos secos en porcion pequena o verduras con hummus." },
+  { id: 9, categoria: "nutricion_general", pregunta: "Es cierto que el ayuno intermitente funciona para todo el mundo?", respuesta: "No funciona igual para todo el mundo; a algunas personas les ayuda con apetito y estructura, y a otras les aumenta ansiedad o les complica la rutina." },
+  { id: 10, categoria: "nutricion_general", pregunta: "Que opinas de la leche sin lactosa frente a bebida vegetal?", respuesta: "La leche sin lactosa mantiene el valor de la leche normal y mejora tolerancia; las bebidas vegetales cambian mucho segun tipo y fortificacion, y suelen aportar menos proteina." },
+  { id: 11, categoria: "planificacion", pregunta: "Dame un plan de hoy si tengo poco tiempo para cocinar.", respuesta: "Cuando hay poco tiempo, conviene montar comidas rapidas y equilibradas: desayuno sencillo con proteina, comida con proteina ya lista y verdura, y cena ligera facil de preparar." },
+  { id: 12, categoria: "planificacion", pregunta: "Como organizo un dia de comidas si entreno por la tarde?", respuesta: "Suele funcionar un desayuno estable, una comida completa con energia util antes del entreno y una cena rica en proteina para recuperar sin pesadez." },
+  { id: 13, categoria: "planificacion", pregunta: "Que desayuno me da saciedad hasta mediodia?", respuesta: "Un desayuno saciante suele combinar proteina, fibra y grasas saludables, por ejemplo yogur con fruta y semillas o tostada integral con huevo y aguacate." },
+  { id: 14, categoria: "planificacion", pregunta: "Que cena ligera me ayuda a no acostarme con hambre?", respuesta: "Una cena ligera y saciante suele llevar proteina facil de digerir y verdura, por ejemplo tortilla con verduras o pescado blanco con calabacin." },
+  { id: 15, categoria: "planificacion", pregunta: "Si me paso en la comida, como compenso el resto del dia sin castigarme?", respuesta: "La mejor compensacion es ligera y estable: merienda con proteina y cena suave con verdura y proteina, sin castigos ni ayunos bruscos." },
+  { id: 16, categoria: "alimentos", pregunta: "Patata cocida o arroz: cual es mejor para control de apetito?", respuesta: "La patata cocida suele saciar mas por agua y densidad energetica menor; el arroz suele ser mas facil de comer en mas cantidad." },
+  { id: 17, categoria: "alimentos", pregunta: "El platano antes de entrenar es buena idea?", respuesta: "El platano antes de entrenar suele encajar bien porque aporta carbohidratos faciles de usar y potasio, con buena digestibilidad para muchas personas." },
+  { id: 18, categoria: "alimentos", pregunta: "Que queso es mas recomendable si quiero bajar calorias?", respuesta: "Suelen encajar mejor quesos frescos y bajos en grasa, como queso fresco batido, cottage o queso fresco tradicional en porciones medidas." },
+  { id: 19, categoria: "alimentos", pregunta: "Legumbres de bote: son buena opcion o pierden calidad?", respuesta: "Las legumbres de bote siguen siendo una buena opcion; solo conviene aclararlas para reducir exceso de sal si lo tienen." },
+  { id: 20, categoria: "alimentos", pregunta: "Atun en lata: cual elegir y cuantas veces por semana?", respuesta: "Suele interesar atun al natural o en aceite de oliva escurrido; la frecuencia depende del conjunto de dieta, pero conviene moderar el abuso continuado." },
+  { id: 21, categoria: "nutrafit_usuario", pregunta: "Con mis creditos de hoy, como deberia repartir desayuno, comida y cena?", respuesta: "Conviene reservar una parte moderada para desayuno, concentrar mas creditos en la comida y dejar una cena ligera rica en proteina para evitar hambre tardia." },
+  { id: 22, categoria: "nutrafit_usuario", pregunta: "Con mi historial de esta semana, que error repito mas?", respuesta: "Busca patrones reales del historial, por ejemplo llegar con demasiada hambre a la noche o dejar demasiados creditos para el final del dia." },
+  { id: 23, categoria: "nutrafit_usuario", pregunta: "Segun mis datos de agua, estoy hidratandome bien?", respuesta: "Valora constancia y reparto del agua durante el dia, no solo el total aislado; si hay regularidad, suele ir mejor que grandes cantidades de golpe." },
+  { id: 24, categoria: "nutrafit_usuario", pregunta: "Que ajuste me recomiendas hoy segun mi progreso de peso?", respuesta: "El ajuste debe salir de la tendencia del peso y del contexto del dia, priorizando saciedad, proteina y estabilidad, no recortes bruscos." },
+  { id: 25, categoria: "nutrafit_usuario", pregunta: "Que menu rapido me encaja con mis creditos restantes?", respuesta: "Con creditos restantes bajos, funciona mejor un menu rapido basado en proteina facil y verdura, con una guarnicion medida si cabe." },
+  { id: 26, categoria: "comer_fuera", pregunta: "Voy a comer fuera, que pido para no disparar creditos?", respuesta: "Fuera de casa suele ir mejor elegir proteina magra y verdura, evitar salsas densas y dejar los extras para una decision consciente." },
+  { id: 27, categoria: "comer_fuera", pregunta: "En una pizzeria, cual seria la opcion menos perjudicial?", respuesta: "En pizzeria suele encajar mejor una opcion sencilla de masa fina con verduras y proteina magra, evitando extras grasos y masas gruesas." },
+  { id: 28, categoria: "comer_fuera", pregunta: "Si voy de tapas, como elijo mejor sin quedarme con hambre?", respuesta: "En tapas conviene priorizar opciones con proteina y verdura y limitar fritos, rebozados y panes extra para mantener saciedad sin exceso." },
+  { id: 29, categoria: "comportamiento", pregunta: "Tengo ansiedad por dulce por la tarde, que hago en 10 minutos?", respuesta: "En 10 minutos suele ayudar moverte un poco, beber agua y elegir un snack con proteina para frenar el impulso de azucar." },
+  { id: 30, categoria: "comportamiento", pregunta: "Como evito abandonar cuando tengo una semana mala?", respuesta: "En una semana mala, reducir exigencia y sostener dos o tres acciones minimas suele proteger el habito mejor que intentar compensar en exceso." }
+];
+
+const MAPA_CATEGORIAS_INTENCION_COACH = {
+  plan_hoy: ["planificacion", "nutrafit_usuario"],
+  nutricion_general: ["nutricion_general", "alimentos"],
+  comidas: ["planificacion", "alimentos"],
+  comer_fuera: ["comer_fuera", "planificacion"],
+  ejercicio: ["planificacion", "nutrafit_usuario"],
+  agua: ["nutrafit_usuario", "comportamiento"],
+  motivacion: ["comportamiento", "nutrafit_usuario"],
+  finde: ["comportamiento", "planificacion"],
+  creditos: ["nutrafit_usuario", "planificacion"],
+  inicio_dia: ["planificacion", "comportamiento"],
+  general: ["nutricion_general", "alimentos"]
+};
+
 function procesarCoachNutrafit(ss, payload) {
   const usuarioId = normalizarEmail(payload.usuario_id);
   const dispositivoId = String(payload.dispositivo_id || "").trim();
@@ -950,6 +997,7 @@ function procesarCoachNutrafit(ss, payload) {
     ? obtenerContextoWebNutricion(pregunta)
     : { resumen: "", fuentes: [] };
   const resumenUsuario = construirResumenUsuarioNutrafitParaCoach(contextoUsuario, contexto || {});
+  const ejemplosCalibracion = seleccionarEjemplosCalibracionCoach(pregunta, intencionDetectada, rutaRespuesta, 3);
   const contextoFinal = Object.assign({}, contexto || {}, {
     perfil_usuario: contextoUsuario,
     accion_nutrafit: accionNutrafit,
@@ -957,6 +1005,7 @@ function procesarCoachNutrafit(ss, payload) {
     intencion_detectada: intencionDetectada,
     ruta_respuesta: rutaRespuesta,
     resumen_usuario_nutrafit: resumenUsuario,
+    ejemplos_calibracion: ejemplosCalibracion,
     resumen_web: contextoWeb.resumen,
     fuentes_web: contextoWeb.fuentes
   });
@@ -1267,6 +1316,7 @@ function construirContextoUsuarioCoach(ss, usuarioId) {
 
 function construirMensajeCoach(pregunta, evento, contexto, modo) {
   const intencion = detectarIntencionCoach(pregunta, evento);
+  const ejemplos = Array.isArray(contexto.ejemplos_calibracion) ? contexto.ejemplos_calibracion : [];
   const safeContext = {
     evento: evento,
     accion: contexto.accion_nutrafit || "pregunta",
@@ -1286,12 +1336,16 @@ function construirMensajeCoach(pregunta, evento, contexto, modo) {
     "Si la pregunta es directa, responde de forma directa en respuesta_directa y evita plantillas.",
     "No uses etiquetas como 'Lectura rapida:', 'Accion ahora:', 'Siguiente paso:' dentro de respuesta_directa.",
     "Si piden plan de hoy, entrega un plan concreto por momentos del dia adaptado a creditos disponibles.",
+    "Usa EJEMPLOS_CALIBRACION como referencia de calidad, tono y nivel de concrecion, pero no copies literal salvo coincidencia total de contexto.",
     "",
     "PREGUNTA:",
     pregunta || "Necesito recomendacion para este momento.",
     "",
     "MODO:",
     modo || "auto",
+    "",
+    "EJEMPLOS_CALIBRACION:",
+    formatearEjemplosCalibracionCoach(ejemplos),
     "",
     "CONTEXTO_JSON:",
     JSON.stringify(safeContext)
@@ -1349,11 +1403,13 @@ function construirMensajeCoachFactual(pregunta, evento, contexto, modo) {
   const fuentes = Array.isArray(contexto.fuentes_web) ? contexto.fuentes_web : [];
   const resumenWeb = String(contexto.resumen_web || "");
   const resumenUsuario = String(contexto.resumen_usuario_nutrafit || "");
+  const ejemplos = Array.isArray(contexto.ejemplos_calibracion) ? contexto.ejemplos_calibracion : [];
 
   return [
     "MODO_FACTUAL_ACTIVO:",
     "Responde a la pregunta con base en consenso de fuentes y con aplicacion practica al usuario.",
     "No uses plantilla de coach.",
+    "Usa EJEMPLOS_CALIBRACION como referencia de concrecion y estructura, no como texto a copiar.",
     "",
     "PREGUNTA_USUARIO:",
     pregunta || "Sin pregunta",
@@ -1370,9 +1426,94 @@ function construirMensajeCoachFactual(pregunta, evento, contexto, modo) {
     "RESUMEN_WEB:",
     resumenWeb || "Sin contexto web adicional.",
     "",
+    "EJEMPLOS_CALIBRACION:",
+    formatearEjemplosCalibracionCoach(ejemplos),
+    "",
     "FUENTES_WEB:",
     fuentes.length ? fuentes.join("\n- ") : "Sin fuentes disponibles"
   ].join("\n");
+}
+
+function normalizarTextoCoachComparable(texto) {
+  return String(texto || "")
+    .toLowerCase()
+    .replace(/[áàäâ]/g, "a")
+    .replace(/[éèëê]/g, "e")
+    .replace(/[íìïî]/g, "i")
+    .replace(/[óòöô]/g, "o")
+    .replace(/[úùüû]/g, "u")
+    .replace(/ñ/g, "n")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenizarCoachComparable(texto) {
+  const limpio = normalizarTextoCoachComparable(texto);
+  if (!limpio) return [];
+  return limpio.split(" ").filter(function(token) {
+    return token && token.length >= 3;
+  });
+}
+
+function categoriasPreferidasCoach(intencion, rutaRespuesta) {
+  const categorias = MAPA_CATEGORIAS_INTENCION_COACH[String(intencion || "general")] || ["nutricion_general"];
+  if (String(rutaRespuesta || "").toLowerCase() === "factual") {
+    return categorias.concat(["nutricion_general", "alimentos"]);
+  }
+  return categorias.concat(["planificacion", "nutrafit_usuario", "comportamiento"]);
+}
+
+function seleccionarEjemplosCalibracionCoach(pregunta, intencion, rutaRespuesta, limite) {
+  const tokensPregunta = tokenizarCoachComparable(pregunta);
+  const preferidas = categoriasPreferidasCoach(intencion, rutaRespuesta);
+  const max = Math.max(1, Number(limite || 3));
+
+  const puntuados = COACH_BATERIA_CALIBRACION.map(function(item) {
+    const tokensItem = tokenizarCoachComparable(item.pregunta + " " + item.respuesta);
+    const mapaTokens = {};
+    tokensItem.forEach(function(token) { mapaTokens[token] = true; });
+
+    let score = 0;
+    if (preferidas.indexOf(String(item.categoria || "")) >= 0) score += 6;
+
+    tokensPregunta.forEach(function(token) {
+      if (mapaTokens[token]) score += 2;
+    });
+
+    if (String(rutaRespuesta || "").toLowerCase() === "factual" && item.categoria === "alimentos") score += 2;
+    if (String(rutaRespuesta || "").toLowerCase() !== "factual" && item.categoria === "planificacion") score += 2;
+
+    return { item: item, score: score };
+  });
+
+  return puntuados
+    .sort(function(a, b) { return b.score - a.score; })
+    .filter(function(entry, idx) {
+      return entry.score > 0 || idx < max;
+    })
+    .slice(0, max)
+    .map(function(entry) {
+      return {
+        id: entry.item.id,
+        categoria: entry.item.categoria,
+        pregunta: entry.item.pregunta,
+        respuesta_esperada: entry.item.respuesta
+      };
+    });
+}
+
+function formatearEjemplosCalibracionCoach(ejemplos) {
+  const lista = Array.isArray(ejemplos) ? ejemplos : [];
+  if (!lista.length) return "Sin ejemplos de calibracion.";
+
+  return lista.map(function(item) {
+    return [
+      "- Categoria: " + String(item.categoria || "general"),
+      "  Pregunta modelo: " + String(item.pregunta || ""),
+      "  Respuesta esperada modelo: " + String(item.respuesta_esperada || "")
+    ].join("\n");
+  }).join("\n");
 }
 
 function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida, modo, evento, opciones) {
