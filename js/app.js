@@ -3709,18 +3709,48 @@ function inyectarEstilosCoach() {
             bottom: 18px;
             z-index: 9998;
             border: none;
-            border-radius: 999px;
-            background: linear-gradient(135deg, #5a8a5a, #78a978);
-            color: #fff;
-            font-weight: 800;
-            font-size: 12px;
-            padding: 12px 16px;
+            border-radius: 16px;
+            background: transparent;
+            padding: 0;
+            width: clamp(72px, 17vw, 110px);
+            height: clamp(72px, 17vw, 110px);
             box-shadow: 0 10px 24px rgba(46, 74, 46, 0.35);
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        .coach-fab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(46, 74, 46, 0.42);
+        }
+
+        .coach-fab:active {
+            transform: translateY(0);
+        }
+
+        .coach-fab img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
 
         .coach-fab.paused {
-            background: linear-gradient(135deg, #666, #888);
+            filter: grayscale(0.55) saturate(0.8);
+            opacity: 0.9;
+        }
+
+        @media (max-width: 420px) {
+            .coach-fab {
+                right: 12px;
+                bottom: 14px;
+                width: 72px;
+                height: 72px;
+            }
         }
 
         .coach-sheet {
@@ -3896,7 +3926,10 @@ function crearBotonFlotanteCoach() {
     const btn = document.createElement('button');
     btn.id = 'coach-fab';
     btn.className = 'coach-fab';
-    btn.innerHTML = '<i class="fas fa-comments"></i> COACH';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Abrir chat del coach');
+    btn.title = 'Abrir chat del coach';
+    btn.innerHTML = '<img src="IMAGENES/coach.png" alt="Coach" loading="eager" decoding="async">';
     btn.addEventListener('click', () => {
         alternarPanelCoach(true);
     });
