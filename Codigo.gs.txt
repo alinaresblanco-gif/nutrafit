@@ -1019,7 +1019,7 @@ const COACH_MINI_TEST_10 = [
     id: 10,
     categoria: "calidad_respuesta",
     pregunta: "Que beneficios tiene la chia?",
-    respuesta: "La chia puede ayudarte por su fibra (saciedad y transito) y su aporte de omega-3 vegetal. Uso practico: 1 cucharada al dia para empezar, en yogur, ensalada o avena.",
+    respuesta: "La chia puede ayudarte por su fibra (saciedad y transito) y su aporte de omega-3 vegetal. Uso practico: 1 cucharada al dia para empezar, en yogur o ensalada.",
     claves_minimas: ["chia", "fibra", "omega", "cucharada"]
   }
 ];
@@ -2427,6 +2427,14 @@ function construirRespuestaDirectaDesdeCatalogoAlimento(contexto, preguntaTxt) {
   return partes.join(" ");
 }
 
+function construirRespuestaCanonicaChiaCoach(preguntaTxt) {
+  var t = normalizarTextoCoachComparable(preguntaTxt || "");
+  if (!t) return "";
+  if (t.indexOf("chia") === -1) return "";
+
+  return "La chia puede ayudarte por su fibra (saciedad y transito) y por su aporte de omega-3 vegetal. Cantidad orientativa: 1 a 2 cucharadas al dia, empezando con 1 cucharada si no la tomas habitualmente y subiendo poco a poco segun tolerancia.";
+}
+
 function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, contenidoRaw, modo) {
   const disponibles = Number(contexto.creditos_disponibles);
   const consumidos = Number(contexto.creditos_consumidos);
@@ -2478,6 +2486,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
     const tieneDatosOficiales = contextoTieneDatosOficialesNutricion(contexto);
     const esConsultaMedica = esConsultaMedicaNutricion(preguntaTxt);
     const respuestaCatalogo = construirRespuestaDirectaDesdeCatalogoAlimento(contexto, preguntaTxt);
+    const respuestaChiaCanonica = construirRespuestaCanonicaChiaCoach(preguntaTxt);
     const respuestaMiniTest = obtenerRespuestaMiniTestCoach(preguntaTxt);
 
     if (esConsultaMedica) {
@@ -2512,9 +2521,9 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
       || limpiarRespuestaDirectaCoach(textoPlano)
       || (preguntaTxt ? ("No tengo evidencia suficiente para responder con precision a: " + preguntaTxt + ". Dame mas contexto (cantidad, frecuencia y objetivo).") : "Necesito tu pregunta concreta para ayudarte mejor.");
 
-    const respuestaFactualFinal = respuestaMiniTest
-      ? String(respuestaMiniTest.respuesta || "")
-      : baseFactual;
+    const respuestaFactualFinal = respuestaChiaCanonica
+      || (respuestaMiniTest ? String(respuestaMiniTest.respuesta || "") : "")
+      || baseFactual;
 
     return {
       respuesta_directa: limpiarRespuestaDirectaCoach(respuestaFactualFinal),
