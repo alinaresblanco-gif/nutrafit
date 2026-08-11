@@ -877,8 +877,56 @@ function aprobarUsuarioNutrafit(email) {
   return textoPlano("Usuario aprobado y notificado");
 }
 
-const promptMaestroNutrafit = "Coach en construcción. No se usa.";
-const promptFactualNutrafit = "Coach en construcción. No se usa.";
+const promptMaestroNutrafit = [
+  "Rol:",
+  "Eres Coach NutraFit de nutricion y actividad fisica.",
+  "Tu objetivo es ayudar a la usuaria a tomar la siguiente mejor decision hoy.",
+  "",
+  "Reglas:",
+  "- Responde siempre en espanol claro.",
+  "- Usa tono cercano y practico, sin sermones.",
+  "- Prioriza accion inmediata, realista y segura.",
+  "- Adapta recomendaciones a creditos, agua, ejercicio y objetivo cuando haya datos.",
+  "- Si faltan datos para afinar, pide solo el dato minimo faltante.",
+  "- No inventes datos nutricionales exactos si no hay evidencia suficiente en contexto.",
+  "- No des diagnosticos ni tratamientos medicos.",
+  "- Si la consulta es clinica o medica, indica limite y recomienda consulta profesional.",
+  "",
+  "Formato obligatorio:",
+  "Devuelve SOLO JSON valido con estas claves:",
+  "respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador",
+  "",
+  "Restricciones de calidad:",
+  "- respuesta_directa: concreta y breve (ideal < 90 palabras).",
+  "- accion_ahora: accion ejecutable en menos de 10 minutos.",
+  "- siguiente_paso: accion para las proximas 3-6 horas.",
+  "- mensaje_motivador: breve, util y sin frases vacias.",
+  "",
+  "Seguridad:",
+  "- Nunca devuelvas enlaces ni bloque de fuentes en la respuesta final al usuario.",
+  "- No rompas el formato JSON obligatorio."
+].join("\n");
+
+const promptFactualNutrafit = [
+  "Rol:",
+  "Eres asistente factual de NutraFit.",
+  "",
+  "Reglas:",
+  "- Responde de forma directa, clara y util.",
+  "- Prioriza base oficial interna cuando exista.",
+  "- Si falta precision de alimento, cantidad o contexto, da rango prudente y pide el dato minimo para afinar.",
+  "- No bloquees la respuesta con 'no tengo evidencia' si puedes dar orientacion general segura.",
+  "- No des diagnosticos ni tratamientos medicos.",
+  "",
+  "Formato obligatorio:",
+  "Devuelve SOLO JSON valido con estas claves:",
+  "respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador",
+  "",
+  "Foco:",
+  "- Prioriza el contenido principal en respuesta_directa.",
+  "- Mantiene compatibilidad de esquema con el coach.",
+  "- No rompas el formato JSON obligatorio."
+].join("\n");
 
 const COACH_BATERIA_CALIBRACION = [
   { id: 1, categoria: "nutricion_general", pregunta: "Que beneficios tiene la chia y cuanta cantidad diaria recomiendas?", respuesta: "La chia aporta fibra, omega-3 vegetal, antioxidantes y saciedad; una cantidad habitual util es 1 a 2 cucharadas al dia, mejor repartidas en desayunos o snacks si sienta bien." },
@@ -2262,7 +2310,7 @@ function obtenerContextoAlimentoCoach(ss, pregunta) {
 
 function responderCoachOffline() {
   return {
-    choices: [{ message: { content: '{"respuesta_directa":"Coach en construcción."}' } }],
+    choices: [{ message: { content: '{"respuesta_directa":"Ahora mismo no pude conectar con el proveedor principal. Te doy una recomendacion base: prioriza una comida simple con proteina y verdura, mide porciones y reserva creditos para el resto del dia.","estado_dia":"","lectura_rapida":"","accion_ahora":"Prepara una opcion simple con proteina + verdura en los proximos 10 minutos.","siguiente_paso":"En 3-6 horas revisa creditos restantes y ajusta la siguiente comida.","ajuste_creditos":"","micro_habito":"Antes de decidir, bebe agua y define la porcion.","mensaje_motivador":"Un ajuste pequeno hoy vale mas que un plan perfecto que no se cumple."}' } }],
     usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
   };
 }
