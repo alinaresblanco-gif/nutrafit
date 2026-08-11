@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NUTRAFIT - Mi Asistente</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="manifest" href="manifest.json">
+    
+    <meta name="theme-color" content="#78a978">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NutraFit">
+
+    <link rel="apple-touch-icon" href="IMAGENES/logo.png">
+    <link rel="icon" type="image/png" href="IMAGENES/logo.png">
+
+    <style>
+        .toast-actualizacion {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(46, 74, 46, 0.95);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            z-index: 9999;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            max-width: calc(100% - 30px);
+            text-align: center;
+        }
+
+        .toast-actualizacion.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-actualizacion.info {
+            background: rgba(46, 74, 46, 0.95);
+        }
+
+        .toast-actualizacion.ok {
+            background: rgba(90, 138, 90, 0.96);
+        }
+    </style>
+</head>
+<body>
+    <!-- MODAL DE LOGIN/REGISTRO/BIENVENIDA -->
+    <div id="modal-usuario" class="modal-usuario oculto">
+        <div class="modal-usuario-contenido">
+            <h2 id="modal-usuario-titulo">Bienvenida a Nutrafit</h2>
+            <div id="modal-usuario-formulario">
+                <input type="email" id="input-correo" placeholder="Correo electrónico" autocomplete="email" required>
+                <input type="text" id="input-nombre" placeholder="Nombre" autocomplete="name" required>
+                <button id="btn-registrar-usuario">Registrarme</button>
+                <button id="btn-login-usuario">Ya tengo cuenta</button>
+            </div>
+            <div id="modal-usuario-mensaje" class="modal-usuario-mensaje"></div>
+        </div>
+    </div>
+
+    <div id="pantalla-inicio" class="contenedor">
+        <header class="cabecera-inicio">
+            <img src="IMAGENES/IMAGEN_2.png" class="imagen-principal" alt="Nutrafit Logo">
+        </header>
+        
+        <div class="menu">
+            <button onclick="abrirVista('creditos-diarios')">
+                <i class="fas fa-credit-card"></i> Mis Créditos Diarios
+            </button>
+            
+            <button onclick="abrirVista('creditos-alimentos')">
+                <i class="fas fa-apple-alt"></i> Mis Créditos de Alimentos
+            </button>
+            
+            <button onclick="abrirVista('evolucion-peso')">
+                <i class="fas fa-chart-line"></i> Mi Evolución de Peso
+            </button>
+            
+            <button onclick="abrirVista('agua')">
+                <i class="fas fa-glass-whiskey"></i> Mi Control de Agua
+            </button>
+            
+            <button onclick="abrirVista('diario-formulario')">
+                <i class="fas fa-book-open"></i> Mi Diario de Comida
+            </button>
+            
+            <button onclick="abrirVista('carrito-compra')">
+                <i class="fas fa-shopping-cart"></i> Mi Carrito de la Compra
+            </button>
+            
+            <button onclick="abrirVista('recetas-favoritas')">
+                <i class="fas fa-heart"></i> Mis Recetas Favoritas
+            </button>
+            
+            <button onclick="abrirVista('ejercicio-diario')">
+                <i class="fas fa-dumbbell"></i> Mi Ejercicio Diario
+            </button>
+        </div>
+    </div>
+
+    <div id="contenedor-vistas" style="display: none; min-height: 100vh; width: 100%;">
+        </div>
+
+    <div id="toast-actualizacion" class="toast-actualizacion info" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script>
+        window.APP_VERSION = '20260811-01';
+        window.NUTRAFIT_COACH_PUBLIC_ENABLED = false;
+    </script>
+    <script id="app-js" defer></script>
+    <script>
+        const appScript = document.getElementById('app-js');
+        if (appScript) {
+            appScript.src = `js/app.js?v=${window.APP_VERSION}`;
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const toast = document.getElementById('toast-actualizacion');
+                let temporizadorToast = null;
+
+                function mostrarToastActualizacion(mensaje, tipo = 'info', autocierreMs = 0) {
+                    if (!toast) return;
+                    toast.textContent = mensaje;
+                    toast.classList.remove('info', 'ok');
+                    toast.classList.add(tipo);
+                    toast.classList.add('visible');
+
+                    if (temporizadorToast) {
+                        clearTimeout(temporizadorToast);
+                        temporizadorToast = null;
+                    }
+
+                    if (autocierreMs > 0) {
+                        temporizadorToast = setTimeout(() => {
+                            toast.classList.remove('visible');
+                        }, autocierreMs);
+                    }
+                }
+
+                const appVersion = window.APP_VERSION || 'dev';
+                navigator.serviceWorker.register(`./sw.js?v=${appVersion}`)
+                    .then(reg => {
+                        console.log('Service Worker activo');
+
+                        if (reg.waiting) {
+                            mostrarToastActualizacion('Nueva versión detectada. Actualizando...', 'info');
+                            setTimeout(() => {
+                                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                            }, 450);
+                        }
+
+                        reg.addEventListener('updatefound', () => {
+                            const nuevoSW = reg.installing;
+                            if (!nuevoSW) return;
+
+                            nuevoSW.addEventListener('statechange', () => {
+                                if (nuevoSW.state === 'installed' && navigator.serviceWorker.controller) {
+                                    mostrarToastActualizacion('Hay una nueva versión. Aplicando cambios...', 'info');
+                                    setTimeout(() => {
+                                        nuevoSW.postMessage({ type: 'SKIP_WAITING' });
+                                    }, 450);
+                                }
+                            });
+                        });
+
+                        reg.update();
+                    })
+                    .catch(err => console.log('Error al registrar SW:', err));
+
+                let recargaHecha = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (recargaHecha) return;
+                    recargaHecha = true;
+                    mostrarToastActualizacion('Versión actualizada. Recargando...', 'ok');
+                    window.location.reload();
+                });
+            });
+        }
+    </script>
+</body>
+    <script>
+    // --- AUTENTICACIÓN Y BIENVENIDA NUTRAFIT ---
+    const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbws6j9zZVbF5IQYGP_sXVJZgD0xdizB5xCNhcFWK90ETCTPSeUhxHJY9sqX6LQDKRMo/exec";
+
+    function generarDispositivoId() {
+        let id = localStorage.getItem('nutrafit_dispositivo_id');
+        if (!id) {
+            id = 'nutrafit-' + Math.random().toString(36).substr(2, 12) + '-' + Date.now();
+            localStorage.setItem('nutrafit_dispositivo_id', id);
+        }
+        return id;
+    }
+
+    function mostrarModalUsuario(modo = 'email', mensaje = '') {
+        const modal = document.getElementById('modal-usuario');
+        const titulo = document.getElementById('modal-usuario-titulo');
+        const form = document.getElementById('modal-usuario-formulario');
+        const msg = document.getElementById('modal-usuario-mensaje');
+        const inputNombre = document.getElementById('input-nombre');
+        const btnPrincipal = document.getElementById('btn-registrar-usuario');
+        const btnSecundario = document.getElementById('btn-login-usuario');
+
+        modal.classList.remove('oculto');
+        msg.textContent = mensaje || '';
+        if (modo === 'email') {
+            titulo.textContent = 'Bienvenida a Nutrafit';
+            form.style.display = '';
+            if (inputNombre) inputNombre.style.display = 'none';
+            if (btnPrincipal) btnPrincipal.textContent = 'Continuar';
+            if (btnSecundario) btnSecundario.textContent = 'Ya tengo cuenta';
+            msg.style.display = mensaje ? '' : 'none';
+        } else if (modo === 'registro') {
+            titulo.textContent = 'Solicitar acceso';
+            form.style.display = '';
+            if (inputNombre) inputNombre.style.display = '';
+            if (btnPrincipal) btnPrincipal.textContent = 'Enviar solicitud';
+            if (btnSecundario) btnSecundario.textContent = 'Usar otro correo';
+            msg.style.display = mensaje ? '' : 'none';
+        } else if (modo === 'pendiente') {
+            titulo.textContent = 'Registro pendiente';
+            form.style.display = 'none';
+            msg.style.display = '';
+        } else if (modo === 'bloqueado') {
+            titulo.textContent = 'Acceso bloqueado';
+            form.style.display = 'none';
+            msg.style.display = '';
+        } else if (modo === 'ok') {
+            modal.classList.add('oculto');
+        }
+    }
+
+    async function leerJsonBackend(res) {
+        const raw = await res.text();
+        try {
+            return JSON.parse(raw);
+        } catch (_) {
+            const m = String(raw || '').match(/\{[\s\S]*\}/);
+            if (m && m[0]) {
+                try {
+                    return JSON.parse(m[0]);
+                } catch (_) {}
+            }
+            return { status: 'error', error: 'respuesta_invalida', raw };
+        }
+    }
+
+    async function postBackend(payload) {
+        let res;
+        try {
+            res = await fetch(URL_GOOGLE_SCRIPT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                cache: 'no-store',
+                body: JSON.stringify(payload)
+            });
+        } catch (_) {
+            throw new Error('conexion_fallida');
+        }
+
+        const data = await leerJsonBackend(res);
+        if (!res.ok) {
+            const detalle = String(data?.message || data?.error || '').trim();
+            throw new Error(detalle || ('HTTP ' + res.status));
+        }
+        if (!data || typeof data !== 'object') {
+            throw new Error('respuesta_invalida');
+        }
+        return data;
+    }
+
+    async function consultarAccesoEmail() {
+        const correo = document.getElementById('input-correo').value.trim().toLowerCase();
+        const did = generarDispositivoId();
+        if (!correo) return mostrarModalUsuario('email', 'Introduce tu correo para continuar.');
+
+        try {
+            const data = await postBackend({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did });
+
+            if (data.status === 'activo') {
+                localStorage.setItem('nutrafit_usuario_id', correo);
+                usuarioActivo = correo;
+                mostrarModalUsuario('ok');
+                document.getElementById('pantalla-inicio').style.display = 'flex';
+            } else if (data.status === 'pendiente') {
+                mostrarModalUsuario('pendiente', 'Tu acceso está pendiente de validación. Recibirás un correo cuando te aprueben.');
+            } else if (data.status === 'bloqueado') {
+                mostrarModalUsuario('bloqueado', 'Tu acceso está bloqueado. Contacta con el administrador.');
+            } else if (data.status === 'no_existe') {
+                document.getElementById('input-nombre').style.display = '';
+                document.getElementById('input-nombre').value = document.getElementById('input-nombre').value || '';
+                document.getElementById('modal-usuario-titulo').textContent = 'Solicitar acceso';
+                document.getElementById('modal-usuario-mensaje').textContent = 'Ese correo no tiene acceso aún. Completa tu nombre para enviar la solicitud.';
+                document.getElementById('modal-usuario-mensaje').style.display = '';
+                document.getElementById('btn-registrar-usuario').textContent = 'Enviar solicitud';
+                document.getElementById('btn-login-usuario').textContent = 'Usar otro correo';
+            } else {
+                mostrarModalUsuario('email', 'No se pudo comprobar el acceso. Inténtalo de nuevo.');
+            }
+        } catch (error) {
+            console.error(error);
+            const msg = String(error?.message || '');
+            if (msg === 'conexion_fallida') {
+                mostrarModalUsuario('email', 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.');
+            } else {
+                mostrarModalUsuario('email', 'Respuesta inválida del servidor. Vuelve a intentarlo en unos segundos.');
+            }
+        }
+    }
+
+    async function solicitarAcceso() {
+        const correo = document.getElementById('input-correo').value.trim().toLowerCase();
+        const nombre = document.getElementById('input-nombre').value.trim();
+        if (!correo) return mostrarModalUsuario('email', 'Introduce tu correo.');
+        if (!nombre) return mostrarModalUsuario('registro', 'Escribe tu nombre para enviar la solicitud.');
+
+        try {
+            const data = await postBackend({ tipo: 'solicitar_acceso', email: correo, nombre: nombre });
+
+            if (data.status === 'pendiente') {
+                mostrarModalUsuario('pendiente', 'Tu solicitud está siendo revisada. Recibirás un correo cuando el administrador la apruebe.');
+            } else if (data.status === 'activo') {
+                localStorage.setItem('nutrafit_usuario_id', correo);
+                usuarioActivo = correo;
+                mostrarModalUsuario('ok');
+                document.getElementById('pantalla-inicio').style.display = 'flex';
+            } else if (data.status === 'existe') {
+                mostrarModalUsuario('email', 'Ese correo ya existe. Usa "Ya tengo cuenta" para entrar.');
+            } else {
+                mostrarModalUsuario('email', 'Error en la solicitud: ' + (data.error || 'respuesta inesperada'));
+            }
+        } catch (error) {
+            console.error(error);
+            const msg = String(error?.message || '');
+            if (msg === 'conexion_fallida') {
+                mostrarModalUsuario('email', 'No se pudo conectar con el servidor. Inténtalo de nuevo.');
+            } else {
+                mostrarModalUsuario('email', 'No se pudo enviar la solicitud. El servidor devolvió una respuesta no válida.');
+            }
+        }
+    }
+
+    async function loginUsuario() {
+        const correo = document.getElementById('input-correo').value.trim().toLowerCase();
+        const did = generarDispositivoId();
+        if (!correo) return mostrarModalUsuario('email', 'Introduce tu correo.');
+
+        try {
+            const data = await postBackend({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did });
+
+            if (data.status === 'activo') {
+                localStorage.setItem('nutrafit_usuario_id', correo);
+                usuarioActivo = correo;
+                mostrarModalUsuario('ok');
+                document.getElementById('pantalla-inicio').style.display = 'flex';
+            } else if (data.status === 'pendiente') {
+                mostrarModalUsuario('pendiente', 'Tu acceso sigue pendiente de validación.');
+            } else if (data.status === 'no_existe') {
+                document.getElementById('input-nombre').style.display = '';
+                mostrarModalUsuario('registro', 'No existe ese correo. Completa tu nombre y envía la solicitud.');
+            } else if (data.status === 'bloqueado') {
+                mostrarModalUsuario('bloqueado', 'Tu acceso está bloqueado.');
+            } else {
+                mostrarModalUsuario('email', 'No se pudo comprobar el acceso.');
+            }
+        } catch (error) {
+            console.error(error);
+            const msg = String(error?.message || '');
+            if (msg === 'conexion_fallida') {
+                mostrarModalUsuario('email', 'No hay conexión con el servidor. Inténtalo de nuevo.');
+            } else {
+                mostrarModalUsuario('email', 'No se pudo comprobar el acceso por respuesta inválida del servidor.');
+            }
+        }
+    }
+
+    async function loginUsuarioAuto(correo) {
+        const did = generarDispositivoId();
+        let data;
+        try {
+            data = await postBackend({ tipo: 'verificar_acceso', email: correo, dispositivo_id: did });
+        } catch (error) {
+            console.error(error);
+            mostrarModalUsuario('email', 'No se pudo validar tu sesión automáticamente.');
+            document.getElementById('pantalla-inicio').style.display = 'none';
+            return;
+        }
+
+        // Comprobar si el usuario ya está en una vista para no interrumpir su navegación.
+        const enVista = () => document.getElementById('contenedor-vistas')?.style.display !== 'none';
+
+        if (data.status === 'activo') {
+            usuarioActivo = correo;
+            // Sincronizar el global de app.js por si se leyó antes del login
+            if (typeof window !== 'undefined') window._nutrafit_usuario = correo;
+            document.getElementById('modal-usuario').classList.add('oculto');
+            // Solo mostrar pantalla inicio si el usuario NO está ya en una vista
+            if (!enVista()) {
+                document.getElementById('pantalla-inicio').style.display = 'flex';
+            }
+        } else if (data.status === 'pendiente') {
+            mostrarModalUsuario('pendiente', 'Tu acceso aún está pendiente de validación.');
+            if (!enVista()) document.getElementById('pantalla-inicio').style.display = 'none';
+        } else if (data.status === 'bloqueado') {
+            mostrarModalUsuario('bloqueado', 'Tu acceso está bloqueado.');
+            if (!enVista()) document.getElementById('pantalla-inicio').style.display = 'none';
+        } else {
+            if (!enVista()) {
+                mostrarModalUsuario('email');
+                document.getElementById('pantalla-inicio').style.display = 'none';
+            }
+        }
+    }
+
+    function comprobarSesionUsuario() {
+        const correo = localStorage.getItem('nutrafit_usuario_id');
+        if (!correo) {
+            mostrarModalUsuario('email');
+            document.getElementById('pantalla-inicio').style.display = 'none';
+            return;
+        }
+        loginUsuarioAuto(correo);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('btn-registrar-usuario').onclick = async () => {
+            const nombreVisible = document.getElementById('input-nombre').style.display !== 'none';
+            if (nombreVisible) {
+                await solicitarAcceso();
+            } else {
+                await consultarAccesoEmail();
+            }
+        };
+
+        document.getElementById('btn-login-usuario').onclick = async () => {
+            const nombreVisible = document.getElementById('input-nombre').style.display !== 'none';
+            if (nombreVisible) {
+                document.getElementById('input-nombre').style.display = 'none';
+                document.getElementById('btn-registrar-usuario').textContent = 'Continuar';
+                document.getElementById('btn-login-usuario').textContent = 'Ya tengo cuenta';
+                document.getElementById('modal-usuario-mensaje').textContent = '';
+                document.getElementById('modal-usuario-mensaje').style.display = 'none';
+            } else {
+                await loginUsuario();
+            }
+        };
+
+        // Garantizar que el dispositivo_id existe ANTES de que app.js lo necesite
+        const devId = generarDispositivoId();
+        // Actualizar el global de app.js si ya se cargó con null
+        if (typeof dispositivoId !== 'undefined' && !dispositivoId) {
+            dispositivoId = devId;
+        }
+
+        comprobarSesionUsuario();
+    });
+    </script>
+</html>

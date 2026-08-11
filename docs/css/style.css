@@ -1,0 +1,562 @@
+/* MODAL USUARIO NUTRAFIT */
+.modal-usuario {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-usuario.oculto { display: none; }
+.modal-usuario-contenido {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px 24px 24px 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    min-width: 320px;
+    max-width: 90vw;
+    text-align: center;
+}
+.modal-usuario-contenido h2 {
+    margin-bottom: 18px;
+    color: #78a978;
+    font-size: 1.4rem;
+}
+.modal-usuario-contenido input {
+    width: 90%;
+    margin: 8px 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #b7d3b7;
+    font-size: 1rem;
+}
+.modal-usuario-contenido button {
+    width: 90%;
+    margin: 10px 0 0 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: #78a978;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.modal-usuario-contenido button:hover {
+    background: #5e8e5e;
+}
+.modal-usuario-mensaje {
+    margin-top: 18px;
+    color: #b94a48;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+/* =========================================
+   CONFIGURACIÓN BASE
+   ========================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    background-color: #f4f7f4;
+    color: #333;
+}
+
+/* Contenedor Principal (Index) */
+.contenedor {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+}
+
+/* Imagen de Cabecera en Menú */
+.imagen-principal {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 0 0 15px 15px;
+    border-bottom: 3px solid #a5cba5; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* =========================================
+   MENÚ PRINCIPAL (BOTONES GIGANTES)
+   ========================================= */
+.menu {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px 15px;
+    overflow-y: auto;
+    background-color: #f4f7f4;
+}
+
+.menu button {
+    background-color: #78a978; 
+    color: white;
+    border: none;
+    border-radius: 10px;
+    width: 100%;
+    min-height: 51px; /* Ajustado para que quepan más en pantalla */
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding-left: 10%;
+    gap: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(120, 169, 120, 0.3);
+}
+
+.menu button i {
+    font-size: 35px;
+    width: 40px;
+    text-align: center;
+}
+
+.menu button:active {
+    transform: scale(0.96);
+    background-color: #618d61;
+}
+
+/* =========================================
+   VISTAS INTERNAS (AGUA, PESO, ETC.)
+   ========================================= */
+#contenedor-vistas {
+    width: 100%;
+    height: 100vh;
+    background-color: #f4f7f4;
+    overflow-y: auto;
+}
+
+/* Cabecera de las secciones */
+.cabecera-seccion {
+    background-color: #78a978;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.boton-volver {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 18px;
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.titulo-cabecera h1 {
+    font-size: 1.2rem;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.contenido-seccion {
+    padding: 20px;
+}
+
+/* =========================================
+   CONTROL DE AGUA - ESPECÍFICO
+   ========================================= */
+.tarjeta-progreso {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.icono-agua-grande {
+    font-size: 45px;
+    color: #3498db;
+    margin-bottom: 10px;
+}
+
+.barra-progreso-fondo {
+    width: 100%;
+    height: 12px;
+    background: #eee;
+    border-radius: 10px;
+    margin-top: 15px;
+    overflow: hidden;
+}
+
+.barra-progreso-relleno {
+    width: 0%; 
+    height: 100%;
+    background-color: #7dd3fc;
+    transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.grid-agua {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.boton-vaso {
+    background-color: #f8fbfd; 
+    border: 2px solid #e0e6ed;
+    border-radius: 12px;
+    height: 60px; 
+    color: #a0aec0;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.boton-vaso.activo {
+    background-color: #e0f2fe !important;
+    color: #0c4a6e !important;
+    border-color: #7dd3fc !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(14, 165, 233, 0.15);
+}
+
+.boton-reset {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 15px;
+    width: 100%;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
+}
+
+/* =========================================
+   HISTORIAL (TABLA)
+   ========================================= */
+.seccion-historico {
+    margin-top: 30px;
+}
+
+.seccion-historico h3 {
+    color: #78a978;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.texto-verde { color: #2ecc71; font-weight: bold; }
+.texto-naranja { color: #e67e22; font-weight: bold; }
+
+/* Estilos de tabla para que se vea profesional */
+table th {
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+}
+
+table td {
+    color: #444;
+}
+/* =========================================
+   TABLA HISTORIAL NUTRAFIT (ESTILO PREMIUM)
+   ========================================= */
+.tabla-nutrafit {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden; /* Para que las esquinas redondeadas funcionen */
+    border: 1px solid #78a978; /* Borde exterior verde */
+}
+
+/* Cabecera: Fondo Verde, Texto Blanco */
+.tabla-nutrafit thead {
+    background-color: #78a978;
+    color: white;
+}
+
+.tabla-nutrafit th {
+    padding: 12px;
+    text-align: left;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid #a5cba5; /* Líneas verdes en la cabecera */
+}
+
+/* Celdas con líneas de cuadrícula verdes suaves */
+.tabla-nutrafit td {
+    padding: 12px;
+    font-size: 0.9rem;
+    color: #444;
+    border: 1px solid #d0e1d0; /* Línea de cuadrícula verde suave */
+}
+
+/* Efecto cebra opcional (filas alternas un pelín más claras) */
+.tabla-nutrafit tr:nth-child(even) {
+    background-color: #f9fbf9;
+}
+/* =========================================
+   VISTA ALIMENTOS Y DESPENSA (ESTILO NUTRAFIT)
+   ========================================= */
+
+/* Cabecera Fija para todas las vistas */
+.vista-cabecera-fija {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #78a978;
+    color: white;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.cabecera-barra {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    height: 60px;
+}
+
+.titulo-vista {
+    flex-grow: 1;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Tarjeta de Formulario */
+.formulario-card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+/* Etiquetas Verdes Corporativas */
+.etiqueta-verde {
+    display: block;
+    color: #78a978;
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+/* Inputs Centrados */
+.input-texto-centrado {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e6ed;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1rem;
+    color: #333;
+    outline: none;
+}
+
+.input-texto-centrado:focus {
+    border-color: #78a978;
+}
+
+/* Controles de Macro (+ / -) Estilo Táctil */
+.control-stepper-corporativo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fbfd;
+    border: 2px solid #78a978;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.control-stepper-corporativo button {
+    background: #78a978;
+    color: white;
+    border: none;
+    width: 45px;
+    height: 45px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.control-stepper-corporativo input {
+    width: 60px;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+    outline: none;
+}
+
+/* Botones de Acción (Ancho completo) */
+.boton-accion-v2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 1rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.boton-accion-v2:active {
+    transform: scale(0.98);
+}
+
+/* Buscador de Despensa */
+.contenedor-buscador-corporativo {
+    padding: 10px 15px;
+    background: #78a978;
+}
+
+.caja-busqueda-v2 {
+    background: white;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+}
+
+.caja-busqueda-v2 input {
+    border: none;
+    outline: none;
+    width: 100%;
+    margin-left: 10px;
+    font-size: 1rem;
+}
+
+/* Estilo de la tabla de la Despensa */
+.cabecera-grupo-despensa {
+    background: #eef5ee;
+    color: #4a6d4a;
+    padding: 12px;
+    font-weight: bold;
+    border-left: 5px solid #78a978;
+    margin: 15px 0 5px 0;
+    text-transform: uppercase;
+}
+
+.tabla-despensa {
+    width: 100%;
+    background: white;
+    border-radius: 10px;
+    border-collapse: collapse;
+}
+
+.fila-alimento td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.credito-badge {
+    background: #78a978;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+.tarjeta-strava {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.strava-header {
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+.avatar-mini { width: 35px; height: 35px; border-radius: 50%; background: #eee; }
+.strava-titulo { font-weight: bold; color: #333; font-size: 14px; }
+.strava-fecha { font-size: 11px; color: #888; }
+.btn-compartir { position: absolute; right: 12px; border: none; background: none; color: #78a978; font-size: 18px; }
+
+.strava-imagen { width: 100%; height: 200px; object-fit: cover; }
+
+.strava-stats {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    justify-content: space-between;
+}
+.stat { display: flex; flex-direction: column; text-align: center; }
+.stat span { font-size: 10px; color: #888; text-transform: uppercase; }
+.stat strong { font-size: 15px; color: #333; }
+
+.strava-footer {
+    padding: 10px 15px;
+    background: #f9f9f9;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #666;
+}
+/* Estilos para los items de la despensa */
+.item-despensa {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.item-despensa:hover { background: #f0f7f0; }
+.item-despensa.seleccionado {
+    background: #e8f4e8;
+    border-left: 4px solid var(--verde-corp);
+}
+.item-nombre { font-weight: 500; color: #333; }
+.item-netos { color: var(--verde-corp); font-weight: bold; }
+

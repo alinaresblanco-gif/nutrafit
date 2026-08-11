@@ -1,0 +1,104 @@
+<div class="vista-cabecera-fija">
+    <div class="cabecera-barra">
+        <button onclick="volverInicio()" class="boton-volver">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <span class="titulo-vista">
+            <i class="fas fa-apple-alt"></i> CREDITOS DE MIS ALIMENTOS
+        </span>
+    </div>
+</div>
+
+<div class="contenido-scroll" style="margin-top: 80px; padding: 15px;">
+    
+    <button class="boton-accion-v2" onclick="abrirVista('nuestra_despensa')" style="width:100%; margin-bottom:20px; background-color: #78a978;">
+        <i class="fas fa-warehouse"></i> NUESTRA DESPENSA
+    </button>
+
+    <div class="formulario-card">
+        
+        <label class="etiqueta-verde">NOMBRE DEL ALIMENTO</label>
+        <input type="text" id="alim-nombre" class="input-texto-centrado" placeholder="Escribir nombre...">
+
+        <label class="etiqueta-verde">GRUPO</label>
+        <select id="alim-grupo" class="input-texto-centrado">
+            <option value="🍉 FRUTA">🍉 FRUTA</option>
+            <option value="🥦 HORTALIZAS,VERDURAS Y PATATAS">🥦 HORTALIZAS, VERDURAS Y PATATAS</option>
+            <option value="🌾 CEREALES">🌾 CEREALES</option>
+            <option value="🥖 PAN">🥖 PAN</option>
+            <option value="🥘 PASTAS, ARROZ Y LEGUMBRES">🥘 PASTAS, ARROZ Y LEGUMBRES</option>
+            <option value="🥩 CARNES Y AVES">🥩 CARNES Y AVES</option>
+            <option value="🐟 PESCADOS">🐟 PESCADOS</option>
+            <option value="🥚 HUEVOS">🥚 HUEVOS</option>
+            <option value="🧀 EMBUTIDOS">🧀 EMBUTIDOS</option>
+            <option value="🏺 MATERIAS GRASAS">🏺 MATERIAS GRASAS</option>
+            <option value="🥜 FRUTOS SECOS">🥜 FRUTOS SECOS</option>
+            <option value="🍶 LACTEOS">🍶 LACTEOS</option>
+            <option value="🥧 POSTRES">🥧 POSTRES</option>
+            <option value="🍯 UNTABLES">🍯 UNTABLES</option>
+            <option value="🧃 SALSAS">🧃 SALSAS</option>
+            <option value="🍟 APERITIVOS SALADOS">🍟 APERITIVOS SALADOS</option>
+            <option value="🥐 BOLLERIA">🥐 BOLLERIA</option>
+            <option value="🍰 PASTELERIA">🍰 PASTELERIA</option>
+            <option value="🍨 HELADOS">🍨 HELADOS</option>
+            <option value="🍵 BEBIDAS">🍵 BEBIDAS</option>
+            <option value="🧂 CONDIMENTOS">🧂 CONDIMENTOS</option>
+            <option value="🍫 CHOCOLATES, GOLOSINAS Y TURRONES">🍫 CHOCOLATES, GOLOSINAS Y TURRONES</option>
+            <option value="🥡 PLATOS PRECOCINADOS">🥡 PLATOS PRECOCINADOS</option>
+            <option value="🫙 SALSAS Y DIPS">🫙 SALSAS Y DIPS</option>
+        </select>
+
+        <div class="grid-macros" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+            <div class="campo-macro">
+                <label class="etiqueta-verde">PROTEINAS</label>
+                <div class="control-stepper-corporativo">
+                    <button onclick="ajustarMacroAlimento('alim-prot', -1)">-</button>
+                    <input type="number" id="alim-prot" value="0.00" step="0.1" class="text-center" oninput="recalcularAlimento()">
+                    <button onclick="ajustarMacroAlimento('alim-prot', 1)">+</button>
+                </div>
+            </div>
+            
+            <div class="campo-macro">
+                <label class="etiqueta-verde">CARBOHIDR.</label>
+                <div class="control-stepper-corporativo">
+                    <button onclick="ajustarMacroAlimento('alim-carb', -1)">-</button>
+                    <input type="number" id="alim-carb" value="0.00" step="0.1" class="text-center" oninput="recalcularAlimento()">
+                    <button onclick="ajustarMacroAlimento('alim-carb', 1)">+</button>
+                </div>
+            </div>
+
+            <div class="campo-macro">
+                <label class="etiqueta-verde">GRASAS</label>
+                <div class="control-stepper-corporativo">
+                    <button onclick="ajustarMacroAlimento('alim-gras', -1)">-</button>
+                    <input type="number" id="alim-gras" value="0.00" step="0.1" class="text-center" oninput="recalcularAlimento()">
+                    <button onclick="ajustarMacroAlimento('alim-gras', 1)">+</button>
+                </div>
+            </div>
+
+            <div class="campo-macro">
+                <label class="etiqueta-verde">FIBRA</label>
+                <div class="control-stepper-corporativo">
+                    <button onclick="ajustarMacroAlimento('alim-fibra', -1)">-</button>
+                    <input type="number" id="alim-fibra" value="0.00" step="0.1" class="text-center" oninput="recalcularAlimento()">
+                    <button onclick="ajustarMacroAlimento('alim-fibra', 1)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <label class="etiqueta-verde" style="margin-top:20px">CRÉDITOS MANUALES</label>
+        <input type="number" id="alim-manual" class="input-texto-centrado" placeholder="0.0" oninput="recalcularAlimento()">
+
+        <label class="etiqueta-verde" style="margin-top:10px">CRÉDITOS CALCULADOS</label>
+        <input type="text" id="alim-calc" class="input-texto-centrado readonly-input" style="background:#eee; font-weight:bold;" readonly value="0.00">
+
+        <button class="boton-accion-v2" onclick="guardarEnDespensa()" style="width:100%; margin-top:25px; background:#78a978">
+            <i class="fas fa-save"></i> GUARDAR EN DESPENSA
+        </button>
+        
+        <button class="boton-accion-v2" onclick="limpiarFormAlimento()" style="width:100%; margin-top:10px; background:#e67e22">
+            <i class="fas fa-plus-circle"></i> NUEVO ALIMENTO
+        </button>
+
+    </div>
+</div>

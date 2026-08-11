@@ -3,7 +3,7 @@
 Hola. Esta es la version estable de Nutrafit lista para usar como PWA instalable.
 
 URL publica actual:
-https://script.google.com/macros/s/AKfycbws6j9zZVbF5IQYGP_sXVJZgD0xdizB5xCNhcFWK90ETCTPSeUhxHJY9sqX6LQDKRMo/exec
+https://alinaresblanco-gif.github.io/nutrafit/
 
 ## Lo que incluye
 - Acceso directo desde navegador o icono instalado en el movil.

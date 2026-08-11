@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutraFit - Mi Libro de Recetas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root { --verde-corp: #78a978; --verde-oscuro: #5a8a5a; --gris-fondo: #f4f4f4; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--gris-fondo); color: #333; }
+
+        /* CABECERA */
+        .cabecera-barra { 
+            background: var(--verde-corp); padding: 10px 15px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            color: white; position: sticky; top: 0; z-index: 1000;
+        }
+        .boton-nav-circular { 
+            background: rgba(255,255,255,0.2); border:none; color:white; 
+            width:38px; height:38px; border-radius:50%; display:flex; 
+            align-items:center; justify-content:center; cursor: pointer;
+        }
+
+        .contenedor-principal { padding: 15px; }
+
+        /* BUSCADOR INTELIGENTE */
+        .contenedor-buscador {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .input-busqueda {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            outline: none;
+            box-sizing: border-box;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+        .input-busqueda:focus {
+            border-color: var(--verde-corp);
+            box-shadow: 0 4px 12px rgba(120, 169, 120, 0.2);
+        }
+        .icono-buscar {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--verde-corp);
+            font-size: 1.1rem;
+        }
+
+        /* GRID Y TARJETAS */
+        .grid-recetas { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .tarjeta-receta { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s; }
+        .tarjeta-receta img { width: 100%; height: 120px; object-fit: cover; }
+        .info-tarjeta { padding: 10px; text-align: center; }
+        .info-tarjeta h3 { margin: 0 0 10px; font-size: 0.9rem; height: 40px; overflow: hidden; }
+        .btn-ver-receta { background: var(--verde-corp); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
+
+        .btn-flotante { position: fixed; bottom: 30px; right: 25px; background: var(--verde-corp); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; z-index: 999; cursor: pointer; }
+
+        /* SECCIONES */
+        #seccion-formulario, #modal-detalle-receta { display: none; }
+
+        /* ESTILOS PREMIUM DEL MODAL DETALLE */
+        .modal-detalle { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; overflow-y: auto; }
+        .img-detalle-full { width: 100%; height: 250px; object-fit: cover; }
+        .contenido-detalle { padding: 20px; background: white; border-radius: 30px 30px 0 0; position: relative; top: -30px; }
+        
+        #det-nombre {
+            background: var(--verde-corp);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 25px 25px 0 0;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .etiqueta-verde {
+            color: var(--verde-corp);
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .linea-divisoria {
+            border: 0;
+            height: 1px;
+            background: #e0e0e0;
+            width: 60%;
+            margin: 25px auto;
+        }
+
+        .lista-ingredientes-pro {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .lista-ingredientes-pro li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f2f2f2;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+        }
+        .lista-ingredientes-pro i {
+            color: var(--verde-corp);
+            width: 30px;
+            margin-right: 10px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* FORMULARIO */
+        .titulo-seccion-verde {
+            background: var(--verde-corp); color: white; text-align: center;
+            padding: 15px; margin: -15px -15px 20px -15px; font-size: 1.4rem; font-weight: bold;
+        }
+        .campo-grupo { margin-bottom: 20px; }
+        .campo-grupo label { display: block; color: var(--verde-corp); font-weight: bold; margin-bottom: 8px; }
+        .campo-grupo input, .campo-grupo textarea, .campo-grupo select { 
+            width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; 
+            box-sizing: border-box; font-size: 1rem; background: #fff;
+        }
+        .contenedor-fotos-flex { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-foto {
+            flex: 1; background: #f0f7f0; color: var(--verde-corp); border: 2px dashed var(--verde-corp);
+            padding: 15px; border-radius: 12px; text-align: center; cursor: pointer; font-weight: bold;
+        }
+        .btn-accion-verde {
+            background: var(--verde-corp); color: white; border: none; padding: 16px; 
+            width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; 
+            cursor: pointer; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-accion-cancelar {
+            background: #666; color: white; border: none; padding: 16px; 
+            width: 100%; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer;
+        }
+        #previa-receta-cont { width: 100%; height: 150px; border-radius: 12px; margin-bottom: 15px; display: none; object-fit: cover; }
+    </style>
+</head>
+<body id="vista-libro-recetas"> 
+    <div class="cabecera-barra">
+        <button onclick="volverInicio()" class="boton-nav-circular">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <strong>MI LIBRO DE RECETAS</strong>
+        <div style="width:38px;"></div>
+    </div>
+
+    <div id="seccion-explorar" class="contenedor-principal">
+        <div class="contenedor-buscador">
+            <i class="fas fa-search icono-buscar"></i>
+            <input 
+                type="text" 
+                id="busqueda-recetas" 
+                class="input-busqueda" 
+                placeholder="Buscar receta o categoría..." 
+                onkeyup="filtrarRecetas()"
+            >
+        </div>
+
+        <div id="contenedor-cards" class="grid-recetas"></div>
+        
+        <button class="btn-flotante" onclick="abrirFormulario()">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <div id="seccion-formulario" class="contenedor-principal" style="background:white; min-height:100vh;">
+        <div class="titulo-seccion-verde">Nueva Receta</div>
+        <div class="contenedor-fotos-flex">
+            <div class="btn-foto" onclick="intentarHacerFotoReceta()">
+                <i class="fas fa-camera"></i><br>Hacer Foto
+            </div>
+            <div class="btn-foto" onclick="intentarSubirCapturaReceta()">
+                <i class="fas fa-image"></i><br>Galería
+            </div>
+        </div>
+        <img id="previa-receta-cont" src="">
+        <input type="file" id="input-captura" accept="image/*" style="display:none" onchange="previsualizarImagenReceta(this)">
+
+        <div class="campo-grupo">
+            <label>Nombre de la Receta</label>
+            <input type="text" id="form-nombre" placeholder="Ej: Tortilla Saludable">
+        </div>
+
+        <div class="campo-grupo">
+            <label>Categoría</label>
+            <select id="form-categoria">
+                <option value="Desayuno">Desayuno</option>
+                <option value="Almuerzo" selected>Almuerzo</option>
+                <option value="Cena">Cena</option>
+                <option value="Snack">Snack</option>
+            </select>
+        </div>
+
+        <div class="campo-grupo">
+            <label>Ingredientes</label>
+            <textarea id="form-ingredientes" rows="6" placeholder="Escribe los ingredientes..."></textarea>
+        </div>
+
+        <div class="campo-grupo">
+            <label>Elaboración</label>
+            <textarea id="form-elaboracion" rows="8" placeholder="Explica paso a paso cómo cocinarlo..."></textarea>
+        </div>
+
+        <button onclick="guardarRecetaJS()" class="btn-accion-verde">GUARDAR EN LIBRO</button>
+        <button onclick="cerrarTodo()" class="btn-accion-cancelar">CANCELAR</button>
+    </div>
+
+    <div id="modal-detalle-receta" class="modal-detalle">
+        <button onclick="cerrarTodo()" style="position:absolute; top:20px; left:20px; background:rgba(0,0,0,0.5); color:white; border:none; width:40px; height:40px; border-radius:50%; z-index:10;">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <button onclick="compartirReceta()" style="position:absolute; top:20px; right:20px; background:var(--verde-corp); color:white; border:none; width:40px; height:40px; border-radius:50%; z-index:10; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+            <i class="fas fa-share-alt"></i>
+        </button>
+
+        <img src="" id="det-img-full" class="img-detalle-full">
+        
+        <div class="contenido-detalle">
+            <h2 id="det-nombre">Nombre Receta</h2>
+            
+            <span class="etiqueta-verde"><i class="fas fa-shopping-basket"></i> Ingredientes</span>
+            <div id="det-ing">...</div>
+            
+            <hr class="linea-divisoria">
+            
+            <span class="etiqueta-verde"><i class="fas fa-mitten"></i> Elaboración</span>
+            <div id="det-elab" style="line-height: 1.6; color: #444;">...</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/app.js"></script>
+
+    <script>
+        // Función de apoyo para los bullets automáticos
+        const areaIngredientes = document.getElementById('form-ingredientes');
+        areaIngredientes.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const bullet = "\n• "; 
+                const cursorPosition = this.selectionStart;
+                const textBefore = this.value.substring(0, cursorPosition);
+                const textAfter = this.value.substring(cursorPosition);
+                this.value = textBefore + bullet + textAfter;
+                this.selectionStart = this.selectionEnd = cursorPosition + bullet.length;
+            }
+        });
+        areaIngredientes.addEventListener('focus', function() {
+            if (this.value === "") this.value = "• ";
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof cargarRecetasDesdeExcel === 'function') cargarRecetasDesdeExcel();
+        });
+    </script>
+</body>
+</html>

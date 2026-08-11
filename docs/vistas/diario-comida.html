@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NutraFit - Menú Semanal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --verde-principal: #78a978;
+            --verde-fondo: #f0f4f0;
+            --texto-oscuro: #2c3e50;
+            --blanco: #ffffff;
+        }
+
+        body { 
+            margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--verde-fondo); color: var(--texto-oscuro);
+            padding-bottom: 90px;
+        }
+
+        /* --- NAVEGACIÓN --- */
+        .navbar {
+            background-color: var(--verde-principal);
+            padding: 15px; display: flex; align-items: center;
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-volver { color: white; font-size: 1.2rem; text-decoration: none; width: 40px; }
+        .nav-titulo { color: white; font-weight: bold; flex-grow: 1; text-align: center; font-size: 1.1rem; }
+
+        /* --- LISTADO DE DÍAS --- */
+        .lista-semana { padding: 15px; }
+
+        .dia-card {
+            background: var(--blanco); border-radius: 15px; margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        /* Cabecera del día */
+        .dia-btn {
+            width: 100%; border: none; background: none; padding: 20px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; outline: none;
+        }
+
+        .dia-nombre { font-size: 1.1rem; font-weight: 800; color: #4a6d4a; text-transform: uppercase; }
+
+        .puntos-container { display: flex; gap: 12px; }
+        .punto-box { display: flex; flex-direction: column; align-items: center; }
+        .punto-label { font-size: 0.65rem; color: #888; font-weight: bold; margin-bottom: 4px; }
+        
+        .input-puntos {
+            width: 45px; height: 32px; border: 2px solid var(--verde-principal);
+            border-radius: 8px; text-align: center; font-weight: bold; font-size: 0.9rem;
+        }
+
+        .valor-restante {
+            width: 45px; height: 32px; background: #eee; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+
+        /* Contenido expandible */
+        .dia-detalle {
+            max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;
+            background: #fafafa;
+        }
+
+        .dia-card.abierto .dia-detalle { max-height: 2000px; padding-bottom: 15px; }
+        .dia-card.abierto .fa-chevron-down { transform: rotate(180deg); }
+
+        /* Bloques de comida */
+        .bloque-comida {
+            margin: 10px 15px; padding: 15px; background: white;
+            border-radius: 10px; border: 1px solid #eee;
+        }
+
+        .comida-header { display: flex; justify-content: space-between; align-items: center; }
+        .comida-nombre { font-size: 0.85rem; font-weight: bold; color: var(--verde-principal); text-transform: uppercase; }
+
+        .btn-plus {
+            background: var(--verde-principal); color: white; border: none;
+            width: 28px; height: 28px; border-radius: 50%; font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+
+        .ingredientes-lista {
+            margin-top: 10px; font-size: 0.9rem; color: #777; font-style: italic;
+            padding-top: 8px; border-top: 1px dashed #eee;
+        }
+
+        /* --- BOTÓN GUARDAR --- */
+        .footer-save {
+            position: fixed; bottom: 0; left: 0; right: 0; padding: 20px;
+            background: linear-gradient(transparent, var(--verde-fondo) 20%);
+            display: flex; justify-content: center;
+        }
+
+        .btn-guardar {
+            background: var(--verde-principal); color: white; border: none;
+            padding: 16px 50px; border-radius: 30px; font-weight: bold;
+            font-size: 1rem; box-shadow: 0 4px 15px rgba(120, 169, 120, 0.4);
+            cursor: pointer; width: 80%;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="#" class="btn-volver"><i class="fas fa-chevron-left"></i></a>
+        <div class="nav-titulo">MI PLAN SEMANAL</div>
+    </nav>
+
+    <div class="lista-semana" id="contenedorPadre">
+        </div>
+
+    <div class="footer-save">
+        <button class="btn-guardar" onclick="alert('Menú guardado con éxito')">GUARDAR SEMANA</button>
+    </div>
+
+    <script>
+        const dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+        const comidas = ["Desayuno", "Almuerzo", "Comida", "Merienda", "Cena"];
+        const contenedor = document.getElementById('contenedorPadre');
+
+        // Renderizado manual y seguro
+        dias.forEach((dia, index) => {
+            const card = document.createElement('div');
+            card.className = 'dia-card';
+            card.id = `dia-${index}`;
+            
+            let htmlComidas = '';
+            comidas.forEach(comida => {
+                htmlComidas += `
+                    <div class="bloque-comida">
+                        <div class="comida-header">
+                            <span class="comida-nombre">${comida}</span>
+                            <button class="btn-plus" onclick="event.stopPropagation(); alert('Añadir a ${comida}')">+</button>
+                        </div>
+                        <div class="ingredientes-lista">No hay ingredientes seleccionados</div>
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <button class="dia-btn" onclick="toggleDia(${index})">
+                    <div class="dia-nombre">${dia}</div>
+                    <div class="puntos-container">
+                        <div class="punto-box">
+                            <span class="punto-label">BASE</span>
+                            <input type="number" class="input-puntos" placeholder="0" 
+                                   onclick="event.stopPropagation()" 
+                                   oninput="actualizar(${index}, this.value)">
+                        </div>
+                        <div class="punto-box">
+                            <span class="punto-label">RESTAN</span>
+                            <div class="valor-restante" id="restante-${index}">0</div>
+                        </div>
+                        <i class="fas fa-chevron-down" style="margin-top:20px; color:#ccc"></i>
+                    </div>
+                </button>
+                <div class="dia-detalle">
+                    ${htmlComidas}
+                </div>
+            `;
+            contenedor.appendChild(card);
+        });
+
+        // Función de apertura/cierre
+        function toggleDia(idx) {
+            const card = document.getElementById(`dia-${idx}`);
+            const estaAbierto = card.classList.contains('abierto');
+            
+            // Cerrar otros (opcional, para que quede más limpio)
+            document.querySelectorAll('.dia-card').forEach(c => c.classList.remove('abierto'));
+            
+            // Alternar el actual
+            if (!estaAbierto) {
+                card.classList.add('abierto');
+                // Scroll suave al abrir
+                setTimeout(() => {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            }
+        }
+
+        // Función para actualizar puntos
+        function actualizar(idx, valor) {
+            document.getElementById(`restante-${idx}`).innerText = valor || 0;
+        }
+    </script>
+</body>
+</html>
