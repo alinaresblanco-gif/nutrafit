@@ -273,11 +273,25 @@ function doPost(e) {
     }
 
     if (tipo === "coach_nutrafit") {
-      return procesarCoachNutrafit(ss, payload);
+      return finalizarJSON({
+        status: "ok",
+        model: "offline",
+        respuesta: {
+          respuesta_directa: "Coach en construcción. Estamos preparándolo para ayudarte pronto.",
+          estado_dia: "",
+          lectura_rapida: "",
+          accion_ahora: "",
+          siguiente_paso: "",
+          ajuste_creditos: "",
+          micro_habito: "",
+          mensaje_motivador: ""
+        },
+        warning: "offline"
+      });
     }
 
     if (tipo === "ejecutar_mini_test_coach") {
-      return ejecutarMiniTestCoach(ss, payload);
+      return finalizarJSON({ status: "ok", mensaje: "Coach en construcción" });
     }
 
 
@@ -872,51 +886,8 @@ function aprobarUsuarioNutrafit(email) {
   return textoPlano("Usuario aprobado y notificado");
 }
 
-const promptMaestroNutrafit = `Eres COACH NUTRAFIT.
-Tu prioridad absoluta es ofrecer informacion veraz, comprobable y basada en fuentes oficiales de nutricion.
-
-REGLAS DE VERACIDAD:
-1) Nunca inventes datos nutricionales.
-2) Si la app envia datos oficiales (nutrientes, calorias, creditos, porciones), basate exclusivamente en ellos.
-3) Si la app no envia datos suficientes, pidelos de forma explicita.
-4) Si la usuaria pregunta por un alimento y no tienes datos oficiales, responde: "Necesito datos nutricionales oficiales para darte una respuesta exacta. Enviame la informacion del alimento."
-5) Cuando la app envie informacion nutricional, interpretala, resumela, explicala con claridad y adaptala al objetivo de la usuaria.
-6) Si CONTEXTO_JSON incluye fuentes_web, usalas como referencia interna de contraste, sin listarlas ni citarlas explicitamente en la respuesta final.
-7) Nunca uses conocimiento inventado o aproximado si hay datos oficiales disponibles.
-
-REGLAS DE SEGURIDAD:
-- No des consejos medicos.
-- No diagnostiques.
-- No recomiendes suplementos sin datos oficiales.
-- Si la usuaria pide algo medico, responde: "Soy un coach nutricional, no un profesional medico."
-
-REGLAS DE NUTRICION:
-- Explica beneficios, riesgos, creditos, porciones y alternativas.
-- Adapta todo a objetivo, alergias, preferencias, historial y creditos disponibles.
-
-REGLAS DE INTERPRETACION:
-- Si recibes JSON nutricional, interpretalo como informacion oficial.
-- Si recibes JSON de vistas de la app (menu, historial, creditos), basate en esos datos para responder.
-
-FORMATO OBLIGATORIO:
-Devuelve SIEMPRE JSON valido con: respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
-Si un campo no aplica, dejalo vacio.
-No devuelvas texto fuera del JSON.`;
-
-const promptFactualNutrafit = `Eres COACH NUTRAFIT en modo FACTUAL.
-Debes responder dudas de nutricion/alimentos con maxima veracidad y precision.
-
-REGLAS FACTUALES ESTRICTAS:
-1) Nunca inventes datos.
-2) Prioriza datos oficiales enviados por la app y fuentes_web del contexto.
-3) Si faltan datos oficiales para responder exacto, pide esos datos explicitamente.
-4) Si la consulta es medica, responde: "Soy un coach nutricional, no un profesional medico."
-5) No uses formato plantilla ni bloques repetitivos.
-6) Si hay fuentes, sintetiza consenso y menciona incertidumbre si existe, pero nunca muestres ni enumeres fuentes al usuario.
-
-SALIDA OBLIGATORIA:
-Devuelve JSON valido con: respuesta_directa, estado_dia, lectura_rapida, accion_ahora, siguiente_paso, ajuste_creditos, micro_habito, mensaje_motivador.
-En modo factual, usa respuesta_directa como cuerpo principal y deja vacios los demas campos si no aplican.`;
+const promptMaestroNutrafit = "Coach en construcción. No se usa.";
+const promptFactualNutrafit = "Coach en construcción. No se usa.";
 
 const COACH_BATERIA_CALIBRACION = [
   { id: 1, categoria: "nutricion_general", pregunta: "Que beneficios tiene la chia y cuanta cantidad diaria recomiendas?", respuesta: "La chia aporta fibra, omega-3 vegetal, antioxidantes y saciedad; una cantidad habitual util es 1 a 2 cucharadas al dia, mejor repartidas en desayunos o snacks si sienta bien." },
@@ -1344,13 +1315,13 @@ function procesarCoachNutrafit(ss, payload) {
   const tempOverride = rutaRespuesta === "factual" ? 0.25 : null;
 
   try {
-    const respuestaGroq = solicitarGroqCoach(modelo, mensajeUsuario, cfg.maxTokensSalida, modo, evento, {
-      systemPrompt: promptSistema,
-      temperature: tempOverride
-    });
+    const respuestaOffline = {
+      choices: [{ message: { content: '{"respuesta_directa":"Coach en construcción."}' } }],
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+    };
     const contenido = String(
-      (((respuestaGroq || {}).choices || [])[0] || {}).message
-        ? (((respuestaGroq || {}).choices || [])[0] || {}).message.content || ""
+      (((respuestaOffline || {}).choices || [])[0] || {}).message
+        ? (((respuestaOffline || {}).choices || [])[0] || {}).message.content || ""
         : ""
     ).trim();
 
@@ -1367,7 +1338,7 @@ function procesarCoachNutrafit(ss, payload) {
       });
     }
 
-    const usage = respuestaGroq.usage || {};
+    const usage = respuestaOffline.usage || {};
     if (!esModoTestInterno) {
       registrarUsoCoach(ss, {
         usuarioId,
@@ -2110,49 +2081,11 @@ function obtenerContextoAlimentoCoach(ss, pregunta) {
   };
 }
 
-function solicitarGroqCoach(modelo, mensajeUsuario, maxTokensSalida, modo, evento, opciones) {
-  const props = PropertiesService.getScriptProperties();
-  const apiKey = props.getProperty("GROQ_API_KEY");
-  if (!apiKey) {
-    throw new Error("Falta GROQ_API_KEY en Script Properties");
-  }
-
-  const modoTxt = String(modo || "auto").toLowerCase() === "chat" ? "chat" : "auto";
-  const eventoTxt = String(evento || "").toLowerCase();
-  const esChatLibre = (modoTxt === "chat" || eventoTxt === "pregunta_libre");
-  const temperaturaBase = esChatLibre ? 0.9 : 0.5;
-  const temperature = (opciones && typeof opciones.temperature === "number") ? Number(opciones.temperature) : temperaturaBase;
-  const maxTokensFinal = Math.max(Number(maxTokensSalida || 260), modoTxt === "chat" ? 320 : 260);
-  const systemPrompt = String((opciones && opciones.systemPrompt) || promptMaestroNutrafit);
-
-  const payload = {
-    model: modelo,
-    temperature: temperature,
-    max_tokens: maxTokensFinal,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: mensajeUsuario }
-    ],
-    response_format: { type: "json_object" }
+function responderCoachOffline() {
+  return {
+    choices: [{ message: { content: '{"respuesta_directa":"Coach en construcción."}' } }],
+    usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
   };
-
-  const response = UrlFetchApp.fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "post",
-    contentType: "application/json",
-    headers: {
-      Authorization: "Bearer " + apiKey
-    },
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
-  });
-
-  const status = response.getResponseCode();
-  const body = response.getContentText();
-  if (status < 200 || status >= 300) {
-    throw new Error("Groq HTTP " + status + " - " + body.substring(0, 500));
-  }
-
-  return JSON.parse(body || "{}");
 }
 
 function parsearRespuestaCoachJSON(texto) {

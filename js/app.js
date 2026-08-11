@@ -3642,7 +3642,7 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
 }
 
 /* ============================================================
-   COACH NUTRAFIT (GROQ) - PILOTO CON ON/OFF
+   COACH NUTRAFIT - PILOTO OFFLINE
    ============================================================ */
 const COACH_LOCAL_ENABLED_KEY = 'nutrafit_coach_enabled';
 const COACH_LAST_OPEN_KEY = 'nutrafit_coach_last_open_msg';
@@ -4041,21 +4041,11 @@ function crearPanelCoach() {
                 <span>Coach NUTRAFIT</span>
             </div>
             <div class="coach-controls">
-                <span id="coach-status-badge" class="coach-status-badge on">Coach activo</span>
-                <button id="coach-toggle-btn" class="coach-btn-mini" title="Activar o pausar coach">ON</button>
+                <span id="coach-status-badge" class="coach-status-badge on">Coach</span>
                 <button id="coach-close-btn" class="coach-btn-mini" title="Cerrar">X</button>
             </div>
         </div>
         <div id="coach-messages" class="coach-messages"></div>
-        <div class="coach-quick-actions">
-            <button class="coach-chip" data-q="Dame mi plan rápido de hoy">Plan de hoy</button>
-            <button class="coach-chip" data-q="Tengo ansiedad por dulce, ¿qué hago ahora?">Ansiedad dulce</button>
-            <button class="coach-chip" data-q="Me he pasado de créditos, ¿cómo lo compenso?">Compensar exceso</button>
-        </div>
-        <div class="coach-input-row">
-            <input id="coach-input" class="coach-input" type="text" placeholder="Escribe tu duda..." />
-            <button id="coach-send" class="coach-send"><i class="fas fa-paper-plane"></i></button>
-        </div>
     `;
 
     document.body.appendChild(panel);
@@ -4065,35 +4055,7 @@ function crearPanelCoach() {
         btnClose.addEventListener('click', () => alternarPanelCoach(false));
     }
 
-    const btnToggle = document.getElementById('coach-toggle-btn');
-    if (btnToggle) {
-        btnToggle.addEventListener('click', () => {
-            coachCambiarEstado(!coachEstaActivo());
-            pushCoachMensajeSistema(coachEstaActivo() ? 'Coach activado.' : 'Coach pausado. Puedes reactivarlo cuando quieras.');
-        });
-    }
-
-    const sendBtn = document.getElementById('coach-send');
-    const input = document.getElementById('coach-input');
-    if (sendBtn) sendBtn.addEventListener('click', enviarMensajeCoachChat);
-    if (input) {
-        input.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                enviarMensajeCoachChat();
-            }
-        });
-    }
-
-    panel.querySelectorAll('.coach-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            const pregunta = chip.dataset.q || '';
-            if (!pregunta) return;
-            enviarPreguntaCoach(pregunta);
-        });
-    });
-
-    pushCoachMensajeSistema('Tu Coach NUTRAFIT está listo. Te acompaño en decisiones rápidas y sin juicios.');
+    pushCoachMensajeSistema('Coach en construcción');
 }
 
 function alternarPanelCoach(abrir) {
@@ -4152,7 +4114,7 @@ function insertarTarjetaCoachEnInicio() {
     const card = document.createElement('div');
     card.id = 'coach-card-inicio';
     card.className = 'coach-card-contexto coach-inicio';
-    card.innerHTML = '<div class="coach-inicio-texto"><h4><i class="fas fa-sparkles"></i> Hoy contigo</h4><p id="coach-texto-inicio">Abre el coach para recibir tu plan del día.</p></div><div id="coach-inicio-slot" class="coach-inicio-slot"></div>';
+    card.innerHTML = '<div class="coach-inicio-texto"><h4><i class="fas fa-sparkles"></i> Hoy contigo</h4><p id="coach-texto-inicio">Soy tu Coach estoy perfeccionando conocimientos para ayudarte, en breve estaré contigo</p></div><div id="coach-inicio-slot" class="coach-inicio-slot"></div>';
     menu.parentNode.insertBefore(card, menu);
     colocarBotonCoachEnTarjetaInicio();
 }
@@ -4304,74 +4266,13 @@ function obtenerDatosContextoCoach(extra = {}) {
 async function coachSolicitarRespuesta({ evento, pregunta, modo = 'auto', vistaDestino = '' }) {
     inicializarCoachNutrafitUI();
 
-    if (!coachEstaActivo()) {
-        if (modo === 'chat') {
-            pushCoachMensajeSistema('Coach en pausa. Actívalo con el interruptor ON para continuar.');
-        }
-        return;
-    }
+    const mensajeConstruccion = 'Coach en construcción';
+    pushCoachMensajeSistema(mensajeConstruccion, 'bot');
+    actualizarTarjetaInicio('Soy tu Coach estoy perfeccionando conocimientos para ayudarte, en breve estaré contigo');
 
-    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id');
-    const did = dispositivoId || localStorage.getItem('nutrafit_dispositivo_id');
-    if (!uid || !did) {
-        if (modo === 'chat') {
-            pushCoachMensajeSistema('Necesito sesión activa para ayudarte.');
-        }
-        return;
-    }
-
-    try {
-        const contexto = obtenerDatosContextoCoach();
-        const payload = {
-            tipo: 'coach_nutrafit',
-            usuario_id: uid,
-            dispositivo_id: did,
-            evento,
-            modo,
-            pregunta: pregunta || '',
-            contexto
-        };
-
-        const resp = await fetch(URL_GOOGLE_SCRIPT, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-
-        const raw = await resp.text();
-        let data = {};
-        try {
-            data = JSON.parse(raw);
-        } catch (_) {
-            data = { status: 'error', message: raw };
-        }
-
-        if (data.status === 'disabled') {
-            pushCoachMensajeSistema('Coach pausado globalmente.');
-            return;
-        }
-
-        if (data.status === 'quota_exceeded') {
-            pushCoachMensajeSistema('Has alcanzado el límite diario del piloto. Seguimos mañana.');
-            return;
-        }
-
-        if (data.status !== 'ok') {
-            const msgError = String(data.message || 'No pude generar respuesta ahora.');
-            pushCoachMensajeSistema(msgError);
-            return;
-        }
-
-        const texto = formatearCoachTexto(data.respuesta);
-        pushCoachMensajeSistema(texto, 'bot');
-        actualizarTarjetaInicio(data.respuesta?.lectura_rapida || texto);
-
-        const vistaObjetivo = vistaDestino || vistaActual || '';
-        if (vistaObjetivo) {
-            actualizarTarjetaContextoVista(vistaObjetivo, data.respuesta?.siguiente_paso || data.respuesta?.accion_ahora || texto);
-        }
-    } catch (error) {
-        console.error('Error coach', error);
-        pushCoachMensajeSistema('No pude responder ahora. Vuelve a intentarlo en unos segundos.');
+    const vistaObjetivo = vistaDestino || vistaActual || '';
+    if (vistaObjetivo) {
+        actualizarTarjetaContextoVista(vistaObjetivo, mensajeConstruccion);
     }
 }
 
