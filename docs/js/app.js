@@ -4350,21 +4350,30 @@ async function coachSolicitarRespuesta({ evento, pregunta, modo = 'auto', vistaD
     try {
         const resp = await fetch(URL_GOOGLE_SCRIPT, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload)
         });
 
         let data = null;
+        const raw = await resp.text();
         try {
-            data = await resp.json();
+            data = JSON.parse(raw);
         } catch (_) {
-            data = null;
+            const m = String(raw || '').match(/\{[\s\S]*\}/);
+            if (m && m[0]) {
+                try {
+                    data = JSON.parse(m[0]);
+                } catch (_) {
+                    data = null;
+                }
+            }
         }
 
         if (thinkingMsg && thinkingMsg.parentNode) thinkingMsg.parentNode.removeChild(thinkingMsg);
 
         const respuesta = data && data.respuesta ? data.respuesta : null;
-        const textoCoach = formatearCoachTexto(respuesta);
+        const backendMsg = data && (data.message || data.error || data.mensaje) ? String(data.message || data.error || data.mensaje).trim() : '';
+        const textoCoach = respuesta ? formatearCoachTexto(respuesta) : (backendMsg || formatearCoachTexto(null));
         pushCoachMensajeSistema(textoCoach, 'bot');
 
         actualizarTarjetaInicio(textoCoach);
