@@ -1,0 +1,14 @@
+{
+  "appId": "com.nutrafit.app",
+  "appName": "Nutrafit",
+  "webDir": "../docs",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": [
+      "script.google.com",
+      "*.script.googleusercontent.com",
+      "alinaresblanco-gif.github.io"
+    ]
+  }
+}
