@@ -278,25 +278,11 @@ function doPost(e) {
     }
 
     if (tipo === "coach_nutrafit") {
-      return finalizarJSON({
-        status: "ok",
-        model: "offline",
-        respuesta: {
-          respuesta_directa: "Coach en construcción. Estamos preparándolo para ayudarte pronto.",
-          estado_dia: "",
-          lectura_rapida: "",
-          accion_ahora: "",
-          siguiente_paso: "",
-          ajuste_creditos: "",
-          micro_habito: "",
-          mensaje_motivador: ""
-        },
-        warning: "offline"
-      });
+      return procesarCoachNutrafit(ss, payload);
     }
 
     if (tipo === "ejecutar_mini_test_coach") {
-      return finalizarJSON({ status: "ok", mensaje: "Coach en construcción" });
+      return ejecutarMiniTestCoach(ss, payload);
     }
 
 
@@ -1283,10 +1269,11 @@ function procesarCoachNutrafit(ss, payload) {
     });
   }
 
-  const modelo = elegirModeloCoach(evento, payload, cfg);
   const accionNutrafit = mapearEventoAAccionNutrafit(evento, payload);
   const intencionDetectada = detectarIntencionCoach(pregunta, evento);
   const rutaRespuesta = clasificarRutaRespuestaCoach(pregunta, evento, modo, intencionDetectada);
+  const modelo = elegirModeloCoach(evento, payload, cfg, rutaRespuesta, modo);
+  const providerActivo = resolverProviderCoach(cfg, usuarioId, esModoTestInterno, payload);
   const memoriaUsuario = obtenerMemoriaCoachUsuario(ss, usuarioId, 8);
   const contextoUsuario = construirContextoUsuarioCoach(ss, usuarioId);
   const contextoBaseOficial = obtenerContextoBaseOficialCoach(pregunta, intencionDetectada, rutaRespuesta, 4);
@@ -1317,17 +1304,27 @@ function procesarCoachNutrafit(ss, payload) {
     ? construirMensajeCoachFactual(pregunta, evento, contextoFinal, modo)
     : construirMensajeCoach(pregunta, evento, contextoFinal, modo);
   const promptSistema = rutaRespuesta === "factual" ? promptFactualNutrafit : promptMaestroNutrafit;
-  const tempOverride = rutaRespuesta === "factual" ? 0.25 : null;
+  const tempOverride = rutaRespuesta === "factual" ? 0.25 : 0.35;
 
   try {
-    const respuestaOffline = {
-      choices: [{ message: { content: '{"respuesta_directa":"Coach en construcción."}' } }],
-      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
-    };
+    const respuestaProveedor = solicitarRespuestaCoachProveedor({
+      provider: providerActivo,
+      cfg: cfg,
+      usuarioId: usuarioId,
+      evento: evento,
+      modo: modo,
+      pregunta: pregunta,
+      rutaRespuesta: rutaRespuesta,
+      modelo: modelo,
+      promptSistema: promptSistema,
+      mensajeUsuario: mensajeUsuario,
+      temperatura: tempOverride,
+      contextoFinal: contextoFinal,
+      contextoUsuario: contextoUsuario
+    });
     const contenido = String(
-      (((respuestaOffline || {}).choices || [])[0] || {}).message
-        ? (((respuestaOffline || {}).choices || [])[0] || {}).message.content || ""
-        : ""
+      extraerContenidoRespuestaProveedorCoach(respuestaProveedor) ||
+      '{}'
     ).trim();
 
     let respuesta = parsearRespuestaCoachJSON(contenido);
@@ -1343,13 +1340,13 @@ function procesarCoachNutrafit(ss, payload) {
       });
     }
 
-    const usage = respuestaOffline.usage || {};
+    const usage = extraerUsageRespuestaProveedorCoach(respuestaProveedor);
     if (!esModoTestInterno) {
       registrarUsoCoach(ss, {
         usuarioId,
         modo,
         evento,
-        modelo,
+        modelo: modelo + "@" + providerActivo,
         promptTokens: Number(usage.prompt_tokens || 0),
         completionTokens: Number(usage.completion_tokens || 0),
         totalTokens: Number(usage.total_tokens || 0),
@@ -1360,6 +1357,7 @@ function procesarCoachNutrafit(ss, payload) {
     return finalizarJSON({
       status: "ok",
       model: modelo,
+      provider: providerActivo,
       respuesta,
       quota: {
         used: cuota.used + 1,
@@ -1395,6 +1393,7 @@ function procesarCoachNutrafit(ss, payload) {
     return finalizarJSON({
       status: "ok",
       model: modelo,
+      provider: providerActivo,
       respuesta: fallback,
       warning: "fallback"
     });
@@ -1409,19 +1408,194 @@ function coachHabilitadoGlobal() {
 
 function obtenerConfigCoach() {
   const props = PropertiesService.getScriptProperties();
+  const modelPrimary = props.getProperty("NUTRAFIT_COACH_OLLAMA_MODEL_PRIMARY") || props.getProperty("NUTRAFIT_COACH_MODEL_PRIMARY") || "llama3.1:8b";
+  const modelFactual = props.getProperty("NUTRAFIT_COACH_OLLAMA_MODEL_FACTUAL") || "phi3:mini";
+  const modelSummary = props.getProperty("NUTRAFIT_COACH_OLLAMA_MODEL_SUMMARY") || props.getProperty("NUTRAFIT_COACH_MODEL_SUMMARY") || "phi3:mini";
+
   return {
-    model8b: props.getProperty("NUTRAFIT_COACH_MODEL_PRIMARY") || "llama-3.1-8b-instant",
-    model70b: props.getProperty("NUTRAFIT_COACH_MODEL_SUMMARY") || "llama-3.3-70b-versatile",
+    provider: normalizarProviderCoach(props.getProperty("NUTRAFIT_COACH_PROVIDER") || "offline"),
+    ollamaProxyUrl: String(props.getProperty("NUTRAFIT_COACH_OLLAMA_PROXY_URL") || "").trim(),
+    modelPrimary: modelPrimary,
+    modelFactual: modelFactual,
+    modelSummary: modelSummary,
+    // Compatibilidad con naming legacy
+    model8b: modelPrimary,
+    model70b: modelSummary,
     maxAutoPorDia: Number(props.getProperty("NUTRAFIT_COACH_MAX_AUTO_DIA") || 4),
     maxChatPorDia: Number(props.getProperty("NUTRAFIT_COACH_MAX_CHAT_DIA") || 4),
-    maxTokensSalida: Number(props.getProperty("NUTRAFIT_COACH_MAX_TOKENS") || 240)
+    maxTokensSalida: Number(props.getProperty("NUTRAFIT_COACH_MAX_TOKENS") || 240),
+    timeoutMs: Number(props.getProperty("NUTRAFIT_COACH_TIMEOUT_MS") || 12000),
+    canaryUsers: parsearListaEmailsCoach(props.getProperty("NUTRAFIT_COACH_CANARY_USERS") || "")
   };
 }
 
-function elegirModeloCoach(evento, payload, cfg) {
-  const usar70 = Boolean(payload.usar_modelo_70b)
-    || String(evento || "").toLowerCase() === "resumen_semanal";
-  return usar70 ? cfg.model70b : cfg.model8b;
+function normalizarProviderCoach(providerRaw) {
+  const v = String(providerRaw || "").trim().toLowerCase();
+  if (v === "ollama") return "ollama";
+  return "offline";
+}
+
+function parsearListaEmailsCoach(texto) {
+  return String(texto || "")
+    .split(/[;,\n\s]+/)
+    .map(function(item) { return normalizarEmail(item); })
+    .filter(function(item) { return item.length > 0; });
+}
+
+function usuarioEnCanaryCoach(usuarioId, canaryUsers) {
+  const uid = normalizarEmail(usuarioId);
+  if (!uid) return false;
+  return (Array.isArray(canaryUsers) ? canaryUsers : []).indexOf(uid) >= 0;
+}
+
+function resolverProviderCoach(cfg, usuarioId, esModoTestInterno, payload) {
+  const forcedProvider = normalizarProviderCoach(payload && payload.force_provider);
+  if (esModoTestInterno && (forcedProvider === "offline" || forcedProvider === "ollama")) {
+    return forcedProvider;
+  }
+
+  const providerCfg = normalizarProviderCoach(cfg && cfg.provider);
+  if (providerCfg !== "ollama") return "offline";
+  if (!cfg || !cfg.ollamaProxyUrl) return "offline";
+  if (!usuarioEnCanaryCoach(usuarioId, cfg.canaryUsers)) return "offline";
+  return "ollama";
+}
+
+function elegirModeloCoach(evento, payload, cfg, rutaRespuesta, modo) {
+  const evt = String(evento || "").toLowerCase();
+  const modoTxt = String(modo || "").toLowerCase();
+  const ruta = String(rutaRespuesta || "coaching").toLowerCase();
+  const forzarResumen = Boolean(payload.usar_modelo_70b) || Boolean(payload.usar_modelo_resumen) || evt === "resumen_semanal" || evt === "cierre_dia" || modoTxt === "resumen";
+  if (forzarResumen) return cfg.modelSummary;
+  if (ruta === "factual") return cfg.modelFactual;
+  return cfg.modelPrimary;
+}
+
+function solicitarRespuestaCoachProveedor(req) {
+  if (!req || req.provider !== "ollama") {
+    return {
+      choices: [{ message: { content: '{}' } }],
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+    };
+  }
+
+  return llamarProxyOllamaCoach(req);
+}
+
+function construirPerfilProxyCoach(contextoUsuario, contextoFinal) {
+  const perfil = contextoUsuario && typeof contextoUsuario === "object" ? contextoUsuario : {};
+  const ctx = contextoFinal && typeof contextoFinal === "object" ? contextoFinal : {};
+
+  return {
+    peso: perfil.peso_ultimo && perfil.peso_ultimo.peso ? Number(perfil.peso_ultimo.peso) : null,
+    altura: perfil.altura_cm ? Number(perfil.altura_cm) : null,
+    sexo: String(perfil.sexo || "").trim(),
+    edad: perfil.edad ? Number(perfil.edad) : null,
+    objetivo: String(ctx.objetivo || perfil.objetivo || "").trim(),
+    creditos_disponibles: (ctx.creditos_disponibles !== undefined ? Number(ctx.creditos_disponibles) : null),
+    creditos_consumidos: (ctx.creditos_consumidos !== undefined ? Number(ctx.creditos_consumidos) : null),
+    agua_hoy_vasos: perfil.agua_hoy_vasos !== undefined ? Number(perfil.agua_hoy_vasos) : null,
+    ejercicio_ultimo: perfil.ejercicio_ultimo || null,
+    despensa: Array.isArray(ctx.despensa) ? ctx.despensa : []
+  };
+}
+
+function llamarProxyOllamaCoach(req) {
+  const url = String((req.cfg && req.cfg.ollamaProxyUrl) || "").trim();
+  if (!url) {
+    throw new Error("Proxy Ollama no configurado");
+  }
+
+  const payloadProxy = {
+    app: "nutrafit",
+    type: "coach_nutrafit",
+    provider: "ollama",
+    model: String(req.modelo || ""),
+    route: String(req.rutaRespuesta || "coaching"),
+    mode: String(req.modo || "auto"),
+    event: String(req.evento || "pregunta_libre"),
+    user_id: normalizarEmail(req.usuarioId || ""),
+    question: String(req.pregunta || ""),
+    temperature: Number(req.temperatura || 0.35),
+    max_tokens: Number((req.cfg && req.cfg.maxTokensSalida) || 240),
+    timeout_ms: Number((req.cfg && req.cfg.timeoutMs) || 12000),
+    system_prompt: String(req.promptSistema || ""),
+    user_prompt: String(req.mensajeUsuario || ""),
+    profile: construirPerfilProxyCoach(req.contextoUsuario, req.contextoFinal),
+    context: req.contextoFinal || {}
+  };
+
+  const options = {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify(payloadProxy),
+    muteHttpExceptions: true
+  };
+
+  const resp = UrlFetchApp.fetch(url, options);
+  const status = Number(resp.getResponseCode() || 0);
+  const raw = String(resp.getContentText() || "");
+
+  if (status < 200 || status >= 300) {
+    throw new Error("Proxy Ollama HTTP " + status + " - " + raw.substring(0, 180));
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return {
+      choices: [{ message: { content: raw } }],
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+    };
+  }
+}
+
+function extraerContenidoRespuestaProveedorCoach(respuestaProveedor) {
+  const r = respuestaProveedor || {};
+
+  if (r.response_json && typeof r.response_json === "object") {
+    return JSON.stringify(r.response_json);
+  }
+
+  if (r.respuesta && typeof r.respuesta === "object") {
+    return JSON.stringify(r.respuesta);
+  }
+
+  if (r.output_json && typeof r.output_json === "object") {
+    return JSON.stringify(r.output_json);
+  }
+
+  if (typeof r.response_text === "string" && r.response_text.trim()) {
+    return r.response_text.trim();
+  }
+
+  if (typeof r.content === "string" && r.content.trim()) {
+    return r.content.trim();
+  }
+
+  if (r.message && typeof r.message.content === "string") {
+    return String(r.message.content || "").trim();
+  }
+
+  if (Array.isArray(r.choices) && r.choices[0] && r.choices[0].message) {
+    return String(r.choices[0].message.content || "").trim();
+  }
+
+  return "";
+}
+
+function extraerUsageRespuestaProveedorCoach(respuestaProveedor) {
+  const r = respuestaProveedor || {};
+  const usage = (r.usage && typeof r.usage === "object") ? r.usage : {};
+  const promptTokens = Number(usage.prompt_tokens || usage.prompt_eval_count || usage.input_tokens || 0);
+  const completionTokens = Number(usage.completion_tokens || usage.eval_count || usage.output_tokens || 0);
+  const totalTokens = Number(usage.total_tokens || (promptTokens + completionTokens) || 0);
+
+  return {
+    prompt_tokens: isNaN(promptTokens) ? 0 : promptTokens,
+    completion_tokens: isNaN(completionTokens) ? 0 : completionTokens,
+    total_tokens: isNaN(totalTokens) ? 0 : totalTokens
+  };
 }
 
 function obtenerHojaUsoCoach(ss) {
@@ -2483,7 +2657,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
     const respuestaBaseOficial = construirRespuestaDesdeBaseOficialCoach(contexto);
 
     if (esConsultaMedica) {
-      return {
+      return aplicarGuardasSalidaCoach({
         respuesta_directa: "Soy un coach nutricional, no un profesional medico.",
         estado_dia: "",
         lectura_rapida: "",
@@ -2492,13 +2666,13 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
         ajuste_creditos: "",
         micro_habito: "",
         mensaje_motivador: ""
-      };
+      }, preguntaTxt);
     }
 
     const esPreguntaAlimentoONutricion = /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|porcion|ingrediente/.test(preguntaTxt.toLowerCase());
     if (esPreguntaAlimentoONutricion && !tieneDatosOficiales && fuentes.length === 0 && !respuestaCatalogo && !respuestaGeneralFactual && !respuestaBaseOficial) {
-      return {
-        respuesta_directa: "Necesito datos nutricionales oficiales para darte una respuesta exacta. Enviame la informacion del alimento.",
+      return aplicarGuardasSalidaCoach({
+        respuesta_directa: "Con la informacion disponible te doy una orientacion general segura: empieza con porcion moderada, prioriza saciedad con proteina/fibra y ajusta segun hambre y actividad de hoy. Si me compartes cantidad y marca/alimento exacto, te lo afino con mas precision.",
         estado_dia: "",
         lectura_rapida: "",
         accion_ahora: "",
@@ -2506,7 +2680,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
         ajuste_creditos: "",
         micro_habito: "",
         mensaje_motivador: ""
-      };
+      }, preguntaTxt);
     }
 
     const baseFactual = respuestaDirecta
@@ -2522,7 +2696,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
       || (respuestaMiniTest ? String(respuestaMiniTest.respuesta || "") : "")
       || baseFactual;
 
-    return {
+    return aplicarGuardasSalidaCoach({
       respuesta_directa: limpiarRespuestaDirectaCoach(respuestaFactualFinal),
       estado_dia: "",
       lectura_rapida: "",
@@ -2531,7 +2705,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
       ajuste_creditos: "",
       micro_habito: "",
       mensaje_motivador: ""
-    };
+    }, preguntaTxt);
   }
 
   if (intencion === "plan_hoy" && (!respuestaDirecta || esPlantillaAntiguaCoach(respuestaDirecta) || respuestaDirecta.length < 90)) {
@@ -2544,7 +2718,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
   }
 
   if (esPreguntaDirecta) {
-    return {
+    return aplicarGuardasSalidaCoach({
       respuesta_directa: respuestaDirecta || (preguntaTxt ? ("Necesito un dato mas para responder con precision a tu pregunta: " + preguntaTxt) : "Necesito tu pregunta concreta para ayudarte mejor."),
       estado_dia: "",
       lectura_rapida: "",
@@ -2553,7 +2727,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
       ajuste_creditos: "",
       micro_habito: "",
       mensaje_motivador: ""
-    };
+    }, preguntaTxt);
   }
 
   let lecturaFinal = lecturaBase;
@@ -2572,7 +2746,7 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
   const microHabitoDefault = plantilla.micro_habito;
   const motivadorDefault = plantilla.mensaje_motivador;
 
-  return {
+  return aplicarGuardasSalidaCoach({
     respuesta_directa: respuestaDirecta,
     estado_dia: estadoFinal,
     lectura_rapida: lecturaFinal,
@@ -2583,7 +2757,86 @@ function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, conteni
       : "Mantiene el reparto equilibrado de creditos para llegar con margen a la noche.")),
     micro_habito: String(respuesta.micro_habito || microHabitoDefault),
     mensaje_motivador: String(respuesta.mensaje_motivador || motivadorDefault)
+  }, preguntaTxt);
+}
+
+function asegurarEsquemaRespuestaCoach(respuesta) {
+  const base = {
+    respuesta_directa: "",
+    estado_dia: "",
+    lectura_rapida: "",
+    accion_ahora: "",
+    siguiente_paso: "",
+    ajuste_creditos: "",
+    micro_habito: "",
+    mensaje_motivador: ""
   };
+  const r = (respuesta && typeof respuesta === "object") ? respuesta : {};
+  Object.keys(base).forEach(function(k) {
+    base[k] = String(r[k] || "").trim();
+  });
+  return base;
+}
+
+function recortarPorPalabrasCoach(texto, maxPalabras) {
+  const max = Math.max(1, Number(maxPalabras || 1));
+  const palabras = String(texto || "").trim().split(/\s+/).filter(Boolean);
+  if (palabras.length <= max) return String(texto || "").trim();
+  return palabras.slice(0, max).join(" ").trim();
+}
+
+function contieneIndicacionesMedicasPeligrosasCoach(texto) {
+  const t = String(texto || "").toLowerCase();
+  if (!t) return false;
+  if (/(suspende|deja|aumenta|reduce|duplica|toma)\s+(la\s+)?(medicacion|medicaci[oó]n|insulina|pastilla|farmaco|f[áa]rmaco)/.test(t)) return true;
+  if (/(dosis|mg\b|miligramos|tratamiento prescrito)/.test(t)) return true;
+  return false;
+}
+
+function aplicarGuardasSalidaCoach(respuesta, preguntaTxt) {
+  let out = asegurarEsquemaRespuestaCoach(respuesta);
+
+  out.respuesta_directa = limpiarRespuestaDirectaCoach(out.respuesta_directa);
+  out.lectura_rapida = limpiarRespuestaDirectaCoach(out.lectura_rapida);
+  out.accion_ahora = limpiarRespuestaDirectaCoach(out.accion_ahora);
+  out.siguiente_paso = limpiarRespuestaDirectaCoach(out.siguiente_paso);
+  out.ajuste_creditos = limpiarRespuestaDirectaCoach(out.ajuste_creditos);
+  out.micro_habito = limpiarRespuestaDirectaCoach(out.micro_habito);
+  out.mensaje_motivador = limpiarRespuestaDirectaCoach(out.mensaje_motivador);
+
+  out.respuesta_directa = recortarPorPalabrasCoach(out.respuesta_directa, 90);
+  out.accion_ahora = recortarPorPalabrasCoach(out.accion_ahora, 35);
+  out.siguiente_paso = recortarPorPalabrasCoach(out.siguiente_paso, 45);
+  out.mensaje_motivador = recortarPorPalabrasCoach(out.mensaje_motivador, 24);
+
+  const textoCompuesto = [
+    out.respuesta_directa,
+    out.lectura_rapida,
+    out.accion_ahora,
+    out.siguiente_paso,
+    out.ajuste_creditos,
+    out.micro_habito,
+    out.mensaje_motivador
+  ].join(" ").trim();
+
+  if (contieneIndicacionesMedicasPeligrosasCoach(textoCompuesto) && !esConsultaMedicaNutricion(preguntaTxt || "")) {
+    return {
+      respuesta_directa: "Por seguridad, no puedo dar indicaciones medicas. Puedo ayudarte con habitos de nutricion y actividad seguros para hoy.",
+      estado_dia: "",
+      lectura_rapida: "",
+      accion_ahora: "Prioriza una comida simple con proteina y verdura, y mantente hidratada.",
+      siguiente_paso: "Si tienes sintomas o dudas clinicas, consulta a un profesional sanitario.",
+      ajuste_creditos: "",
+      micro_habito: "Antes de decidir, revisa tus creditos y elige una accion pequena y segura.",
+      mensaje_motivador: "Avanzar con seguridad tambien es progreso."
+    };
+  }
+
+  if (!out.respuesta_directa) {
+    out.respuesta_directa = "Te doy una orientacion practica: empieza por una decision pequena y sostenible en tu siguiente comida o bloque de actividad.";
+  }
+
+  return out;
 }
 
 /**

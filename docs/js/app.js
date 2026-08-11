@@ -4053,11 +4053,16 @@ function crearPanelCoach() {
                 <span>Coach NUTRAFIT</span>
             </div>
             <div class="coach-controls">
+                <button id="coach-toggle-btn" class="coach-btn-mini" title="Activar o pausar coach">OFF</button>
                 <span id="coach-status-badge" class="coach-status-badge on">Coach</span>
                 <button id="coach-close-btn" class="coach-btn-mini" title="Cerrar">X</button>
             </div>
         </div>
         <div id="coach-messages" class="coach-messages"></div>
+        <div class="coach-input-row">
+            <input id="coach-input" class="coach-input" type="text" maxlength="280" placeholder="Escribe tu pregunta...">
+            <button id="coach-send-btn" class="coach-send" title="Enviar"><i class="fas fa-paper-plane"></i></button>
+        </div>
     `;
 
     document.body.appendChild(panel);
@@ -4067,7 +4072,35 @@ function crearPanelCoach() {
         btnClose.addEventListener('click', () => alternarPanelCoach(false));
     }
 
-    pushCoachMensajeSistema('Coach en construcción');
+    const btnToggle = document.getElementById('coach-toggle-btn');
+    if (btnToggle) {
+        btnToggle.addEventListener('click', () => {
+            const activar = !coachEstaActivo();
+            coachCambiarEstado(activar);
+            if (activar) {
+                pushCoachMensajeSistema('Coach activado. Ya puedes preguntarme.', 'bot');
+            } else {
+                pushCoachMensajeSistema('Coach en pausa. Pulsa ON para continuar.', 'bot');
+            }
+        });
+    }
+
+    const btnSend = document.getElementById('coach-send-btn');
+    if (btnSend) {
+        btnSend.addEventListener('click', enviarMensajeCoachChat);
+    }
+
+    const input = document.getElementById('coach-input');
+    if (input) {
+        input.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') {
+                ev.preventDefault();
+                enviarMensajeCoachChat();
+            }
+        });
+    }
+
+    pushCoachMensajeSistema('Coach listo para pruebas. Pulsa ON y haz tu primera pregunta.');
 }
 
 function alternarPanelCoach(abrir) {
@@ -4086,13 +4119,14 @@ function alternarPanelCoach(abrir) {
 
 function pushCoachMensajeSistema(texto, clase = 'bot') {
     const cont = document.getElementById('coach-messages');
-    if (!cont) return;
+    if (!cont) return null;
 
     const item = document.createElement('div');
     item.className = `coach-msg ${clase}`;
     item.textContent = texto;
     cont.appendChild(item);
     cont.scrollTop = cont.scrollHeight;
+    return item;
 }
 
 function enviarMensajeCoachChat() {
@@ -4126,7 +4160,7 @@ function insertarTarjetaCoachEnInicio() {
     const card = document.createElement('div');
     card.id = 'coach-card-inicio';
     card.className = 'coach-card-contexto coach-inicio';
-    card.innerHTML = '<div class="coach-inicio-texto"><h4><i class="fas fa-sparkles"></i> Hoy contigo</h4><p id="coach-texto-inicio">Soy tu Coach estoy perfeccionando conocimientos para ayudarte, en breve estaré contigo</p></div><div id="coach-inicio-slot" class="coach-inicio-slot"></div>';
+    card.innerHTML = '<div class="coach-inicio-texto"><h4><i class="fas fa-sparkles"></i> Hoy contigo</h4><p id="coach-texto-inicio">Activa el coach y empecemos a probar resultados reales.</p></div><div id="coach-inicio-slot" class="coach-inicio-slot"></div>';
     menu.parentNode.insertBefore(card, menu);
     colocarBotonCoachEnTarjetaInicio();
 }
@@ -4284,13 +4318,69 @@ async function coachSolicitarRespuesta({ evento, pregunta, modo = 'auto', vistaD
 
     inicializarCoachNutrafitUI();
 
-    const mensajeConstruccion = 'Coach en construcción';
-    pushCoachMensajeSistema(mensajeConstruccion, 'bot');
-    actualizarTarjetaInicio('Soy tu Coach estoy perfeccionando conocimientos para ayudarte, en breve estaré contigo');
+    if (!coachEstaActivo()) {
+        const msgPausa = 'El coach esta en pausa. Pulsa ON para activarlo.';
+        pushCoachMensajeSistema(msgPausa, 'bot');
+        actualizarTarjetaInicio('Activa el coach para empezar a medir resultados reales.');
+        return;
+    }
+
+    const uid = usuarioActivo || localStorage.getItem('nutrafit_usuario_id') || '';
+    const did = dispositivoId || localStorage.getItem('nutrafit_dispositivo_id') || '';
+    if (!uid || !did) {
+        pushCoachMensajeSistema('Necesito sesion activa para responder. Vuelve a identificarte.', 'bot');
+        return;
+    }
 
     const vistaObjetivo = vistaDestino || vistaActual || '';
-    if (vistaObjetivo) {
-        actualizarTarjetaContextoVista(vistaObjetivo, mensajeConstruccion);
+    const payload = {
+        tipo: 'coach_nutrafit',
+        usuario_id: uid,
+        dispositivo_id: did,
+        evento: String(evento || 'pregunta_libre'),
+        modo: String(modo || 'auto'),
+        pregunta: String(pregunta || '').trim() || 'Necesito una recomendacion para este momento.',
+        contexto: obtenerDatosContextoCoach({
+            vista_destino: vistaObjetivo
+        })
+    };
+
+    const thinkingMsg = pushCoachMensajeSistema('Pensando...', 'bot');
+
+    try {
+        const resp = await fetch(URL_GOOGLE_SCRIPT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        let data = null;
+        try {
+            data = await resp.json();
+        } catch (_) {
+            data = null;
+        }
+
+        if (thinkingMsg && thinkingMsg.parentNode) thinkingMsg.parentNode.removeChild(thinkingMsg);
+
+        const respuesta = data && data.respuesta ? data.respuesta : null;
+        const textoCoach = formatearCoachTexto(respuesta);
+        pushCoachMensajeSistema(textoCoach, 'bot');
+
+        actualizarTarjetaInicio(textoCoach);
+        if (vistaObjetivo) {
+            actualizarTarjetaContextoVista(vistaObjetivo, textoCoach);
+        }
+    } catch (error) {
+        if (thinkingMsg && thinkingMsg.parentNode) thinkingMsg.parentNode.removeChild(thinkingMsg);
+        console.error('Error solicitando respuesta del coach:', error);
+        const msgError = 'No pude responder ahora. Reintenta en unos segundos.';
+        pushCoachMensajeSistema(msgError, 'bot');
+        actualizarTarjetaInicio(msgError);
+
+        if (vistaObjetivo) {
+            actualizarTarjetaContextoVista(vistaObjetivo, msgError);
+        }
     }
 }
 
