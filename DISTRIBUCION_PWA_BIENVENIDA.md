@@ -5,7 +5,7 @@ Bienvenido/a a Nutrafit.
 Esta es la version estable de la aplicacion, preparada como PWA instalable para usar desde el movil o el ordenador sin necesidad de tienda.
 
 URL publica actual:
-https://script.google.com/macros/s/AKfycbxMafehlP3woU4sn1xRdTeAbhAqrRYyB57bqaXkZUNBq0AbPqPqNp5AAQFAfYuxSRRp/exec
+https://script.google.com/macros/s/AKfycbxPFrOh8d00YNqb0_cpqoN-IJV_iAE-ws3Ycdpt-HeGJMJqs9nppN7D1Y06hyhD69Yy/exec
 
 ## Mensaje de bienvenida
 Nutrafit te acompana en la organizacion diaria de comidas, creditos, agua, ejercicio, peso, recetas y compras. La aplicacion esta pensada para ayudarte a registrar tu progreso de forma simple y mantener una rutina mas clara.

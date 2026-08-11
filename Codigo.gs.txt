@@ -34,18 +34,14 @@ function doGet(e) {
 
     // --- 1. LÓGICA DE CARGA DE VISTAS HTML ---
     if (e.parameter.v) {
-      return HtmlService.createTemplateFromFile(e.parameter.v)
-          .evaluate()
-          .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-          .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      return renderHtmlSeguroNutrafit([e.parameter.v, String(e.parameter.v || "").replace(/\.html$/i, "")]);
     }
 
     // --- 2. LÓGICA DE LECTURA DE DATOS (JSON) ---
     if (!tabla) {
-      return HtmlService.createTemplateFromFile('index')
-          .evaluate()
-          .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-          .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      // Prioriza la portada con registro/login. Si no existe con ese nombre exacto,
+      // prueba variantes comunes para evitar fallos de despliegue por mayusculas.
+      return renderHtmlSeguroNutrafit(["index", "Index", "inicio", "Inicio"]);
     }
 
     const tz = Session.getScriptTimeZone();
@@ -3006,4 +3002,27 @@ function obtenerContextoWebNutricion(pregunta, intencion) {
     : "Sin fuentes web disponibles en este momento. Responde con prudencia y pide precision si falta contexto.";
 
   return { resumen: resumen, fuentes: fuentesFinal };
+}
+
+function renderHtmlSeguroNutrafit(candidatos) {
+  const lista = Array.isArray(candidatos) ? candidatos : [candidatos];
+
+  for (let i = 0; i < lista.length; i++) {
+    const nombre = String(lista[i] || "").trim();
+    if (!nombre) continue;
+
+    try {
+      return HtmlService.createTemplateFromFile(nombre)
+        .evaluate()
+        .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    } catch (_) {
+      // Intenta con el siguiente candidato.
+    }
+  }
+
+  return textoPlano(
+    "Error de despliegue: no se encontro la portada HTML (index). " +
+    "Sube el archivo index.html al proyecto de Apps Script y vuelve a desplegar."
+  );
 }
