@@ -1258,7 +1258,7 @@ function procesarCoachNutrafit(ss, payload) {
   const contexto = payload.contexto && typeof payload.contexto === "object" ? payload.contexto : {};
   const esModoTestInterno = Boolean(payload.__test_mode) && String(payload.admin_key || payload.adminKey || "") === ADMIN_KEY;
 
-  if (!coachHabilitadoGlobal()) {
+  if (!coachHabilitadoGlobal() && !esModoTestInterno) {
     return finalizarJSON({ status: "disabled", message: "Coach pausado globalmente" });
   }
 
@@ -1398,7 +1398,7 @@ function procesarCoachNutrafit(ss, payload) {
 
 function coachHabilitadoGlobal() {
   const props = PropertiesService.getScriptProperties();
-  const valor = String(props.getProperty("NUTRAFIT_COACH_ENABLED") || "true").toLowerCase();
+  const valor = String(props.getProperty("NUTRAFIT_COACH_ENABLED") || "false").toLowerCase();
   return !(valor === "false" || valor === "off" || valor === "0");
 }
 

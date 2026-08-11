@@ -3647,7 +3647,11 @@ async function cargarSemanaDesdeHistorial(fechaSemana) {
 const COACH_LOCAL_ENABLED_KEY = 'nutrafit_coach_enabled';
 const COACH_LAST_OPEN_KEY = 'nutrafit_coach_last_open_msg';
 const COACH_LAST_DIARIO_KEY = 'nutrafit_coach_last_diario_msg';
-const COACH_DEFAULT_ENABLED = 'on';
+const COACH_DEFAULT_ENABLED = 'off';
+
+function coachHabilitadoPublicamente() {
+    return !(typeof window !== 'undefined' && window.NUTRAFIT_COACH_PUBLIC_ENABLED === false);
+}
 
 const coachState = {
     initialized: false,
@@ -3658,10 +3662,14 @@ const coachState = {
 };
 
 function coachEstaActivo() {
+    if (!coachHabilitadoPublicamente()) {
+        return false;
+    }
+
     const valor = localStorage.getItem(COACH_LOCAL_ENABLED_KEY);
     if (!valor) {
         localStorage.setItem(COACH_LOCAL_ENABLED_KEY, COACH_DEFAULT_ENABLED);
-        return true;
+        return false;
     }
     return valor === 'on';
 }
@@ -3684,6 +3692,10 @@ function actualizarEstadoCoachUI() {
 }
 
 function inicializarCoachNutrafitUI() {
+    if (!coachHabilitadoPublicamente()) {
+        return;
+    }
+
     if (coachState.initialized) {
         actualizarEstadoCoachUI();
         return;
@@ -4154,6 +4166,8 @@ function actualizarTarjetaInicio(texto) {
 }
 
 function coachOnVistaAbierta(nombreVista) {
+    if (!coachHabilitadoPublicamente()) return;
+
     inicializarCoachNutrafitUI();
 
     if (!coachEstaActivo()) return;
@@ -4189,6 +4203,8 @@ function coachOnVistaAbierta(nombreVista) {
 }
 
 function coachNotificarCambioDiario(payload) {
+    if (!coachHabilitadoPublicamente()) return;
+
     if (vistaActual !== 'diario-formulario') return;
     if (!coachEstaActivo()) return;
 
@@ -4264,6 +4280,8 @@ function obtenerDatosContextoCoach(extra = {}) {
 }
 
 async function coachSolicitarRespuesta({ evento, pregunta, modo = 'auto', vistaDestino = '' }) {
+    if (!coachHabilitadoPublicamente()) return;
+
     inicializarCoachNutrafitUI();
 
     const mensajeConstruccion = 'Coach en construcción';
