@@ -1,7 +1,7 @@
 # Nutrafit - Guia rapida
 
 URL:
-https://script.google.com/macros/s/AKfycbxPFrOh8d00YNqb0_cpqoN-IJV_iAE-ws3Ycdpt-HeGJMJqs9nppN7D1Y06hyhD69Yy/exec
+https://script.google.com/macros/s/AKfycbxMafehlP3woU4sn1xRdTeAbhAqrRYyB57bqaXkZUNBq0AbPqPqNp5AAQFAfYuxSRRp/exec
 
 ## Instalar
 - Android: abrir en Chrome y usar Instalar app o Anadir a pantalla de inicio.
