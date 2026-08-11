@@ -1,7 +1,7 @@
 # Nutrafit - Guia de entrega para clientes
 
 URL publica actual:
-https://script.google.com/macros/s/AKfycbxMafehlP3woU4sn1xRdTeAbhAqrRYyB57bqaXkZUNBq0AbPqPqNp5AAQFAfYuxSRRp/exec
+https://script.google.com/macros/s/AKfycbws6j9zZVbF5IQYGP_sXVJZgD0xdizB5xCNhcFWK90ETCTPSeUhxHJY9sqX6LQDKRMo/exec
 
 ## Que es esta version
 Nutrafit se entrega como una PWA instalable. No hace falta pasar por tienda: se abre desde el navegador y se puede anadir a la pantalla de inicio como si fuera una app.

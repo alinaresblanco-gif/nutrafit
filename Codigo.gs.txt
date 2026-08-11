@@ -26,6 +26,15 @@ function doGet(e) {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
+    if (String((e && e.parameter && e.parameter.ping) || "") === "1") {
+      return finalizarJSON({
+        status: "ok",
+        app: "nutrafit",
+        backend_version: "20260811-02",
+        note: "Si ves esta respuesta, el despliegue activo ya incluye los ultimos cambios de doGet."
+      });
+    }
+
     if (e.parameter.action === "admin_aprobar" && e.parameter.adminKey === ADMIN_KEY && e.parameter.email) {
       return aprobarUsuarioNutrafit(e.parameter.email);
     }
