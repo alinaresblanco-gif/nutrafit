@@ -6,9 +6,9 @@ const OLLAMA_BASE_URL = String(process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:
 const DEFAULT_TIMEOUT_MS = Number(process.env.DEFAULT_TIMEOUT_MS || 12000);
 
 const MODELS = {
-  primary: process.env.COACH_PRIMARY_MODEL || 'llama3.1:8b',
-  factual: process.env.COACH_FACTUAL_MODEL || 'phi3:mini',
-  summary: process.env.COACH_SUMMARY_MODEL || 'phi3:mini'
+  primary: process.env.COACH_PRIMARY_MODEL || 'nutracoach',
+  factual: process.env.COACH_FACTUAL_MODEL || 'nutracoach',
+  summary: process.env.COACH_SUMMARY_MODEL || 'nutracoach'
 };
 
 function json(res, status, body) {

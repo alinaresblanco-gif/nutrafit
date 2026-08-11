@@ -25,6 +25,30 @@ ollama pull phi3:mini
 npm start
 ```
 
+## 2.1) Crear modelo profesional NUTRACOACH (recomendado)
+
+En esta carpeta ya tienes un `Modelfile` listo.
+
+1. Crea el modelo local:
+
+```powershell
+ollama create nutracoach -f Modelfile
+```
+
+2. Verifica que existe:
+
+```powershell
+ollama list
+```
+
+3. (Opcional) Fuerza el proxy a usarlo en todas las rutas con `.env`:
+
+```env
+COACH_PRIMARY_MODEL=nutracoach
+COACH_FACTUAL_MODEL=nutracoach
+COACH_SUMMARY_MODEL=nutracoach
+```
+
 Por defecto escucha en:
 
 - http://localhost:8787/health
@@ -46,6 +70,24 @@ Respuesta esperada:
 
 - status: ok
 - response_json con las 8 claves del esquema NutraFit
+
+## 4.1) Tests automaticos (7 checks)
+
+Ejecuta:
+
+```powershell
+npm run test:coach
+```
+
+El script valida:
+
+- JSON valido y esquema completo
+- limite medico
+- accion inmediata y siguiente paso
+- comportamiento factual
+- uso de despensa
+- coherencia con creditos
+- mensaje motivador breve
 
 ## 5) Integracion con Apps Script
 
