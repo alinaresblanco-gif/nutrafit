@@ -1450,8 +1450,22 @@ function procesarCoachNutrafit(ss, payload) {
 
 function coachHabilitadoGlobal() {
   const props = PropertiesService.getScriptProperties();
-  const valor = String(props.getProperty("NUTRAFIT_COACH_ENABLED") || "false").toLowerCase();
-  return !(valor === "false" || valor === "off" || valor === "0");
+  const claves = [
+    "NUTRAFIT_COACH_ENABLED",
+    "NUTRAFIT_COACH_GLOBAL_ENABLED",
+    "COACH_GLOBAL_ENABLED"
+  ];
+
+  for (var i = 0; i < claves.length; i++) {
+    var raw = props.getProperty(claves[i]);
+    if (raw === null || raw === undefined || String(raw).trim() === "") continue;
+
+    var valor = String(raw).trim().toLowerCase();
+    return !(valor === "false" || valor === "off" || valor === "0");
+  }
+
+  // Si no hay propiedad configurada, el coach debe quedar activo por defecto.
+  return true;
 }
 
 function obtenerConfigCoach() {
