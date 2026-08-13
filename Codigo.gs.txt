@@ -1860,40 +1860,73 @@ function construirContextoUsuarioCoach(ss, usuarioId) {
   return resumen;
 }
 
+function construirContextoJsonPromptCoach(contexto) {
+  const c = (contexto && typeof contexto === "object") ? contexto : {};
+  const perfil = (c.perfil_usuario && typeof c.perfil_usuario === "object") ? c.perfil_usuario : {};
+
+  const creditosTotales = Number(perfil.creditos_ultimo_total);
+  const creditosConsumidos = Number(c.creditos_consumidos);
+  const creditosDisponibles = Number(c.creditos_disponibles);
+
+  return {
+    peso: (perfil.peso_ultimo && perfil.peso_ultimo.peso !== undefined) ? Number(perfil.peso_ultimo.peso) : null,
+    altura: perfil.altura_cm !== undefined ? Number(perfil.altura_cm) : null,
+    edad: perfil.edad !== undefined ? Number(perfil.edad) : null,
+    sexo: String(perfil.sexo || "").trim(),
+    creditos_totales: isNaN(creditosTotales) ? 0 : creditosTotales,
+    creditos_consumidos: isNaN(creditosConsumidos) ? 0 : creditosConsumidos,
+    creditos_restantes: isNaN(creditosDisponibles) ? 0 : creditosDisponibles,
+    objetivo: String(c.objetivo || perfil.objetivo || "").trim(),
+    agua: (perfil.agua_hoy_vasos !== undefined && perfil.agua_hoy_vasos !== null) ? Number(perfil.agua_hoy_vasos) : 0,
+    ejercicio: (perfil.ejercicio_ultimo && perfil.ejercicio_ultimo.actividad) ? String(perfil.ejercicio_ultimo.actividad) : "",
+    despensa: Array.isArray(c.despensa) ? c.despensa : [],
+    historial: Array.isArray(c.memoria_usuario) ? c.memoria_usuario : [],
+    fecha: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss")
+  };
+}
+
+function construirAlimentoContextoPromptCoach(contexto) {
+  const c = (contexto && typeof contexto === "object") ? contexto : {};
+
+  return {
+    preferencias: Array.isArray(c.preferencias) ? c.preferencias : [],
+    alergias: Array.isArray(c.alergias) ? c.alergias : [],
+    restricciones: Array.isArray(c.restricciones) ? c.restricciones : [],
+    despensa: Array.isArray(c.despensa) ? c.despensa : [],
+    creditos_totales: Number(c.creditos_totales || c.presupuesto_diario || 0),
+    creditos_restantes: Number(c.creditos_disponibles || 0),
+    objetivo: String(c.objetivo || "").trim(),
+    momento_dia: String(c.momento_dia || "").trim(),
+    ultima_comida: String(c.ultima_comida || "").trim(),
+    actividad_reciente: String(c.actividad_reciente || "").trim(),
+    alimento_detectado: String(c.alimento_detectado || "").trim(),
+    resumen_alimento: String(c.resumen_alimento || "").trim()
+  };
+}
+
 function construirMensajeCoach(pregunta, evento, contexto, modo) {
-  const intencion = detectarIntencionCoach(pregunta, evento);
   const ejemplos = Array.isArray(contexto.ejemplos_calibracion) ? contexto.ejemplos_calibracion : [];
   const baseOficial = Array.isArray(contexto.base_oficial_coach) ? contexto.base_oficial_coach : [];
-  const resumenAlimento = String(contexto.resumen_alimento || "");
-  const safeContext = {
-    evento: evento,
-    accion: contexto.accion_nutrafit || "pregunta",
-    modo: modo || "",
-    intencion_detectada: intencion,
-    fecha: contexto.fecha || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd"),
-    vista_actual: contexto.vista_actual || "",
-    objetivo: contexto.objetivo || "mejorar habitos",
-    creditos_disponibles: contexto.creditos_disponibles,
-    creditos_consumidos: contexto.creditos_consumidos,
-    perfil_usuario: contexto.perfil_usuario || {},
-    contexto_extra: contexto
-  };
+  const contextoJson = construirContextoJsonPromptCoach(contexto);
+  const alimentoContextJson = construirAlimentoContextoPromptCoach(contexto);
 
   return [
     "REGLA_IMPORTANTE:",
-    "Si la pregunta es directa, responde de forma directa en respuesta_directa y evita plantillas.",
-    "No uses etiquetas como 'Lectura rapida:', 'Accion ahora:', 'Siguiente paso:' dentro de respuesta_directa.",
-    "Si piden plan de hoy, entrega un plan concreto por momentos del dia adaptado a creditos disponibles.",
-    "Usa EJEMPLOS_CALIBRACION como referencia de calidad, tono y nivel de concrecion, pero no copies literal salvo coincidencia total de contexto.",
+    "Responde directo, sin rodeos y sin etiquetas dentro de respuesta_directa.",
+    "Mantiene el formato JSON obligatorio.",
+    "Prioriza accion inmediata y realista.",
+    "No inventes datos nutricionales exactos si no hay evidencia.",
+    "Si faltan peso, altura, edad o sexo y te piden calculo personalizado, pide esos datos antes de calcular.",
+    "No des diagnosticos ni tratamientos medicos. Si la consulta es medica, indica limite y recomienda consulta profesional.",
     "",
-    "PREGUNTA:",
+    "PREGUNTA_USUARIO:",
     pregunta || "Necesito recomendacion para este momento.",
     "",
     "MODO:",
-    modo || "auto",
+    "coaching",
     "",
-    "ALIMENTO_CONTEXT:",
-    resumenAlimento || "Sin alimento concreto detectado.",
+    "ALIMENTO_CONTEXT_JSON:",
+    JSON.stringify(alimentoContextJson),
     "",
     "BASE_OFICIAL_COACH:",
     formatearBaseOficialCoach(baseOficial),
@@ -1902,7 +1935,7 @@ function construirMensajeCoach(pregunta, evento, contexto, modo) {
     formatearEjemplosCalibracionCoach(ejemplos),
     "",
     "CONTEXTO_JSON:",
-    JSON.stringify(safeContext)
+    JSON.stringify(contextoJson)
   ].join("\n");
 }
 
@@ -1959,14 +1992,16 @@ function construirMensajeCoachFactual(pregunta, evento, contexto, modo) {
   const resumenUsuario = String(contexto.resumen_usuario_nutrafit || "");
   const ejemplos = Array.isArray(contexto.ejemplos_calibracion) ? contexto.ejemplos_calibracion : [];
   const baseOficial = Array.isArray(contexto.base_oficial_coach) ? contexto.base_oficial_coach : [];
-  const resumenAlimento = String(contexto.resumen_alimento || "");
+  const alimentoContextJson = construirAlimentoContextoPromptCoach(contexto);
 
   return [
     "MODO_FACTUAL_ACTIVO:",
-    "Responde a la pregunta con base en consenso de fuentes y con aplicacion practica al usuario.",
-    "No uses plantilla de coach.",
-    "Usa EJEMPLOS_CALIBRACION como referencia de concrecion y estructura, no como texto a copiar.",
-    "Prioriza BASE_OFICIAL_COACH cuando aporte contexto util y consistente con la pregunta.",
+    "Responder con consenso de fuentes seguras.",
+    "No usar plantilla de coach.",
+    "Priorizar base oficial NutraFit.",
+    "Responder directo y util.",
+    "Si falta cantidad o detalle, pedir el dato minimo para afinar.",
+    "No dar diagnosticos ni tratamientos medicos.",
     "",
     "PREGUNTA_USUARIO:",
     pregunta || "Sin pregunta",
@@ -1975,7 +2010,7 @@ function construirMensajeCoachFactual(pregunta, evento, contexto, modo) {
     String(evento || "pregunta_libre"),
     "",
     "MODO:",
-    String(modo || "chat"),
+    "factual",
     "",
     "RESUMEN_USUARIO_NUTRAFIT:",
     resumenUsuario || "Sin datos adicionales del usuario.",
@@ -1983,8 +2018,8 @@ function construirMensajeCoachFactual(pregunta, evento, contexto, modo) {
     "RESUMEN_WEB:",
     resumenWeb || "Sin contexto web adicional.",
     "",
-    "ALIMENTO_CONTEXT:",
-    resumenAlimento || "Sin alimento concreto detectado.",
+    "ALIMENTO_CONTEXT_JSON:",
+    JSON.stringify(alimentoContextJson),
     "",
     "BASE_OFICIAL_COACH:",
     formatearBaseOficialCoach(baseOficial),
