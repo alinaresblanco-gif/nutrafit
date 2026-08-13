@@ -1,0 +1,909 @@
+/* EXTRACCION DEL PIPELINE COACH NUTRAFIT DESDE Codigo.gs.txt */
+
+/* ===== PROCESADOR PRINCIPAL (1291-1435) ===== */
+
+function procesarCoachNutrafit(ss, payload) {
+  const usuarioId = normalizarEmail(payload.usuario_id);
+  const dispositivoId = String(payload.dispositivo_id || "").trim();
+  const evento = String(payload.evento || "pregunta_libre").trim();
+  const modo = String(payload.modo || "auto").toLowerCase() === "chat" ? "chat" : "auto";
+  const pregunta = String(payload.pregunta || "").trim();
+  const contexto = payload.contexto && typeof payload.contexto === "object" ? payload.contexto : {};
+  const esModoTestInterno = Boolean(payload.__test_mode) && String(payload.admin_key || payload.adminKey || "") === ADMIN_KEY;
+
+  if (!coachHabilitadoGlobal() && !esModoTestInterno) {
+    return finalizarJSON({ status: "disabled", message: "Coach pausado globalmente" });
+  }
+
+  if (!esModoTestInterno && (!usuarioId || !dispositivoId || !sesionValidaNutrafit(ss, usuarioId, dispositivoId))) {
+    return finalizarJSON({ status: "error", message: "Sesion invalida" });
+  }
+
+  const cfg = obtenerConfigCoach();
+  const cuota = esModoTestInterno
+    ? { ok: true, used: 0, max: 999 }
+    : validarCuotaCoachDiaria(ss, usuarioId, modo, cfg);
+  if (!cuota.ok) {
+    return finalizarJSON({
+      status: "quota_exceeded",
+      message: "Limite diario del piloto alcanzado",
+      quota: cuota
+    });
+  }
+
+  const accionNutrafit = mapearEventoAAccionNutrafit(evento, payload);
+  const intencionDetectada = detectarIntencionCoach(pregunta, evento);
+  const rutaRespuesta = clasificarRutaRespuestaCoach(pregunta, evento, modo, intencionDetectada);
+  const modelo = elegirModeloCoach(evento, payload, cfg, rutaRespuesta, modo);
+  const providerActivo = resolverProviderCoach(cfg, usuarioId, esModoTestInterno, payload);
+  const memoriaUsuario = obtenerMemoriaCoachUsuario(ss, usuarioId, 8);
+  const contextoUsuario = construirContextoUsuarioCoach(ss, usuarioId);
+  const contextoBaseOficial = obtenerContextoBaseOficialCoach(pregunta, intencionDetectada, rutaRespuesta, 4);
+  const contextoAlimento = obtenerContextoAlimentoCoach(ss, pregunta);
+  const contextoWeb = preguntaRequiereBusquedaWebNutricion(pregunta, evento, modo, intencionDetectada)
+    ? obtenerContextoWebNutricion(pregunta, intencionDetectada)
+    : { resumen: "", fuentes: [] };
+  const resumenUsuario = construirResumenUsuarioNutrafitParaCoach(contextoUsuario, contexto || {});
+  const ejemplosCalibracion = seleccionarEjemplosCalibracionCoach(pregunta, intencionDetectada, rutaRespuesta, 3);
+  const contextoFinal = Object.assign({}, contexto || {}, {
+    perfil_usuario: contextoUsuario,
+    accion_nutrafit: accionNutrafit,
+    memoria_usuario: memoriaUsuario,
+    intencion_detectada: intencionDetectada,
+    ruta_respuesta: rutaRespuesta,
+    resumen_usuario_nutrafit: resumenUsuario,
+    ejemplos_calibracion: ejemplosCalibracion,
+    base_oficial_coach: contextoBaseOficial.items,
+    resumen_base_oficial: contextoBaseOficial.resumen,
+    alimento_detectado: contextoAlimento.detectado,
+    alimento_oficial: contextoAlimento.oficial,
+    alimento_catalogo: contextoAlimento.catalogo,
+    resumen_alimento: contextoAlimento.resumen,
+    resumen_web: contextoWeb.resumen,
+    fuentes_web: contextoWeb.fuentes
+  });
+  const mensajeUsuario = (rutaRespuesta === "factual")
+    ? construirMensajeCoachFactual(pregunta, evento, contextoFinal, modo)
+    : construirMensajeCoach(pregunta, evento, contextoFinal, modo);
+  const promptSistema = rutaRespuesta === "factual" ? promptFactualNutrafit : promptMaestroNutrafit;
+  const tempOverride = rutaRespuesta === "factual" ? 0.25 : 0.35;
+
+  try {
+    const respuestaProveedor = solicitarRespuestaCoachProveedor({
+      provider: providerActivo,
+      cfg: cfg,
+      usuarioId: usuarioId,
+      evento: evento,
+      modo: modo,
+      pregunta: pregunta,
+      rutaRespuesta: rutaRespuesta,
+      modelo: modelo,
+      promptSistema: promptSistema,
+      mensajeUsuario: mensajeUsuario,
+      temperatura: tempOverride,
+      contextoFinal: contextoFinal,
+      contextoUsuario: contextoUsuario
+    });
+    const contenido = String(
+      extraerContenidoRespuestaProveedorCoach(respuestaProveedor) ||
+      '{}'
+    ).trim();
+
+    let respuesta = parsearRespuestaCoachJSON(contenido);
+    respuesta = normalizarRespuestaCoach(respuesta, evento, contextoFinal, pregunta, contenido, modo);
+
+    if (!esModoTestInterno) {
+      registrarMemoriaCoachUsuario(ss, {
+        usuarioId: usuarioId,
+        pregunta: pregunta,
+        respuestaDirecta: String(respuesta.respuesta_directa || "").substring(0, 300),
+        accion: accionNutrafit,
+        intencion: intencionDetectada
+      });
+    }
+
+    const usage = extraerUsageRespuestaProveedorCoach(respuestaProveedor);
+    if (!esModoTestInterno) {
+      registrarUsoCoach(ss, {
+        usuarioId,
+        modo,
+        evento,
+        modelo: modelo + "@" + providerActivo,
+        promptTokens: Number(usage.prompt_tokens || 0),
+        completionTokens: Number(usage.completion_tokens || 0),
+        totalTokens: Number(usage.total_tokens || 0),
+        pregunta
+      });
+    }
+
+    return finalizarJSON({
+      status: "ok",
+      model: modelo,
+      provider: providerActivo,
+      respuesta,
+      quota: {
+        used: cuota.used + 1,
+        max: cuota.max,
+        mode: modo
+      }
+    });
+  } catch (error) {
+    Logger.log("Error coach_nutrafit: " + error);
+    const fallback = normalizarRespuestaCoach({}, evento, contextoFinal, pregunta, "", modo);
+
+    if (!esModoTestInterno) {
+      registrarMemoriaCoachUsuario(ss, {
+        usuarioId: usuarioId,
+        pregunta: pregunta,
+        respuestaDirecta: String(fallback.respuesta_directa || "").substring(0, 300),
+        accion: accionNutrafit,
+        intencion: intencionDetectada
+      });
+
+      registrarUsoCoach(ss, {
+        usuarioId,
+        modo,
+        evento,
+        modelo,
+        promptTokens: 0,
+        completionTokens: 0,
+
+/* ===== PROXY Y ENRUTADO (1536-1698) ===== */
+
+function solicitarRespuestaCoachProveedor(req) {
+  if (!req || req.provider !== "ollama") {
+    return {
+      choices: [{ message: { content: '{}' } }],
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+    };
+  }
+
+  return llamarProxyOllamaCoach(req);
+}
+
+function construirPerfilProxyCoach(contextoUsuario, contextoFinal) {
+  const perfil = contextoUsuario && typeof contextoUsuario === "object" ? contextoUsuario : {};
+  const ctx = contextoFinal && typeof contextoFinal === "object" ? contextoFinal : {};
+
+  return {
+    peso: perfil.peso_ultimo && perfil.peso_ultimo.peso ? Number(perfil.peso_ultimo.peso) : null,
+    altura: perfil.altura_cm ? Number(perfil.altura_cm) : null,
+    sexo: String(perfil.sexo || "").trim(),
+    edad: perfil.edad ? Number(perfil.edad) : null,
+    objetivo: String(ctx.objetivo || perfil.objetivo || "").trim(),
+    creditos_disponibles: (ctx.creditos_disponibles !== undefined ? Number(ctx.creditos_disponibles) : null),
+    creditos_consumidos: (ctx.creditos_consumidos !== undefined ? Number(ctx.creditos_consumidos) : null),
+    agua_hoy_vasos: perfil.agua_hoy_vasos !== undefined ? Number(perfil.agua_hoy_vasos) : null,
+    ejercicio_ultimo: perfil.ejercicio_ultimo || null,
+    despensa: Array.isArray(ctx.despensa) ? ctx.despensa : []
+  };
+}
+
+function llamarProxyOllamaCoach(req) {
+  const url = String((req.cfg && req.cfg.ollamaProxyUrl) || "").trim();
+  if (!url) {
+    throw new Error("Proxy Ollama no configurado");
+  }
+
+  const payloadProxy = {
+    app: "nutrafit",
+    type: "coach_nutrafit",
+    provider: "ollama",
+    model: String(req.modelo || ""),
+    route: String(req.rutaRespuesta || "coaching"),
+    mode: String(req.modo || "auto"),
+    event: String(req.evento || "pregunta_libre"),
+    user_id: normalizarEmail(req.usuarioId || ""),
+    question: String(req.pregunta || ""),
+    temperature: Number(req.temperatura || 0.35),
+    max_tokens: Number((req.cfg && req.cfg.maxTokensSalida) || 240),
+    timeout_ms: Number((req.cfg && req.cfg.timeoutMs) || 12000),
+    system_prompt: String(req.promptSistema || ""),
+    user_prompt: String(req.mensajeUsuario || ""),
+    profile: construirPerfilProxyCoach(req.contextoUsuario, req.contextoFinal),
+    context: req.contextoFinal || {}
+  };
+
+  const options = {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify(payloadProxy),
+    muteHttpExceptions: true
+  };
+
+  const resp = UrlFetchApp.fetch(url, options);
+  const status = Number(resp.getResponseCode() || 0);
+  const raw = String(resp.getContentText() || "");
+
+  if (status < 200 || status >= 300) {
+    throw new Error("Proxy Ollama HTTP " + status + " - " + raw.substring(0, 180));
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return {
+      choices: [{ message: { content: raw } }],
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+    };
+  }
+}
+
+function extraerContenidoRespuestaProveedorCoach(respuestaProveedor) {
+  const r = respuestaProveedor || {};
+
+  if (r.response_json && typeof r.response_json === "object") {
+    return JSON.stringify(r.response_json);
+  }
+
+  if (r.respuesta && typeof r.respuesta === "object") {
+    return JSON.stringify(r.respuesta);
+  }
+
+  if (r.output_json && typeof r.output_json === "object") {
+    return JSON.stringify(r.output_json);
+  }
+
+  if (typeof r.response_text === "string" && r.response_text.trim()) {
+    return r.response_text.trim();
+  }
+
+  if (typeof r.content === "string" && r.content.trim()) {
+    return r.content.trim();
+  }
+
+  if (r.message && typeof r.message.content === "string") {
+    return String(r.message.content || "").trim();
+  }
+
+  if (Array.isArray(r.choices) && r.choices[0] && r.choices[0].message) {
+    return String(r.choices[0].message.content || "").trim();
+  }
+
+  return "";
+}
+
+function extraerUsageRespuestaProveedorCoach(respuestaProveedor) {
+  const r = respuestaProveedor || {};
+  const usage = (r.usage && typeof r.usage === "object") ? r.usage : {};
+  const promptTokens = Number(usage.prompt_tokens || usage.prompt_eval_count || usage.input_tokens || 0);
+  const completionTokens = Number(usage.completion_tokens || usage.eval_count || usage.output_tokens || 0);
+  const totalTokens = Number(usage.total_tokens || (promptTokens + completionTokens) || 0);
+
+  return {
+    prompt_tokens: isNaN(promptTokens) ? 0 : promptTokens,
+    completion_tokens: isNaN(completionTokens) ? 0 : completionTokens,
+    total_tokens: isNaN(totalTokens) ? 0 : totalTokens
+  };
+}
+
+function obtenerHojaUsoCoach(ss) {
+  const nombre = "coach_uso";
+  let hoja = ss.getSheetByName(nombre);
+  if (!hoja) {
+    hoja = ss.insertSheet(nombre);
+    hoja.appendRow(["timestamp", "fecha", "usuario_id", "modo", "evento", "modelo", "prompt_tokens", "completion_tokens", "total_tokens", "pregunta"]);
+  }
+
+  if (hoja.getLastRow() === 0) {
+    hoja.appendRow(["timestamp", "fecha", "usuario_id", "modo", "evento", "modelo", "prompt_tokens", "completion_tokens", "total_tokens", "pregunta"]);
+  }
+
+  return hoja;
+}
+
+function validarCuotaCoachDiaria(ss, usuarioId, modo, cfg) {
+  const hoja = obtenerHojaUsoCoach(ss);
+  const fechaHoy = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+  const max = modo === "chat" ? cfg.maxChatPorDia : cfg.maxAutoPorDia;
+
+  if (hoja.getLastRow() <= 1) {
+    return { ok: true, used: 0, max: max };
+  }
+
+  const datos = hoja.getRange(2, 1, hoja.getLastRow() - 1, 10).getValues();
+  let usados = 0;
+  datos.forEach(fila => {
+    const fecha = String(fila[1] || "").trim();
+    const uid = normalizarEmail(fila[2] || "");
+    const m = String(fila[3] || "").trim();
+    if (fecha === fechaHoy && uid === usuarioId && m === modo) {
+      usados++;
+    }
+  });
+
+  return { ok: usados < max, used: usados, max: max };
+
+/* ===== PROMPTS Y CONTEXTO JSON (1863-2060) ===== */
+
+function construirContextoJsonPromptCoach(contexto) {
+  const c = (contexto && typeof contexto === "object") ? contexto : {};
+  const perfil = (c.perfil_usuario && typeof c.perfil_usuario === "object") ? c.perfil_usuario : {};
+
+  const creditosTotales = Number(perfil.creditos_ultimo_total);
+  const creditosConsumidos = Number(c.creditos_consumidos);
+  const creditosDisponibles = Number(c.creditos_disponibles);
+
+  return {
+    peso: (perfil.peso_ultimo && perfil.peso_ultimo.peso !== undefined) ? Number(perfil.peso_ultimo.peso) : null,
+    altura: perfil.altura_cm !== undefined ? Number(perfil.altura_cm) : null,
+    edad: perfil.edad !== undefined ? Number(perfil.edad) : null,
+    sexo: String(perfil.sexo || "").trim(),
+    creditos_totales: isNaN(creditosTotales) ? 0 : creditosTotales,
+    creditos_consumidos: isNaN(creditosConsumidos) ? 0 : creditosConsumidos,
+    creditos_restantes: isNaN(creditosDisponibles) ? 0 : creditosDisponibles,
+    objetivo: String(c.objetivo || perfil.objetivo || "").trim(),
+    agua: (perfil.agua_hoy_vasos !== undefined && perfil.agua_hoy_vasos !== null) ? Number(perfil.agua_hoy_vasos) : 0,
+    ejercicio: (perfil.ejercicio_ultimo && perfil.ejercicio_ultimo.actividad) ? String(perfil.ejercicio_ultimo.actividad) : "",
+    despensa: Array.isArray(c.despensa) ? c.despensa : [],
+    historial: Array.isArray(c.memoria_usuario) ? c.memoria_usuario : [],
+    fecha: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss")
+  };
+}
+
+function construirAlimentoContextoPromptCoach(contexto) {
+  const c = (contexto && typeof contexto === "object") ? contexto : {};
+
+  return {
+    preferencias: Array.isArray(c.preferencias) ? c.preferencias : [],
+    alergias: Array.isArray(c.alergias) ? c.alergias : [],
+    restricciones: Array.isArray(c.restricciones) ? c.restricciones : [],
+    despensa: Array.isArray(c.despensa) ? c.despensa : [],
+    creditos_totales: Number(c.creditos_totales || c.presupuesto_diario || 0),
+    creditos_restantes: Number(c.creditos_disponibles || 0),
+    objetivo: String(c.objetivo || "").trim(),
+    momento_dia: String(c.momento_dia || "").trim(),
+    ultima_comida: String(c.ultima_comida || "").trim(),
+    actividad_reciente: String(c.actividad_reciente || "").trim(),
+    alimento_detectado: String(c.alimento_detectado || "").trim(),
+    resumen_alimento: String(c.resumen_alimento || "").trim()
+  };
+}
+
+function construirMensajeCoach(pregunta, evento, contexto, modo) {
+  const ejemplos = Array.isArray(contexto.ejemplos_calibracion) ? contexto.ejemplos_calibracion : [];
+  const baseOficial = Array.isArray(contexto.base_oficial_coach) ? contexto.base_oficial_coach : [];
+  const contextoJson = construirContextoJsonPromptCoach(contexto);
+  const alimentoContextJson = construirAlimentoContextoPromptCoach(contexto);
+
+  return [
+    "REGLA_IMPORTANTE:",
+    "Responde directo, sin rodeos y sin etiquetas dentro de respuesta_directa.",
+    "Mantiene el formato JSON obligatorio.",
+    "Prioriza accion inmediata y realista.",
+    "No inventes datos nutricionales exactos si no hay evidencia.",
+    "Si faltan peso, altura, edad o sexo y te piden calculo personalizado, pide esos datos antes de calcular.",
+    "No des diagnosticos ni tratamientos medicos. Si la consulta es medica, indica limite y recomienda consulta profesional.",
+    "",
+    "PREGUNTA_USUARIO:",
+    pregunta || "Necesito recomendacion para este momento.",
+    "",
+    "MODO:",
+    "coaching",
+    "",
+    "ALIMENTO_CONTEXT_JSON:",
+    JSON.stringify(alimentoContextJson),
+    "",
+    "BASE_OFICIAL_COACH:",
+    formatearBaseOficialCoach(baseOficial),
+    "",
+    "EJEMPLOS_CALIBRACION:",
+    formatearEjemplosCalibracionCoach(ejemplos),
+    "",
+    "CONTEXTO_JSON:",
+    JSON.stringify(contextoJson)
+  ].join("\n");
+}
+
+function clasificarRutaRespuestaCoach(pregunta, evento, modo, intencion) {
+  const preguntaTxt = String(pregunta || "").trim().toLowerCase();
+  const eventoTxt = String(evento || "").trim().toLowerCase();
+  const modoTxt = String(modo || "").trim().toLowerCase();
+  const intencionTxt = String(intencion || "").trim().toLowerCase();
+
+  if (!(eventoTxt === "pregunta_libre" || modoTxt === "chat")) return "coaching";
+  if (intencionTxt === "plan_hoy" || intencionTxt === "motivacion") return "coaching";
+
+  if (/que es|beneficio|beneficios|riesgo|riesgos|caloria|calorias|proteina|hidrato|fibra|vitamina|mineral|omega|indice glucemico|colesterol|trigliceridos|apto|contraindic|preentreno|postentreno|recuperacion|masa muscular|fuerza|resistencia|cardio|series|repeticiones|pasos|hidratacion|electrolitos/.test(preguntaTxt)) {
+    return "factual";
+  }
+
+  if (["nutricion_general", "comidas", "comer_fuera", "general", "ejercicio", "agua"].indexOf(intencionTxt) >= 0) {
+    return "factual";
+  }
+
+  return "coaching";
+}
+
+function construirResumenUsuarioNutrafitParaCoach(perfil, contexto) {
+  const p = perfil || {};
+  const c = contexto || {};
+
+  const partes = [];
+  if (p.creditos_ultimo_total !== null && p.creditos_ultimo_total !== undefined && !isNaN(Number(p.creditos_ultimo_total))) {
+    partes.push("Ultimo total de creditos registrado: " + Number(p.creditos_ultimo_total));
+  }
+  if (c.creditos_consumidos !== null && c.creditos_consumidos !== undefined && !isNaN(Number(c.creditos_consumidos))) {
+    partes.push("Creditos consumidos hoy: " + Number(c.creditos_consumidos));
+  }
+  if (c.creditos_disponibles !== null && c.creditos_disponibles !== undefined && !isNaN(Number(c.creditos_disponibles))) {
+    partes.push("Creditos disponibles hoy: " + Number(c.creditos_disponibles));
+  }
+  if (p.agua_hoy_vasos !== null && p.agua_hoy_vasos !== undefined && !isNaN(Number(p.agua_hoy_vasos))) {
+    partes.push("Agua hoy: " + Number(p.agua_hoy_vasos) + " vasos.");
+  }
+  if (p.ejercicio_ultimo && p.ejercicio_ultimo.actividad) {
+    partes.push("Ultimo ejercicio: " + String(p.ejercicio_ultimo.actividad) + " (" + Number(p.ejercicio_ultimo.tiempo_min || 0) + " min).");
+  }
+  if (p.peso_ultimo && p.peso_ultimo.peso) {
+    partes.push("Ultimo peso registrado: " + Number(p.peso_ultimo.peso) + " kg.");
+  }
+
+  return partes.join(" ");
+}
+
+function construirMensajeCoachFactual(pregunta, evento, contexto, modo) {
+  const fuentes = Array.isArray(contexto.fuentes_web) ? contexto.fuentes_web : [];
+  const resumenWeb = String(contexto.resumen_web || "");
+  const resumenUsuario = String(contexto.resumen_usuario_nutrafit || "");
+  const ejemplos = Array.isArray(contexto.ejemplos_calibracion) ? contexto.ejemplos_calibracion : [];
+  const baseOficial = Array.isArray(contexto.base_oficial_coach) ? contexto.base_oficial_coach : [];
+  const alimentoContextJson = construirAlimentoContextoPromptCoach(contexto);
+
+  return [
+    "MODO_FACTUAL_ACTIVO:",
+    "Responder con consenso de fuentes seguras.",
+    "No usar plantilla de coach.",
+    "Priorizar base oficial NutraFit.",
+    "Responder directo y util.",
+    "Si falta cantidad o detalle, pedir el dato minimo para afinar.",
+    "No dar diagnosticos ni tratamientos medicos.",
+    "",
+    "PREGUNTA_USUARIO:",
+    pregunta || "Sin pregunta",
+    "",
+    "EVENTO:",
+    String(evento || "pregunta_libre"),
+    "",
+    "MODO:",
+    "factual",
+    "",
+    "RESUMEN_USUARIO_NUTRAFIT:",
+    resumenUsuario || "Sin datos adicionales del usuario.",
+    "",
+    "RESUMEN_WEB:",
+    resumenWeb || "Sin contexto web adicional.",
+    "",
+    "ALIMENTO_CONTEXT_JSON:",
+    JSON.stringify(alimentoContextJson),
+    "",
+    "BASE_OFICIAL_COACH:",
+    formatearBaseOficialCoach(baseOficial),
+    "",
+    "EJEMPLOS_CALIBRACION:",
+    formatearEjemplosCalibracionCoach(ejemplos),
+    "",
+    "FUENTES_WEB:",
+    fuentes.length ? fuentes.join("\n- ") : "Sin fuentes disponibles"
+  ].join("\n");
+}
+
+function normalizarTextoCoachComparable(texto) {
+  return String(texto || "")
+    .toLowerCase()
+    .replace(/[áàäâ]/g, "a")
+    .replace(/[éèëê]/g, "e")
+    .replace(/[íìïî]/g, "i")
+    .replace(/[óòöô]/g, "o")
+    .replace(/[úùüû]/g, "u")
+    .replace(/ñ/g, "n")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenizarCoachComparable(texto) {
+  const limpio = normalizarTextoCoachComparable(texto);
+  if (!limpio) return [];
+  return limpio.split(" ").filter(function(token) {
+    return token && token.length >= 3;
+  });
+}
+
+function categoriasPreferidasCoach(intencion, rutaRespuesta) {
+  const categorias = MAPA_CATEGORIAS_INTENCION_COACH[String(intencion || "general")] || ["nutricion_general"];
+  if (String(rutaRespuesta || "").toLowerCase() === "factual") {
+    return categorias.concat(["nutricion_general", "alimentos"]);
+
+/* ===== PARSEO JSON (2367-2383) ===== */
+
+function parsearRespuestaCoachJSON(texto) {
+  if (!texto) return {};
+
+  try {
+    return JSON.parse(texto);
+  } catch (_) {
+    const match = String(texto).match(/\{[\s\S]*\}/);
+    if (!match) return {};
+    try {
+      return JSON.parse(match[0]);
+    } catch (_) {
+      const textoPlano = String(texto || "").trim();
+      return textoPlano ? { __textoPlano: textoPlano } : {};
+    }
+  }
+}
+
+
+/* ===== NORMALIZADOR Y GUARDAS (2700-2965) ===== */
+
+function normalizarRespuestaCoach(respuesta, evento, contexto, pregunta, contenidoRaw, modo) {
+  const disponibles = Number(contexto.creditos_disponibles);
+  const consumidos = Number(contexto.creditos_consumidos);
+  const tieneCreditos = !isNaN(disponibles) && !isNaN(consumidos);
+  const exceso = tieneCreditos && disponibles < 0 ? Math.abs(disponibles) : 0;
+
+  const estado = String(respuesta.estado_dia || "").toUpperCase();
+  const estadoFinal = (estado === "VERDE" || estado === "AMARILLO" || estado === "ROJO")
+    ? estado
+    : (exceso > 0 ? "ROJO" : (tieneCreditos && disponibles <= 3 ? "AMARILLO" : "VERDE"));
+
+  const preguntaTxt = String(pregunta || "").trim();
+  const eventoTxt = String(evento || "").trim().toLowerCase();
+  const textoPlano = String(respuesta.__textoPlano || "").trim();
+  const contenidoPlano = String(contenidoRaw || "").trim();
+  const intencion = detectarIntencionCoach(preguntaTxt, eventoTxt);
+  const modoTxt = String(modo || "auto").toLowerCase() === "chat" ? "chat" : "auto";
+  const esPreguntaDirecta = (modoTxt === "chat" || eventoTxt === "pregunta_libre");
+  const rutaRespuesta = String(contexto.ruta_respuesta || "coaching").toLowerCase();
+  const esRutaFactual = rutaRespuesta === "factual";
+  const plantilla = construirFallbackSegunIntencion(intencion, {
+    exceso: exceso,
+    disponibles: disponibles,
+    consumidos: consumidos,
+    pregunta: preguntaTxt
+  });
+
+  const lecturaDinamica = tieneCreditos
+    ? (exceso > 0
+      ? "Hay un exceso en el consumo de creditos. Te ayudo a compensarlo con decisiones concretas."
+      : (disponibles <= 3
+        ? "Vas justa de creditos y estas a tiempo de cerrar bien el dia."
+        : "Vas con buen margen para mantener equilibrio."))
+    : "Reviso tu situacion y te doy el siguiente paso mas util ahora.";
+
+  const lecturaPregunta = preguntaTxt
+    ? "Sobre tu pregunta: " + preguntaTxt
+    : "";
+
+  const lecturaBase = respuesta.lectura_rapida
+    ? String(respuesta.lectura_rapida)
+    : (textoPlano || contenidoPlano || (lecturaPregunta ? (lecturaPregunta + ". " + lecturaDinamica) : lecturaDinamica));
+
+  const respuestaDirectaRaw = String(respuesta.respuesta_directa || textoPlano || "").trim();
+  let respuestaDirecta = limpiarRespuestaDirectaCoach(respuestaDirectaRaw);
+
+  if (esRutaFactual) {
+    const fuentes = Array.isArray(contexto.fuentes_web) ? contexto.fuentes_web.filter(Boolean).slice(0, 3) : [];
+    const tieneDatosOficiales = contextoTieneDatosOficialesNutricion(contexto);
+    const esConsultaMedica = esConsultaMedicaNutricion(preguntaTxt);
+    const respuestaCatalogo = construirRespuestaDirectaDesdeCatalogoAlimento(contexto, preguntaTxt);
+    const respuestaChiaCanonica = construirRespuestaCanonicaChiaCoach(preguntaTxt);
+    const respuestaMiniTest = obtenerRespuestaMiniTestCoach(preguntaTxt);
+    const respuestaGeneralFactual = construirRespuestaFactualGeneralCoach(preguntaTxt, contexto);
+    const respuestaBaseOficial = construirRespuestaDesdeBaseOficialCoach(contexto);
+
+    if (esConsultaMedica) {
+      return aplicarGuardasSalidaCoach({
+        respuesta_directa: "Soy un coach nutricional, no un profesional medico.",
+        estado_dia: "",
+        lectura_rapida: "",
+        accion_ahora: "",
+        siguiente_paso: "",
+        ajuste_creditos: "",
+        micro_habito: "",
+        mensaje_motivador: ""
+      }, preguntaTxt);
+    }
+
+    const esPreguntaAlimentoONutricion = /alimento|comida|nutricion|nutricional|caloria|calorias|proteina|grasa|hidrato|fibra|vitamina|mineral|omega|azucar|porcion|ingrediente/.test(preguntaTxt.toLowerCase());
+    if (esPreguntaAlimentoONutricion && !tieneDatosOficiales && fuentes.length === 0 && !respuestaCatalogo && !respuestaGeneralFactual && !respuestaBaseOficial) {
+      return aplicarGuardasSalidaCoach({
+        respuesta_directa: "Con la informacion disponible te doy una orientacion general segura: empieza con porcion moderada, prioriza saciedad con proteina/fibra y ajusta segun hambre y actividad de hoy. Si me compartes cantidad y marca/alimento exacto, te lo afino con mas precision.",
+        estado_dia: "",
+        lectura_rapida: "",
+        accion_ahora: "",
+        siguiente_paso: "",
+        ajuste_creditos: "",
+        micro_habito: "",
+        mensaje_motivador: ""
+      }, preguntaTxt);
+    }
+
+    const baseFactual = respuestaDirecta
+      || respuestaCatalogo
+      || respuestaGeneralFactual
+      || respuestaBaseOficial
+      || limpiarRespuestaDirectaCoach(textoPlano)
+      || (preguntaTxt
+        ? ("Con la informacion disponible, te doy una orientacion general: empieza con una opcion moderada y ajusta por objetivo, tolerancia y actividad de hoy. Si me compartes cantidad, frecuencia, peso y objetivo, te lo cierro con un rango mas preciso para tu caso.")
+        : "Dime tu pregunta concreta y te doy una orientacion practica con el mejor rango posible.");
+
+    const respuestaFactualFinal = respuestaChiaCanonica
+      || (respuestaMiniTest ? String(respuestaMiniTest.respuesta || "") : "")
+      || baseFactual;
+
+    return aplicarGuardasSalidaCoach({
+      respuesta_directa: limpiarRespuestaDirectaCoach(respuestaFactualFinal),
+      estado_dia: "",
+      lectura_rapida: "",
+      accion_ahora: "",
+      siguiente_paso: "",
+      ajuste_creditos: "",
+      micro_habito: "",
+      mensaje_motivador: ""
+    }, preguntaTxt);
+  }
+
+  if (intencion === "plan_hoy" && (!respuestaDirecta || esPlantillaAntiguaCoach(respuestaDirecta) || respuestaDirecta.length < 90)) {
+    respuestaDirecta = construirPlanHoyDirectoCoach(contexto);
+  }
+
+  if (!respuestaDirecta && esPreguntaDirecta) {
+    const fallbackDirecto = [plantilla.accion_ahora, plantilla.siguiente_paso].filter(Boolean).join(" ").trim();
+    respuestaDirecta = limpiarRespuestaDirectaCoach(fallbackDirecto);
+  }
+
+  if (esPreguntaDirecta) {
+    return aplicarGuardasSalidaCoach({
+      respuesta_directa: respuestaDirecta || (preguntaTxt ? ("Necesito un dato mas para responder con precision a tu pregunta: " + preguntaTxt) : "Necesito tu pregunta concreta para ayudarte mejor."),
+      estado_dia: "",
+      lectura_rapida: "",
+      accion_ahora: "",
+      siguiente_paso: "",
+      ajuste_creditos: "",
+      micro_habito: "",
+      mensaje_motivador: ""
+    }, preguntaTxt);
+  }
+
+  let lecturaFinal = lecturaBase;
+  if (exceso > 0) {
+    const objetivo = Math.max(0, consumidos - exceso);
+    lecturaFinal = "Hay un exceso en el consumo de creditos. Objetivo: " + objetivo + ", consumidos: " + consumidos + ", exceso: " + exceso + ". " + lecturaBase;
+  }
+
+  let siguientePaso = String(respuesta.siguiente_paso || plantilla.siguiente_paso);
+  if (exceso > 0) {
+    siguientePaso = "Para el siguiente paso, usa verduras cocinadas y una proteina magra. Deja crudos solo para la cena.";
+  }
+
+  const accionAhoraDefault = plantilla.accion_ahora;
+  const siguientePasoDefault = plantilla.siguiente_paso;
+  const microHabitoDefault = plantilla.micro_habito;
+  const motivadorDefault = plantilla.mensaje_motivador;
+
+  return aplicarGuardasSalidaCoach({
+    respuesta_directa: respuestaDirecta,
+    estado_dia: estadoFinal,
+    lectura_rapida: lecturaFinal,
+    accion_ahora: String(respuesta.accion_ahora || accionAhoraDefault),
+    siguiente_paso: String(respuesta.siguiente_paso || siguientePaso || siguientePasoDefault),
+    ajuste_creditos: String(respuesta.ajuste_creditos || (exceso > 0
+      ? "Compensa con ejercicio moderado hoy o manana y ajusta una comida, sin castigos."
+      : "Mantiene el reparto equilibrado de creditos para llegar con margen a la noche.")),
+    micro_habito: String(respuesta.micro_habito || microHabitoDefault),
+    mensaje_motivador: String(respuesta.mensaje_motivador || motivadorDefault)
+  }, preguntaTxt);
+}
+
+function asegurarEsquemaRespuestaCoach(respuesta) {
+  const base = {
+    respuesta_directa: "",
+    estado_dia: "",
+    lectura_rapida: "",
+    accion_ahora: "",
+    siguiente_paso: "",
+    ajuste_creditos: "",
+    micro_habito: "",
+    mensaje_motivador: ""
+  };
+  const r = (respuesta && typeof respuesta === "object") ? respuesta : {};
+  Object.keys(base).forEach(function(k) {
+    base[k] = String(r[k] || "").trim();
+  });
+  return base;
+}
+
+function recortarPorPalabrasCoach(texto, maxPalabras) {
+  const max = Math.max(1, Number(maxPalabras || 1));
+  const palabras = String(texto || "").trim().split(/\s+/).filter(Boolean);
+  if (palabras.length <= max) return String(texto || "").trim();
+  return palabras.slice(0, max).join(" ").trim();
+}
+
+function contieneIndicacionesMedicasPeligrosasCoach(texto) {
+  const t = String(texto || "").toLowerCase();
+  if (!t) return false;
+  if (/(suspende|deja|aumenta|reduce|duplica|toma)\s+(la\s+)?(medicacion|medicaci[oó]n|insulina|pastilla|farmaco|f[áa]rmaco)/.test(t)) return true;
+  if (/(dosis|mg\b|miligramos|tratamiento prescrito)/.test(t)) return true;
+  return false;
+}
+
+function aplicarGuardasSalidaCoach(respuesta, preguntaTxt) {
+  let out = asegurarEsquemaRespuestaCoach(respuesta);
+
+  out.respuesta_directa = limpiarRespuestaDirectaCoach(out.respuesta_directa);
+  out.lectura_rapida = limpiarRespuestaDirectaCoach(out.lectura_rapida);
+  out.accion_ahora = limpiarRespuestaDirectaCoach(out.accion_ahora);
+  out.siguiente_paso = limpiarRespuestaDirectaCoach(out.siguiente_paso);
+  out.ajuste_creditos = limpiarRespuestaDirectaCoach(out.ajuste_creditos);
+  out.micro_habito = limpiarRespuestaDirectaCoach(out.micro_habito);
+  out.mensaje_motivador = limpiarRespuestaDirectaCoach(out.mensaje_motivador);
+
+  out.respuesta_directa = recortarPorPalabrasCoach(out.respuesta_directa, 90);
+  out.accion_ahora = recortarPorPalabrasCoach(out.accion_ahora, 35);
+  out.siguiente_paso = recortarPorPalabrasCoach(out.siguiente_paso, 45);
+  out.mensaje_motivador = recortarPorPalabrasCoach(out.mensaje_motivador, 24);
+
+  const textoCompuesto = [
+    out.respuesta_directa,
+    out.lectura_rapida,
+    out.accion_ahora,
+    out.siguiente_paso,
+    out.ajuste_creditos,
+    out.micro_habito,
+    out.mensaje_motivador
+  ].join(" ").trim();
+
+  if (contieneIndicacionesMedicasPeligrosasCoach(textoCompuesto) && !esConsultaMedicaNutricion(preguntaTxt || "")) {
+    return {
+      respuesta_directa: "Por seguridad, no puedo dar indicaciones medicas. Puedo ayudarte con habitos de nutricion y actividad seguros para hoy.",
+      estado_dia: "",
+      lectura_rapida: "",
+      accion_ahora: "Prioriza una comida simple con proteina y verdura, y mantente hidratada.",
+      siguiente_paso: "Si tienes sintomas o dudas clinicas, consulta a un profesional sanitario.",
+      ajuste_creditos: "",
+      micro_habito: "Antes de decidir, revisa tus creditos y elige una accion pequena y segura.",
+      mensaje_motivador: "Avanzar con seguridad tambien es progreso."
+    };
+  }
+
+  if (!out.respuesta_directa) {
+    out.respuesta_directa = "Te doy una orientacion practica: empieza por una decision pequena y sostenible en tu siguiente comida o bloque de actividad.";
+  }
+
+  return out;
+}
+
+/**
+ * Sanitiza valores antes de guardar
+ */
+function sanitizeCampo(valor) {
+  if (valor === null || valor === undefined) return "";
+  if (typeof valor === "string") return valor.trim();
+  return valor;
+}
+
+function esConsultaMedicaNutricion(preguntaTxt) {
+  const t = String(preguntaTxt || "").toLowerCase();
+  return /diagnost|tratamiento|medicacion|medicamento|enfermedad|patologia|hipertension|diabetes|cancer|tiroides|embarazo de riesgo|insuficiencia|renal|hepatica/.test(t);
+}
+
+function contextoTieneDatosOficialesNutricion(contexto) {
+  const c = contexto && typeof contexto === "object" ? contexto : {};
+
+  const candidatos = [
+    c.datos_nutricionales,
+    c.nutricion,
+    c.alimento,
+    c.alimento_info,
+    c.fooddata,
+    c.foodDataCentral,
+    c.tabla_nutricional,
+    c.porciones,
+    c.nutrientes,
+
+/* ===== MINI TEST (2995-3095) ===== */
+
+function evaluarCasoMiniTestCoach(caso, respuestaDirecta) {
+  const texto = String(respuestaDirecta || "").trim();
+  const textoNorm = normalizarTextoCoachComparable(texto);
+  const claves = Array.isArray(caso.claves_minimas) ? caso.claves_minimas : [];
+
+  const contieneFuentes = /fuentes?\s*(consultadas?|usadas?)|https?:\/\//i.test(texto);
+  const faltantes = claves.filter(function(k) {
+    const key = normalizarTextoCoachComparable(k || "");
+    return key && textoNorm.indexOf(key) === -1;
+  });
+
+  const aprobado = Boolean(texto) && !contieneFuentes && faltantes.length <= 1;
+
+  return {
+    aprobado: aprobado,
+    contiene_fuentes: contieneFuentes,
+    claves_faltantes: faltantes,
+    longitud: texto.length
+  };
+}
+
+function ejecutarMiniTestCoach(ss, payload) {
+  const adminKey = String(payload.admin_key || payload.adminKey || "").trim();
+  const usuarioId = normalizarEmail(payload.usuario_id);
+  const dispositivoId = String(payload.dispositivo_id || "").trim();
+  const autorizadoPorSesion = Boolean(usuarioId && dispositivoId && sesionValidaNutrafit(ss, usuarioId, dispositivoId));
+
+  if (!(adminKey === ADMIN_KEY || autorizadoPorSesion)) {
+    return finalizarJSON({ status: "error", message: "No autorizado para ejecutar mini test" });
+  }
+
+  const resultados = COACH_MINI_TEST_10.map(function(caso) {
+    const payloadCaso = {
+      tipo: "coach_nutrafit",
+      usuario_id: usuarioId,
+      dispositivo_id: dispositivoId,
+      evento: "pregunta_libre",
+      modo: "chat",
+      pregunta: caso.pregunta,
+      contexto: {},
+      __test_mode: true,
+      admin_key: adminKey
+    };
+
+    let respuestaDirecta = "";
+    let status = "error";
+    try {
+      const salida = procesarCoachNutrafit(ss, payloadCaso);
+      const json = JSON.parse(String(salida.getContent() || "{}"));
+      status = String(json.status || "error");
+      respuestaDirecta = String((((json || {}).respuesta || {}).respuesta_directa) || "");
+    } catch (_) {
+      status = "error";
+      respuestaDirecta = "";
+    }
+
+    const evaluacion = evaluarCasoMiniTestCoach(caso, respuestaDirecta);
+
+    return {
+      id: caso.id,
+      categoria: caso.categoria,
+      pregunta: caso.pregunta,
+      status: status,
+      aprobado: evaluacion.aprobado,
+      contiene_fuentes: evaluacion.contiene_fuentes,
+      claves_faltantes: evaluacion.claves_faltantes,
+      respuesta_esperada: caso.respuesta,
+      respuesta_obtenida: respuestaDirecta
+    };
+  });
+
+  const aprobados = resultados.filter(function(r) { return r.aprobado; }).length;
+  const total = resultados.length;
+  const porcentaje = total ? Math.round((aprobados / total) * 100) : 0;
+
+  return finalizarJSON({
+    status: "ok",
+    total: total,
+    aprobados: aprobados,
+    fallidos: Math.max(0, total - aprobados),
+    porcentaje_aprobado: porcentaje,
+    resultados: resultados
+  });
+}
+
+const FUENTES_NUTRICION_CONFIABLES = [
+  { nombre: "WHO", dominio: "who.int", url: "https://www.who.int", temas: ["salud_general", "nutricion", "actividad", "sueno", "salud_mental"] },
+  { nombre: "FAO Nutrition", dominio: "fao.org", url: "https://www.fao.org/nutrition", temas: ["nutricion", "seguridad_alimentaria"] },
+  { nombre: "EFSA", dominio: "efsa.europa.eu", url: "https://www.efsa.europa.eu", temas: ["nutricion", "seguridad_alimentaria"] },
+  { nombre: "AESAN", dominio: "aesan.gob.es", url: "https://www.aesan.gob.es", temas: ["nutricion", "seguridad_alimentaria"] },
+  { nombre: "USDA FoodData Central", dominio: "fdc.nal.usda.gov", url: "https://fdc.nal.usda.gov", temas: ["nutricion"] },
+  { nombre: "USDA Dietary Guidelines", dominio: "dietaryguidelines.gov", url: "https://www.dietaryguidelines.gov", temas: ["nutricion"] },
+  { nombre: "MyPlate", dominio: "myplate.gov", url: "https://www.myplate.gov", temas: ["nutricion"] },
+  { nombre: "USDA Nutrition", dominio: "usda.gov", url: "https://www.usda.gov/topics/food-nutrition", temas: ["nutricion"] },
+  { nombre: "NIH", dominio: "nih.gov", url: "https://www.nih.gov", temas: ["salud_general", "nutricion"] },
+  { nombre: "NIH ODS", dominio: "ods.od.nih.gov", url: "https://ods.od.nih.gov", temas: ["nutricion", "suplementos"] },
+  { nombre: "NIDDK", dominio: "niddk.nih.gov", url: "https://www.niddk.nih.gov", temas: ["nutricion", "metabolica"] },
+  { nombre: "NHLBI", dominio: "nhlbi.nih.gov", url: "https://www.nhlbi.nih.gov", temas: ["salud_general", "cardio"] },
+  { nombre: "NIMH", dominio: "nimh.nih.gov", url: "https://www.nimh.nih.gov", temas: ["salud_mental"] },
+  { nombre: "MedlinePlus", dominio: "medlineplus.gov", url: "https://medlineplus.gov", temas: ["salud_general", "nutricion", "salud_mental", "sueno"] },
+  { nombre: "CDC", dominio: "cdc.gov", url: "https://www.cdc.gov", temas: ["salud_general", "actividad", "sueno"] },
