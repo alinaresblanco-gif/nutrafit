@@ -1705,7 +1705,11 @@ function llamarGeminiCoach(req) {
       return llamarGeminiModeloCoach_(req, apiKey, candidatos[i]);
     } catch (e) {
       ultimoError = e;
-      if (String(e).indexOf("HTTP 404") === -1) throw e;
+      var msg = String(e);
+      // 404 = modelo retirado, 503 = sobrecarga temporal; ambos justifican reintento
+      if (msg.indexOf("HTTP 404") === -1 && msg.indexOf("HTTP 503") === -1) throw e;
+      // Pausa breve antes de reintentar para dar margen al servidor
+      if (i < candidatos.length - 1) Utilities.sleep(1500);
     }
   }
 
