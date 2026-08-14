@@ -1510,6 +1510,34 @@ function configurarCoachOllama() {
 }
 
 /**
+ * Prueba directa de conexion con Gemini. Ejecutar desde el editor y mirar el registro.
+ */
+function probarGeminiCoach() {
+  const cfg = obtenerConfigCoach();
+  if (!cfg.geminiApiKey) {
+    Logger.log("Falta NUTRAFIT_COACH_GEMINI_API_KEY en propiedades del script");
+    return { ok: false, motivo: "sin_api_key" };
+  }
+
+  try {
+    const r = llamarGeminiCoach({
+      cfg: cfg,
+      modelo: cfg.geminiModel,
+      temperatura: 0.3,
+      promptSistema: promptMaestroNutrafit,
+      mensajeUsuario: "PREGUNTA_USUARIO:\nDime en una frase que cenar hoy con poca hambre.\n\nCONTEXTO_JSON:\n{}"
+    });
+
+    const contenido = extraerContenidoRespuestaProveedorCoach(r);
+    Logger.log(contenido);
+    return { ok: true, modelo: cfg.geminiModel, respuesta: contenido };
+  } catch (e) {
+    Logger.log("Error Gemini: " + e);
+    return { ok: false, error: String(e) };
+  }
+}
+
+/**
  * Muestra la configuracion activa del coach para verificar despliegue.
  */
 function verEstadoCoachConfig() {
@@ -1639,7 +1667,7 @@ function llamarGeminiCoach(req) {
 
   const modelo = String(req.modelo || (req.cfg && req.cfg.geminiModel) || "gemini-2.0-flash").trim();
   const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
-    encodeURIComponent(modelo) + ":generateContent?key=" + encodeURIComponent(apiKey);
+    encodeURIComponent(modelo) + ":generateContent";
 
   const body = {
     systemInstruction: {
@@ -1673,6 +1701,7 @@ function llamarGeminiCoach(req) {
   const resp = UrlFetchApp.fetch(url, {
     method: "post",
     contentType: "application/json",
+    headers: { "x-goog-api-key": apiKey },
     payload: JSON.stringify(body),
     muteHttpExceptions: true
   });
