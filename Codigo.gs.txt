@@ -1476,7 +1476,7 @@ function configurarCoachGemini() {
     NUTRAFIT_COACH_ENABLED: "true",
     NUTRAFIT_COACH_PROVIDER: "gemini",
     NUTRAFIT_COACH_GEMINI_API_KEY: API_KEY,
-    NUTRAFIT_COACH_GEMINI_MODEL: "gemini-2.0-flash",
+    NUTRAFIT_COACH_GEMINI_MODEL: "gemini-2.5-flash",
     NUTRAFIT_COACH_CANARY_USERS: "",
     NUTRAFIT_COACH_MAX_CHAT_DIA: "50",
     NUTRAFIT_COACH_MAX_AUTO_DIA: "50",
@@ -1529,12 +1529,38 @@ function probarGeminiCoach() {
     });
 
     const contenido = extraerContenidoRespuestaProveedorCoach(r);
+    Logger.log("Modelo usado: " + String(r.modelo_usado || cfg.geminiModel));
     Logger.log(contenido);
-    return { ok: true, modelo: cfg.geminiModel, respuesta: contenido };
+    return { ok: true, modelo: String(r.modelo_usado || cfg.geminiModel), respuesta: contenido };
   } catch (e) {
     Logger.log("Error Gemini: " + e);
     return { ok: false, error: String(e) };
   }
+}
+
+/**
+ * Lista los modelos Gemini disponibles para tu API key.
+ */
+function listarModelosGemini() {
+  const cfg = obtenerConfigCoach();
+  if (!cfg.geminiApiKey) {
+    Logger.log("Falta NUTRAFIT_COACH_GEMINI_API_KEY");
+    return [];
+  }
+
+  const resp = UrlFetchApp.fetch("https://generativelanguage.googleapis.com/v1beta/models", {
+    method: "get",
+    headers: { "x-goog-api-key": cfg.geminiApiKey },
+    muteHttpExceptions: true
+  });
+
+  const data = JSON.parse(String(resp.getContentText() || "{}"));
+  const nombres = (data.models || []).map(function(m) {
+    return String(m.name || "").replace("models/", "");
+  });
+
+  Logger.log(nombres.join("\n"));
+  return nombres;
 }
 
 /**
@@ -1586,7 +1612,7 @@ function obtenerConfigCoach() {
     provider: normalizarProviderCoach(props.getProperty("NUTRAFIT_COACH_PROVIDER") || "offline"),
     ollamaProxyUrl: String(props.getProperty("NUTRAFIT_COACH_OLLAMA_PROXY_URL") || "").trim(),
     geminiApiKey: String(props.getProperty("NUTRAFIT_COACH_GEMINI_API_KEY") || "").trim(),
-    geminiModel: String(props.getProperty("NUTRAFIT_COACH_GEMINI_MODEL") || "gemini-2.0-flash").trim(),
+    geminiModel: String(props.getProperty("NUTRAFIT_COACH_GEMINI_MODEL") || "gemini-2.5-flash").trim(),
     modelPrimary: modelPrimary,
     modelFactual: modelFactual,
     modelSummary: modelSummary,
@@ -1659,13 +1685,34 @@ function solicitarRespuestaCoachProveedor(req) {
   };
 }
 
+// Se prueban en orden si el modelo configurado ya no esta disponible (HTTP 404).
+const MODELOS_GEMINI_FALLBACK = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"];
+
 function llamarGeminiCoach(req) {
   const apiKey = String((req.cfg && req.cfg.geminiApiKey) || "").trim();
   if (!apiKey) {
     throw new Error("Gemini API key no configurada");
   }
 
-  const modelo = String(req.modelo || (req.cfg && req.cfg.geminiModel) || "gemini-2.0-flash").trim();
+  const preferido = String(req.modelo || (req.cfg && req.cfg.geminiModel) || "").trim();
+  const candidatos = [preferido].concat(MODELOS_GEMINI_FALLBACK).filter(function(m, i, arr) {
+    return m && arr.indexOf(m) === i;
+  });
+
+  let ultimoError = null;
+  for (var i = 0; i < candidatos.length; i++) {
+    try {
+      return llamarGeminiModeloCoach_(req, apiKey, candidatos[i]);
+    } catch (e) {
+      ultimoError = e;
+      if (String(e).indexOf("HTTP 404") === -1) throw e;
+    }
+  }
+
+  throw ultimoError || new Error("Gemini sin modelo disponible");
+}
+
+function llamarGeminiModeloCoach_(req, apiKey, modelo) {
   const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
     encodeURIComponent(modelo) + ":generateContent";
 
@@ -1719,6 +1766,7 @@ function llamarGeminiCoach(req) {
   const usage = data.usageMetadata || {};
 
   return {
+    modelo_usado: modelo,
     choices: [{ message: { content: contenido || '{}' } }],
     usage: {
       prompt_tokens: Number(usage.promptTokenCount || 0),
