@@ -1377,9 +1377,9 @@ function procesarCoachNutrafit(ss, payload) {
 
     let respuesta = parsearRespuestaCoachJSON(contenido);
     const salidaModeloValida = Boolean(respuesta && String(respuesta.respuesta_directa || "").trim());
-    const fuenteSalida = (providerActivo === "ollama" && salidaModeloValida) ? "proxy" : "fallback";
+    const fuenteSalida = (providerActivo !== "offline" && salidaModeloValida) ? "modelo" : "fallback";
 
-    respuesta = (fuenteSalida === "proxy")
+    respuesta = (fuenteSalida === "modelo")
       ? aplicarGuardasSalidaCoach(respuesta, pregunta)
       : normalizarRespuestaCoach(respuesta, evento, contextoFinal, pregunta, contenido, modo);
 
@@ -1467,6 +1467,26 @@ function procesarCoachNutrafit(ss, payload) {
 }
 
 /**
+ * Configura el coach en modo Gemini (nube). Edita API_KEY y ejecuta esta funcion una sola vez.
+ */
+function configurarCoachGemini() {
+  const API_KEY = "PEGA_AQUI_TU_API_KEY"; // https://aistudio.google.com/apikey
+
+  PropertiesService.getScriptProperties().setProperties({
+    NUTRAFIT_COACH_ENABLED: "true",
+    NUTRAFIT_COACH_PROVIDER: "gemini",
+    NUTRAFIT_COACH_GEMINI_API_KEY: API_KEY,
+    NUTRAFIT_COACH_GEMINI_MODEL: "gemini-2.0-flash",
+    NUTRAFIT_COACH_CANARY_USERS: "",
+    NUTRAFIT_COACH_MAX_CHAT_DIA: "50",
+    NUTRAFIT_COACH_MAX_AUTO_DIA: "50",
+    NUTRAFIT_COACH_TIMEOUT_MS: "20000"
+  }, false);
+
+  return verEstadoCoachConfig();
+}
+
+/**
  * Configura el coach en modo Ollama. Edita PROXY_URL y ejecuta esta funcion una sola vez.
  */
 function configurarCoachOllama() {
@@ -1499,6 +1519,8 @@ function verEstadoCoachConfig() {
     provider: cfg.provider,
     proxy_configurado: Boolean(cfg.ollamaProxyUrl),
     proxy_url: cfg.ollamaProxyUrl,
+    gemini_configurado: Boolean(cfg.geminiApiKey),
+    gemini_modelo: cfg.geminiModel,
     modelo_primario: cfg.modelPrimary,
     canary: cfg.canaryUsers
   };
@@ -1535,6 +1557,8 @@ function obtenerConfigCoach() {
   return {
     provider: normalizarProviderCoach(props.getProperty("NUTRAFIT_COACH_PROVIDER") || "offline"),
     ollamaProxyUrl: String(props.getProperty("NUTRAFIT_COACH_OLLAMA_PROXY_URL") || "").trim(),
+    geminiApiKey: String(props.getProperty("NUTRAFIT_COACH_GEMINI_API_KEY") || "").trim(),
+    geminiModel: String(props.getProperty("NUTRAFIT_COACH_GEMINI_MODEL") || "gemini-2.0-flash").trim(),
     modelPrimary: modelPrimary,
     modelFactual: modelFactual,
     modelSummary: modelSummary,
@@ -1552,6 +1576,7 @@ function obtenerConfigCoach() {
 function normalizarProviderCoach(providerRaw) {
   const v = String(providerRaw || "").trim().toLowerCase();
   if (v === "ollama") return "ollama";
+  if (v === "gemini") return "gemini";
   return "offline";
 }
 
@@ -1570,18 +1595,19 @@ function usuarioEnCanaryCoach(usuarioId, canaryUsers) {
 
 function resolverProviderCoach(cfg, usuarioId, esModoTestInterno, payload) {
   const forcedProvider = normalizarProviderCoach(payload && payload.force_provider);
-  if (esModoTestInterno && (forcedProvider === "offline" || forcedProvider === "ollama")) {
+  if (esModoTestInterno && forcedProvider) {
     return forcedProvider;
   }
 
   const providerCfg = normalizarProviderCoach(cfg && cfg.provider);
-  if (providerCfg !== "ollama") return "offline";
-  if (!cfg || !cfg.ollamaProxyUrl) return "offline";
+  if (providerCfg === "offline") return "offline";
+  if (providerCfg === "ollama" && (!cfg || !cfg.ollamaProxyUrl)) return "offline";
+  if (providerCfg === "gemini" && (!cfg || !cfg.geminiApiKey)) return "offline";
 
   // Sin lista canary configurada, el piloto aplica a todos los usuarios activos.
   const canary = Array.isArray(cfg.canaryUsers) ? cfg.canaryUsers : [];
   if (canary.length && !usuarioEnCanaryCoach(usuarioId, canary)) return "offline";
-  return "ollama";
+  return providerCfg;
 }
 
 function elegirModeloCoach(evento, payload, cfg, rutaRespuesta, modo) {
@@ -1589,20 +1615,88 @@ function elegirModeloCoach(evento, payload, cfg, rutaRespuesta, modo) {
   const modoTxt = String(modo || "").toLowerCase();
   const ruta = String(rutaRespuesta || "coaching").toLowerCase();
   const forzarResumen = Boolean(payload.usar_modelo_70b) || Boolean(payload.usar_modelo_resumen) || evt === "resumen_semanal" || evt === "cierre_dia" || modoTxt === "resumen";
+  if (normalizarProviderCoach(cfg && cfg.provider) === "gemini") return cfg.geminiModel;
   if (forzarResumen) return cfg.modelSummary;
   if (ruta === "factual") return cfg.modelFactual;
   return cfg.modelPrimary;
 }
 
 function solicitarRespuestaCoachProveedor(req) {
-  if (!req || req.provider !== "ollama") {
-    return {
-      choices: [{ message: { content: '{}' } }],
-      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
-    };
+  if (req && req.provider === "ollama") return llamarProxyOllamaCoach(req);
+  if (req && req.provider === "gemini") return llamarGeminiCoach(req);
+
+  return {
+    choices: [{ message: { content: '{}' } }],
+    usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+  };
+}
+
+function llamarGeminiCoach(req) {
+  const apiKey = String((req.cfg && req.cfg.geminiApiKey) || "").trim();
+  if (!apiKey) {
+    throw new Error("Gemini API key no configurada");
   }
 
-  return llamarProxyOllamaCoach(req);
+  const modelo = String(req.modelo || (req.cfg && req.cfg.geminiModel) || "gemini-2.0-flash").trim();
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
+    encodeURIComponent(modelo) + ":generateContent?key=" + encodeURIComponent(apiKey);
+
+  const body = {
+    systemInstruction: {
+      parts: [{ text: String(req.promptSistema || "") }]
+    },
+    contents: [{
+      role: "user",
+      parts: [{ text: String(req.mensajeUsuario || "") }]
+    }],
+    generationConfig: {
+      temperature: Number(req.temperatura || 0.35),
+      maxOutputTokens: Math.max(512, Number((req.cfg && req.cfg.maxTokensSalida) || 240) * 3),
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          respuesta_directa: { type: "STRING" },
+          estado_dia: { type: "STRING" },
+          lectura_rapida: { type: "STRING" },
+          accion_ahora: { type: "STRING" },
+          siguiente_paso: { type: "STRING" },
+          ajuste_creditos: { type: "STRING" },
+          micro_habito: { type: "STRING" },
+          mensaje_motivador: { type: "STRING" }
+        },
+        required: ["respuesta_directa"]
+      }
+    }
+  };
+
+  const resp = UrlFetchApp.fetch(url, {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify(body),
+    muteHttpExceptions: true
+  });
+
+  const status = Number(resp.getResponseCode() || 0);
+  const raw = String(resp.getContentText() || "");
+
+  if (status < 200 || status >= 300) {
+    throw new Error("Gemini HTTP " + status + " - " + raw.substring(0, 180));
+  }
+
+  const data = JSON.parse(raw);
+  const partes = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+  const contenido = partes.map(function(p) { return String(p.text || ""); }).join("").trim();
+  const usage = data.usageMetadata || {};
+
+  return {
+    choices: [{ message: { content: contenido || '{}' } }],
+    usage: {
+      prompt_tokens: Number(usage.promptTokenCount || 0),
+      completion_tokens: Number(usage.candidatesTokenCount || 0),
+      total_tokens: Number(usage.totalTokenCount || 0)
+    }
+  };
 }
 
 function construirPerfilProxyCoach(contextoUsuario, contextoFinal) {
