@@ -1376,7 +1376,12 @@ function procesarCoachNutrafit(ss, payload) {
     ).trim();
 
     let respuesta = parsearRespuestaCoachJSON(contenido);
-    respuesta = normalizarRespuestaCoach(respuesta, evento, contextoFinal, pregunta, contenido, modo);
+    const salidaModeloValida = Boolean(respuesta && String(respuesta.respuesta_directa || "").trim());
+    const fuenteSalida = (providerActivo === "ollama" && salidaModeloValida) ? "proxy" : "fallback";
+
+    respuesta = (fuenteSalida === "proxy")
+      ? aplicarGuardasSalidaCoach(respuesta, pregunta)
+      : normalizarRespuestaCoach(respuesta, evento, contextoFinal, pregunta, contenido, modo);
 
     if (!esModoTestInterno) {
       registrarMemoriaCoachUsuario(ss, {
@@ -1407,6 +1412,12 @@ function procesarCoachNutrafit(ss, payload) {
       model: modelo,
       provider: providerActivo,
       respuesta,
+      debug_route: {
+        provider_activo: providerActivo,
+        ruta_respuesta: rutaRespuesta,
+        modelo: modelo,
+        fuente_salida: fuenteSalida
+      },
       quota: {
         used: cuota.used + 1,
         max: cuota.max,
@@ -1443,9 +1454,56 @@ function procesarCoachNutrafit(ss, payload) {
       model: modelo,
       provider: providerActivo,
       respuesta: fallback,
-      warning: "fallback"
+      warning: "fallback",
+      debug_route: {
+        provider_activo: providerActivo,
+        ruta_respuesta: rutaRespuesta,
+        modelo: modelo,
+        fuente_salida: "fallback",
+        error: String(error).substring(0, 180)
+      }
     });
   }
+}
+
+/**
+ * Configura el coach en modo Ollama. Edita PROXY_URL y ejecuta esta funcion una sola vez.
+ */
+function configurarCoachOllama() {
+  const PROXY_URL = "https://TU-URL-PUBLICA/coach"; // <-- pon aqui la URL publica de tu proxy
+
+  PropertiesService.getScriptProperties().setProperties({
+    NUTRAFIT_COACH_ENABLED: "true",
+    NUTRAFIT_COACH_PROVIDER: "ollama",
+    NUTRAFIT_COACH_OLLAMA_PROXY_URL: PROXY_URL,
+    NUTRAFIT_COACH_OLLAMA_MODEL_PRIMARY: "nutracoach",
+    NUTRAFIT_COACH_OLLAMA_MODEL_FACTUAL: "nutracoach",
+    NUTRAFIT_COACH_OLLAMA_MODEL_SUMMARY: "nutracoach",
+    NUTRAFIT_COACH_CANARY_USERS: "",
+    NUTRAFIT_COACH_MAX_CHAT_DIA: "50",
+    NUTRAFIT_COACH_MAX_AUTO_DIA: "50",
+    NUTRAFIT_COACH_TIMEOUT_MS: "20000"
+  }, false);
+
+  Logger.log(JSON.stringify(obtenerConfigCoach()));
+  return obtenerConfigCoach();
+}
+
+/**
+ * Muestra la configuracion activa del coach para verificar despliegue.
+ */
+function verEstadoCoachConfig() {
+  const cfg = obtenerConfigCoach();
+  const estado = {
+    habilitado_global: coachHabilitadoGlobal(),
+    provider: cfg.provider,
+    proxy_configurado: Boolean(cfg.ollamaProxyUrl),
+    proxy_url: cfg.ollamaProxyUrl,
+    modelo_primario: cfg.modelPrimary,
+    canary: cfg.canaryUsers
+  };
+  Logger.log(JSON.stringify(estado, null, 2));
+  return estado;
 }
 
 function coachHabilitadoGlobal() {
@@ -1519,7 +1577,10 @@ function resolverProviderCoach(cfg, usuarioId, esModoTestInterno, payload) {
   const providerCfg = normalizarProviderCoach(cfg && cfg.provider);
   if (providerCfg !== "ollama") return "offline";
   if (!cfg || !cfg.ollamaProxyUrl) return "offline";
-  if (!usuarioEnCanaryCoach(usuarioId, cfg.canaryUsers)) return "offline";
+
+  // Sin lista canary configurada, el piloto aplica a todos los usuarios activos.
+  const canary = Array.isArray(cfg.canaryUsers) ? cfg.canaryUsers : [];
+  if (canary.length && !usuarioEnCanaryCoach(usuarioId, canary)) return "offline";
   return "ollama";
 }
 
@@ -1948,11 +2009,16 @@ function clasificarRutaRespuestaCoach(pregunta, evento, modo, intencion) {
   if (!(eventoTxt === "pregunta_libre" || modoTxt === "chat")) return "coaching";
   if (intencionTxt === "plan_hoy" || intencionTxt === "motivacion") return "coaching";
 
-  if (/que es|beneficio|beneficios|riesgo|riesgos|caloria|calorias|proteina|hidrato|fibra|vitamina|mineral|omega|indice glucemico|colesterol|trigliceridos|apto|contraindic|preentreno|postentreno|recuperacion|masa muscular|fuerza|resistencia|cardio|series|repeticiones|pasos|hidratacion|electrolitos/.test(preguntaTxt)) {
+  // Peticiones personalizadas (cantidad, menu, mi caso) deben ir por coaching aunque citen macros.
+  if (/cuant[oa]s?|cuanta|debo|deberia|me toca|mi caso|para mi|menu|plan|reparto|hoy|kg\b|peso/.test(preguntaTxt)) {
+    return "coaching";
+  }
+
+  if (/que es|beneficio|beneficios|riesgo|riesgos|vitamina|mineral|omega|indice glucemico|colesterol|trigliceridos|contraindic/.test(preguntaTxt)) {
     return "factual";
   }
 
-  if (["nutricion_general", "comidas", "comer_fuera", "general", "ejercicio", "agua"].indexOf(intencionTxt) >= 0) {
+  if (["nutricion_general"].indexOf(intencionTxt) >= 0) {
     return "factual";
   }
 
