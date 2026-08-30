@@ -6,7 +6,7 @@
     <title>NUTRAFIT - Mi Asistente</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20260830-07">
+    <link rel="stylesheet" href="css/style.css?v=20260830-08">
     
     <link rel="manifest" href="manifest.json">
     
@@ -56,7 +56,7 @@
         .mascota-flotante {
             position: fixed;
             right: 10px;
-            bottom: 110px;
+            bottom: 30px;
             z-index: 500;
             width: 128px;
             cursor: pointer;
@@ -180,7 +180,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <script>
-        window.APP_VERSION = '20260830-07';
+        window.APP_VERSION = '20260830-08';
         window.NUTRAFIT_COACH_PUBLIC_ENABLED = false;
     </script>
     <script>
@@ -198,7 +198,7 @@
             const ultimo = botones[botones.length - 1];
             const rect = ultimo.getBoundingClientRect();
             const alturaMascota = mascota.offsetHeight || 128;
-            const top = rect.top + (rect.height / 2) - (alturaMascota / 2);
+            const top = rect.top + (rect.height / 2) - (alturaMascota / 2) + 80;
             mascota.style.top = Math.max(8, top) + 'px';
             mascota.style.bottom = 'auto';
         }
