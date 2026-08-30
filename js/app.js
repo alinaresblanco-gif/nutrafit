@@ -24,6 +24,10 @@ function mostrarInicioEnContenedor() {
     pantallaInicio.style.display = 'flex';
     contenedorVistas.style.display = 'none';
     vistaActual = null;
+
+    if (typeof mostrarBocadilloMascota === 'function') {
+        mostrarBocadilloMascota();
+    }
 }
 
 function inicializarNavegacionMovil() {

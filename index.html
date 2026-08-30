@@ -6,7 +6,7 @@
     <title>NUTRAFIT - Mi Asistente</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20260830-08">
+    <link rel="stylesheet" href="css/style.css?v=20260830-09">
     
     <link rel="manifest" href="manifest.json">
     
@@ -180,16 +180,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <script>
-        window.APP_VERSION = '20260830-08';
+        window.APP_VERSION = '20260830-09';
         window.NUTRAFIT_COACH_PUBLIC_ENABLED = false;
     </script>
     <script>
-        window.addEventListener('load', () => {
+        let temporizadorOcultarBocadilloMascota = null;
+
+        function mostrarBocadilloMascota() {
             const bocadillo = document.getElementById('mascota-bocadillo');
             if (!bocadillo) return;
-            setTimeout(() => bocadillo.classList.add('visible'), 400);
-            setTimeout(() => bocadillo.classList.remove('visible'), 7000);
-        });
+            clearTimeout(temporizadorOcultarBocadilloMascota);
+            bocadillo.classList.add('visible');
+            temporizadorOcultarBocadilloMascota = setTimeout(() => bocadillo.classList.remove('visible'), 10000);
+        }
+
+        window.addEventListener('load', () => setTimeout(mostrarBocadilloMascota, 400));
 
         function posicionarMascotaJuntoUltimoBoton() {
             const mascota = document.getElementById('mascota-flotante');
