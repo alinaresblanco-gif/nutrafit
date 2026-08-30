@@ -202,7 +202,7 @@
             if (!mascota || !botones.length) return;
             const ultimo = botones[botones.length - 1];
             const rect = ultimo.getBoundingClientRect();
-            mascota.style.top = (rect.bottom - mascota.offsetHeight - 5) + 'px';
+            mascota.style.top = (rect.bottom - mascota.offsetHeight + 95) + 'px';
             mascota.style.bottom = 'auto';
         }
 
