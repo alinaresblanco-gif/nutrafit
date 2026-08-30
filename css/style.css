@@ -53,6 +53,39 @@
     font-size: 1.1rem;
     font-weight: 600;
 }
+/* MODAL ADMIN ALIMENTOS (CREDITOS DE MIS ALIMENTOS) */
+.modal-admin-alimentos {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9998;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px 10px;
+    overflow-y: auto;
+}
+.modal-admin-alimentos.oculto { display: none; }
+.modal-admin-alimentos-contenido {
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.modal-admin-alimentos-cerrar {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: #555;
+    cursor: pointer;
+}
 /* =========================================
    CONFIGURACIÓN BASE
    ========================================= */

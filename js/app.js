@@ -1157,6 +1157,18 @@ function inicializarProteccionCreditosAlimentos() {
     });
 }
 
+function abrirModalAdminAlimentos() {
+    if (!solicitarAccesoAdminAlimentos()) return;
+
+    const modal = document.getElementById('modal-admin-alimentos');
+    if (modal) modal.classList.remove('oculto');
+}
+
+function cerrarModalAdminAlimentos() {
+    const modal = document.getElementById('modal-admin-alimentos');
+    if (modal) modal.classList.add('oculto');
+}
+
 function ajustarMacroAlimento(id, inc) {
     if (!solicitarAccesoAdminAlimentos()) return;
 

@@ -15,6 +15,16 @@
         <i class="fas fa-warehouse"></i> NUESTRA DESPENSA
     </button>
 
+    <button class="boton-accion-v2" onclick="abrirModalAdminAlimentos()" style="width:100%; margin-bottom:20px; background-color: #7a7a7a;">
+        <i class="fas fa-user-lock"></i> Introducir un nuevo alimento en la despensa (Sólo Administrador)
+    </button>
+
+</div>
+
+<div id="modal-admin-alimentos" class="modal-admin-alimentos oculto">
+    <div class="modal-admin-alimentos-contenido">
+        <button class="modal-admin-alimentos-cerrar" onclick="cerrarModalAdminAlimentos()">&times;</button>
+
     <div class="formulario-card">
         
         <label class="etiqueta-verde">NOMBRE DEL ALIMENTO</label>
@@ -100,5 +110,6 @@
             <i class="fas fa-plus-circle"></i> NUEVO ALIMENTO
         </button>
 
+    </div>
     </div>
 </div>
