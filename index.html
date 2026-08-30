@@ -6,7 +6,7 @@
     <title>NUTRAFIT - Mi Asistente</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20260830-02">
+    <link rel="stylesheet" href="css/style.css?v=20260830-04">
     
     <link rel="manifest" href="manifest.json">
     
@@ -51,6 +51,63 @@
 
         .toast-actualizacion.ok {
             background: rgba(90, 138, 90, 0.96);
+        }
+
+        .mascota-flotante {
+            position: fixed;
+            right: 10px;
+            bottom: 100px;
+            z-index: 500;
+            width: 64px;
+            cursor: pointer;
+            animation: mascotaFlotar 3s ease-in-out infinite;
+        }
+
+        .mascota-imagen {
+            width: 100%;
+            display: block;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
+        }
+
+        .mascota-bocadillo {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            margin-bottom: 10px;
+            background: #fff;
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 14px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.25;
+            width: 150px;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        .mascota-bocadillo::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 18px;
+            border-width: 8px 8px 0 8px;
+            border-style: solid;
+            border-color: #fff transparent transparent transparent;
+        }
+
+        .mascota-bocadillo.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes mascotaFlotar {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
     </style>
 </head>
@@ -107,6 +164,11 @@
                 <i class="fas fa-dumbbell"></i> Mi Ejercicio Diario
             </button>
         </div>
+
+        <div id="mascota-flotante" class="mascota-flotante" onclick="window.open('https://chat.whatsapp.com/HXXNrZW5f7A2eKDRYR2SRB?s=cl&p=a&mlu=4', '_blank', 'noopener')">
+            <div id="mascota-bocadillo" class="mascota-bocadillo">Pulsando en mí, podrás acceder al chat de Artmonia Plena</div>
+            <img src="IMAGENES/mascota-1.png" alt="Mascota Artmonia Plena" class="mascota-imagen">
+        </div>
     </div>
 
     <div id="contenedor-vistas" style="display: none; min-height: 100vh; width: 100%;">
@@ -118,8 +180,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <script>
-        window.APP_VERSION = '20260830-03';
+        window.APP_VERSION = '20260830-04';
         window.NUTRAFIT_COACH_PUBLIC_ENABLED = false;
+    </script>
+    <script>
+        window.addEventListener('load', () => {
+            const bocadillo = document.getElementById('mascota-bocadillo');
+            if (!bocadillo) return;
+            setTimeout(() => bocadillo.classList.add('visible'), 400);
+            setTimeout(() => bocadillo.classList.remove('visible'), 7000);
+        });
     </script>
     <script id="app-js" defer></script>
     <script>
