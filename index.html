@@ -201,8 +201,8 @@
             if (!mascota || !botones.length) return;
             const ultimo = botones[botones.length - 1];
             const rect = ultimo.getBoundingClientRect();
-            mascota.style.top = 'auto';
-            mascota.style.bottom = (window.innerHeight - rect.bottom - 130) + 'px';
+            mascota.style.top = (rect.top + (rect.height - mascota.offsetHeight) / 2) + 'px';
+            mascota.style.bottom = 'auto';
         }
 
         window.addEventListener('load', posicionarMascotaJuntoUltimoBoton);
