@@ -190,7 +190,8 @@ async function abrirVista(nombreVista, opciones = {}) {
     const pantallaInicio = document.getElementById('pantalla-inicio');
     const contenedorVistas = document.getElementById('contenedor-vistas');
     try {
-        const respuesta = await fetch(`vistas/${nombreVista}.html`);
+        const version = window.APP_VERSION || Date.now();
+        const respuesta = await fetch(`vistas/${nombreVista}.html?v=${version}`, { cache: 'no-store' });
         const textoHtml = await respuesta.text();
         contenedorVistas.innerHTML = textoHtml;
         pantallaInicio.style.display = 'none';
