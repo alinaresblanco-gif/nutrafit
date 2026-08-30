@@ -484,6 +484,28 @@ table td {
     transform: scale(0.98);
 }
 
+.boton-despensa-imagen {
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    min-height: 33vh;
+    overflow: hidden;
+}
+
+.boton-despensa-imagen .imagen-boton-despensa {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.boton-despensa-imagen span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 /* Buscador de Despensa */
 .contenedor-buscador-corporativo {
     padding: 10px 15px;
