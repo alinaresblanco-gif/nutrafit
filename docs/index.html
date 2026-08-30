@@ -54,7 +54,7 @@
         }
 
         .mascota-flotante {
-            position: fixed;
+            position: absolute;
             right: 10px;
             bottom: 30px;
             z-index: 500;
@@ -201,12 +201,13 @@
             if (!mascota || !botones.length) return;
             const ultimo = botones[botones.length - 1];
             const rect = ultimo.getBoundingClientRect();
-            mascota.style.top = (rect.top + (rect.height - mascota.offsetHeight) / 2) + 'px';
+            mascota.style.top = (rect.top + window.scrollY + (rect.height - mascota.offsetHeight) / 2) + 'px';
             mascota.style.bottom = 'auto';
         }
 
         window.addEventListener('load', posicionarMascotaJuntoUltimoBoton);
         window.addEventListener('resize', posicionarMascotaJuntoUltimoBoton);
+        window.addEventListener('scroll', posicionarMascotaJuntoUltimoBoton, { passive: true });
     </script>
     <script id="app-js" defer></script>
     <script>
