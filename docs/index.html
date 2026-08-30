@@ -60,7 +60,6 @@
             z-index: 500;
             width: 128px;
             cursor: pointer;
-            animation: mascotaFlotar 3s ease-in-out infinite;
         }
 
         .mascota-imagen {
@@ -202,15 +201,12 @@
             if (!mascota || !botones.length) return;
             const ultimo = botones[botones.length - 1];
             const rect = ultimo.getBoundingClientRect();
-            mascota.style.top = (rect.bottom - mascota.offsetHeight + 95) + 'px';
-            mascota.style.bottom = 'auto';
+            mascota.style.top = 'auto';
+            mascota.style.bottom = (window.innerHeight - rect.bottom - 145) + 'px';
         }
 
         window.addEventListener('load', posicionarMascotaJuntoUltimoBoton);
         window.addEventListener('resize', posicionarMascotaJuntoUltimoBoton);
-        setTimeout(posicionarMascotaJuntoUltimoBoton, 300);
-        setTimeout(posicionarMascotaJuntoUltimoBoton, 800);
-        setTimeout(posicionarMascotaJuntoUltimoBoton, 1500);
     </script>
     <script id="app-js" defer></script>
     <script>
